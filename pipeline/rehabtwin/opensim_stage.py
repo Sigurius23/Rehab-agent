@@ -1,0 +1,514 @@
+"""MarkerSequence -> scaled OpenSim model + inverse kinematics.
+
+Steps (all intermediate files are written to ``out_dir/opensim``):
+
+1. prepare the generic model: attach the configured marker set, apply
+   recorded marker-location fixes, add virtual joint-centre markers;
+2. transform the sequence into OpenSim ground (gravity up, x = heading);
+3. bridge short gaps, split at long ones, low-pass filter (logged);
+4. build a static trial (SKEL q = 0 neutral pose, or the stillest window)
+   and rigidly register it onto the model's default pose;
+5. ScaleTool (measurement scaling + marker placement) -> subject .osim;
+6. InverseKinematicsTool per segment -> .mot (+ marker errors .sto);
+7. QC summary (marker RMS, imputed frames, up-vector estimates).
+"""
+from __future__ import annotations
+
+import contextlib
+import json
+import math
+import os
+from dataclasses import dataclass, field
+from pathlib import Path
+from xml.sax.saxutils import escape
+
+import numpy as np
+
+from . import filtering, frames
+from .config import resolve
+from .io_formats import read_table, write_table, write_trc
+from .sequence import MarkerSequence
+
+JC_PREFIX = "JC_"
+
+
+def _osim():
+    try:
+        import opensim  # noqa: F401
+    except ImportError as e:  # pragma: no cover - environment guard
+        raise ImportError("The OpenSim stage needs the 'opensim' package (pip install opensim, "
+                          "see pipeline/README.md)") from e
+    import opensim as osim
+    osim.Logger.setLevelString("error")
+    return osim
+
+
+@dataclass
+class StageResult:
+    out_dir: Path
+    scaled_model: Path
+    motions: list                    # one .mot per solved segment
+    marker_errors: list              # matching *_ik_marker_errors.sto
+    qc: dict = field(default_factory=dict)
+
+    @property
+    def motion(self) -> Path:
+        return self.motions[0]
+
+
+# ------------------------------------------------------------------ model
+
+def prepare_model(cfg, out_dir: Path, data_names):
+    """Generic model + configured markers restricted to those present in the data."""
+    osim = _osim()
+    cfg_dir = Path(cfg["_path"]).parent
+    model = osim.Model(str(resolve(cfg["model"], cfg_dir)))
+    model.setName("rehabtwin_generic")
+    if cfg.get("marker_set"):
+        model.updateMarkerSet(osim.MarkerSet(str(resolve(cfg["marker_set"], cfg_dir))))
+    state = model.initSystem()
+    notes = []
+
+    # Recorded fixes for upstream marker files (see config "marker_fixes").
+    for fix in cfg.get("marker_fixes", []):
+        src = model.getBodySet().get(fix["expressed_in"]) if fix["expressed_in"] != "ground" else model.getGround()
+        for name in fix["markers"]:
+            if not model.getMarkerSet().contains(name):
+                continue
+            mk = model.getMarkerSet().get(name)
+            loc = mk.get_location()
+            new = src.findStationLocationInAnotherFrame(state, loc, mk.getParentFrame())
+            mk.set_location(new)
+        notes.append(f"re-expressed {len(fix['markers'])} markers from {fix['expressed_in']} frame: {fix['why']}")
+
+    bodies = {model.getBodySet().get(i).getName() for i in range(model.getBodySet().getSize())}
+    jc = cfg.get("joint_centre_markers", {})
+    for joint_name, spec in jc.items():
+        name = JC_PREFIX + joint_name
+        if name not in data_names or spec["body"] not in bodies:
+            continue
+        loc = osim.Vec3(*spec.get("location", [0.0, 0.0, 0.0]))
+        mk = osim.Marker(name, model.getBodySet().get(spec["body"]), loc)
+        mk.set_fixed(True)
+        model.addMarker(mk)
+
+    # Keep only markers the data can drive; drop markers on missing bodies.
+    ms = model.updMarkerSet()
+    for i in reversed(range(ms.getSize())):
+        mk = ms.get(i)
+        if mk.getName() not in data_names:
+            ms.remove(i)
+    fixed_policy = cfg.get("marker_fixed_policy", "keep")
+    for i in range(ms.getSize()):
+        mk = ms.get(i)
+        if mk.getName().startswith(JC_PREFIX):
+            continue
+        if fixed_policy == "all_free":
+            mk.set_fixed(False)
+    model.finalizeConnections()
+    model.initSystem()
+    path = out_dir / "model_generic_with_markers.osim"
+    model.printToXML(str(path))
+    names = [ms.get(i).getName() for i in range(ms.getSize())]
+    return path, names, notes
+
+
+def model_marker_positions(model_path, names):
+    """Marker positions in ground at the model's default pose."""
+    osim = _osim()
+    model = osim.Model(str(model_path))
+    state = model.initSystem()
+    out = np.full((len(names), 3), np.nan)
+    for i, n in enumerate(names):
+        if model.getMarkerSet().contains(n):
+            p = model.getMarkerSet().get(n).getLocationInGround(state)
+            out[i] = [p.get(0), p.get(1), p.get(2)]
+    return out
+
+
+# --------------------------------------------------------------- frames
+
+def to_ground(seq: MarkerSequence, cfg):
+    """Return (names, points (T,N,3) in OpenSim ground, qc dict)."""
+    names, pts = seq.all_points()
+    fcfg = cfg.get("frames", {})
+    qc = {"input_frame": seq.frame}
+    if seq.frame == "opensim":
+        qc["up_source"] = "input already in OpenSim ground"
+        return names, pts, qc
+    if seq.frame == "opencv_camera":
+        world = frames.apply(frames.R_CV_TO_YUP, pts)
+    else:
+        world = pts.copy()
+    camera_up = np.array([0.0, 1.0, 0.0])
+    up = camera_up
+    mode = fcfg.get("up", "auto")
+    qc["up_mode_requested"] = mode
+    floor = None
+    try:
+        n, rms, npts = frames.estimate_floor_up(world, names, fcfg.get("foot_markers", []), camera_up)
+        floor = {"normal": n.round(4).tolist(), "rms_m": round(rms, 4), "n_points": npts,
+                 "tilt_vs_camera_level_deg": round(frames.angle_deg(n, camera_up), 2)}
+    except ValueError as e:
+        floor = {"error": str(e)}
+    qc["floor_fit"] = floor
+    use_floor = False
+    if mode == "floor":
+        if "error" in floor:
+            raise ValueError(f"up=floor requested but floor fit failed: {floor['error']}")
+        use_floor = True
+    elif mode == "auto" and "error" not in floor:
+        use_floor = (floor["rms_m"] <= fcfg.get("floor_max_rms_m", 0.02)
+                     and floor["tilt_vs_camera_level_deg"] <= fcfg.get("floor_max_tilt_deg", 20.0))
+    if use_floor:
+        up = np.asarray(floor["normal"])
+    qc["up_source"] = "floor plane fit" if use_floor else "camera-level assumption"
+    R1 = frames.rotation_between(up, [0.0, 1.0, 0.0])
+    world = frames.apply(R1, world)
+    R2, t2 = frames.to_opensim_ground(world, names, [0.0, 1.0, 0.0],
+                                      [tuple(p) for p in fcfg.get("right_left_pairs", [])],
+                                      floor_names=fcfg.get("foot_markers"))
+    return names, frames.apply(R2, world, t2), qc
+
+
+# --------------------------------------------------------------- static
+
+def static_points(seq: MarkerSequence, ground_names, ground_pts, valid_mask, cfg):
+    """(points (N,3), description) for the scaling trial, in any rigid frame."""
+    if seq.static_markers is not None:
+        names, pts = seq.all_points(static=True)
+        order = [names.index(n) for n in ground_names]
+        return pts[order], "neutral pose supplied by front-end (SKEL q = 0)"
+    window = int(round(cfg.get("static", {}).get("window_s", 0.5) * seq.fps))
+    best, best_i = math.inf, None
+    vel = np.linalg.norm(np.diff(ground_pts, axis=0), axis=2)  # (T-1, N)
+    for i in range(0, len(ground_pts) - window):
+        if not valid_mask[i:i + window].all():
+            continue
+        v = np.nanmean(vel[i:i + window - 1])
+        if v < best:
+            best, best_i = v, i
+    if best_i is None:
+        raise ValueError("no fully valid window for a static trial; record a still neutral stance")
+    pts = np.nanmedian(ground_pts[best_i:best_i + window], axis=0)
+    return pts, f"stillest {window}-frame window starting at frame {best_i} (mean speed {best * seq.fps:.3f} m/s)"
+
+
+# ---------------------------------------------------------------- XML
+
+def _tasks_xml(names, weights, default_w, coord_tasks=None):
+    """IKTaskSet XML. ``coord_tasks``: {coordinate: {"weight": w, "value": v (internal units) | "from_file": True}}."""
+    out = []
+    for n in names:
+        w = weights.get(n, weights.get(n[len(JC_PREFIX):] if n.startswith(JC_PREFIX) else "", default_w))
+        out.append(f'<IKMarkerTask name="{escape(n)}"><apply>{"true" if w > 0 else "false"}</apply>'
+                   f"<weight>{w}</weight></IKMarkerTask>")
+    for c, spec in (coord_tasks or {}).items():
+        if spec.get("from_file"):
+            value = "<value_type>from_file</value_type>"
+        else:
+            value = f"<value_type>manual_value</value_type><value>{spec.get('value', 0.0)}</value>"
+        out.append(f'<IKCoordinateTask name="{escape(c)}"><apply>true</apply>'
+                   f"<weight>{spec['weight']}</weight>{value}</IKCoordinateTask>")
+    return "<IKTaskSet><objects>" + "".join(out) + "</objects><groups/></IKTaskSet>"
+
+
+def scale_setup_xml(cfg, generic_model, static_trc, t_range, mass_kg, height_m, marker_names):
+    """ScaleTool setup (measurement scaling only; markers are placed by ``place_markers``).
+
+    OpenSim resolves these file names relative to the setup file's folder.
+    """
+    meas = []
+    for m in cfg["scaling"]["measurements"]:
+        pairs = [p for p in m["pairs"] if p[0] in marker_names and p[1] in marker_names]
+        if not pairs:
+            continue
+        pairs_xml = "".join(f"<MarkerPair><markers> {a} {b}</markers></MarkerPair>" for a, b in pairs)
+        bodies_xml = "".join(f'<BodyScale name="{b}"><axes> {ax}</axes></BodyScale>' for b, ax in m["bodies"].items())
+        meas.append(f'<Measurement name="{m["name"]}"><apply>true</apply>'
+                    f"<MarkerPairSet><objects>{pairs_xml}</objects><groups/></MarkerPairSet>"
+                    f"<BodyScaleSet><objects>{bodies_xml}</objects><groups/></BodyScaleSet></Measurement>")
+    t0, t1 = t_range
+    return f"""<?xml version="1.0" encoding="UTF-8" ?>
+<OpenSimDocument Version="40500">
+<ScaleTool name="subject">
+<mass>{mass_kg}</mass>
+<height>{height_m if height_m else -1}</height>
+<age>-1</age>
+<notes>Generated by rehabtwin</notes>
+<GenericModelMaker><model_file>{generic_model}</model_file><marker_set_file>Unassigned</marker_set_file></GenericModelMaker>
+<ModelScaler>
+<apply>true</apply>
+<scaling_order> measurements</scaling_order>
+<MeasurementSet><objects>{"".join(meas)}</objects><groups/></MeasurementSet>
+<ScaleSet><objects/><groups/></ScaleSet>
+<marker_file>{static_trc}</marker_file>
+<time_range> {t0} {t1}</time_range>
+<preserve_mass_distribution>true</preserve_mass_distribution>
+<output_model_file>model_scaled_only.osim</output_model_file>
+<output_scale_file>scale_factors.xml</output_scale_file>
+</ModelScaler>
+<MarkerPlacer><apply>false</apply></MarkerPlacer>
+</ScaleTool>
+</OpenSimDocument>
+"""
+
+
+def place_markers(model_path, static_mot, static_names, static_pts, out_path, max_move_m):
+    """Move free (non-fixed) markers onto their static-trial positions at the solved static pose.
+
+    Equivalent to OpenSim's MarkerPlacer but explicit and logged: markers whose
+    required move exceeds ``max_move_m`` are left in place and reported.
+    """
+    osim = _osim()
+    model = osim.Model(str(model_path))
+    state = model.initSystem()
+    tab = read_table(static_mot)
+    cs = model.getCoordinateSet()
+    for c in tab.columns:
+        if cs.contains(c):
+            co = cs.get(c)
+            v = tab.col(c)[0]
+            if co.getMotionType() == osim.Coordinate.Rotational and tab.in_degrees:
+                v = np.radians(v)
+            co.setValue(state, v, False)
+    model.realizePosition(state)
+    moved, refused = {}, {}
+    ground = model.getGround()
+    for i, n in enumerate(static_names):
+        if not model.getMarkerSet().contains(n) or not np.isfinite(static_pts[i]).all():
+            continue
+        mk = model.updMarkerSet().get(n)
+        if mk.get_fixed():
+            continue
+        cur = mk.getLocationInGround(state)
+        d = float(np.linalg.norm(np.array([cur.get(0), cur.get(1), cur.get(2)]) - static_pts[i]))
+        if max_move_m is not None and max_move_m > 0 and d > max_move_m:
+            refused[n] = round(d, 4)
+            continue
+        target = osim.Vec3(*map(float, static_pts[i]))
+        mk.set_location(ground.findStationLocationInAnotherFrame(state, target, mk.getParentFrame()))
+        moved[n] = round(d, 4)
+    model.setName("rehabtwin_subject")
+    model.finalizeConnections()
+    model.printToXML(str(out_path))
+    vals = np.array(list(moved.values())) if moved else np.zeros(1)
+    return {"moved": len(moved), "mean_move_m": round(float(vals.mean()), 4), "max_move_m": round(float(vals.max()), 4),
+            "refused_over_limit": refused}
+
+
+def ik_setup_xml(cfg, model, trc, t_range, out_dir, name, marker_names, coord_file=None, coord_tasks=None):
+    ik = cfg["ik"]
+    t0, t1 = t_range
+    return f"""<?xml version="1.0" encoding="UTF-8" ?>
+<OpenSimDocument Version="40500">
+<InverseKinematicsTool name="{name}">
+<results_directory>.</results_directory>
+<model_file>{model}</model_file>
+<constraint_weight>{ik.get("constraint_weight", "Inf")}</constraint_weight>
+<accuracy>{ik.get("accuracy", 1e-5)}</accuracy>
+{_tasks_xml(marker_names, ik.get("weights", {}), ik.get("default_weight", 1.0), coord_tasks)}
+<marker_file>{trc}</marker_file>
+<coordinate_file>{coord_file or "Unassigned"}</coordinate_file>
+<time_range> {t0} {t1}</time_range>
+<report_errors>true</report_errors>
+<output_motion_file>{name}.mot</output_motion_file>
+<report_marker_locations>false</report_marker_locations>
+</InverseKinematicsTool>
+</OpenSimDocument>
+"""
+
+
+# ------------------------------------------------------------- the stage
+
+def run(seq: MarkerSequence, cfg: dict, out_dir, mass_kg=None, height_m=None) -> StageResult:
+    osim = _osim()
+    out_dir = Path(out_dir)
+    od = out_dir / "opensim"
+    od.mkdir(parents=True, exist_ok=True)
+    qc = {"config": Path(cfg["_path"]).name, "n_frames": seq.n_frames, "fps": seq.fps}
+
+    # 1. frames
+    names, pts, frame_qc = to_ground(seq, cfg)
+    qc["frames"] = frame_qc
+
+    # 2. model
+    generic, model_names, notes = prepare_model(cfg, od, set(names))
+    qc["model_notes"] = notes
+    missing = sorted(set(names) - set(model_names))
+    qc["markers_in_data_not_in_model"] = missing
+    use = [names.index(n) for n in model_names]
+    names = model_names
+    pts = pts[:, use]
+    if len(names) < 6:
+        raise ValueError(f"only {len(names)} markers overlap between data and model; check config")
+
+    # 3. segments, gaps, filtering
+    fcfg = cfg.get("filter", {})
+    valid = seq.valid & np.isfinite(pts).any(axis=(1, 2))
+    segs, imputed = filtering.plan_segments(valid, seq.fps, fcfg.get("max_gap_s", 0.2), fcfg.get("min_segment_s", 1.0))
+    if not segs:
+        raise ValueError("no segment long enough to solve (check detection rate / min_segment_s)")
+    clean = np.full_like(pts, np.nan)
+    for a, b in segs:
+        seg = filtering.interpolate_gaps(pts[a:b])
+        clean[a:b] = filtering.lowpass(seg, seq.fps, fcfg.get("cutoff_hz", 6.0), fcfg.get("order", 4))
+    qc["segments"] = [{"start_frame": int(seq.frame_index[a]), "stop_frame": int(seq.frame_index[b - 1]) + 1,
+                       "duration_s": round((b - a) / seq.fps, 3)} for a, b in segs]
+    qc["imputed_frames"] = [int(seq.frame_index[f]) for f in imputed]
+    qc["detection_rate"] = round(float(seq.valid.mean()), 4)
+    qc["filter"] = {"type": "butterworth zero-lag", "cutoff_hz": fcfg.get("cutoff_hz", 6.0), "order": fcfg.get("order", 4)}
+    times = seq.times
+    write_trc(od / "markers_dynamic.trc", names, clean, times)
+
+    # 4. static trial, registered onto the model default pose
+    static, static_desc = static_points(seq, names, clean, valid, cfg)
+    model_static = model_marker_positions(generic, names)
+    reg_names = [n for n in cfg.get("static", {}).get("registration_markers", names) if n in names]
+    reg = [names.index(n) for n in reg_names]
+    R, t, _, rms = frames.kabsch(static[reg], model_static[reg])
+    static_g = frames.apply(R, static, t)
+    qc["static"] = {"source": static_desc, "registration_rms_m": round(rms, 4), "registration_markers": len(reg)}
+    n_static = 10
+    static_times = np.arange(n_static) / 100.0
+    write_trc(od / "markers_static.trc", names, np.repeat(static_g[None], n_static, axis=0), static_times)
+
+    # 5. scale (measurements), static IK (soft-pinned known neutral pose), marker placement
+    mass = mass_kg or cfg.get("default_mass_kg", 70.0)
+    qc["subject"] = {"mass_kg": mass, "mass_source": "measured" if mass_kg else "assumed default",
+                     "height_m": height_m}
+    scale_xml = od / "scale_setup.xml"
+    scale_xml.write_text(scale_setup_xml(cfg, generic.name, "markers_static.trc",
+                                         (static_times[0], static_times[-1]), mass, height_m, names))
+    (od / "model_scaled_only.osim").unlink(missing_ok=True)
+    with _cwd(od):
+        # run() reports False whenever MarkerPlacer is off, so judge by the output file
+        osim.ScaleTool(str(scale_xml)).run()
+    if not (od / "model_scaled_only.osim").exists():
+        raise RuntimeError(f"OpenSim ScaleTool failed (setup: {scale_xml})")
+    qc["scale_factors"] = read_scale_factors(od / "scale_factors.xml")
+    scfg = cfg.get("static", {})
+    pins = scfg.get("coordinate_pins", {}) if seq.static_markers is not None else scfg.get("coordinate_pins_measured", {})
+    static_xml = od / "static_ik_setup.xml"
+    static_xml.write_text(ik_setup_xml(cfg, "model_scaled_only.osim", "markers_static.trc",
+                                       (static_times[0], static_times[-1]), od, "static_pose", names,
+                                       coord_tasks={c: {"weight": w, "value": 0.0} for c, w in pins.items()}))
+    with _cwd(od):
+        ok = osim.InverseKinematicsTool(str(static_xml)).run()
+    if not ok:
+        raise RuntimeError(f"OpenSim static IK failed (setup: {static_xml})")
+    scaled = od / "model_scaled.osim"
+    if cfg["scaling"].get("marker_placer", True):
+        placement = place_markers(od / "model_scaled_only.osim", od / "static_pose.mot", names, static_g,
+                                  scaled, cfg["scaling"].get("max_marker_movement_m", 0.05))
+    else:
+        import shutil
+        shutil.copy(od / "model_scaled_only.osim", scaled)
+        placement = {"moved": 0, "note": "marker placement disabled"}
+    static_err = read_table(od / "static_pose_ik_marker_errors.sto")
+    qc["static"].update({"pinned_coordinates": sorted(pins), "marker_placement": placement,
+                         "static_marker_rms_m_before_placement": round(float(static_err.col("marker_error_RMS").mean()), 4)})
+
+    # 6. IK per segment
+    coord_tasks, coord_file = None, None
+    if cfg.get("skel_coordinate_tasks") and seq.skel_poses is not None:
+        coord_tasks, coord_file = _skel_coordinate_file(seq, cfg, scaled, od)
+    motions, errors = [], []
+    for k, (a, b) in enumerate(segs):
+        name = "ik" if len(segs) == 1 else f"ik_seg{k + 1:02d}"
+        xml = od / f"{name}_setup.xml"
+        xml.write_text(ik_setup_xml(cfg, scaled.name, "markers_dynamic.trc", (times[a], times[b - 1]),
+                                    od, name, names, coord_file and Path(coord_file).name, coord_tasks))
+        with _cwd(od):
+            ok = osim.InverseKinematicsTool(str(xml)).run()
+        if not ok:
+            raise RuntimeError(f"OpenSim IK failed (setup: {xml})")
+        motions.append(od / f"{name}.mot")
+        errors.append(od / f"{name}_ik_marker_errors.sto")
+
+    # 7. QC
+    qc["ik"] = summarise_marker_errors(errors, cfg.get("qc", {}).get("max_rms_m", 0.04))
+    if seq.skel_poses is not None:
+        qc["skel_vs_ik"] = compare_skel_q(seq, motions)
+    (out_dir / "qc.json").write_text(json.dumps(qc, indent=2))
+    return StageResult(out_dir=out_dir, scaled_model=scaled, motions=motions, marker_errors=errors, qc=qc)
+
+
+@contextlib.contextmanager
+def _cwd(path):
+    """OpenSim tools resolve some file names against the working directory."""
+    prev = os.getcwd()
+    os.chdir(path)
+    try:
+        yield
+    finally:
+        os.chdir(prev)
+
+
+def read_scale_factors(path):
+    import re
+    if not Path(path).exists():
+        return {}
+    txt = Path(path).read_text()
+    out = {}
+    for m in re.finditer(r'<Scale(?: name="[^"]*")?>\s*<scales>([^<]+)</scales>\s*<segment>([^<]+)</segment>', txt):
+        seg = m.group(2).strip()
+        if seg == "ground" or seg.endswith("_offset") or "geom_frame" in seg:
+            continue
+        out[seg] = [round(float(v), 4) for v in m.group(1).split()]
+    return out
+
+
+def summarise_marker_errors(paths, max_rms):
+    rms_all, max_all = [], []
+    for p in paths:
+        tab = read_table(p)
+        rms_all.append(tab.col("marker_error_RMS"))
+        max_all.append(tab.col("marker_error_max"))
+    rms = np.concatenate(rms_all)
+    mx = np.concatenate(max_all)
+    return {
+        "marker_rms_m": {"mean": round(float(rms.mean()), 4), "p95": round(float(np.percentile(rms, 95)), 4),
+                         "max": round(float(rms.max()), 4)},
+        "marker_max_m": {"mean": round(float(mx.mean()), 4), "max": round(float(mx.max()), 4)},
+        "frames_over_threshold": int((rms > max_rms).sum()),
+        "threshold_rms_m": max_rms,
+        "pass": bool((rms > max_rms).mean() < 0.05),
+    }
+
+
+def _skel_coordinate_file(seq, cfg, model_path, od):
+    """SKEL q for coordinates that share name and convention with the model."""
+    from .skel_names import SKEL_POSE_PARAM_NAMES
+    osim = _osim()
+    model = osim.Model(str(model_path))
+    model.initSystem()
+    cs = model.getCoordinateSet()
+    shared = [n for n in cfg["skel_coordinate_tasks"] if cs.contains(n) and n in SKEL_POSE_PARAM_NAMES]
+    cols = [np.degrees(seq.skel_poses[:, SKEL_POSE_PARAM_NAMES.index(n)]) for n in shared]
+    path = od / "skel_coordinates.mot"
+    write_table(path, shared, np.stack(cols, axis=1), seq.times, in_degrees=True)
+    return {n: {"weight": cfg["skel_coordinate_tasks"][n], "from_file": True} for n in shared}, path
+
+
+def compare_skel_q(seq, motions):
+    """RMSE between SKEL's own joint angles and OpenSim IK, for same-named coordinates.
+
+    A naming-level cross-check of the two routes (direct q vs marker IK); a
+    large value flags either a convention mismatch or a poor fit.
+    """
+    from .skel_names import SKEL_POSE_PARAM_NAMES
+    out = {}
+    for mot in motions:
+        tab = read_table(mot)
+        idx = np.searchsorted(seq.times, tab.time - 1e-9)
+        idx = np.clip(idx, 0, seq.n_frames - 1)
+        for n in SKEL_POSE_PARAM_NAMES:
+            if not tab.has(n) or n.startswith("pelvis_"):
+                continue
+            q = np.degrees(seq.skel_poses[idx, SKEL_POSE_PARAM_NAMES.index(n)])
+            d = tab.col(n) - q
+            d = d[np.isfinite(d)]
+            if len(d):
+                out.setdefault(n, []).append(d)
+    return {n: round(float(np.sqrt(np.mean(np.concatenate(v) ** 2))), 2) for n, v in out.items()}

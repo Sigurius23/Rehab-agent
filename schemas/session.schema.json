@@ -30,7 +30,7 @@
         "required": ["device_id", "modality", "file"],
         "properties": {
           "device_id": {"type": "string"},
-          "modality": {"enum": ["rgb", "depth", "pointcloud", "imu", "emg", "pose2d", "pose3d"]},
+          "modality": {"enum": ["rgb", "depth", "pointcloud", "imu", "emg", "pose2d", "pose3d", "skel-sequence"]},
           "file": {"type": "string"},
           "fps": {"type": "number"},
           "resolution": {"type": "string"}
@@ -43,16 +43,28 @@
       "properties": {
         "intrinsics_source": {"type": "string"},
         "extrinsics_file": {"type": "string"},
-        "reprojection_error_px": {"type": "number"}
+        "reprojection_error_px": {"type": ["number", "null"], "description": "null when no multi-view calibration was performed (monocular screening session)"}
       }
     },
     "sync": {
       "type": "object",
       "required": ["method", "max_offset_ms_after_correction"],
       "properties": {
-        "method": {"const": "labstreaminglayer"},
+        "method": {"enum": ["labstreaminglayer", "single-stream"], "description": "single-stream: one video, nothing to synchronise"},
         "proof_event": {"type": "string", "description": "e.g. LED flash / hand clap at session start"},
-        "max_offset_ms_after_correction": {"type": "number", "description": "Must be < 5 for kinematics use (docs/hardware.md)"}
+        "max_offset_ms_after_correction": {"type": ["number", "null"], "description": "Must be < 5 for kinematics use (docs/hardware.md); null for single-stream sessions"}
+      }
+    },
+    "pipeline": {
+      "type": "object",
+      "description": "Software provenance: front-end/back-end, config, versions, upstream pins and output files.",
+      "properties": {
+        "front_end": {"type": "string"},
+        "back_end": {"type": "string"},
+        "config": {"type": "string"},
+        "software": {"type": "object", "additionalProperties": {"type": "string"}},
+        "upstream_pins": {"type": "object", "additionalProperties": {"type": "string"}},
+        "outputs": {"type": "object", "additionalProperties": {"type": "string"}}
       }
     },
     "accuracy_layers": {
