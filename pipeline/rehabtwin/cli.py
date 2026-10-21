@@ -21,6 +21,7 @@ from . import metrics as metrics_mod
 from . import opensim_stage, records, report, validation
 from .config import load_config
 from .io_formats import read_table
+from .kinematics import skeleton_positions
 from .sequence import MarkerSequence
 
 
@@ -42,11 +43,13 @@ def process(seq_path, out_dir, exercise="squat", config=None, mass_kg=None, heig
     person_ref = person_ref or seq.meta.get("person_ref", "UNSPECIFIED")
 
     derived = metrics_mod.derived_signals(est, stage.scaled_model)
-    val, ref_plot = None, None
+    skeleton = skeleton_positions(stage.scaled_model, est)
+    val, ref_plot, ref_skeleton = None, None, None
     if reference:
         ref_tab = read_table(reference)
         ref_model = Path(reference_model) if reference_model else Path(reference).parent / "model_scaled.osim"
         if ref_model.exists():  # posture signals (inclination vs gravity, FPPA) can be validated too
+            ref_skeleton = skeleton_positions(ref_model, ref_tab)
             ref_tab = metrics_mod.with_signals(ref_tab, metrics_mod.derived_signals(ref_tab, ref_model))
         cmp = validation.compare(metrics_mod.with_signals(est, derived), ref_tab, max_lag_s=max_lag_s)
         ref_plot = (ref_tab.time + cmp["lag_s"], {c: ref_tab.col(c) for c in ref_tab.columns})
@@ -70,7 +73,7 @@ def process(seq_path, out_dir, exercise="squat", config=None, mass_kg=None, heig
                                   config_name=Path(cfg["_path"]).name, outputs=outputs, validation_report=val)
     records.validate(sess, "session")
     records.write_json(out_dir / "session.json", sess)
-    report.write(out_dir / "report.html", sess, stage.qc, met, signals, est.time, val, ref_plot)
+    report.write(out_dir / "report.html", sess, stage.qc, met, signals, est.time, val, ref_plot, skeleton, ref_skeleton)
     return {"session": sess, "metrics": met, "qc": stage.qc, "validation": val, "motion": motion}
 
 

@@ -115,6 +115,45 @@ def segment_orientations(model_path, table, bodies=("torso", "pelvis", "head")):
     return out, fppa
 
 
+# Body origins drawn as the replay skeleton (joint centres in the Pose2Sim / Rajagopal models)
+SKELETON_BODIES = ["pelvis", "femur_r", "tibia_r", "talus_r", "toes_r", "femur_l", "tibia_l", "talus_l", "toes_l",
+                   "torso", "head", "humerus_r", "ulna_r", "hand_r", "humerus_l", "ulna_l", "hand_l"]
+SKELETON_BONES = [("pelvis", "femur_r"), ("femur_r", "tibia_r"), ("tibia_r", "talus_r"), ("talus_r", "toes_r"),
+                  ("pelvis", "femur_l"), ("femur_l", "tibia_l"), ("tibia_l", "talus_l"), ("talus_l", "toes_l"),
+                  ("pelvis", "torso"), ("torso", "head"), ("head", "humerus_r"), ("humerus_r", "ulna_r"),
+                  ("ulna_r", "hand_r"), ("head", "humerus_l"), ("humerus_l", "ulna_l"), ("ulna_l", "hand_l"),
+                  ("humerus_r", "humerus_l"), ("head", "head_top")]
+
+
+def skeleton_positions(model_path, table, max_fps=30.0):
+    """Body-origin positions over time for the 3D replay: (times (K,), {body: (K, 3)})."""
+    import opensim as osim
+    osim.Logger.setLevelString("error")
+    model = osim.Model(str(model_path))
+    state = model.initSystem()
+    cs = model.getCoordinateSet()
+    cols = [c for c in table.columns if cs.contains(c)]
+    fps = 1.0 / float(np.median(np.diff(table.time))) if len(table.time) > 1 else max_fps
+    step = max(1, int(round(fps / max_fps)))
+    frames = np.arange(0, len(table.time), step)
+    bodies = [b for b in SKELETON_BODIES if model.getBodySet().contains(b)]
+    out = {b: np.zeros((len(frames), 3)) for b in bodies}
+    for k, f in enumerate(frames):
+        for c in cols:
+            coord = cs.get(c)
+            v = table.data[f, table.columns.index(c)]
+            if coord.getMotionType() == osim.Coordinate.Rotational and table.in_degrees:
+                v = np.radians(v)
+            coord.setValue(state, v, False)
+        model.realizePosition(state)
+        for b in bodies:
+            out[b][k] = _origin(model, state, b)
+        if "head" in bodies:  # a point near the top of the skull, for drawing the head
+            p = model.getBodySet().get("head").findStationLocationInGround(state, osim.Vec3(0.0, 0.2, 0.0))
+            out.setdefault("head_top", np.zeros((len(frames), 3)))[k] = [p.get(0), p.get(1), p.get(2)]
+    return table.time[frames], out
+
+
 def _rot(transform):
     R = transform.R()
     return np.array([[R.get(i, j) for j in range(3)] for i in range(3)])
