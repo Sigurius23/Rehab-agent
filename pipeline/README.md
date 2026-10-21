@@ -104,16 +104,47 @@ replays and never targets or live cues.
 python -m rehabtwin correct  SESSION --spec squat_knee_valgus_right --illustrative
 # muscle effects: estimated GRF → inverse dynamics → static optimisation (+ what-ifs)
 python -m rehabtwin muscles  SESSION --rep 1 --correction squat_knee_valgus_right --weaken gluteus_medius_r=0.5 \
-                             --assist knee_angle_r=40:neg      # ideal knee-extension exo, max 40 N·m
+                             --assist knee_angle_r=40:neg --passive knee_angle_r=60@20:pos
+# --assist: ideal knee-extension exo, max 40 N·m; --passive: elastic band, 60 N·m/rad beyond 20° knee flexion
 # haptic posture cues (suit Track 1): offline replay of a rule set, also over a corrected motion
 python -m rehabtwin cues     SESSION --rules squat_posture [--motion SESSION/correction/<spec>/corrected.mot]
 ```
+
+Strength calibration from hand-held dynamometry (maximal isometric torques; template in
+`configs/strength/example_hhd.json`, test actions and postures in `configs/strength_actions.json`):
+
+```bash
+python -m rehabtwin strength SESSION --tests my_hhd.json    # → SESSION/strength/ (model_strength.osim, strength.html)
+python -m rehabtwin muscles  SESSION --rep 1 --strength --grf-sensitivity 0.15
+```
+For each test the model is posed as tested and its isometric moment at full activation is
+computed per muscle; the test's prime movers (and synergists no other test owns) get one
+max-isometric-force factor so the model reproduces the measured torque, all tests solved
+jointly. The report lists each factor against the generic model and the limb symmetry index
+(LSI < 90 % flagged). The trunk test is evaluated about L5/S1 alone (lumbar couplers removed
+for that moment). `--grf-sensitivity` re-runs every variant with the right foot's share of
+the load shifted by ± the given amount; a change (variant − measured, same split) is marked
+robust only if it keeps its sign and stays ≥ 2 points of capacity under every split. Expect the
+absolute activation levels to move far more than the changes (±0.15 moved right-quadriceps
+peak demand between 37 % and 67 % on the synthetic squat).
 
 `muscles.html` includes a **3D muscle view**: each muscle's line of action (OpenSim path, wrapping
 included) on the moving model, coloured by its static-optimisation activation or by the change
 against the measured run, with line width ∝ √(max isometric force), so a weakened group draws
 thinner. Pick the variant (measured / corrected / weakened / exo); hover a muscle for its numbers.
 `--no-3d` leaves it out.
+
+Progress over time, for one person's sessions of the same exercise:
+
+```bash
+python -m rehabtwin progress SESSION_WEEK1 SESSION_WEEK4 SESSION_WEEK8 --out progress/
+```
+Per signal the session value is the mean of the rep peaks. A change is called **real** only if it
+exceeds both the rep-to-rep scatter and the minimal detectable change from that joint × plane's
+validation (MDC95 = 1.96·√2·RMSE vs a reference system). Without a (non-synthetic) validation the
+verdict is "consistent across reps; size not validated": a lighting, clothing or camera change can
+produce a consistent shift too. Sessions of different people are refused; a front-end or tier
+change between sessions is flagged.
 
 Live loop over Lab Streaming Layer (`pip install -e "pipeline[live]"`), the same engine in real time:
 
@@ -191,6 +222,8 @@ let IK jitter 6.6 cm sideways, and static optimisation then "needed" 70 N·m res
 | `session.json` | provenance, tier, accuracy layers, upstream commit pins (`schemas/session.schema.json`) |
 | `report.html` | self-contained charts (reference dashed when present), per-rep table, gates |
 | `correction/<spec>/` | `corrected.mot`, `correction.json`, `correction.html` (measured vs corrected 3D replay) |
+| `progress/` (`--out`) | `progress.json` (verdicts per signal, series), `progress.html` (trend per signal) |
+| `strength/` | `model_strength.osim`, `strength.json` (factors, LSI), `strength.html` |
 | `muscles/` | per variant: `grf.mot`, `inverse_dynamics.sto`, static-optimisation activations/forces, `muscles.json`; `study.json`, `muscles.html` |
 | `feedback/<rules>/` | `cues.json` (event log + summary), `commands.csv` (actuator events), `cues.html` |
 

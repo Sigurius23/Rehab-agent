@@ -10,7 +10,10 @@ changes selected joint-angle trajectories of a measured motion, e.g.
 and OpenSim IK re-solves the whole body so the result stays kinematically
 consistent: corrected coordinates are tracked strongly, the rest of the
 movement weakly, and the feet stay where they were (anchor tasks), so the
-pelvis and other joints adapt the way a real body would have to.
+pelvis and other joints adapt the way a real body would have to. A spec can
+``preserve`` chosen coordinates (higher weight than ``other``) so the change is
+absorbed elsewhere, and name ``check_rules`` (a posture rule set) so the
+corrected motion is checked for faults it removes and faults it introduces.
 
 docs/accuracy.md red line: no corrected-posture *target* from a generic
 skeleton. On a Tier-B/C body this module only runs with ``illustrative=True``,
@@ -159,7 +162,7 @@ def correct(session_dir, spec, illustrative=False, motion=None, model=None):
             # metres, not radians: an untracked pelvis translation lets IK jitter sideways
             wt = w.get("translation", 100.0)
         else:
-            wt = w.get("other", 1.0)
+            wt = spec.get("preserve", {}).get(c, w.get("other", 1.0))
         tasks.append(f'<IKCoordinateTask name="{escape(c)}"><apply>true</apply><weight>{wt}</weight>'
                      "<value_type>from_file</value_type></IKCoordinateTask>")
     t0, t1 = measured.time[0], measured.time[-1]
@@ -242,3 +245,23 @@ def correct(session_dir, spec, illustrative=False, motion=None, model=None):
     }
     (out / "correction.json").write_text(json.dumps(summary, indent=2) + "\n")
     return summary, measured, corrected, out
+
+
+def rule_check(rules, time_m, sig_m, time_c, sig_c):
+    """Posture-rule violations of the measured vs the corrected motion (gating ignored: this is a check)."""
+    from . import feedback
+    spec = feedback.load_rules(rules)
+    count = {}
+    for label, t, sig in (("measured", time_m, sig_m), ("corrected", time_c, sig_c)):
+        log, _ = feedback.replay(spec, t, sig, tier="A", allowed_joint_planes=[r["joint_plane"] for r in spec["rules"]])
+        for r in spec["rules"]:
+            ends = [e for e in log if e.get("rule") == r["id"] and e.get("event") == "violation_end"]
+            n = sum(1 for e in log if e.get("rule") == r["id"] and "decision" in e)
+            count.setdefault(r["id"], {})[label] = {"violations": n, "worst": (max(ends, key=lambda e: abs(e["peak"]))["peak"]
+                                                                               if ends else None)}
+    return {"rules": spec["name"],
+            "per_rule": count,
+            "removed": sorted(k for k, v in count.items() if v["measured"]["violations"] and not v["corrected"]["violations"]),
+            "introduced": sorted(k for k, v in count.items() if v["corrected"]["violations"] and not v["measured"]["violations"]),
+            "note": "Rules replayed without the tier/validation gate: a check of the motion, not of feedback."}
+

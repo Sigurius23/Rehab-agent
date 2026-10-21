@@ -70,8 +70,11 @@ def _set_state(model, state, table, f, cs, cols):
     model.realizePosition(state)
 
 
-def estimate_grf(model_path, table: Table, cutoff_hz=6.0, max_foot_speed=0.15):
-    """Quasi-static double-stance GRF estimate. Returns (columns, data (T, 18), qc dict)."""
+def estimate_grf(model_path, table: Table, cutoff_hz=6.0, max_foot_speed=0.15, share_bias=0.0):
+    """Quasi-static double-stance GRF estimate. Returns (columns, data (T, 18), qc dict).
+
+    ``share_bias`` shifts the right foot's share of the load (e.g. +0.15) for sensitivity runs.
+    """
     osim = _osim()
     model = osim.Model(str(model_path))
     state = model.initSystem()
@@ -103,7 +106,7 @@ def estimate_grf(model_path, table: Table, cutoff_hz=6.0, max_foot_speed=0.15):
     d[:, 1] = 0.0
     c = com_f - L
     c[:, 1] = 0.0
-    share_r = np.clip(np.sum(c * d, axis=1) / np.maximum(np.sum(d * d, axis=1), 1e-9), 0.0, 1.0)
+    share_r = np.clip(np.sum(c * d, axis=1) / np.maximum(np.sum(d * d, axis=1), 1e-9) + share_bias, 0.0, 1.0)
     # Whole-body centre of pressure from moment balance about the COM (segment angular
     # momentum neglected): CoP = COM_h - height * F_h / F_v. Its component across the
     # foot-to-foot line sets the split above; its component along the feet (front/back)
@@ -133,6 +136,7 @@ def estimate_grf(model_path, table: Table, cutoff_hz=6.0, max_foot_speed=0.15):
         "peak_vertical_bw": round(float(F[:, 1].max() / (mass * 9.81)), 3),
         "min_vertical_bw": round(float(F[:, 1].min() / (mass * 9.81)), 3),
         "right_share_range": [round(float(share_r.min()), 3), round(float(share_r.max()), 3)],
+        "right_share_bias": share_bias,
         "max_foot_speed_m_s": round(foot_speed, 3),
         "feet_planted": foot_speed <= max_foot_speed,
     }
@@ -151,11 +155,35 @@ def _external_loads_xml(datafile):
 """
 
 
-def dynamics_model(model_path, out_path, weaken=None):
+def parse_passive(spec):
+    """'knee_angle_r=40@10:pos' -> (coordinate, K in N·m/rad, slack angle in deg, 'pos' | 'neg').
+
+    A one-sided elastic element across the joint (band, spring): no torque until the coordinate
+    passes the slack angle q0 in the given direction, then torque = -K (q - q0). 'pos' resists the
+    coordinate increasing past q0 (e.g. knee flexion), 'neg' resists it decreasing.
+    """
+    coord, rest = spec.split("=", 1)
+    rest, _, direction = rest.partition(":")
+    k, _, q0 = rest.partition("@")
+    direction = direction or "pos"
+    if direction not in ("pos", "neg"):
+        raise ValueError(f"passive: direction must be pos or neg, got {direction!r}")
+    return coord, float(k), float(q0 or 0.0), direction
+
+
+def passive_torque(k, q0_deg, direction, q_deg):
+    """Torque (N·m) of a ``parse_passive`` element at coordinate values ``q_deg``."""
+    d = np.radians(np.asarray(q_deg, float) - q0_deg)
+    return -k * (np.maximum(d, 0.0) if direction == "pos" else np.minimum(d, 0.0))
+
+
+def dynamics_model(model_path, out_path, weaken=None, passive=()):
     """Copy of the subject model for ID/SO: foot contact forces removed, optional weakened groups.
 
     ``weaken``: {"gluteus_medius_r": 0.5, ...} scales max isometric force.
-    Returns {"weakened": {group: [muscles]}}.
+    ``passive``: ``parse_passive`` tuples, added as ExpressionBasedCoordinateForce (static
+    optimisation and inverse dynamics then treat them as known applied forces).
+    Returns {"weakened": {group: [muscles]}, "passive": [...]}.
     """
     osim = _osim()
     model = osim.Model(str(model_path))
@@ -174,10 +202,61 @@ def dynamics_model(model_path, out_path, weaken=None):
                 mu = model.updMuscles().get(n)
                 mu.setMaxIsometricForce(mu.getMaxIsometricForce() * factor)
             applied[g] = groups[g]
+    resolved = []
+    for coord, k, q0, direction in passive:
+        real, gain = device_coordinate(model, coord)
+        if not model.getCoordinateSet().contains(real):
+            raise ValueError(f"passive: no coordinate {coord!r} in the model")
+        # physical torque -K (gain q - q0) between the segments = generalized force -K gain^2 (q - q0/gain)
+        fn = "max" if direction == "pos" else "min"
+        force = osim.ExpressionBasedCoordinateForce(real, f"-{k * gain * gain}*{fn}(0,q-({np.radians(q0) / gain}))")
+        force.setName(f"passive_{coord}")
+        model.addForce(force)
+        resolved.append((coord, k, q0, direction, real, gain))
     model.finalizeConnections()
     model.initSystem()
     model.printToXML(str(out_path))
-    return {"weakened": {g: {"factor": weaken[g], "muscles": len(m)} for g, m in applied.items()}}
+    return {"weakened": {g: {"factor": weaken[g], "muscles": len(m)} for g, m in applied.items()},
+            "passive": [{"coordinate": c, "stiffness_Nm_per_rad": k, "slack_deg": q0, "direction": d,
+                         "model_coordinate": real, "coupling_gain": round(gain, 4)}
+                        for c, k, q0, d, real, gain in resolved]}
+
+
+# Trunk devices act between pelvis and thorax. In the Pose2Sim/Christophy spine the six lumbar levels
+# are coupled to L5_S1, so a generalized force on L5_S1_* is not a physical trunk torque (the trunk
+# turns ~7x the L5_S1 angle). These device coordinates take physical units and are converted.
+TRUNK_COORDS = {"lumbar_total_extension": ("L5_S1_Flex_Ext", "lumbar_extension"),
+                "lumbar_total_bending": ("L5_S1_Lat_Bending", "lumbar_bending"),
+                "lumbar_total_rotation": ("L5_S1_axial_rotation", "lumbar_rotation")}
+
+
+def _rotation(model, state, body):
+    R = model.getBodySet().get(body).getTransformInGround(state).R()
+    return np.array([[R.get(i, j) for j in range(3)] for i in range(3)])
+
+
+def coupling_gain(model, coord, base="pelvis", body="torso", delta=0.05):
+    """d(angle of ``body`` relative to ``base``)/d(``coord``) with the model's coupler constraints enforced."""
+    state = model.initSystem()
+    model.realizePosition(state)
+    r0 = _rotation(model, state, base).T @ _rotation(model, state, body)
+    model.getCoordinateSet().get(coord).setValue(state, delta, True)
+    model.realizePosition(state)
+    r1 = _rotation(model, state, base).T @ _rotation(model, state, body)
+    d = r0.T @ r1
+    return float(np.arccos(np.clip((np.trace(d) - 1.0) / 2.0, -1.0, 1.0)) / delta)
+
+
+def device_coordinate(model, coord):
+    """(model coordinate, gain) for a device coordinate; physical angle = gain x model coordinate."""
+    if coord not in TRUNK_COORDS:
+        return coord, 1.0
+    coupled, single = TRUNK_COORDS[coord]
+    if model.getCoordinateSet().contains(coupled):
+        return coupled, coupling_gain(model, coupled)
+    if model.getCoordinateSet().contains(single):     # one-joint lumbar (Rajagopal): no coupling
+        return single, 1.0
+    raise ValueError(f"{coord}: the model has neither {coupled} nor {single}")
 
 
 def exo_optimal_force(cap_nm):
@@ -222,18 +301,20 @@ def reserves_xml(model_path, path, residual_force=10.0, reserve_force=1.0, ideal
                      f"<optimal_force>{opt}</optimal_force><min_control>-Inf</min_control><max_control>Inf</max_control>"
                      "</CoordinateActuator>")
     for coord, torque, lo, hi in assist:
-        if not cs.contains(coord):
+        real, gain = device_coordinate(model, coord)
+        if not cs.contains(real):
             raise ValueError(f"assist: no coordinate {coord!r} in the model")
-        opt = exo_optimal_force(torque)
-        items.append(f'<CoordinateActuator name="exo_{coord}"><coordinate>{coord}</coordinate>'
-                     f"<optimal_force>{opt}</optimal_force><min_control>{lo * torque / opt}</min_control>"
-                     f"<max_control>{hi * torque / opt}</max_control></CoordinateActuator>")
+        cap = torque * gain            # physical torque cap -> generalized force on the model coordinate
+        opt = exo_optimal_force(cap)
+        items.append(f'<CoordinateActuator name="exo_{coord}"><coordinate>{real}</coordinate>'
+                     f"<optimal_force>{opt}</optimal_force><min_control>{lo * cap / opt}</min_control>"
+                     f"<max_control>{hi * cap / opt}</max_control></CoordinateActuator>")
     Path(path).write_text('<?xml version="1.0" encoding="UTF-8" ?>\n<OpenSimDocument Version="40500">'
                           f'<ForceSet name="reserves"><objects>{"".join(items)}</objects><groups/></ForceSet></OpenSimDocument>\n')
 
 
 def run(model_path, motion_path, out_dir, weaken=None, label="measured", exercise="squat", start=None, stop=None,
-        assist=()):
+        assist=(), grf_share_bias=0.0, passive=()):
     """GRF estimate → ID → SO for one motion. Returns a summary dict (also written to muscles.json)."""
     osim = _osim()
     out = Path(out_dir) / label
@@ -242,10 +323,11 @@ def run(model_path, motion_path, out_dir, weaken=None, label="measured", exercis
     t0 = tab.time[0] if start is None else start
     t1 = tab.time[-1] if stop is None else stop
     write_table(out / "motion.mot", tab.columns, tab.data, tab.time, tab.in_degrees, name="motion")
-    names, grf, grf_qc = estimate_grf(model_path, tab)
+    names, grf, grf_qc = estimate_grf(model_path, tab, share_bias=grf_share_bias)
     write_table(out / "grf.mot", names, grf, tab.time, in_degrees=False, name="estimated_grf")
     (out / "external_loads.xml").write_text(_external_loads_xml("grf.mot"))
-    model_info = dynamics_model(model_path, out / "model_dynamics.osim", weaken)
+    passive = [parse_passive(p) if isinstance(p, str) else p for p in passive]
+    model_info = dynamics_model(model_path, out / "model_dynamics.osim", weaken, passive)
     assist = [parse_assist(a) if isinstance(a, str) else a for a in assist]
     reserves_xml(out / "model_dynamics.osim", out / "reserves.xml", assist=assist)
 
@@ -280,6 +362,21 @@ def run(model_path, motion_path, out_dir, weaken=None, label="measured", exercis
         if not osim.AnalyzeTool(str(out / "so_setup.xml")).run():
             raise RuntimeError(f"static optimisation failed ({out})")
     summary = summarise(out, model_path, grf_qc, exercise, assist)
+    window = (tab.time >= t0 - 1e-9) & (tab.time <= t1 + 1e-9)
+    summary["passive_devices"] = {}
+    for dev in model_info["passive"]:
+        coord, k, q0, direction = dev["coordinate"], dev["stiffness_Nm_per_rad"], dev["slack_deg"], dev["direction"]
+        q = tab.col(dev["model_coordinate"])[window]
+        q = dev["coupling_gain"] * (q if tab.in_degrees else np.degrees(q))      # physical joint/trunk angle
+        tq = passive_torque(k, q0, direction, q)
+        summary["passive_devices"][coord] = {"stiffness_Nm_per_rad": k, "slack_deg": q0, "direction": direction,
+                                             "peak_abs_Nm": round(float(np.max(np.abs(tq))), 2),
+                                             "mean_abs_Nm": round(float(np.mean(np.abs(tq))), 2),
+                                             "engaged_fraction": round(float(np.mean(np.abs(tq) > 1e-6)), 3)}
+    if passive:
+        summary["caveats"].append("Passive elements are ideal one-sided linear springs on the joint coordinate "
+                                  "(no slip, no strap migration, no skin compression); real garments lose much of "
+                                  "their nominal stiffness to soft tissue.")
     summary.update({"label": label, "model_changes": model_info, "time_range_s": [round(t0, 3), round(t1, 3)]})
     (out / "muscles.json").write_text(json.dumps(summary, indent=2) + "\n")
     return summary
@@ -321,7 +418,8 @@ def summarise(out, model_path, grf_qc, exercise, assist=()):
             reserve_peak[r[len("reserve_"):]] = round(peak, 2)
     exo = {}
     for coord, torque, lo, hi in assist:
-        tq = act.col(f"exo_{coord}") * exo_optimal_force(torque)     # control x optimal force
+        _, gain = device_coordinate(model, coord)
+        tq = act.col(f"exo_{coord}") * exo_optimal_force(torque * gain) / gain   # physical torque
         exo[coord] = {"max_torque_Nm": torque, "direction": {(-1.0, 1.0): "both", (0.0, 1.0): "pos", (-1.0, 0.0): "neg"}[(lo, hi)],
                       "peak_abs_Nm": round(float(np.max(np.abs(tq))), 2), "mean_abs_Nm": round(float(np.mean(np.abs(tq))), 2),
                       "time_at_cap_fraction": round(float(np.mean(np.abs(tq) > 0.98 * torque)), 3)}
@@ -338,7 +436,9 @@ def summarise(out, model_path, grf_qc, exercise, assist=()):
         "caveats": [
             "Ground reaction forces are estimated (quasi-static double stance), not measured.",
             "Generic (scaled) muscle parameters: no personalised strength, no EMG calibration.",
-            "Static optimisation minimises summed squared activation; real recruitment differs (co-contraction).",
+            "Static optimisation minimises summed squared activation; real recruitment differs (co-contraction). "
+            "It also shifts load from weak muscles to stronger synergists, so a weakness can show up as extra "
+            "synergist demand rather than as higher activation of the weak muscle itself.",
         ] + (["Assistive devices are ideal (massless, instantaneous, optimally controlled): an upper bound on "
               "the benefit. Offloading a muscle in training also removes training stimulus - consider "
               "assist-as-needed rather than constant support."] if assist else []),
@@ -469,3 +569,20 @@ def view_data(model_path, run_dirs, motions, start, stop, max_fps=20.0):
     from .kinematics import SKELETON_BONES
     view["bones"] = [b for b in SKELETON_BONES if "head_top" not in b]
     return view
+
+
+def grf_bands(runs):
+    """Per-group peak-activation band over GRF-split sensitivity runs ({label: summary})."""
+    groups = set.intersection(*(set(r["group_activation"]) for r in runs.values()))
+    return {g: {"lo": min(r["group_activation"][g]["peak"] for r in runs.values()),
+                "hi": max(r["group_activation"][g]["peak"] for r in runs.values())} for g in sorted(groups)}
+
+
+MIN_ROBUST_CHANGE = 0.02     # fraction of capacity: smaller changes are not reported as effects
+
+
+def robust_to_grf(changes, min_change=MIN_ROBUST_CHANGE):
+    """A paired change (variant - measured) is robust if it keeps its sign and stays >= ``min_change``
+    under every GRF split it was recomputed with."""
+    changes = list(changes)
+    return bool(all(c >= min_change for c in changes) or all(c <= -min_change for c in changes))

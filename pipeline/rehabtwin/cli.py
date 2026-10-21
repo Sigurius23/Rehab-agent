@@ -33,7 +33,7 @@ from .sequence import MarkerSequence
 
 def process(seq_path, out_dir, exercise="squat", config=None, mass_kg=None, height_m=None,
             reference=None, reference_system=None, person_ref=None, tier=None, video=None, max_lag_s=0.0,
-            reference_model=None):
+            reference_model=None, reference_grade="marker-mocap"):
     seq_path, out_dir = Path(seq_path), Path(out_dir)
     out_dir.mkdir(parents=True, exist_ok=True)
     seq = MarkerSequence.load(seq_path)
@@ -60,7 +60,7 @@ def process(seq_path, out_dir, exercise="squat", config=None, mass_kg=None, heig
         cmp = validation.compare(metrics_mod.with_signals(est, derived), ref_tab, max_lag_s=max_lag_s)
         ref_plot = (ref_tab.time + cmp["lag_s"], {c: ref_tab.col(c) for c in ref_tab.columns})
         val = validation.report(cmp, person_ref, reference_system or str(reference), [exercise],
-                                synthetic=bool(seq.meta.get("synthetic")))
+                                synthetic=bool(seq.meta.get("synthetic")), reference_grade=reference_grade)
         records.validate(val, "validation-report")
         records.write_json(out_dir / "validation-report.json", val)
 
@@ -99,6 +99,8 @@ def run_correction(session_dir, spec_name, illustrative=False):
             summary.setdefault("derived_signals", {})[k] = {
                 "measured_range": [round(float(np.min(sig_m[k])), 2), round(float(np.max(sig_m[k])), 2)],
                 "corrected_range": [round(float(np.min(sig_c[k])), 2), round(float(np.max(sig_c[k])), 2)]}
+    if spec.get("check_rules"):
+        summary["rule_check"] = correction.rule_check(spec["check_rules"], measured.time, sig_m, corrected.time, sig_c)
     records.write_json(out / "correction.json", summary)
     report.write_correction(out / "correction.html", summary, measured.time, sig_m, sig_c,
                             skeleton_positions(model, measured), skeleton_positions(model, corrected))
@@ -106,13 +108,38 @@ def run_correction(session_dir, spec_name, illustrative=False):
     return summary, out
 
 
-def muscle_study(session_dir, rep=1, start=None, stop=None, correction=None, weaken=(), assist=(), view_3d=True):
+def strength_calibration(session_dir, tests_file):
+    """Dynamometer torques → strength-calibrated copy of the session model (SESSION/strength/)."""
+    from . import strength
+    session_dir = Path(session_dir)
+    sess = json.loads((session_dir / "session.json").read_text())
+    spec = json.loads(Path(tests_file).read_text())
+    out = session_dir / "strength"
+    rec = strength.calibrate(session_dir / sess["pipeline"]["outputs"]["model"], spec["tests"], out)
+    rec.update({k: spec[k] for k in ("device", "protocol", "tester", "date") if k in spec})
+    rec["model"] = sess["pipeline"]["outputs"]["model"]
+    records.write_json(out / "strength.json", rec)
+    report.write_strength(out / "strength.html", rec, sess["twin_tier"])
+    report.write_index(session_dir)
+    return rec, out
+
+
+def muscle_study(session_dir, rep=1, start=None, stop=None, correction=None, weaken=(), assist=(), view_3d=True,
+                 grf_sensitivity=0.0, use_strength=False, passive=()):
     """Measured motion (+ corrected motion, + weakened variants) through GRF estimate → ID → SO."""
     from . import muscles
     session_dir = Path(session_dir)
     sess = json.loads((session_dir / "session.json").read_text())
     met = json.loads((session_dir / "metrics.json").read_text())
     model = session_dir / sess["pipeline"]["outputs"]["model"]
+    muscle_model = {"source": "generic (scaled literature muscle parameters)"}
+    if use_strength:
+        model = session_dir / "strength" / "model_strength.osim"
+        if not model.exists():
+            raise SystemExit(f"{model} missing; run 'rehabtwin strength {session_dir} --tests FILE' first")
+        st = json.loads((session_dir / "strength" / "strength.json").read_text())
+        muscle_model = {"source": "strength-calibrated (dynamometry)", "tests": [t["action"] for t in st["tests"]],
+                        "calibrated_muscles": st["calibrated_muscles"], "symmetry": st["symmetry"]}
     motion = session_dir / sess["pipeline"]["outputs"]["motion"]
     if start is None or stop is None:
         if not met["reps"]:
@@ -121,27 +148,48 @@ def muscle_study(session_dir, rep=1, start=None, stop=None, correction=None, wea
         start, stop = r["start_s"], r["stop_s"]
     exercise = met["exercise"] if met["exercise"] in muscles.VALID_EXERCISES else met["exercise"]
     out = session_dir / "muscles"
-    runs = {"measured": muscles.run(model, motion, out, label="measured", exercise=exercise, start=start, stop=stop)}
-    used = {"measured": motion}     # motion each variant moved with (for the 3D muscle view)
+    # every variant: (label, output folder, motion, extra muscles.run arguments)
+    variants = [("measured", "measured", motion, {})]
     if correction:
         corrected = session_dir / "correction" / correction / "corrected.mot"
         if not corrected.exists():
             raise SystemExit(f"{corrected} missing; run 'rehabtwin correct {session_dir} --spec {correction} ...' first")
-        runs[f"corrected: {correction}"] = muscles.run(model, corrected, out, label=f"corrected_{correction}",
-                                                       exercise=exercise, start=start, stop=stop)
-        used[f"corrected: {correction}"] = corrected
+        variants.append((f"corrected: {correction}", f"corrected_{correction}", corrected, {}))
     for spec in weaken:
         group, factor = spec.split("=")
-        lab = f"{group} at {float(factor) * 100:.0f}%"
-        runs[lab] = muscles.run(model, motion, out, weaken={group: float(factor)}, label=f"weak_{group}_{factor}",
-                                exercise=exercise, start=start, stop=stop)
+        variants.append((f"{group} at {float(factor) * 100:.0f}%", f"weak_{group}_{factor}", motion,
+                         {"weaken": {group: float(factor)}}))
     for spec in assist:
         coord, torque, lo, hi = muscles.parse_assist(spec)
-        lab = f"ideal exo {coord} <= {torque:g} N·m" + ("" if (lo, hi) == (-1.0, 1.0) else f" ({spec.split(':')[1]})")
-        runs[lab] = muscles.run(model, motion, out, label=f"exo_{spec.replace('=', '_').replace(':', '_')}",
-                                exercise=exercise, start=start, stop=stop, assist=[spec])
-    study = {"twin_tier": sess["twin_tier"], "runs": runs,
+        variants.append((f"ideal exo {coord} <= {torque:g} N·m" + ("" if (lo, hi) == (-1.0, 1.0) else f" ({spec.split(':')[1]})"),
+                         f"exo_{spec.replace('=', '_').replace(':', '_')}", motion, {"assist": [spec]}))
+    for spec in passive:
+        coord, k, q0, direction = muscles.parse_passive(spec)
+        variants.append((f"passive spring {coord} {k:g} N·m/rad from {q0:g}° ({direction})",
+                         f"passive_{coord}_{k:g}_{q0:g}_{direction}", motion, {"passive": [spec]}))
+    used = {lab: mot for lab, _, mot, _ in variants}     # motion each variant moved with (3D muscle view)
+
+    def run_all(bias=0.0):
+        sfx = f"_grf{bias:+.2f}" if bias else ""
+        return {lab: muscles.run(model, mot, out, label=folder + sfx, exercise=exercise, start=start, stop=stop,
+                                 grf_share_bias=bias, **kw) for lab, folder, mot, kw in variants}
+    runs = run_all()
+    study = {"twin_tier": sess["twin_tier"], "muscle_model": muscle_model, "runs": runs,
              "comparisons": {lab: muscles.compare(runs["measured"], r) for lab, r in runs.items() if lab != "measured"}}
+    if grf_sensitivity:
+        # The left/right load split is the least certain input. Re-run every variant with the right
+        # foot's share shifted both ways: a change is robust only if it keeps its sign and size under
+        # every split (paired: variant and measured always share the same split).
+        shifted = {b: run_all(b) for b in (grf_sensitivity, -grf_sensitivity)}
+        split_runs = {"measured": runs["measured"], **{f"right share {b:+.2f}": r["measured"] for b, r in shifted.items()}}
+        study["grf_sensitivity"] = {"right_share_bias": grf_sensitivity, "bands": muscles.grf_bands(split_runs),
+                                    "min_change": muscles.MIN_ROBUST_CHANGE}
+        for lab, cmp in study["comparisons"].items():
+            alt = [muscles.compare(r["measured"], r[lab]) for r in shifted.values()]
+            for g, v in cmp.items():
+                changes = [v["change"]] + [a[g]["change"] for a in alt if g in a]
+                v["change_range_over_grf_split"] = [min(changes), max(changes)]
+                v["robust_to_grf_split"] = muscles.robust_to_grf(changes)
     records.write_json(out / "study.json", study)
     view = muscles.view_data(model, {lab: out / r["label"] for lab, r in runs.items()},
                              {lab: used.get(lab, motion) for lab in runs}, start, stop) if view_3d else None
@@ -235,6 +283,8 @@ def main(argv=None):
     p.add_argument("--height-m", type=float)
     p.add_argument("--reference", help="reference .mot for validation (e.g. marker-mocap IK)")
     p.add_argument("--reference-system", help="what the reference is, for the report")
+    p.add_argument("--reference-grade", default="marker-mocap", choices=["marker-mocap", "markerless"],
+                   help="markerless = another video system (agreement only; approves nothing)")
     p.add_argument("--max-lag-s", type=float, default=0.0, help="search a time offset for unsynchronised references")
     p.add_argument("--reference-model", help="OpenSim model of the reference (default: model_scaled.osim next to it); "
                                              "enables validation of trunk/pelvis inclination and knee FPPA")
@@ -250,6 +300,7 @@ def main(argv=None):
     v.add_argument("--movement", action="append", default=[])
     v.add_argument("--max-lag-s", type=float, default=0.0)
     v.add_argument("--synthetic", action="store_true")
+    v.add_argument("--reference-grade", default="marker-mocap", choices=["marker-mocap", "markerless"])
     s = sub.add_parser("synth", help="write a synthetic sequence + truth")
     s.add_argument("out")
     s.add_argument("--seed", type=int, default=0)
@@ -264,7 +315,12 @@ def main(argv=None):
     m.add_argument("--gravity-source", default="user supplied")
     mv = sub.add_parser("mp-multiview", help="MediaPipe raw dumps + calibration -> triangulated sequence")
     mv.add_argument("raws", nargs="+", help="one raw dump per camera, in calibration camera order")
-    mv.add_argument("--qca", required=True, help="Qualisys .qca.txt calibration")
+    cal = mv.add_mutually_exclusive_group(required=True)
+    cal.add_argument("--qca", help="Qualisys .qca.txt calibration (lab z-up)")
+    cal.add_argument("--opencap-calib", nargs="+", metavar="PICKLE",
+                     help="OpenCap cameraIntrinsicsExtrinsics.pickle per camera, same order as the dumps (board y-down)")
+    mv.add_argument("--sync", action="store_true",
+                    help="estimate per-camera frame offsets from hip motion (unsynchronised phones)")
     mv.add_argument("--out", required=True)
     mv.add_argument("--person-ref", default="UNSPECIFIED")
     co = sub.add_parser("correct", help="correction view for a processed session")
@@ -281,8 +337,23 @@ def main(argv=None):
     mu.add_argument("--weaken", action="append", default=[], metavar="GROUP=FACTOR",
                     help="what-if weakness, e.g. gluteus_medius_r=0.5 (repeatable)")
     mu.add_argument("--assist", action="append", default=[], metavar="COORD=NM[:pos|neg]",
-                    help="ideal assistive device, e.g. knee_angle_r=40:neg (extension only); repeatable")
+                    help="ideal assistive device, e.g. knee_angle_r=40:neg (extension only); trunk: "
+                         "lumbar_total_extension=30:pos (physical N·m between pelvis and thorax); repeatable")
     mu.add_argument("--no-3d", action="store_true", help="skip the 3D muscle view (smaller report)")
+    mu.add_argument("--strength", action="store_true", help="use the strength-calibrated model (rehabtwin strength)")
+    mu.add_argument("--passive", action="append", default=[], metavar="COORD=K[@Q0][:pos|neg]",
+                    help="passive one-sided spring/elastic, e.g. knee_angle_r=40@10:pos (N·m/rad, slack until 10° "
+                         "flexion); back elastic resisting trunk flexion: lumbar_total_extension=60@0:neg; repeatable")
+    mu.add_argument("--grf-sensitivity", type=float, default=0.0, metavar="SHARE",
+                    help="also re-run with the right foot's load share shifted by +/-SHARE (e.g. 0.15) and flag "
+                         "which changes are larger than the band that GRF split alone causes")
+    stp = sub.add_parser("strength", help="calibrate muscle capacities from dynamometer joint torques")
+    stp.add_argument("session")
+    stp.add_argument("--tests", required=True, help="JSON with measured isometric torques (see configs/strength/)")
+    pg = sub.add_parser("progress", help="compare sessions: which changes beat rep scatter and measurement error")
+    pg.add_argument("sessions", nargs="+")
+    pg.add_argument("--out", required=True, help="folder for progress.json / progress.html")
+    pg.add_argument("--signals", nargs="*", help="limit to these signals (default: all shared)")
     cu = sub.add_parser("cues", help="offline replay of haptic posture-cue rules over a session")
     cu.add_argument("session")
     cu.add_argument("--rules", required=True, help="name in pipeline/configs/feedback or a path")
@@ -313,12 +384,14 @@ def main(argv=None):
 
     if a.cmd == "process":
         res = process(a.sequence, a.out, a.exercise, a.config, a.mass_kg, a.height_m, a.reference,
-                      a.reference_system, a.person_ref, a.tier, a.video, a.max_lag_s, a.reference_model)
+                      a.reference_system, a.person_ref, a.tier, a.video, a.max_lag_s, a.reference_model,
+                      a.reference_grade)
         print(json.dumps({"reps": res["metrics"]["n_reps"], "tier": res["metrics"]["tier"],
                           "ik_marker_rms_m": res["qc"]["ik"]["marker_rms_m"], "report": str(Path(a.out) / "report.html")}, indent=2))
     elif a.cmd == "validate":
         cmp = validation.compare(read_table(a.estimate), read_table(a.reference), max_lag_s=a.max_lag_s)
-        rep = validation.report(cmp, a.person_ref, a.reference_system, a.movement, synthetic=a.synthetic)
+        rep = validation.report(cmp, a.person_ref, a.reference_system, a.movement, synthetic=a.synthetic,
+                                reference_grade=a.reference_grade)
         records.validate(rep, "validation-report")
         records.write_json(a.out, rep)
         print(json.dumps({"kinematics_rmse_deg": rep["kinematics_rmse_deg"], "approved_for": rep["approved_for"]}, indent=1))
@@ -333,11 +406,21 @@ def main(argv=None):
                 meta.update(gravity_up_cv=[float(v) for v in a.gravity_up_cv.split(",")], gravity_source=a.gravity_source)
             seq = mf.monocular_sequence(dict(np.load(a.raw)), focal_px=a.focal_px, meta=meta)
         else:
-            cams = mf.read_qca(a.qca)
+            if a.qca:
+                cams, up, source = mf.read_qca(a.qca), "z", "Qualisys calibration file"
+            else:
+                cams, up, source = mf.read_opencap_calibration(a.opencap_calib), "-y", "OpenCap calibration (checkerboard)"
             if len(cams) != len(a.raws):
-                raise SystemExit(f"{len(a.raws)} dumps but {len(cams)} cameras in {a.qca}")
-            seq, err = mf.multiview_sequence([dict(np.load(r)) for r in a.raws], cams,
-                                             meta={"person_ref": a.person_ref, "raws": [str(r) for r in a.raws]})
+                raise SystemExit(f"{len(a.raws)} dumps but {len(cams)} cameras in the calibration")
+            raws = [dict(np.load(r)) for r in a.raws]
+            meta = {"person_ref": a.person_ref, "raws": [str(r) for r in a.raws]}
+            if a.sync:
+                lags, peaks = mf.sync_lags(raws)
+                raws, start = mf.apply_lags(raws, lags)
+                meta.update(sync={"method": "hip vertical velocity cross-correlation", "lags_frames": lags,
+                                  "peak_correlation": peaks, "reference_start_frame": start})
+                print(json.dumps({"sync_lags_frames": lags, "peak_correlation": peaks}))
+            seq, err = mf.multiview_sequence(raws, cams, up_axis=up, meta=meta, intrinsics_source=source)
         seq.save(a.out)
         print(json.dumps({"out": a.out, "frames": seq.n_frames, "valid": int(seq.valid.sum()),
                           **{k: seq.meta[k] for k in ("intrinsics_source", "reprojection_px_median") if k in seq.meta}}))
@@ -351,11 +434,33 @@ def main(argv=None):
         print(json.dumps({"status": summary["status"], "admissible": summary["admissible"],
                           "derived_signals": summary.get("derived_signals"), "report": str(out / "correction.html")}, indent=1))
     elif a.cmd == "muscles":
-        study, out = muscle_study(a.session, a.rep, a.start, a.stop, a.correction, a.weaken, a.assist, not a.no_3d)
+        study, out = muscle_study(a.session, a.rep, a.start, a.stop, a.correction, a.weaken, a.assist, not a.no_3d,
+                                  a.grf_sensitivity, a.strength, a.passive)
         for lab, cmp in study["comparisons"].items():
             top = sorted(cmp.items(), key=lambda kv: -abs(kv[1]["change"]))[:5]
             print(lab + ": " + ", ".join(f"{g} {v['base']:.2f}->{v['other']:.2f}" for g, v in top))
         print(f"report: {out / 'muscles.html'}")
+    elif a.cmd == "strength":
+        rec, out = strength_calibration(a.session, a.tests)
+        for t in rec["tests"]:
+            print(f"{t['action']:24s} measured {t['measured_Nm']:7.1f} N·m  generic model {t['generic_model_Nm']:7.1f}  "
+                  f"factor {t['factor']:.2f}{'  AT BOUND' if t['at_bound'] else ''}")
+        for act, v in rec["symmetry"].items():
+            print(f"LSI {act}: {v['lsi_pct']}% (weaker: {v['weaker_side']}){'  < 90 %' if v['flag'] else ''}")
+        print(f"report: {out / 'strength.html'}")
+    elif a.cmd == "progress":
+        from . import progress
+        prog = progress.compare(a.sessions, a.signals)
+        out = Path(a.out)
+        out.mkdir(parents=True, exist_ok=True)
+        records.write_json(out / "progress.json", prog)
+        report.write_progress(out / "progress.html", prog)
+        for w in prog["warnings"]:
+            print("WARNING:", w)
+        for sig, j in prog["first_to_last"].items():
+            if j:
+                print(f"{sig:24s} {j['from']:7.1f} -> {j['to']:7.1f}  ({j['change']:+.1f})  {j['verdict']}")
+        print(f"report: {out / 'progress.html'}")
     elif a.cmd == "cues":
         result, out = cue_replay(a.session, a.rules, a.motion)
         for rid, pr in result["summary"]["per_rule"].items():

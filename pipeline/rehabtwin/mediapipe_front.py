@@ -12,6 +12,8 @@ triangulated (weighted DLT) — the classic markerless reference.
 """
 from __future__ import annotations
 
+from pathlib import Path
+
 import numpy as np
 
 from .sequence import MarkerSequence
@@ -94,17 +96,18 @@ class Camera:
         return uv * [self.K[0, 0], self.K[1, 1]] + [self.K[0, 2], self.K[1, 2]]
 
     def undistort(self, uv, iters=10):
-        """Remove Brown radial/tangential distortion (k1, k2, p1, p2) from pixel points."""
+        """Remove Brown radial/tangential distortion (OpenCV order k1, k2, p1, p2[, k3]) from pixel points."""
         if not np.any(self.dist):
             return uv
         k1, k2, p1, p2 = self.dist[:4]
+        k3 = self.dist[4] if len(self.dist) > 4 else 0.0
         fx, fy, cx, cy = self.K[0, 0], self.K[1, 1], self.K[0, 2], self.K[1, 2]
         xd = (uv[..., 0] - cx) / fx
         yd = (uv[..., 1] - cy) / fy
         x, y = xd.copy(), yd.copy()
         for _ in range(iters):
             r2 = x * x + y * y
-            rad = 1 + k1 * r2 + k2 * r2 * r2
+            rad = 1 + k1 * r2 + k2 * r2 * r2 + k3 * r2 ** 3
             dx = 2 * p1 * x * y + p2 * (r2 + 2 * x * x)
             dy = p1 * (r2 + 2 * y * y) + 2 * p2 * x * y
             x, y = (xd - dx) / rad, (yd - dy) / rad
@@ -138,6 +141,93 @@ def read_qca(path):
     return sorted(cams, key=lambda c: c.name)
 
 
+def _numpy_only_unpickler(fh):
+    """Unpickler that can rebuild numpy arrays and nothing else (calibration files are data, not code)."""
+    import importlib
+    import pickle
+    allowed = {("numpy.core.multiarray", "_reconstruct"), ("numpy._core.multiarray", "_reconstruct"),
+               ("numpy", "ndarray"), ("numpy", "dtype")}
+
+    class Safe(pickle.Unpickler):
+        def find_class(self, module, name):
+            if (module, name) not in allowed:
+                raise pickle.UnpicklingError(f"refusing to load {module}.{name} from a calibration pickle")
+            module = "numpy._core.multiarray" if module == "numpy.core.multiarray" else module
+            try:
+                return getattr(importlib.import_module(module), name)
+            except ImportError:      # numpy < 2
+                return getattr(importlib.import_module(module.replace("._core", ".core")), name)
+    return Safe(fh)
+
+
+def read_opencap_calibration(paths):
+    """OpenCap ``cameraIntrinsicsExtrinsics.pickle`` files (one per camera) -> [Camera] in metres.
+
+    OpenCap's world frame is the checkerboard's (y points down along the board); extrinsics map
+    world -> camera (x_c = R x_w + t, t in mm), distortion is OpenCV (k1, k2, p1, p2, k3).
+    """
+    cams = []
+    for path in paths:
+        with open(path, "rb") as fh:
+            d = _numpy_only_unpickler(fh).load()
+        size = tuple(int(v) for v in np.asarray(d["imageSize"]).ravel())   # (height, width)
+        cams.append(Camera(Path(path).parent.name, d["intrinsicMat"], np.asarray(d["distortion"]).ravel(),
+                           d["rotation"], np.asarray(d["translation"], float).ravel() / 1000.0, (size[1], size[0])))
+    return cams
+
+
+def sync_lags(raws, ref=0, max_lag_s=2.0, landmarks=(23, 24)):
+    """Integer frame offsets that align each camera's dump with ``raws[ref]``.
+
+    Unsynchronised phones start recording at slightly different times. The vertical image motion
+    of the hips (mean of ``landmarks``) is the same event seen from every camera; the offset is the
+    peak of the normalised cross-correlation of its frame-to-frame velocity. Returns (lags, peak
+    correlations); ``raws[c]`` frame ``k + lags[c]`` matches reference frame ``k``.
+    """
+    def velocity(raw):
+        y = np.asarray(raw["image_xy"], float)[:, list(landmarks), 1].mean(axis=1)
+        ok = np.isfinite(y)
+        y = np.interp(np.arange(len(y)), np.flatnonzero(ok), y[ok]) if ok.any() else np.zeros_like(y)
+        v = np.diff(y)
+        return (v - v.mean()) / (v.std() or 1.0)
+    fps = float(raws[ref]["fps"])
+    vr = velocity(raws[ref])
+    lags, peaks = [], []
+    for c, raw in enumerate(raws):
+        if c == ref:
+            lags.append(0)
+            peaks.append(1.0)
+            continue
+        vc = velocity(raw)
+        best, best_lag = -np.inf, 0
+        for lag in range(-int(max_lag_s * fps), int(max_lag_s * fps) + 1):
+            a, b = (vr[:len(vr)], vc[lag:]) if lag >= 0 else (vr[-lag:], vc)
+            n = min(len(a), len(b))
+            if n < fps:          # need at least a second of overlap
+                continue
+            r = float(np.dot(a[:n], b[:n]) / n)
+            if r > best:
+                best, best_lag = r, lag
+        lags.append(best_lag)
+        peaks.append(round(best, 3))
+    return lags, peaks
+
+
+def apply_lags(raws, lags):
+    """Trim each dump so frame k is simultaneous across cameras (common window only)."""
+    start = max(0, -min(lags))
+    n = min(len(r["image_xy"]) - lag - start for r, lag in zip(raws, lags))
+    out = []
+    for r, lag in zip(raws, lags):
+        a = start + lag
+        d = dict(r)
+        for k in ("image_xy", "image_z", "visibility", "presence", "world", "detected"):
+            if k in d:
+                d[k] = np.asarray(d[k])[a:a + n]
+        out.append(d)
+    return out, start
+
+
 def triangulate(cams, uv, weights, min_weight=0.5, min_views=2):
     """Weighted DLT. uv (C,T,N,2) pixels, weights (C,T,N). Returns (X (T,N,3), reproj_px (T,N), n_views (T,N))."""
     C, T, N, _ = uv.shape
@@ -165,7 +255,8 @@ def triangulate(cams, uv, weights, min_weight=0.5, min_views=2):
     return X, err, nv
 
 
-def multiview_sequence(raws, cams, up_axis="z", min_visibility=0.5, max_reproj_px=25.0, meta=None):
+def multiview_sequence(raws, cams, up_axis="z", min_visibility=0.5, max_reproj_px=25.0, meta=None,
+                       intrinsics_source="Qualisys calibration file"):
     """MarkerSequence (frame='yup_world') from synchronised raw dumps + calibration."""
     names = list(POSE2SIM_MEDIAPIPE)
     idx = [POSE2SIM_MEDIAPIPE[n] for n in names]
@@ -176,10 +267,12 @@ def multiview_sequence(raws, cams, up_axis="z", min_visibility=0.5, max_reproj_p
     X[err > max_reproj_px] = np.nan
     if up_axis == "z":  # lab z-up -> y-up (x, y, z) -> (x, z, -y)
         X = X @ np.array([[1, 0, 0], [0, 0, 1], [0, -1, 0]]).T
+    elif up_axis == "-y":  # y-down board frame (OpenCap) -> y-up: half turn about x
+        X = X @ np.diag([1.0, -1.0, -1.0]).T
     valid = np.isfinite(X).all(axis=2).sum(axis=1) >= 12
     m = {"source": f"MediaPipe Pose, {len(cams)}-camera DLT triangulation", "tier": "C",
          "default_config": "mediapipe33_pose2sim", "reprojection_px_median": float(np.nanmedian(err)),
-         "reprojection_px_p95": float(np.nanpercentile(err, 95)), "intrinsics_source": "Qualisys calibration file",
+         "reprojection_px_p95": float(np.nanpercentile(err, 95)), "intrinsics_source": intrinsics_source,
          "cameras": [c.name for c in cams]}
     m.update(meta or {})
     return MarkerSequence(fps=float(raws[0]["fps"]), frame="yup_world", marker_names=names, markers=X,

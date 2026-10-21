@@ -32,9 +32,18 @@ Clone: `python scripts/clone.py --only naubiomech/OpenExo,neurobionics/opensourc
 
 **Sizing a device before building it:** `rehabtwin muscles SESSION --assist knee_angle_r=40:neg`
 adds an ideal assistive actuator (capped torque, chosen direction) to the subject's
-static-optimisation problem. It shows how much torque, when, and which muscles it offloads,
-for any joint including `L5_S1_Flex_Ext` (lumbar support). It is an upper bound for an
-ideal device and should inform an assist-as-needed controller, not constant support.
+static-optimisation problem. It shows how much torque, when, and which muscles it offloads.
+It is an upper bound for an ideal device and should inform an assist-as-needed controller,
+not constant support. `--passive knee_angle_r=60@20:pos` is the realistic counterpart: a
+one-sided elastic (band, spring) with stiffness and slack angle, i.e. what a passive suit
+panel can do without motors.
+
+For **trunk/posture support** use the physical coordinates `lumbar_total_extension`
+(`_bending`, `_rotation`): torque and stiffness between pelvis and thorax, e.g.
+`--assist lumbar_total_extension=30:pos` or a back elastic resisting flexion
+`--passive lumbar_total_extension=60@0:neg`. Do not put devices on `L5_S1_Flex_Ext` directly:
+the model's six lumbar levels are coupled to it, so the thorax turns ~7× the L5/S1 angle and a
+"40 N·m" generalized force there is only ~5.6 N·m across the trunk.
 
 ⚠️ No turnkey open repo provides powered *spinal* posture support. Track 2 is joint
 assistance adapted from OpenExo. Before anything load-bearing touches a person:

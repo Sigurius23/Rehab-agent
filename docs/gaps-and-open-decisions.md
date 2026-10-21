@@ -41,11 +41,27 @@
 - ✅ Haptic loop end to end in software: SlimeVR VMC → posture → gated CueEngine (faded feedback) → LSL → SenseShift BLE payloads
 - ⚠️ Found: the Pose2Sim/Rajagopal knee has no independent tibial rotation, so hip-rotation corrections with planted feet move the foot (~2 cm) — matters for any knee-valgus correction claim
 
+## Filled (2026-10-21 third pass)
+- ✅ 3D muscle view in `muscles.html`: muscle paths on the moving model, coloured by activation or change vs measured
+- ✅ Strength calibration (`rehabtwin strength`): dynamometer torques → per-test muscle capacity factors, limb
+  symmetry index; `muscles --strength` simulates with them. First evidence path for a "weak muscle group" statement
+  that `accuracy.md` allows (measured strength, not body shape)
+- ✅ GRF uncertainty made visible (`muscles --grf-sensitivity 0.15`): every variant is re-run under shifted left/right
+  load splits and a change counts as robust only if it keeps its sign and size under all of them. On the synthetic
+  squat, ±0.15 moves right-quadriceps peak demand between 37 % and 67 % — absolute muscle numbers are far less
+  certain than paired what-if differences
+- ✅ Progress over sessions (`rehabtwin progress`): a change is "real" only beyond rep scatter and the validated MDC95
+- ✅ Passive elastic support what-if (`muscles --passive knee_angle_r=60@20:pos`) next to the ideal exo bound
+- ⚠️ Evaluated and rejected for G-02: total external wrench from full-body inverse dynamics distributed over the
+  model's 12 foot-contact spheres (min-norm, f_y ≥ 0). Physically exact in principle, but the second derivatives of
+  video-grade kinematics drive the right-foot share between 5 % and 70 % within one second on the synthetic squat;
+  the quasi-static centre-of-mass split stays the default.
+
 ## Still open after the second pass
 | ID | Gap | Why it matters | Next step |
 |---|---|---|---|
 | G-01 | No measured accuracy for HSMR/SKEL yet | Every Tier-C/B claim in `pipeline/` | OpenCap LabValidation run (needs SKEL licence + GPU) |
-| G-02 | Ground forces are estimated, not measured | Muscle/exo numbers | Force plates in the validation session, or Moco tracking with foot contact |
+| G-02 | Ground forces are estimated, not measured | Muscle/exo numbers | Force plates or pressure insoles in the validation session; until then report `--grf-sensitivity` bands. Contact-model tracking (Moco) inherits the same kinematic noise (see third pass) |
 | G-03 | No Tier-A subject | Corrections and cues stay illustrations | D-02 imaging pathway; personalised `.osim` drops into `pipeline/configs` |
 | G-04 | Physical BLE write to SenseShift untested | Suit Track 1 | One ESP32 + vibration motors bench test with `suit-bridge --ble` |
 | G-05 | SlimeVR posture signals unvalidated | Live cues | Same validation protocol as video (per joint × plane), IMU vs mocap |

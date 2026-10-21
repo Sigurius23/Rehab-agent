@@ -126,11 +126,23 @@ def gate(kin_rmse, targets=TARGETS_DEG, min_rom_deg=5.0, per_coord=None):
     return gates, allowed
 
 
-def report(cmp, person_ref, reference_system, movements, synthetic=False, extra=None):
-    """A validation-report (schemas/validation-report.schema.json)."""
+REFERENCE_GRADES = ("marker-mocap", "markerless", "synthetic")
+
+
+def report(cmp, person_ref, reference_system, movements, synthetic=False, extra=None, reference_grade="marker-mocap"):
+    """A validation-report (schemas/validation-report.schema.json).
+
+    ``reference_grade``: what the reference is. Only marker-based motion capture can approve a use;
+    agreement with another markerless system ("markerless") bounds the error but licenses nothing.
+    """
+    if reference_grade not in REFERENCE_GRADES:
+        raise ValueError(f"reference_grade must be one of {REFERENCE_GRADES}")
+    grade = "synthetic" if synthetic else reference_grade
     kin = by_joint_plane(cmp["coordinates"])
     gates, allowed = gate(kin, per_coord=cmp["coordinates"])
-    if synthetic or not allowed:
+    if grade == "markerless":
+        allowed = []
+    if grade != "marker-mocap" or not allowed:
         # A synthetic round trip licenses nothing clinically, and a validation
         # where no joint/plane met its target licenses nothing beyond what the
         # tier already allows (Tier C: adherence and rep counting, no angles).
@@ -149,12 +161,16 @@ def report(cmp, person_ref, reference_system, movements, synthetic=False, extra=
         "approved_for": approved,
         "feedback_allowed_joint_planes": allowed,
         "synthetic": bool(synthetic),
+        "reference_grade": grade,
         "time_lag_applied_s": cmp["lag_s"],
         "per_coordinate": {c: {k: (round(v, 3) if isinstance(v, float) else v) for k, v in s.items()}
                            for c, s in cmp["coordinates"].items()},
         "targets_deg": TARGETS_DEG,
-        "notes": ("Synthetic round trip: tests the software, not the measurement. No clinical use."
-                  if synthetic else "Targets are project engineering targets (docs/accuracy.md); clinician sign-off pending."),
+        "notes": {"synthetic": "Synthetic round trip: tests the software, not the measurement. No clinical use.",
+                  "markerless": "Agreement with another markerless system, which has its own error against marker "
+                                "mocap: the RMSE here is not this pipeline's accuracy and approves nothing.",
+                  "marker-mocap": "Targets are project engineering targets (docs/accuracy.md); clinician sign-off "
+                                  "pending."}[grade],
     }
     if extra:
         rep.update(extra)

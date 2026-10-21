@@ -8,6 +8,10 @@
 - Live loop: `lsl-live`/`lsl-simulate`/`lsl-listen` (LSL) and `vmc-posture` (SlimeVR VMC → posture signals)
 - `suit-bridge`: cue markers → SenseShift/bHaptics BLE payloads (layouts parsed from the GPL firmware at run time)
 - `muscles --assist`: ideal assistive device (exo sizing upper bound), e.g. `knee_angle_r=40:neg`
+- `rehabtwin progress`: session-to-session change per signal against rep scatter and validated MDC95
+- `muscles --passive`: one-sided elastic support what-if (e.g. knee band), alongside the ideal exo
+- `rehabtwin strength`: dynamometer torques → strength-calibrated model (per-test capacity factors, LSI);
+  `muscles --strength`; `muscles --grf-sensitivity` robustness bands for the GRF split
 - 3D muscle view in `muscles.html`: activation-coloured muscle paths per variant, change-vs-measured mode,
   capacity-scaled widths; 3D replays now view from above (camera pitch sign fixed)
 - `examples/synthetic_demo.sh`: every command on the synthetic squat; `docs/architecture.md` stage → module map

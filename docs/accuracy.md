@@ -100,7 +100,10 @@ Repos: [TotalSegmentator](https://github.com/wasserth/TotalSegmentator) ·
 ## Red lines
 
 - No muscle "underdevelopment" statement from surface shape (SMPL betas) alone —
-  it requires Tier-A muscle geometry and/or strength/EMG evidence.
+  it requires Tier-A muscle geometry and/or strength/EMG evidence. Strength
+  evidence can be added today with `rehabtwin strength` (dynamometer torques →
+  calibrated capacities + limb symmetry index); it supports "weaker in this test"
+  and a capacity-scaled simulation, not a statement about muscle size.
 - No "corrected posture" target generated from a generic skeleton; correction
   targets are computed on the patient's own joint geometry and range limits.
 - No exoskeleton assistance profile derived from an unvalidated tier.

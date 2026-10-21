@@ -27,6 +27,7 @@
       "additionalProperties": {"enum": ["pass", "fail", "not-tested"]}
     },
     "synthetic": {"type": "boolean", "description": "True for software round-trip tests against synthetic truth. A synthetic report never approves any use."},
+    "reference_grade": {"enum": ["marker-mocap", "markerless", "synthetic"], "description": "What the reference is. Only marker-mocap references can approve a use; markerless references give agreement, not accuracy."},
     "feedback_allowed_joint_planes": {"type": "array", "items": {"type": "string"}, "description": "joint.plane pairs that passed their gate; only these may be used by feedback rules"},
     "approved_for": {"type": "array", "items": {"enum": ["screening", "posture-feedback", "muscle-claims", "exo-assistance"]},
       "description": "What this validation licenses the system to do. exo-assistance requires all gates pass."}

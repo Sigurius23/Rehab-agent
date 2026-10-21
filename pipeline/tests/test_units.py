@@ -473,3 +473,111 @@ def test_parse_assist():
     assert parse_assist("knee_angle_r=40") == ("knee_angle_r", 40.0, -1.0, 1.0)
     assert parse_assist("hip_flexion_l=25.5:neg") == ("hip_flexion_l", 25.5, -1.0, 0.0)
     assert parse_assist("L5_S1_Flex_Ext=30:pos")[2:] == (0.0, 1.0)
+
+
+def test_grf_sensitivity_bands_and_robustness():
+    from rehabtwin.muscles import grf_bands, robust_to_grf
+    runs = {k: {"group_activation": {"quadriceps_r": {"peak": p}, "gluteus_medius_r": {"peak": q}}}
+            for k, p, q in (("measured", 0.50, 0.12), ("+", 0.58, 0.13), ("-", 0.44, 0.11))}
+    b = grf_bands(runs)
+    assert b["quadriceps_r"] == {"lo": 0.44, "hi": 0.58}
+    assert robust_to_grf([-0.20, -0.15, -0.25])                 # same sign, large under every split
+    assert not robust_to_grf([0.05, -0.01, 0.08])              # flips sign under one split
+    assert not robust_to_grf([0.05, 0.01, 0.08])               # too small under one split
+
+
+def test_strength_symmetry_index():
+    from rehabtwin.strength import symmetry
+    s = symmetry([{"action": "hip_abduction_r", "measured_Nm": 60.0}, {"action": "hip_abduction_l", "measured_Nm": 100.0},
+                  {"action": "knee_extension_r", "measured_Nm": 190.0}, {"action": "knee_extension_l", "measured_Nm": 200.0},
+                  {"action": "trunk_extension", "measured_Nm": 200.0}])
+    assert s["hip_abduction"] == {"right_Nm": 60.0, "left_Nm": 100.0, "lsi_pct": 60.0, "weaker_side": "r", "flag": True}
+    assert s["knee_extension"]["lsi_pct"] == 95.0 and not s["knee_extension"]["flag"]
+    assert "trunk_extension" not in s
+
+
+def test_passive_spring_spec_and_torque():
+    from rehabtwin.muscles import parse_passive, passive_torque
+    assert parse_passive("knee_angle_r=40@10:pos") == ("knee_angle_r", 40.0, 10.0, "pos")
+    assert parse_passive("hip_flexion_l=25") == ("hip_flexion_l", 25.0, 0.0, "pos")
+    with pytest.raises(ValueError):
+        parse_passive("knee_angle_r=40:up")
+    tq = passive_torque(40.0, 10.0, "pos", [0.0, 10.0, 10.0 + np.degrees(1.0)])
+    assert tq[0] == 0.0 and tq[1] == 0.0 and tq[2] == pytest.approx(-40.0)   # resists flexion past the slack angle
+    assert passive_torque(30.0, 0.0, "neg", [-np.degrees(0.5), 5.0]).tolist() == pytest.approx([15.0, 0.0])
+
+
+def _session(sid, when, mean, sd, n=3, rmse=None, synthetic=False):
+    val = None if rmse is None else {"synthetic": synthetic, "kinematics_rmse_deg": {"knee_r": {"frontal": rmse}}}
+    return {"session_id": sid, "started_at": when, "person_ref": "P1", "tier": "B", "front_end": "x",
+            "exercise": "squat", "n_reps": n, "dir": sid, "validation": val,
+            "summary": {"knee_fppa_r": {"joint": "knee_r", "plane": "frontal", "unit": "deg",
+                                        "rep_peak_mean": mean, "rep_peak_sd": sd}}}
+
+
+def test_progress_verdicts():
+    from rehabtwin.progress import judge
+    # 10° less valgus, tight reps, validated 2° error: MDC95 = 5.5° -> real
+    j = judge(_session("a", "1", 22.0, 1.0, rmse=2.0), _session("b", "2", 12.0, 1.0, rmse=2.0), "knee_fppa_r")
+    assert j["change"] == -10.0 and j["mdc95"] == pytest.approx(5.54, abs=0.01) and j["verdict"].startswith("real")
+    # same change but 4° validated error: MDC95 = 11.1° -> within measurement error
+    j = judge(_session("a", "1", 22.0, 1.0, rmse=4.0), _session("b", "2", 12.0, 1.0, rmse=2.0), "knee_fppa_r")
+    assert j["verdict"] == "within measurement error"
+    # noisy reps swamp a 3° change
+    j = judge(_session("a", "1", 15.0, 4.0), _session("b", "2", 12.0, 4.0), "knee_fppa_r")
+    assert j["verdict"] == "within rep-to-rep scatter" and "mdc95" not in j
+    # synthetic validation never sizes a change
+    j = judge(_session("a", "1", 22.0, 0.5, rmse=1.0, synthetic=True), _session("b", "2", 12.0, 0.5, rmse=1.0, synthetic=True),
+              "knee_fppa_r")
+    assert j["verdict"] == "consistent across reps; size not validated"
+
+
+def test_markerless_reference_approves_nothing():
+    per = {"knee_angle_r": {"joint": "knee_r", "plane": "sagittal", "rmse_deg": 1.0, "reference_rom_deg": 90.0}}
+    cmp = {"coordinates": per, "lag_s": 0.0}
+    mocap = validation.report(cmp, "P1", "Vicon", ["squat"])
+    assert mocap["approved_for"] and mocap["feedback_allowed_joint_planes"] == ["knee_r.sagittal"]
+    other = validation.report(cmp, "P1", "OpenCap", ["squat"], reference_grade="markerless")
+    assert other["approved_for"] == [] and other["feedback_allowed_joint_planes"] == []
+    assert other["reference_grade"] == "markerless" and other["gates"] == mocap["gates"]
+    with pytest.raises(ValueError):
+        validation.report(cmp, "P1", "x", ["squat"], reference_grade="imu")
+
+
+def test_camera_sync_recovers_frame_offsets():
+    from rehabtwin.mediapipe_front import apply_lags, sync_lags
+    rng = np.random.default_rng(0)
+    fps, n = 60.0, 900
+    t = np.arange(n) / fps
+    hip_y = 400 + 120 * np.sin(2 * np.pi * 0.35 * t) * (1 + 0.3 * np.sin(2 * np.pi * 0.05 * t))
+
+    def dump(shift, length):
+        xy = np.zeros((length, 33, 2))
+        y = np.interp(np.arange(length) + shift, np.arange(n), hip_y) + rng.normal(0, 1.0, length)
+        xy[:, 23, 1] = xy[:, 24, 1] = y
+        return {"image_xy": xy, "visibility": np.ones((length, 33)), "fps": np.array(fps)}
+    raws = [dump(0, 700), dump(25, 650), dump(-13, 700)]     # camera 1 started 25 frames later, camera 2 13 earlier
+    lags, peaks = sync_lags(raws)
+    assert lags == [0, -25, 13] and min(peaks) > 0.8
+    aligned, start = apply_lags(raws, lags)
+    y = [a["image_xy"][:, 23, 1] for a in aligned]
+    assert len({len(v) for v in y}) == 1 and np.abs(y[0] - y[1]).max() < 6 and np.abs(y[0] - y[2]).max() < 6
+
+
+def test_opencap_calibration_reader_is_numpy_only(tmp_path):
+    import pickle
+    from rehabtwin.mediapipe_front import read_opencap_calibration
+    d = {"intrinsicMat": np.array([[900.0, 0, 360], [0, 900, 640], [0, 0, 1]]), "distortion": np.array([[0.1, -0.2, 0, 0, 0.2]]),
+         "imageSize": np.array([[1280.0], [720.0]]), "rotation": np.eye(3), "translation": np.array([[100.0], [0.0], [3000.0]])}
+    (tmp_path / "Cam0").mkdir()
+    (tmp_path / "Cam0" / "cal.pickle").write_bytes(pickle.dumps(d))
+    cam = read_opencap_calibration([tmp_path / "Cam0" / "cal.pickle"])[0]
+    assert cam.name == "Cam0" and cam.size == (720, 1280) and np.allclose(cam.t, [0.1, 0.0, 3.0]) and len(cam.dist) == 5
+    assert np.allclose(cam.project(np.array([0.0, 0.0, 0.0])), [360 + 900 * 0.1 / 3.0, 640])
+
+    class Evil:
+        def __reduce__(self):
+            return (print, ("pwned",))
+    (tmp_path / "Cam0" / "evil.pickle").write_bytes(pickle.dumps({"intrinsicMat": Evil()}))
+    with pytest.raises(pickle.UnpicklingError):
+        read_opencap_calibration([tmp_path / "Cam0" / "evil.pickle"])

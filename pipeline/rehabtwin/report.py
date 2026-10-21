@@ -406,9 +406,15 @@ def write_index(session_dir):
         j = json.loads(c.read_text())
         items.append((f"Correction view: {j['spec']}", str(c.parent.relative_to(d) / "correction.html"),
                       f"{j['status']} · admissible: {'yes' if j['admissible'] else 'no'}"))
+    if (d / "strength" / "strength.json").exists():
+        st = json.loads((d / "strength" / "strength.json").read_text())
+        flags = [a for a, v in st["symmetry"].items() if v["flag"]]
+        items.append(("Strength calibration", "strength/strength.html",
+                      f"{len(st['tests'])} tests" + (f" · LSI < 90 %: {', '.join(flags)}" if flags else "")))
     if (d / "muscles" / "study.json").exists():
         st = json.loads((d / "muscles" / "study.json").read_text())
-        items.append(("Muscle effects", "muscles/muscles.html", "variants: " + ", ".join(st["runs"])))
+        items.append(("Muscle effects", "muscles/muscles.html",
+                      st.get("muscle_model", {}).get("source", "generic") + " · variants: " + ", ".join(st["runs"])))
     for c in sorted((d / "feedback").glob("*/cues.json")):
         j = json.loads(c.read_text())["summary"]
         items.append((f"Haptic cue replay: {c.parent.name}", str(c.parent.relative_to(d) / "cues.html"),
@@ -469,6 +475,21 @@ bandwidth {spec.get('schedule', {}).get('bandwidth_deg', 2)}°, refractory {spec
     return path
 
 
+def _muscle_banner(study):
+    e = html.escape
+    mm = study.get("muscle_model", {})
+    if mm.get("source", "").startswith("strength"):
+        flags = ", ".join(f"{a} LSI {v['lsi_pct']:.0f}% (weaker {v['weaker_side']})" for a, v in mm["symmetry"].items() if v["flag"])
+        return (f"<p class='banner'><b>What-if simulation with strength-calibrated capacities</b> ({len(mm['tests'])} "
+                f"dynamometer tests, {mm['calibrated_muscles']} muscles; geometry generic, Tier {e(study['twin_tier'])}). "
+                + (f"Measured deficits: {e(flags)}. " if flags else "No between-limb deficit below 90 %. ")
+                + "Ground forces are estimated, not measured.</p>")
+    return (f"<p class='banner'><b>What-if simulation on a generic (Tier {e(study['twin_tier'])}) muscle model.</b> "
+            "Not a statement about this person's muscles (docs/accuracy.md: no 'underdeveloped muscle' claim without "
+            "imaging/strength/EMG evidence; <code>rehabtwin strength</code> adds dynamometry). Ground forces are "
+            "estimated, not measured.</p>")
+
+
 def write_muscles(path, study, view=None):
     """HTML for a muscle-effects study (rehabtwin muscles); ``view`` from ``muscles.view_data``."""
     e = html.escape
@@ -478,11 +499,27 @@ def write_muscles(path, study, view=None):
     groups = [g for g in groups if max(r["group_activation"].get(g, {}).get("peak", 0) for r in runs.values()) >= 0.05]
     variants = {lab: {g: r["group_activation"][g]["peak"] for g in groups if g in r["group_activation"]} for lab, r in runs.items()}
     rows = []
+    sens = study.get("grf_sensitivity")
+
+    def robust(v):
+        if "robust_to_grf_split" not in v:
+            return ""
+        lo, hi = v["change_range_over_grf_split"]
+        rng = f"{lo * 100:+.0f} to {hi * 100:+.0f} pts"
+        return f"<td>yes ({rng})</td>" if v["robust_to_grf_split"] else f"<td class='muted'>no ({rng})</td>"
     for lab, cmp in study.get("comparisons", {}).items():
         top = sorted(cmp.items(), key=lambda kv: -abs(kv[1]["change"]))[:8]
         cells = "".join(f"<tr><td>{e(lab)}</td><td>{e(g)}</td><td>{v['base'] * 100:.0f}%</td><td>{v['other'] * 100:.0f}%</td>"
-                        f"<td>{v['change'] * 100:+.0f} pts</td></tr>" for g, v in top)
+                        f"<td>{v['change'] * 100:+.0f} pts</td>{robust(v)}</tr>" for g, v in top)
         rows.append(cells)
+    sens_html = ""
+    if sens:
+        widest = sorted(sens["bands"].items(), key=lambda kv: -(kv[1]["hi"] - kv[1]["lo"]))[:6]
+        sens_html = (f"<p class='muted'>GRF sensitivity: every variant re-run with the right foot's share of the load "
+                     f"shifted by ±{sens['right_share_bias']:.2f}. A change is called robust only if it keeps its sign and "
+                     f"stays ≥ {sens['min_change'] * 100:.0f} pts under every split. The absolute levels move much more "
+                     f"than the changes; widest measured-run bands: "
+                     + e(", ".join(f"{g} {b['lo'] * 100:.0f}–{b['hi'] * 100:.0f}%" for g, b in widest)) + "</p>")
     base = runs["measured"]
     mom = "".join(f"<tr><td>{e(k)}</td><td>{v['min_Nm_per_kg']}</td><td>{v['max_Nm_per_kg']}</td></tr>"
                   for k, v in base["joint_moments"].items())
@@ -491,6 +528,13 @@ def write_muscles(path, study, view=None):
                        for lab, r in runs.items() for c, v in r.get("assistive_devices", {}).items())
     exo_html = (f"<h2>Ideal assistive devices</h2><table><tr><th>variant</th><th>joint</th><th>cap (N·m)</th><th>direction</th>"
                 f"<th>peak (N·m)</th><th>mean (N·m)</th><th>time at cap</th></tr>{exo_rows}</table>" if exo_rows else "")
+    pas_rows = "".join(f"<tr><td>{e(lab)}</td><td>{e(c)}</td><td>{v['stiffness_Nm_per_rad']:g}</td><td>{v['slack_deg']:g}°</td>"
+                       f"<td>{e(v['direction'])}</td><td>{v['peak_abs_Nm']}</td><td>{v['mean_abs_Nm']}</td>"
+                       f"<td>{v['engaged_fraction'] * 100:.0f}%</td></tr>"
+                       for lab, r in runs.items() for c, v in r.get("passive_devices", {}).items())
+    exo_html += (f"<h2>Passive elastic supports</h2><table><tr><th>variant</th><th>joint</th><th>stiffness (N·m/rad)</th>"
+                 f"<th>slack until</th><th>resists</th><th>peak (N·m)</th><th>mean (N·m)</th><th>engaged</th></tr>"
+                 f"{pas_rows}</table>" if pas_rows else "")
     reserve_notes = "".join(f"<li>{e(lab)}: {e(', '.join(f'{k} {v} N·m' for k, v in r['reserve_torque_peaks_Nm'].items()) or 'none')}"
                             f"; saturated muscles: {e(', '.join(r['muscles_saturated']) or 'none')}</li>" for lab, r in runs.items())
     grf = base["grf"]
@@ -498,9 +542,7 @@ def write_muscles(path, study, view=None):
 <meta name="viewport" content="width=device-width, initial-scale=1"><title>Muscle effects</title>
 <style>{_CSS}</style></head><body>
 <h1>Muscle effects — {e(base['exercise'])}</h1>
-<p class="banner"><b>What-if simulation on a generic (Tier {e(study['twin_tier'])}) muscle model.</b>
-Not a statement about this person's muscles (docs/accuracy.md: no "underdeveloped muscle" claim without
-imaging/strength/EMG evidence). Ground forces are estimated, not measured.</p>
+{_muscle_banner(study)}
 <div class="kv"><span>window: {base['time_range_s'][0]}–{base['time_range_s'][1]} s</span>
 <span>vertical GRF: {grf['min_vertical_bw']}–{grf['peak_vertical_bw']} BW</span>
 <span>right-foot share: {grf['right_share_range'][0]}–{grf['right_share_range'][1]}</span>
@@ -508,14 +550,129 @@ imaging/strength/EMG evidence). Ground forces are estimated, not measured.</p>
 <span>valid exercise for this GRF model: {'yes' if base['valid_exercise'] else 'NO'}</span></div>
 {_svg_bars(groups, variants, "Peak muscle-group activation (fraction of group capacity)")}
 {_muscle_view(view) if view else ""}
-<h2>Biggest changes</h2>
-<table><tr><th>variant</th><th>group</th><th>measured</th><th>variant</th><th>change</th></tr>{''.join(rows)}</table>
+<h2>Biggest changes</h2>{sens_html}
+<table><tr><th>variant</th><th>group</th><th>measured</th><th>variant</th><th>change</th>{"<th>robust to GRF split</th>" if sens else ""}</tr>{''.join(rows)}</table>
 {exo_html}
 <h2>Joint moments, measured (N·m/kg; OpenSim sign convention)</h2>
 <table><tr><th>coordinate</th><th>min</th><th>max</th></tr>{mom}</table>
 <h2>Consistency evidence</h2><ul>{reserve_notes}
 <li>pelvis residuals (measured): {e(', '.join(f'{k} {v}' for k, v in base['pelvis_residual_force_N'].items()))}</li></ul>
 <h2>Caveats</h2><ul>{''.join(f'<li>{e(c)}</li>' for c in dict.fromkeys(c for r in runs.values() for c in r['caveats']))}</ul>
+</body></html>"""
+    Path(path).write_text(doc)
+    return path
+
+
+def write_strength(path, rec, tier):
+    """HTML for a strength calibration (rehabtwin strength)."""
+    e = html.escape
+    mass = rec["body_mass_kg"]
+    bound = " <span class='b fail'>at bound</span>"
+    low = "<span class='b fail'>below 90%</span>"
+    rows = "".join(
+        f"<tr><td>{e(t['action'])}</td><td>{e(', '.join(f'{k} {v:g}°' for k, v in t['posture_deg'].items()) or 'neutral')}</td>"
+        f"<td>{t['measured_Nm']:.1f}</td><td>{t['measured_Nm'] / mass:.2f}</td><td>{t['generic_model_Nm']:.1f}</td>"
+        f"<td>{t['factor']:.2f}{bound if t['at_bound'] else ''}</td>"
+        f"<td>{len(t['prime_movers'])} + {len(t['synergists_scaled_with_this_test'])} "
+        f"({t['scaled_share_of_generic'] * 100:.0f}% of generic torque)</td></tr>"
+        for t in rec["tests"])
+    sym = "".join(
+        f"<tr><td>{e(a)}</td><td>{v['right_Nm']:.1f}</td><td>{v['left_Nm']:.1f}</td><td>{v['lsi_pct']:.0f}%</td>"
+        f"<td>{e(v['weaker_side'] or '-')}</td><td>{low if v['flag'] else 'ok'}</td></tr>"
+        for a, v in rec["symmetry"].items())
+    doc = f"""<!doctype html><html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1"><title>Strength calibration</title>
+<style>{_CSS}</style></head><body>
+<h1>Strength calibration</h1>
+<p class="banner"><b>Measured joint strength, generic muscle geometry (Tier {e(tier)}).</b> Each factor is the
+person's torque relative to the generic model's capacity for that test's prime movers; it rescales their
+maximum isometric force and nothing else. "Weak" here means weak in the measured test — the factor says
+nothing about muscle size or why.</p>
+<div class="kv"><span>body mass {mass} kg</span><span>muscles calibrated: {rec['calibrated_muscles']} of {rec['total_muscles']}</span>
+{''.join(f"<span>{e(k)}: {e(str(rec[k]))}</span>" for k in ("device", "protocol", "tester", "date") if k in rec)}</div>
+<h2>Tests</h2>
+<table><tr><th>action</th><th>posture</th><th>measured (N·m)</th><th>N·m/kg</th><th>generic model (N·m)</th>
+<th>factor</th><th>muscles scaled (prime + synergists)</th></tr>{rows}</table>
+<h2>Limb symmetry</h2>
+{f"<table><tr><th>action</th><th>right (N·m)</th><th>left (N·m)</th><th>LSI</th><th>weaker side</th><th></th></tr>{sym}</table>" if sym else "<p class='muted'>No action measured on both sides.</p>"}
+<p class="muted">LSI = weaker / stronger side × 100; below 90 % is a common clinical threshold for a between-limb deficit.
+Use <code>rehabtwin muscles SESSION --strength</code> to simulate with these capacities.</p>
+<h2>Notes</h2><ul>{''.join(f'<li>{e(n)}</li>' for n in rec['notes'])}</ul>
+</body></html>"""
+    Path(path).write_text(doc)
+    return path
+
+
+def _svg_trend(points, title, unit, w=360, h=180):
+    """One signal across sessions: mean of rep peaks with ±1 SD bars (native tooltips on points)."""
+    e = html.escape
+    pad_l, pad_r, pad_t, pad_b = 44, 14, 26, 34
+    vals = [p["mean"] for p in points]
+    lo = min(v - (p["sd"] or 0) for v, p in zip(vals, points))
+    hi = max(v + (p["sd"] or 0) for v, p in zip(vals, points))
+    span = max(hi - lo, 2.0)
+    lo, hi = lo - 0.15 * span, hi + 0.15 * span
+    n = len(points)
+
+    def x(i):
+        return pad_l + (w - pad_l - pad_r) * (0.5 if n == 1 else i / (n - 1))
+
+    def y(v):
+        return pad_t + (h - pad_t - pad_b) * (hi - v) / (hi - lo)
+    col = PALETTE[0]
+    parts = [f'<svg viewBox="0 0 {w} {h}" role="img" aria-label="{e(title)}" class="chart" style="max-width:{w}px">',
+             f'<text x="{pad_l}" y="15" class="ct">{e(title)}</text>']
+    for k in range(4):
+        v = lo + k * (hi - lo) / 3
+        parts.append(f'<line x1="{pad_l}" x2="{w - pad_r}" y1="{y(v):.1f}" y2="{y(v):.1f}" class="grid"/>'
+                     f'<text x="{pad_l - 5}" y="{y(v) + 3:.1f}" class="ax" text-anchor="end">{v:.0f}</text>')
+    parts.append(f'<polyline points="{" ".join(f"{x(i):.1f},{y(v):.1f}" for i, v in enumerate(vals))}" fill="none" '
+                 f'stroke="{col}" stroke-width="2"/>')
+    for i, p in enumerate(points):
+        if p["sd"]:
+            parts.append(f'<line x1="{x(i):.1f}" x2="{x(i):.1f}" y1="{y(p["mean"] - p["sd"]):.1f}" '
+                         f'y2="{y(p["mean"] + p["sd"]):.1f}" stroke="{col}" stroke-width="2"/>')
+        tip = f'{p["session_id"]} ({p["started_at"][:10]}): {p["mean"]:.1f} {unit}' + (f' ± {p["sd"]:.1f}' if p["sd"] else "") \
+            + f', {p["n_reps"]} reps'
+        parts.append(f'<circle cx="{x(i):.1f}" cy="{y(p["mean"]):.1f}" r="5" fill="{col}" stroke="var(--bg)" stroke-width="2">'
+                     f'<title>{e(tip)}</title></circle>'
+                     f'<text x="{x(i):.1f}" y="{h - 12}" class="ax" text-anchor="middle">{e(p["started_at"][:10])}</text>')
+    parts.append("</svg>")
+    return "".join(parts)
+
+
+def write_progress(path, prog):
+    """HTML for rehabtwin progress: first → last verdicts and a trend per signal."""
+    e = html.escape
+    verdict_class = {"real change (beyond rep scatter and measurement error)": "pass",
+                     "within measurement error": "not-tested", "within rep-to-rep scatter": "not-tested"}
+    rows = []
+    for sig, j in prog["first_to_last"].items():
+        if not j:
+            continue
+        cls = verdict_class.get(j["verdict"], "unvalidated")
+        rows.append(f"<tr><td>{e(sig)}</td><td>{j['from']:.1f}</td><td>{j['to']:.1f}</td><td>{j['change']:+.1f} {e(j['unit'])}</td>"
+                    f"<td>{j.get('rep_threshold', '–')}</td><td>{j.get('mdc95', '–')}</td>"
+                    f"<td><span class='b {cls}'>{e(j['verdict'])}</span></td></tr>")
+    sess = "".join(f"<tr><td>{e(s['session_id'])}</td><td>{e(s['started_at'])}</td><td>{e(s['tier'])}</td>"
+                   f"<td>{e(s['front_end'])}</td><td>{s['n_reps']}</td></tr>" for s in prog["sessions"])
+    first = prog["first_to_last"]
+    charts = "".join(_svg_trend(prog["series"][sig], f"{sig} (mean of rep peaks)", first[sig]["unit"])
+                     for sig in prog["series"] if first.get(sig))
+    warn = "".join(f"<p class='banner'>{e(w)}</p>" for w in prog["warnings"])
+    doc = f"""<!doctype html><html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1"><title>Progress</title>
+<style>{_CSS}</style></head><body>
+<h1>Progress over {len(prog['sessions'])} sessions</h1>
+<p class="banner"><b>A change is only called real when it beats both the rep-to-rep scatter and the validated
+measurement error.</b> Without a validation of that joint × plane the size of a change is unknown, even when it is
+consistent across reps.</p>{warn}
+<h2>First → last session</h2>
+<table><tr><th>signal</th><th>first</th><th>last</th><th>change</th><th>rep threshold</th><th>MDC95</th><th>verdict</th></tr>
+{''.join(rows)}</table>
+<h2>Trends</h2><div style="display:flex;flex-wrap:wrap;gap:8px">{charts}</div>
+<h2>Sessions</h2><table><tr><th>session</th><th>started</th><th>tier</th><th>front end</th><th>reps</th></tr>{sess}</table>
+<p class="muted">{e(prog['method'])}</p>
 </body></html>"""
     Path(path).write_text(doc)
     return path
@@ -543,6 +700,18 @@ def write_correction(path, summary, measured_time, signals_measured, signals_cor
     viol = "".join(f"<li>{e(v['coordinate'])}: exceeds range {v['range']} by {v['exceeds_range_by']}°</li>"
                    for v in summary["range_of_motion_violations"]) or "<li>none</li>"
     drift = summary["feet_anchor_drift_m"]
+    rc = summary.get("rule_check")
+    rule_html = ""
+    if rc:
+        def cell(v):
+            return f"{v['violations']}" + (f" (worst {v['worst']:+.1f})" if v["worst"] is not None else "")
+        rrows = "".join(f"<tr><td>{e(r)}</td><td>{cell(v['measured'])}</td><td>{cell(v['corrected'])}</td>"
+                        f"<td>{'removed' if r in rc['removed'] else '<b>introduced</b>' if r in rc['introduced'] else ''}</td></tr>"
+                        for r, v in rc["per_rule"].items())
+        rule_html = (f"<h2>Posture rules ({e(rc['rules'])}) on the corrected motion</h2>"
+                     + (f"<p class='banner'>The correction introduces: {e(', '.join(rc['introduced']))}.</p>" if rc["introduced"] else "")
+                     + f"<table><tr><th>rule</th><th>measured: violations</th><th>corrected: violations</th><th></th></tr>{rrows}</table>"
+                     f"<p class='muted'>{e(rc['note'])}</p>")
     banner = ("<p class='banner'><b>ILLUSTRATION ONLY.</b> Computed on a generic (Tier "
               f"{e(summary['twin_tier'])}) skeleton — docs/accuracy.md forbids using it as a correction target "
               "or for feedback. It shows what the requested change implies for the rest of the body.</p>"
@@ -561,6 +730,7 @@ def write_correction(path, summary, measured_time, signals_measured, signals_cor
 <h2>What changed</h2>
 <table><tr><th>coordinate</th><th>kind</th><th>max change (°)</th><th></th></tr>{rows}</table>
 <h2>Range-of-motion check</h2><ul>{viol}</ul>
+{rule_html}
 <p class="muted">Files: {e(summary['measured_motion'])} (measured), {e(summary['corrected_motion'])} (corrected), correction.json.</p>
 </body></html>"""
     Path(path).write_text(doc)

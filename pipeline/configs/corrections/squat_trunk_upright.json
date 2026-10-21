@@ -61,5 +61,6 @@
     "target": 10.0,
     "other": 0.1,
     "translation": 100.0
-  }
+  },
+  "check_rules": "squat_posture"
 }
