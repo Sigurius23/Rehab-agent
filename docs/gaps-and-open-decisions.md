@@ -35,6 +35,21 @@
 - ✅ Upstream issues found and handled: Pose2Sim `Markers_SKEL.xml` head markers in the wrong frame; HSMR demo resize (W, H) swap (drafted reports in `docs/upstream-issues.md`)
 - ✅ Doc inconsistency fixed: roadmap Phase 1 vs environments install order (both now point at the implemented slice + Tier-A swap)
 
+## Filled (2026-10-21 second pass)
+- ✅ Correction view (`rehabtwin correct`): clinician specs, planted-feet IK, compensations, ROM check; illustration-only below Tier A
+- ✅ Muscle effects (`rehabtwin muscles`): GRF estimate, ID, static optimisation, weakness and ideal-exo what-ifs
+- ✅ Haptic loop end to end in software: SlimeVR VMC → posture → gated CueEngine (faded feedback) → LSL → SenseShift BLE payloads
+- ⚠️ Found: the Pose2Sim/Rajagopal knee has no independent tibial rotation, so hip-rotation corrections with planted feet move the foot (~2 cm) — matters for any knee-valgus correction claim
+
+## Still open after the second pass
+| ID | Gap | Why it matters | Next step |
+|---|---|---|---|
+| G-01 | No measured accuracy for HSMR/SKEL yet | Every Tier-C/B claim in `pipeline/` | OpenCap LabValidation run (needs SKEL licence + GPU) |
+| G-02 | Ground forces are estimated, not measured | Muscle/exo numbers | Force plates in the validation session, or Moco tracking with foot contact |
+| G-03 | No Tier-A subject | Corrections and cues stay illustrations | D-02 imaging pathway; personalised `.osim` drops into `pipeline/configs` |
+| G-04 | Physical BLE write to SenseShift untested | Suit Track 1 | One ESP32 + vibration motors bench test with `suit-bridge --ble` |
+| G-05 | SlimeVR posture signals unvalidated | Live cues | Same validation protocol as video (per joint × plane), IMU vs mocap |
+
 ## Known catalog limitations (accepted, recorded)
 - Star/fork counts are orientation only and go stale; upstream READMEs win.
 - Several upstream licenses are unclassified by the GitHub API (`NOASSERTION`)

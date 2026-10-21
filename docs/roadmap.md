@@ -30,7 +30,10 @@ unvalidated joint/planes, they only produce labelled illustrations and `would_cu
 Rule checks on measured outputs only (e.g. "knee flexion < target on 3/5 reps"),
 clinician reviews/edits every patient-facing message. Log rule firings.
 
-## Phase 4 — Simulation & assistance (optional track)
+## Phase 4 — Simulation & assistance (optional track) — 🟡 first tools exist
+`rehabtwin muscles` (estimated double-stance GRF → inverse dynamics → static optimisation)
+gives muscle-group demand, weakness what-ifs and ideal-exo sizing (`--assist`). MyoSuite/SCONE
+(predictive, RL) and Moco tracking with foot contact are the next fidelity steps.
 MyoSuite/SCONE path: simulate muscle effort and assistive strategies in silico.
 Nothing from this track reaches a patient without Phase 2-grade validation.
 
