@@ -11,7 +11,7 @@ This module turns that dump into the pipeline's file contract:
 * picks one person and follows them (no silent identity switches: a frame
   whose best candidate jumps too far is marked invalid instead);
 * recomputes full-image camera translations from ``patch_cam_t``/``bbx_cs``
-  (HSMR's own ``full_cam_t`` dump is sliced per image, not per person);
+  with HSMR's own formula, so an image-size override applies consistently;
 * runs SKEL with one shape for the whole trial (median betas) and reads the
   105 BSM skin markers (SMPL2AddBiomechanics vertex ids) and 24 SKEL joints;
 * adds the q = 0 neutral pose of the same body as the static trial.

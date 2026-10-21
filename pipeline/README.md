@@ -129,14 +129,16 @@ marker mocap and its OpenSim IK, see `docs/validation-results.md`). Pose2Sim's
   for every number; a synthetic validation never approves anything; a validation in
   which no joint/plane meets its target approves nothing.
 
-## Known upstream issues handled here
+## Known upstream issues handled here (drafted reports: `docs/upstream-issues.md`)
 
 - Pose2Sim `Markers_SKEL.xml`: the 7 head markers carry torso-frame coordinates (top of
   head ≈ 0.5 m too high). Re-expressed via `marker_fixes` in `configs/skel105_pose2sim.json`.
-- HSMR demo resize passes `(H, W)` where `(W, H)` is expected — a 3840×2160 video is run at
-  1080×608. `rehabtwin.hsmr.hsmr_input_size` replicates it; override with `--image-size`.
-- HSMR's dumped `full_cam_t` is sliced per image, not per person; the adapter recomputes it
-  from `patch_cam_t` and `bbx_cs`.
+- HSMR demo resize passes `(MAX_IMG_H, -1)` to a function expecting `(width, height)` — a
+  3840×2160 video is processed at 1080×608 rather than 1920×1080.
+  `rehabtwin.hsmr.hsmr_input_size` replicates it; override with `--image-size`.
+- The adapter recomputes full-image camera translations from `patch_cam_t` and `bbx_cs`
+  (same formula as HSMR's renderer), so it only depends on the per-person dump keys and
+  honours `--image-size`.
 
 ## Licences
 

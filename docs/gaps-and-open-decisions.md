@@ -32,7 +32,7 @@
 ## Filled (2026-10-21 pipeline pass)
 - ✅ First working slice: `pipeline/` (video → SKEL → OpenSim), 35 tests, synthetic selftest, real-video demo
 - ✅ Measured results recorded in `docs/validation-results.md` (synthetic + monocular vs multi-view)
-- ✅ Upstream issues found and handled: Pose2Sim `Markers_SKEL.xml` head markers in the wrong frame; HSMR demo resize (W, H) swap; HSMR `full_cam_t` dumped per image, not per person
+- ✅ Upstream issues found and handled: Pose2Sim `Markers_SKEL.xml` head markers in the wrong frame; HSMR demo resize (W, H) swap (drafted reports in `docs/upstream-issues.md`)
 - ✅ Doc inconsistency fixed: roadmap Phase 1 vs environments install order (both now point at the implemented slice + Tier-A swap)
 
 ## Known catalog limitations (accepted, recorded)
