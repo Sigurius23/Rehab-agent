@@ -138,6 +138,8 @@ def main(argv=None):
     m.add_argument("out")
     m.add_argument("--focal-px", type=float, help="calibrated focal length; default assumes a 75 deg diagonal FOV")
     m.add_argument("--person-ref", default="UNSPECIFIED")
+    m.add_argument("--gravity-up-cv", help="up direction in OpenCV camera coords 'x,y,z' (phone IMU / calibration)")
+    m.add_argument("--gravity-source", default="user supplied")
     mv = sub.add_parser("mp-multiview", help="MediaPipe raw dumps + calibration -> triangulated sequence")
     mv.add_argument("raws", nargs="+", help="one raw dump per camera, in calibration camera order")
     mv.add_argument("--qca", required=True, help="Qualisys .qca.txt calibration")
@@ -162,8 +164,10 @@ def main(argv=None):
     elif a.cmd in ("mp-mono", "mp-multiview"):
         from . import mediapipe_front as mf
         if a.cmd == "mp-mono":
-            seq = mf.monocular_sequence(dict(np.load(a.raw)), focal_px=a.focal_px,
-                                        meta={"person_ref": a.person_ref, "raw": str(a.raw)})
+            meta = {"person_ref": a.person_ref, "raw": str(a.raw)}
+            if a.gravity_up_cv:
+                meta.update(gravity_up_cv=[float(v) for v in a.gravity_up_cv.split(",")], gravity_source=a.gravity_source)
+            seq = mf.monocular_sequence(dict(np.load(a.raw)), focal_px=a.focal_px, meta=meta)
         else:
             cams = mf.read_qca(a.qca)
             if len(cams) != len(a.raws):

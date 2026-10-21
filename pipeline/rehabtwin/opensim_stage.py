@@ -156,6 +156,15 @@ def to_ground(seq: MarkerSequence, cfg, marker_heights=None):
     up = camera_up
     mode = fcfg.get("up", "auto")
     qc["up_mode_requested"] = mode
+    device_up = seq.meta.get("gravity_up_cv")
+    if device_up is not None and seq.frame == "opencv_camera" and mode in ("auto", "device"):
+        # Gravity measured by the recording device (phone IMU / calibration) beats any image-based guess.
+        up = frames.apply(frames.R_CV_TO_YUP, np.asarray(device_up, float))
+        up = up / np.linalg.norm(up)
+        qc["up_source"] = f"device gravity ({seq.meta.get('gravity_source', 'unspecified')})"
+        qc["device_tilt_vs_camera_level_deg"] = round(frames.angle_deg(up, camera_up), 2)
+    elif mode == "device":
+        raise ValueError("up=device requested but the sequence has no gravity_up_cv")
     floor = None
     try:
         n, rms, npts = frames.estimate_floor_up(world, names, fcfg.get("foot_markers", []), camera_up,
@@ -173,10 +182,14 @@ def to_ground(seq: MarkerSequence, cfg, marker_heights=None):
     elif mode == "auto" and "error" not in floor:
         use_floor = (floor["rms_m"] <= fcfg.get("floor_max_rms_m", 0.02)
                      and floor["tilt_vs_camera_level_deg"] <= fcfg.get("floor_max_tilt_deg", 20.0))
-    if use_floor:
-        up = np.asarray(floor["normal"])
-    fallback = "input y axis (calibrated lab frame)" if seq.frame == "yup_world" else "camera-level assumption"
-    qc["up_source"] = "floor plane fit" if use_floor else fallback
+    if "up_source" in qc:  # device gravity already chosen; the floor fit is kept as a cross-check
+        if "error" not in floor:
+            floor["angle_to_device_up_deg"] = round(frames.angle_deg(floor["normal"], up), 2)
+    else:
+        if use_floor:
+            up = np.asarray(floor["normal"])
+        fallback = "input y axis (calibrated lab frame)" if seq.frame == "yup_world" else "camera-level assumption"
+        qc["up_source"] = "floor plane fit" if use_floor else fallback
     R1 = frames.rotation_between(up, [0.0, 1.0, 0.0])
     world = frames.apply(R1, world)
     R2, t2 = frames.to_opensim_ground(world, names, [0.0, 1.0, 0.0],

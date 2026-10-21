@@ -17,6 +17,10 @@ model's neutral pose (SKEL q = 0, which is the BSM/OpenSim default pose) in
 any rigid frame — they are only used for scaling and are rigidly registered
 to the model before use.
 
+Optional ``meta["gravity_up_cv"]`` (3,) is the up direction measured by the
+recording device (phone IMU, calibration) in OpenCV camera coordinates; it
+takes precedence over image-based gravity estimates.
+
 Missing data is NaN and ``valid`` is False — nothing is silently filled in
 here (docs/architecture.md, "no stage silently imputes").
 """

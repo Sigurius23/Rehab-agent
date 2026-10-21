@@ -46,8 +46,28 @@ def best_lag(est: Table, ref: Table, coords, max_lag_s, step_s=None):
     return best_lag_s
 
 
-def compare(est: Table, ref: Table, max_lag_s=0.0, coords=None):
+# Estimate signal -> reference coordinate when models differ. Pose2Sim spreads the
+# lumbar spine over five levels; Rajagopal/Lai-Arnold models (e.g. the OpenCap
+# LabValidation mocap IK) have one lumbar joint whose angle is the total.
+DEFAULT_ALIASES = {
+    "lumbar_total.sagittal": "lumbar_extension",
+    "lumbar_total.frontal": "lumbar_bending",
+    "lumbar_total.transverse": "lumbar_rotation",
+}
+
+
+def _apply_aliases(est: Table, ref: Table, aliases):
+    """Copy reference columns under the estimate's names where only an alias exists."""
+    extra = [(e, r) for e, r in aliases.items() if e in est.columns and e not in ref.columns and r in ref.columns]
+    if not extra:
+        return ref, []
+    data = np.column_stack([ref.data] + [ref.col(r) for _, r in extra])
+    return Table(ref.columns + [e for e, _ in extra], data, ref.time, ref.in_degrees, ref.header), extra
+
+
+def compare(est: Table, ref: Table, max_lag_s=0.0, coords=None, aliases=None):
     """Per-coordinate error statistics of ``est`` against ``ref`` (both in degrees)."""
+    ref, aliased = _apply_aliases(est, ref, DEFAULT_ALIASES if aliases is None else aliases)
     shared = [c for c in est.columns if c in ref.columns]
     angular = [c for c in shared if classify(c)[1] in ("sagittal", "frontal", "transverse")]
     if coords:
@@ -71,6 +91,9 @@ def compare(est: Table, ref: Table, max_lag_s=0.0, coords=None):
             "max_abs_deg": float(np.max(np.abs(d))),
             "reference_rom_deg": float(np.nanmax(r[:, ref.columns.index(c)]) - np.nanmin(r[:, ref.columns.index(c)])),
         }
+    for e, r in aliased:
+        if e in per:
+            per[e]["reference_column"] = r
     return {"lag_s": lag, "coordinates": per}
 
 

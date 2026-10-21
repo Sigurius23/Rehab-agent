@@ -2,7 +2,7 @@
 import numpy as np
 import pytest
 
-from rehabtwin import filtering, frames, hsmr, validation
+from rehabtwin import filtering, frames, hsmr, opensim_stage, validation
 from rehabtwin.io_formats import Table, read_table, read_trc, write_table, write_trc
 from rehabtwin.kinematics import _fppa, classify
 from rehabtwin.metrics import segment_reps
@@ -228,3 +228,30 @@ def test_select_track_follows_person_and_rejects_jumps():
         {"bbx_cs": [[520, 505, 410]]},
     ]
     assert hsmr.select_track(frames_).tolist() == [0, 1, -1, -1, 0]
+
+
+def test_validation_aliases_lumbar_total_to_single_joint_models():
+    t = np.arange(0, 3, 0.01)
+    ref = Table(["lumbar_extension", "knee_angle_r"], np.stack([-20 * np.sin(t), 40 * np.sin(t)], axis=1), t)
+    est = Table(["lumbar_total.sagittal", "knee_angle_r"], ref.data + [1.0, 0.0], t)
+    per = validation.compare(est, ref)["coordinates"]
+    assert per["lumbar_total.sagittal"]["reference_column"] == "lumbar_extension"
+    assert abs(per["lumbar_total.sagittal"]["bias_deg"] - 1.0) < 1e-9
+
+
+def test_device_gravity_overrides_image_estimates():
+    # a subject standing upright, seen by a camera pitched 20 deg down (OpenCV frame)
+    names = ["RHIP", "LHIP", "RHEE", "LHEE", "RTOE", "LTOE"]
+    body = np.array([[0.1, 0.9, 0], [-0.1, 0.9, 0], [0.1, 0, -0.05], [-0.1, 0, -0.05], [0.1, 0, 0.15], [-0.1, 0, 0.15]])
+    cam_from_world = rot_x(-20) @ np.diag([1.0, -1.0, -1.0])   # y-up world -> pitched OpenCV camera
+    pts = np.repeat((body @ cam_from_world.T + [0, 0.5, 3.0])[None], 40, axis=0)
+    up_cv = cam_from_world @ [0, 1.0, 0]
+    seq = MarkerSequence(fps=30, marker_names=names, markers=pts, frame="opencv_camera",
+                         meta={"gravity_up_cv": up_cv.tolist(), "gravity_source": "test IMU"})
+    cfg = {"frames": {"up": "auto", "foot_markers": [], "right_left_pairs": [["RHIP", "LHIP"]]}}
+    _, g, qc = opensim_stage.to_ground(seq, cfg)
+    assert qc["up_source"] == "device gravity (test IMU)" and abs(qc["device_tilt_vs_camera_level_deg"] - 20) < 1e-6
+    # the feet -> hips direction keeps exactly its true inclination to gravity
+    hips = g[0, :2].mean(axis=0) - g[0, 2:].mean(axis=0)
+    true = body[:2].mean(axis=0) - body[2:].mean(axis=0)
+    assert abs(frames.angle_deg(hips, [0, 1, 0]) - frames.angle_deg(true, [0, 1, 0])) < 1e-6
