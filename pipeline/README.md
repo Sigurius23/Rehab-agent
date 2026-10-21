@@ -76,6 +76,16 @@ python -m rehabtwin mp-mono clip_mp.npz clip_seq.npz [--focal-px F] [--gravity-u
 python -m rehabtwin process clip_seq.npz out/ --config mediapipe33_pose2sim --exercise sit_to_stand
 ```
 
+Several phones (OpenCap-style checkerboard calibration, unsynchronised starts) and OpenCap's LSTM
+anatomical-marker augmenter, which the pelvis needs (validation-results §4):
+
+```bash
+python -m rehabtwin mp-multiview cam0.npz cam1.npz cam2.npz --sync --out multi_seq.npz \
+    --opencap-calib Cam0/cameraIntrinsicsExtrinsics.pickle Cam1/... Cam2/...   # numpy-only unpickler
+python -m rehabtwin augment multi_seq.npz multi_aug_seq.npz --height-m 1.80 --mass-kg 75   # pip install onnxruntime
+python -m rehabtwin process multi_aug_seq.npz out/ --exercise squat --mass-kg 75 --height-m 1.80
+```
+
 `examples/pose2sim_demo.sh` reproduces the real-data validation in
 `docs/validation-results.md` (single camera vs 4-camera triangulation).
 

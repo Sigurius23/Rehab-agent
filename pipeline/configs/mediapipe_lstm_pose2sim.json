@@ -1,0 +1,67 @@
+{
+  "name": "mediapipe_lstm_pose2sim",
+  "description": "MediaPipe keypoints + OpenCap LSTM augmented anatomical markers (rehabtwin augment) -> Pose2Sim full-body model. Marker set, scaling pairs and IK weights follow Pose2Sim's LSTM setup files (without its L5_S1 prior, see _coordinate_tasks_note).",
+  "model": "upstream:perfanalytics/pose2sim/Pose2Sim/OpenSim_Setup/Model_Pose2Sim_muscles_flex.osim",
+  "marker_set": "upstream:perfanalytics/pose2sim/Pose2Sim/OpenSim_Setup/Markers_LSTM.xml",
+  "marker_fixes": [],
+  "marker_fixed_policy": "keep",
+  "joint_centre_markers": {},
+  "frames": {
+    "up": "auto",
+    "foot_markers": ["r_calc_study", "L_calc_study", "r_toe_study", "L_toe_study"],
+    "right_left_pairs": [["RHJC_study", "LHJC_study"], ["r_shoulder_study", "L_shoulder_study"]],
+    "floor_max_rms_m": 0.03,
+    "floor_max_tilt_deg": 20.0
+  },
+  "filter": {"cutoff_hz": 6.0, "order": 4, "max_gap_s": 0.2, "min_segment_s": 1.0},
+  "static": {
+    "window_s": 0.25,
+    "registration_markers": ["r.ASIS_study", "L.ASIS_study", "r.PSIS_study", "L.PSIS_study", "r_knee_study", "L_knee_study",
+                             "r_ankle_study", "L_ankle_study", "r_calc_study", "L_calc_study", "r_toe_study", "L_toe_study",
+                             "r_shoulder_study", "L_shoulder_study", "C7_study"],
+    "coordinate_pins_measured": {"subtalar_angle_r": 10.0, "subtalar_angle_l": 10.0, "mtp_angle_r": 10.0, "mtp_angle_l": 10.0,
+                                 "wrist_flex_r": 1.0, "wrist_flex_l": 1.0, "wrist_dev_r": 1.0, "wrist_dev_l": 1.0}
+  },
+  "scaling": {
+    "marker_placer": false,
+    "measurements": [
+      {"name": "foot", "pairs": [["r_calc_study", "r_toe_study"], ["r_calc_study", "r_5meta_study"], ["L_calc_study", "L_toe_study"], ["L_calc_study", "L_5meta_study"]],
+       "bodies": {"talus_r": "X Y Z", "calcn_r": "X Y Z", "toes_r": "X Y Z", "talus_l": "X Y Z", "calcn_l": "X Y Z", "toes_l": "X Y Z"}},
+      {"name": "tibia_r", "pairs": [["r_knee_study", "r_ankle_study"], ["r_mknee_study", "r_mankle_study"]], "bodies": {"tibia_r": "X Y Z"}},
+      {"name": "femur_r", "pairs": [["RHJC_study", "r_knee_study"]], "bodies": {"femur_r": "X Y Z", "patella_r": "X Y Z"}},
+      {"name": "tibia_l", "pairs": [["L_knee_study", "L_ankle_study"], ["L_mknee_study", "L_mankle_study"]], "bodies": {"tibia_l": "X Y Z"}},
+      {"name": "femur_l", "pairs": [["LHJC_study", "L_knee_study"]], "bodies": {"femur_l": "X Y Z", "patella_l": "X Y Z"}},
+      {"name": "pelvisXY", "pairs": [["r.ASIS_study", "r.PSIS_study"], ["L.ASIS_study", "L.PSIS_study"]], "bodies": {"pelvis": "X Y"}},
+      {"name": "pelvisZ", "pairs": [["RHJC_study", "LHJC_study"]], "bodies": {"pelvis": "Z"}},
+      {"name": "torsoXY", "pairs": [["RShoulder", "r.PSIS_study"], ["LShoulder", "L.PSIS_study"]],
+       "bodies": {"torso": "X Y", "scapulaPhantom_r": "X Y", "scapulaPhantom_l": "X Y", "lumbar5": "X Y", "lumbar4": "X Y",
+                  "lumbar3": "X Y", "lumbar2": "X Y", "lumbar1": "X Y", "Abdomen": "X Y", "head": "X Y", "sacrum": "X Y"}},
+      {"name": "torsoZ", "pairs": [["RShoulder", "LShoulder"]],
+       "bodies": {"torso": "Z", "scapulaPhantom_r": "Z", "scapulaPhantom_l": "Z", "lumbar5": "Z", "lumbar4": "Z",
+                  "lumbar3": "Z", "lumbar2": "Z", "lumbar1": "Z", "Abdomen": "Z", "head": "Z", "sacrum": "Z"}},
+      {"name": "humerus", "pairs": [["RShoulder", "RElbow"], ["RShoulder", "r_melbow_study"], ["LShoulder", "LElbow"], ["LShoulder", "L_melbow_study"]],
+       "bodies": {"humerus_r": "X Y Z", "humerus_l": "X Y Z"}},
+      {"name": "radius", "pairs": [["r_lwrist_study", "RElbow"], ["r_mwrist_study", "r_melbow_study"], ["L_lwrist_study", "LElbow"], ["L_mwrist_study", "L_melbow_study"]],
+       "bodies": {"ulna_r": "X Y Z", "radius_r": "X Y Z", "hand_r": "X Y Z", "ulna_l": "X Y Z", "radius_l": "X Y Z", "hand_l": "X Y Z"}}
+    ]
+  },
+  "ik": {
+    "default_weight": 0.0,
+    "weights": {"C7_study": 5, "r_shoulder_study": 5, "L_shoulder_study": 5,
+                "r.ASIS_study": 25, "L.ASIS_study": 25, "r.PSIS_study": 25, "L.PSIS_study": 25, "RHJC_study": 25, "LHJC_study": 25,
+                "r_knee_study": 30, "r_mknee_study": 30, "r_ankle_study": 30, "r_mankle_study": 30, "r_toe_study": 30, "r_5meta_study": 30,
+                "r_calc_study": 60, "L_knee_study": 30, "L_mknee_study": 30, "L_ankle_study": 30, "L_mankle_study": 30,
+                "L_toe_study": 30, "L_calc_study": 60, "L_5meta_study": 30,
+                "r_lelbow_study": 5, "L_lelbow_study": 5, "r_melbow_study": 5, "L_melbow_study": 5,
+                "r_lwrist_study": 5, "L_lwrist_study": 5, "r_mwrist_study": 5, "L_mwrist_study": 5,
+                "r_thigh1_study": 4, "r_thigh2_study": 4, "r_thigh3_study": 4, "L_thigh1_study": 4, "L_thigh2_study": 4, "L_thigh3_study": 4,
+                "r_sh1_study": 4, "r_sh2_study": 4, "r_sh3_study": 4, "L_sh1_study": 4, "L_sh2_study": 4, "L_sh3_study": 4},
+    "coordinate_tasks": {},
+    "_coordinate_tasks_note": "Pose2Sim's LSTM setup adds a weak L5_S1_Flex_Ext prior (weight 0.1 towards 0). OpenCap's own IK has none, and on the OpenCap 5-camera squat (docs/validation-results.md) the prior moved trunk flexion into the pelvis: pelvis tilt RMSE vs OpenCap 13.0 deg with it, 6.0 without. Left out; add it back here if a reference shows otherwise.",
+    "accuracy": 1e-5,
+    "constraint_weight": "Inf"
+  },
+  "skel_coordinate_tasks": null,
+  "qc": {"max_rms_m": 0.05},
+  "default_mass_kg": 70.0
+}

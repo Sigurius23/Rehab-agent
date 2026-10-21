@@ -97,6 +97,61 @@ HSMR dump (fake detections including a bystander, fake SKEL forward). The real H
 and the SKEL model are licence-gated (MPI-IS registration) and could not be run in the
 build environment. **Its accuracy is unknown until step 4 below has been run.**
 
+## 4. Real video against an independent markerless reference — OpenCap, 5 phones, one squat trial
+
+**Data.** The only public video trial reachable from the build environment: OpenCap's LabValidation
+fixture `subject2/squats1` in `stanfordnmbl/opencap-test-data` (5 iPhones at ±65°, ±40°, 0°; 60 fps,
+720×1280; checkerboard calibration; 1.96 m, 78.2 kg; 5 squats). Its marker-mocap files live only on
+SimTK, which the build network blocks. The reference is therefore **OpenCap's own result** for the same
+videos (OpenPose → triangulation → LSTM marker augmenter → LaiUhlrich2022 IK). OpenCap reports about
+4.5° mean absolute joint-angle error against marker mocap (Uhlrich et al. 2023), so this measures
+*agreement with a validated markerless system*, not accuracy. The validation reports carry
+`reference_grade: markerless` and approve nothing. Reproduce with `examples/opencap_agreement.sh`.
+
+**Pipeline.**
+- MediaPipe Pose (heavy) per camera.
+- Camera sync: the phones started up to 46 frames (0.77 s) apart. Hip-motion cross-correlation recovered the offsets (peak r 0.79–0.85), and the remaining lag to OpenCap's timeline was 0.07 s.
+- Weighted DLT triangulation with OpenCap's calibration, median reprojection 7.4 px.
+- `rehabtwin process`, optionally after `rehabtwin augment` (OpenCap's LSTM via Pose2Sim's ONNX).
+
+Values are RMSE in degrees; brackets give (bias / SD after removing the bias).
+
+| Signal | 5 cams, keypoints only | **5 cams + augmenter** | 1 cam (frontal) | 1 cam + augmenter |
+|---|---|---|---|---|
+| Trunk inclination, sagittal | 47.4 (−23.4 / 41.3) | **2.7 (−0.8 / 2.6)** | 9.7 (+7.4 / 6.3) | 9.4 (+6.0 / 7.3) |
+| Trunk inclination, frontal | 8.7 (+2.0 / 8.4) | **2.6 (+1.2 / 2.3)** | 10.3 (+8.9 / 5.2) | 7.2 (+6.8 / 2.5) |
+| Pelvis tilt | 37.3 (−29.1 / 23.4) | **6.0 (−5.5 / 2.4)** | 18.9 (+15.5 / 10.9) | 20.1 (+18.8 / 7.2) |
+| Pelvis list | 2.6 | **2.6** | 7.8 | 4.3 |
+| Lumbar flexion (total) | 50.9 (+37.5 / 34.4) | **7.1 (+6.3 / 3.2)** | 25.3 (−23.7 / 8.8) | 25.8 (−25.0 / 6.3) |
+| Hip flexion R | 36.0 (+25.7 / 25.3) | **13.9 (+13.1 / 4.6)** | 17.6 (−14.7 / 9.6) | 10.4 (−8.3 / 6.3) |
+| Hip adduction R | 2.4 | **3.2** | 3.3 | 4.6 |
+| Knee flexion R / L | 8.1 / 5.9 | **9.3 / 9.2 (+8.7 / 3.2)** | 9.7 / 13.6 | 14.9 / 21.5 |
+| Ankle dorsiflexion R / L | 8.5 / 6.5 | **4.9 / 4.6** | 14.5 / 13.8 | 13.3 / 18.4 |
+| Knee FPPA R / L | 20.7 / 21.4 | **4.7 / 9.5** | 6.6 / 10.2 | 5.9 / 7.1 |
+
+What this shows:
+
+1. **Sparse keypoints leave the pelvis unobservable.** Two hip points fix the pelvis's left-right axis
+   but not its tilt, so IK trades pelvis tilt, hip flexion and lumbar flexion freely. It settled on
+   up to 95° of pelvis tilt with 56° of lumbar *extension*. The synthetic round trip (§1) could not
+   show this, because it uses 105 dense SKEL markers.
+2. **OpenCap's LSTM augmenter fixes it.** It predicts ASIS/PSIS, epicondyles and malleoli from the
+   keypoints, height and mass. With 5 cameras, the trunk then agrees within 2.7°, pelvis tilt within
+   6° (2.4° after removing the bias), knee FPPA R within 4.7°, and ankle within 5°.
+3. **Pose2Sim's weak L5/S1 prior hurt here.** OpenCap's IK has none. With the prior, pelvis tilt was
+   13.0° and hip flexion 20.3°; without it, 6.0° and 13.9°. `mediapipe_lstm_pose2sim` now leaves the
+   prior out.
+4. **Remaining constant offsets are mostly definitional.** Knee is +8.7° and hip flexion +13°. The
+   Pose2Sim model and LaiUhlrich2022 define the pelvis and knee frames differently, and MediaPipe's hip
+   landmarks are not OpenPose's. The bias-removed agreement is 2.4–4.6° for these joints.
+5. **One camera is not enough for the trunk–pelvis–hip chain**, even with the augmenter: 9–26° on
+   those signals, and the knee and ankle get worse (13–22°). Knee FPPA, hip adduction and frontal pelvis
+   stay within 4–8°.
+
+One trial and one subject, against a markerless reference: nothing here approves a use. It does say
+which front end to measure against marker mocap first: 5 cameras plus augmenter. It also says which
+signals monocular capture should not drive (pelvis, hip flexion, lumbar).
+
 ## Next: the first real accuracy measurement (closes gap D-04 for kinematics)
 
 Use the public **OpenCap LabValidation** dataset (SimTK project "opencap"): 10 subjects;

@@ -5,7 +5,8 @@
   synth     write a synthetic SKEL-like sequence with known truth
   selftest  synth -> process -> validate, exits non-zero if the round trip regresses
   mp-mono   raw MediaPipe dump (adapters/mediapipe_pose.py) -> monocular sequence .npz
-  mp-multiview  synchronised raw MediaPipe dumps + Qualisys calibration -> triangulated sequence .npz
+  mp-multiview  raw MediaPipe dumps + Qualisys or OpenCap calibration (+ --sync) -> triangulated sequence .npz
+  augment   keypoint sequence -> + 43 anatomical markers (OpenCap LSTM via Pose2Sim) for mediapipe_lstm_pose2sim
   correct   session folder + correction spec -> corrected motion, correction.json, correction.html
   muscles   session folder -> estimated GRF, inverse dynamics, static optimisation (+ corrected / weakened what-ifs)
   cues      session folder + haptic rule set -> offline cue replay (gated; never drives hardware)
@@ -323,6 +324,11 @@ def main(argv=None):
                     help="estimate per-camera frame offsets from hip motion (unsynchronised phones)")
     mv.add_argument("--out", required=True)
     mv.add_argument("--person-ref", default="UNSPECIFIED")
+    au = sub.add_parser("augment", help="add OpenCap's LSTM anatomical markers to a keypoint sequence (pip install onnxruntime)")
+    au.add_argument("sequence")
+    au.add_argument("out")
+    au.add_argument("--height-m", type=float, required=True)
+    au.add_argument("--mass-kg", type=float, required=True)
     co = sub.add_parser("correct", help="correction view for a processed session")
     co.add_argument("session")
     co.add_argument("--spec", required=True, help="name in pipeline/configs/corrections or a path")
@@ -424,6 +430,12 @@ def main(argv=None):
         seq.save(a.out)
         print(json.dumps({"out": a.out, "frames": seq.n_frames, "valid": int(seq.valid.sum()),
                           **{k: seq.meta[k] for k in ("intrinsics_source", "reprojection_px_median") if k in seq.meta}}))
+    elif a.cmd == "augment":
+        from .augmenter import augment
+        seq = augment(MarkerSequence.load(a.sequence), a.height_m, a.mass_kg)
+        seq.save(a.out)
+        print(json.dumps({"out": a.out, "markers": len(seq.marker_names), "frames": seq.n_frames,
+                          "default_config": seq.meta["default_config"]}))
     elif a.cmd == "correct":
         from .correction import CorrectionRefused
         try:

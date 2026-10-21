@@ -295,3 +295,36 @@ def test_trunk_devices_use_physical_units(selftest_run, tmp_path):
     expr = opensim.ExpressionBasedCoordinateForce.safeDownCast(
         dyn.getForceSet().get("passive_lumbar_total_extension")).get_expression()
     assert expr.startswith(f"-{60 * gain * gain}") and "min(0," in expr
+
+
+def test_augmenter_adds_plausible_anatomical_markers(tmp_path):
+    """OpenCap's LSTM (via Pose2Sim ONNX) on MediaPipe-named keypoints taken from the model itself."""
+    pytest.importorskip("onnxruntime")
+    from rehabtwin.augmenter import RESPONSES, augment
+    from rehabtwin.sequence import MarkerSequence
+    cfg = load_config("mediapipe33_pose2sim")
+    model = opensim.Model(str(resolve(cfg["model"])))
+    ms = opensim.MarkerSet(str(resolve(cfg["marker_set"])))
+    for i in range(ms.getSize()):
+        model.addMarker(ms.get(i).clone())
+    model.finalizeConnections()
+    state = model.initSystem()
+    names = [ms.get(i).getName() for i in range(ms.getSize())]
+    frames = []
+    for k in range(90):                      # a slow, shallow squat
+        q = np.radians(25.0 * (1 - np.cos(2 * np.pi * k / 90)))
+        for c, v in (("hip_flexion_r", q), ("hip_flexion_l", q), ("knee_angle_r", 2 * q), ("knee_angle_l", 2 * q),
+                     ("ankle_angle_r", q), ("ankle_angle_l", q)):
+            model.getCoordinateSet().get(c).setValue(state, v, False)
+        model.getCoordinateSet().get("pelvis_ty").setValue(state, 0.93 - 0.25 * (1 - np.cos(2 * np.pi * k / 90)) / 2, False)
+        model.realizePosition(state)
+        frames.append([[model.getMarkerSet().get(n).getLocationInGround(state).get(j) for j in range(3)] for n in names])
+    seq = MarkerSequence(fps=30.0, marker_names=names, markers=np.array(frames), frame="yup_world")
+    out = augment(seq, height_m=1.75, mass_kg=70.0)
+    pts = {n: out.markers[:, out.marker_names.index(n)] for n in out.marker_names}
+    assert out.meta["default_config"] == "mediapipe_lstm_pose2sim" and len(out.marker_names) == len(names) + 43
+    assert all(np.isfinite(pts[n]).all() for p in RESPONSES.values() for n in p)
+    # model faces +x: ASIS in front of PSIS, hip joint centres near the hip keypoints, heels near the calcaneus markers
+    assert (pts["r.ASIS_study"][:, 0] - pts["r.PSIS_study"][:, 0] > 0.05).all()
+    assert np.linalg.norm(pts["RHJC_study"] - pts["RHip"], axis=1).max() < 0.10
+    assert np.linalg.norm(pts["r_calc_study"] - pts["RHeel"], axis=1).max() < 0.08

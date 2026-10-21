@@ -444,6 +444,9 @@ def run(seq: MarkerSequence, cfg: dict, out_dir, mass_kg=None, height_m=None) ->
     coord_tasks, coord_file = None, None
     if cfg.get("skel_coordinate_tasks") and seq.skel_poses is not None:
         coord_tasks, coord_file = _skel_coordinate_file(seq, cfg, scaled, od)
+    if cfg["ik"].get("coordinate_tasks"):
+        # weak priors, e.g. Pose2Sim's L5_S1 task: sparse markers leave the pelvis/lumbar split ill-conditioned
+        coord_tasks = {**cfg["ik"]["coordinate_tasks"], **(coord_tasks or {})}
     motions, errors = [], []
     for k, (a, b) in enumerate(segs):
         name = "ik" if len(segs) == 1 else f"ik_seg{k + 1:02d}"

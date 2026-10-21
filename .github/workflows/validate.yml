@@ -31,7 +31,7 @@ jobs:
         with:
           python-version: '3.12'
       - name: Install rehabtwin (OpenSim 4.6 wheel from PyPI)
-        run: pip install -e "pipeline[test,live]"
+        run: pip install -e "pipeline[test,live,augment]"
       - name: Clone the Pose2Sim OpenSim model and marker sets
         run: python3 scripts/clone.py --only perfanalytics/pose2sim
       - name: Tests

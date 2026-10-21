@@ -52,6 +52,10 @@
   certain than paired what-if differences
 - ✅ Progress over sessions (`rehabtwin progress`): a change is "real" only beyond rep scatter and the validated MDC95
 - ✅ Passive elastic support what-if (`muscles --passive knee_angle_r=60@20:pos`) next to the ideal exo bound
+- ✅ First real-video numbers (`docs/validation-results.md` §4): MediaPipe 5-camera and 1-camera vs OpenCap on a public
+  LabValidation squat; phone sync, OpenCap calibration, and OpenCap's LSTM marker augmenter (`rehabtwin augment`)
+- ⚠️ Found: with sparse keypoints the pelvis tilt / hip flexion / lumbar split is unobservable (IK reached 95° pelvis
+  tilt); the augmenter fixes it. Monocular capture should not drive pelvis, hip-flexion or lumbar signals
 - ⚠️ Evaluated and rejected for G-02: total external wrench from full-body inverse dynamics distributed over the
   model's 12 foot-contact spheres (min-norm, f_y ≥ 0). Physically exact in principle, but the second derivatives of
   video-grade kinematics drive the right-foot share between 5 % and 70 % within one second on the synthetic squat;
@@ -60,7 +64,7 @@
 ## Still open after the second pass
 | ID | Gap | Why it matters | Next step |
 |---|---|---|---|
-| G-01 | No measured accuracy for HSMR/SKEL yet | Every Tier-C/B claim in `pipeline/` | OpenCap LabValidation run (needs SKEL licence + GPU) |
+| G-01 | No measured accuracy against marker mocap yet (HSMR/SKEL or MediaPipe) | Every Tier-C/B claim in `pipeline/` | Agreement with OpenCap is measured (validation-results §4: 5 cams + augmenter within 2.5–6° on trunk/pelvis/FPPA). Next: the same run against LabValidation mocap IK (SimTK download, blocked from the build network) |
 | G-02 | Ground forces are estimated, not measured | Muscle/exo numbers | Force plates or pressure insoles in the validation session; until then report `--grf-sensitivity` bands. Contact-model tracking (Moco) inherits the same kinematic noise (see third pass) |
 | G-03 | No Tier-A subject | Corrections and cues stay illustrations | D-02 imaging pathway; personalised `.osim` drops into `pipeline/configs` |
 | G-04 | Physical BLE write to SenseShift untested | Suit Track 1 | One ESP32 + vibration motors bench test with `suit-bridge --ble` |

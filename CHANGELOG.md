@@ -8,6 +8,9 @@
 - Live loop: `lsl-live`/`lsl-simulate`/`lsl-listen` (LSL) and `vmc-posture` (SlimeVR VMC → posture signals)
 - `suit-bridge`: cue markers → SenseShift/bHaptics BLE payloads (layouts parsed from the GPL firmware at run time)
 - `muscles --assist`: ideal assistive device (exo sizing upper bound), e.g. `knee_angle_r=40:neg`
+- Real-video agreement vs OpenCap (5 phones + 1 phone, public LabValidation squat): `rehabtwin augment` (OpenCap
+  LSTM via Pose2Sim ONNX), `mp-multiview --opencap-calib --sync`, `mediapipe_lstm_pose2sim` config,
+  `examples/opencap_agreement.sh`, `reference_grade` in validation reports
 - `rehabtwin progress`: session-to-session change per signal against rep scatter and validated MDC95
 - `muscles --passive`: one-sided elastic support what-if (e.g. knee band), alongside the ideal exo
 - `rehabtwin strength`: dynamometer torques → strength-calibrated model (per-test capacity factors, LSI);
