@@ -319,3 +319,21 @@ def test_cue_engine_faded_schedule_and_refractory():
 def test_feedback_rules_template_loads():
     spec = feedback.load_rules("squat_posture")
     assert "TEMPLATE" in spec["author"] and all("joint_plane" in r for r in spec["rules"])
+
+
+def test_lsl_live_loop_matches_offline_replay():
+    pylsl = pytest.importorskip("pylsl")  # noqa: F841
+    import threading
+    from rehabtwin import lsl_bridge
+    t = np.arange(0, 8, 0.02)
+    s = np.where((t % 2) < 0.6, 15.0, 0.0)          # 4 violations
+    spec = _rule_spec(start_fraction=1.0, end_fraction=0.5, fade_events=2)
+    _, offline = feedback.replay(spec, t, {"s": s}, tier="A", allowed_joint_planes=["knee_r.frontal"])
+    res = {}
+    live = threading.Thread(target=lambda: res.update(eng=lsl_bridge.run_live(
+        spec, "A", ["knee_r.frontal"], duration_s=20, source="rt_test_posture", resolve_timeout=10)))
+    live.start()
+    lsl_bridge.stream_posture(t, {"s": s}, speed=4.0, name="rt_test_posture")
+    live.join()
+    online = [e for e in res["eng"].log if e.get("decision") == "cue"]
+    assert len(online) == len(offline) >= 2

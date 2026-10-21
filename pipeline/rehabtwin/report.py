@@ -223,6 +223,38 @@ def _svg_bars(groups, variants, title, w=760, row=16):
     return "".join(parts)
 
 
+def write_index(session_dir):
+    """index.html for a session folder: every report it holds, with its status line."""
+    import json
+    d = Path(session_dir)
+    e = html.escape
+    sess = json.loads((d / "session.json").read_text())
+    items = [("Session report", "report.html", f"Tier {sess['twin_tier']} · {sess['pipeline']['front_end']}")]
+    for c in sorted((d / "correction").glob("*/correction.json")):
+        j = json.loads(c.read_text())
+        items.append((f"Correction view: {j['spec']}", str(c.parent.relative_to(d) / "correction.html"),
+                      f"{j['status']} · admissible: {'yes' if j['admissible'] else 'no'}"))
+    if (d / "muscles" / "study.json").exists():
+        st = json.loads((d / "muscles" / "study.json").read_text())
+        items.append(("Muscle effects", "muscles/muscles.html", "variants: " + ", ".join(st["runs"])))
+    for c in sorted((d / "feedback").glob("*/cues.json")):
+        j = json.loads(c.read_text())["summary"]
+        items.append((f"Haptic cue replay: {c.parent.name}", str(c.parent.relative_to(d) / "cues.html"),
+                      f"cues sent: {j['commands_sent']} · {sum(r['would_cue'] for r in j['per_rule'].values())} would-cue"))
+    rows = "".join(f"<tr><td><a href='{e(href)}'>{e(title)}</a></td><td class='muted'>{e(note)}</td></tr>"
+                   for title, href, note in items if (d / href).exists())
+    doc = f"""<!doctype html><html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1"><title>Session {e(sess['session_id'])}</title>
+<style>{_CSS} a {{ color: inherit; }}</style></head><body>
+<h1>Session {e(sess['session_id'])}{' (SYNTHETIC)' if sess.get('synthetic') else ''}</h1>
+<p class="muted">person {e(sess['person_ref'])} · started {e(sess['started_at'])} · tier {e(sess['twin_tier'])}</p>
+<table><tr><th>report</th><th>status</th></tr>{rows}</table>
+<p class="muted">Raw data: session.json, qc.json, metrics.json, opensim/, and the JSON next to each report.</p>
+</body></html>"""
+    (d / "index.html").write_text(doc)
+    return d / "index.html"
+
+
 CUE_COLOURS = {"cue": "#059669", "would_cue": "#d97706", "withheld": "#9ca3af"}
 
 

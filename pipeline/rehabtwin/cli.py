@@ -9,6 +9,7 @@
   correct   session folder + correction spec -> corrected motion, correction.json, correction.html
   muscles   session folder -> estimated GRF, inverse dynamics, static optimisation (+ corrected / weakened what-ifs)
   cues      session folder + haptic rule set -> offline cue replay (gated; never drives hardware)
+  lsl-simulate / lsl-live / lsl-listen   live cue loop over Lab Streaming Layer (pip install pylsl)
 """
 from __future__ import annotations
 
@@ -77,6 +78,7 @@ def process(seq_path, out_dir, exercise="squat", config=None, mass_kg=None, heig
     records.validate(sess, "session")
     records.write_json(out_dir / "session.json", sess)
     report.write(out_dir / "report.html", sess, stage.qc, met, signals, est.time, val, ref_plot, skeleton, ref_skeleton)
+    report.write_index(out_dir)
     return {"session": sess, "metrics": met, "qc": stage.qc, "validation": val, "motion": motion}
 
 
@@ -98,6 +100,7 @@ def run_correction(session_dir, spec_name, illustrative=False):
     records.write_json(out / "correction.json", summary)
     report.write_correction(out / "correction.html", summary, measured.time, sig_m, sig_c,
                             skeleton_positions(model, measured), skeleton_positions(model, corrected))
+    report.write_index(session_dir)
     return summary, out
 
 
@@ -132,6 +135,7 @@ def muscle_study(session_dir, rep=1, start=None, stop=None, correction=None, wea
              "comparisons": {lab: muscles.compare(runs["measured"], r) for lab, r in runs.items() if lab != "measured"}}
     records.write_json(out / "study.json", study)
     report.write_muscles(out / "muscles.html", study)
+    report.write_index(session_dir)
     return study, out
 
 
@@ -164,7 +168,21 @@ def cue_replay(session_dir, rules, motion=None):
         w.writeheader()
         w.writerows(sent)
     report.write_cues(out / "cues.html", result, tab.time, signals)
+    report.write_index(session_dir)
     return result, out
+
+
+def _session_gate(session_dir):
+    """(tier, allowed joint/planes) from a session's own records — the live loop has no bypass."""
+    session_dir = Path(session_dir)
+    sess = json.loads((session_dir / "session.json").read_text())
+    allowed = []
+    val_path = session_dir / "validation-report.json"
+    if val_path.exists():
+        val = json.loads(val_path.read_text())
+        if not val.get("synthetic"):
+            allowed = val.get("feedback_allowed_joint_planes", [])
+    return sess, sess["twin_tier"], allowed
 
 
 def _synth(out_dir, seed=0, **kw):
@@ -255,6 +273,17 @@ def main(argv=None):
     cu.add_argument("session")
     cu.add_argument("--rules", required=True, help="name in pipeline/configs/feedback or a path")
     cu.add_argument("--motion", help="replay another motion (e.g. correction/<spec>/corrected.mot)")
+    ls = sub.add_parser("lsl-simulate", help="stream a session's posture signals over LSL (no hardware needed)")
+    ls.add_argument("session")
+    ls.add_argument("--rules", required=True)
+    ls.add_argument("--speed", type=float, default=1.0)
+    ll = sub.add_parser("lsl-live", help="live cue loop: LSL posture stream -> CueEngine -> LSL cue markers")
+    ll.add_argument("--rules", required=True)
+    ll.add_argument("--session", required=True, help="the subject's processed session: tier + validation gate the cues")
+    ll.add_argument("--duration-s", type=float)
+    ll.add_argument("--publish-would-cue", action="store_true", help="also publish blocked cues as diagnostics")
+    lt = sub.add_parser("lsl-listen", help="print cue markers (stand-in for the suit firmware bridge)")
+    lt.add_argument("--duration-s", type=float, default=30.0)
     a = ap.parse_args(argv)
 
     if a.cmd == "process":
@@ -307,6 +336,25 @@ def main(argv=None):
         for rid, pr in result["summary"]["per_rule"].items():
             print(f"{rid:16s} violations {pr['violations']}  sent {pr['cues_sent']}  would {pr['would_cue']}  gate: {pr['gate'] or 'open'}")
         print(f"report: {out / 'cues.html'}")
+    elif a.cmd == "lsl-simulate":
+        from . import feedback, lsl_bridge
+        sess, _, _ = _session_gate(a.session)
+        spec = feedback.load_rules(a.rules)
+        tab = read_table(Path(a.session) / sess["pipeline"]["outputs"]["motion"])
+        derived = metrics_mod.derived_signals(tab, Path(a.session) / sess["pipeline"]["outputs"]["model"])
+        sig = lsl_bridge.session_signals(tab, derived, [r["signal"] for r in spec["rules"]])
+        print(f"streaming {len(sig)} signals x {len(tab.time)} samples as '{lsl_bridge.POSTURE_STREAM}'")
+        lsl_bridge.stream_posture(tab.time, sig, speed=a.speed)
+    elif a.cmd == "lsl-live":
+        from . import feedback, lsl_bridge
+        _, tier, allowed = _session_gate(a.session)
+        eng = lsl_bridge.run_live(feedback.load_rules(a.rules), tier, allowed, a.duration_s,
+                                  publish_would_cue=a.publish_would_cue)
+        print(json.dumps([e for e in eng.log if "decision" in e], indent=1))
+    elif a.cmd == "lsl-listen":
+        from . import lsl_bridge
+        for c in lsl_bridge.listen(a.duration_s):
+            print(json.dumps(c))
     elif a.cmd == "selftest":
         res, failures = selftest(a.out)
         per = res["validation"]["per_coordinate"]

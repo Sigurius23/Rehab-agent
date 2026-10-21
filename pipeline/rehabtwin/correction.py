@@ -26,7 +26,8 @@ import numpy as np
 
 from .config import CONFIG_DIR
 from .io_formats import Table, read_table, write_table, write_trc
-from .opensim_stage import _cwd, _osim, summarise_marker_errors
+from .filtering import lowpass
+from .opensim_stage import _cwd, _osim
 
 MODES = ("set", "clamp", "scale", "offset", "mirror")
 ANCHOR_PREFIX = "ANCHOR_"
@@ -152,7 +153,13 @@ def correct(session_dir, spec, illustrative=False, motion=None, model=None):
     tasks = [f'<IKMarkerTask name="{escape(n)}"><apply>true</apply><weight>{w.get("anchor", 100.0)}</weight></IKMarkerTask>'
              for n in anchor_names]
     for c in tracked:
-        wt = w.get("target", 50.0) if c in targets else w.get("other", 1.0)
+        if c in targets:
+            wt = w.get("target", 50.0)
+        elif cs.get(c).getMotionType() == osim.Coordinate.Translational:
+            # metres, not radians: an untracked pelvis translation lets IK jitter sideways
+            wt = w.get("translation", 100.0)
+        else:
+            wt = w.get("other", 1.0)
         tasks.append(f'<IKCoordinateTask name="{escape(c)}"><apply>true</apply><weight>{wt}</weight>'
                      "<value_type>from_file</value_type></IKCoordinateTask>")
     t0, t1 = measured.time[0], measured.time[-1]
@@ -176,6 +183,12 @@ def correct(session_dir, spec, illustrative=False, motion=None, model=None):
     with _cwd(out):
         if not osim.InverseKinematicsTool(str(out / "ik_setup.xml")).run():
             raise RuntimeError(f"correction IK failed ({out / 'ik_setup.xml'})")
+    raw = read_table(out / "corrected.mot")
+    # same smoothing as every measured motion (6 Hz zero-lag) before anyone differentiates it
+    fps = 1.0 / float(np.median(np.diff(raw.time)))
+    smooth = lowpass(raw.data, fps, spec.get("cutoff_hz", 6.0))
+    write_table(out / "corrected_unfiltered.mot", raw.columns, raw.data, raw.time, raw.in_degrees, name="corrected_unfiltered")
+    write_table(out / "corrected.mot", raw.columns, smooth, raw.time, raw.in_degrees, name="corrected")
     corrected = read_table(out / "corrected.mot")
 
     # 4. what changed, and is the result physically admissible?
@@ -205,7 +218,12 @@ def correct(session_dir, spec, illustrative=False, motion=None, model=None):
         over = float(max(np.max(v - hi), np.max(lo - v), 0.0))
         if over > 0.5:
             limits.append({"coordinate": c, "exceeds_range_by": round(over, 2), "range": [round(lo, 1), round(hi, 1)]})
-    anchor_err = summarise_marker_errors([out / "corrected_ik_marker_errors.sto"], 0.01)
+    # feet drift of the final (filtered) motion, by forward kinematics against the measured anchors
+    drift = np.linalg.norm(_anchor_trajectories(model, corrected, anchors) - _anchor_trajectories(model, measured, anchors),
+                           axis=2)
+    rms = np.sqrt(np.mean(drift ** 2, axis=1))
+    anchor_err = {"marker_rms_m": {"mean": round(float(rms.mean()), 4), "p95": round(float(np.percentile(rms, 95)), 4),
+                                   "max": round(float(rms.max()), 4), "max_single_point": round(float(drift.max()), 4)}}
     summary = {
         "spec": spec["name"],
         "spec_file": Path(spec["_path"]).name,
@@ -220,7 +238,7 @@ def correct(session_dir, spec, illustrative=False, motion=None, model=None):
         "range_of_motion_violations": limits,
         "feet_anchor_drift_m": anchor_err["marker_rms_m"],
         "admissible": bool(not limits and anchor_err["marker_rms_m"]["max"] < spec.get("max_feet_drift_m", 0.02)),
-        "admissible_rule": f"no range-of-motion violation and feet drift < {spec.get('max_feet_drift_m', 0.02)} m",
+        "admissible_rule": f"no range-of-motion violation and per-frame feet drift (RMS over anchors) < {spec.get('max_feet_drift_m', 0.02)} m",
     }
     (out / "correction.json").write_text(json.dumps(summary, indent=2) + "\n")
     return summary, measured, corrected, out

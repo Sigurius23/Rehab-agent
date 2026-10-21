@@ -45,7 +45,7 @@ python3 -m venv ~/.venvs/twin-live && ~/.venvs/twin-live/bin/pip install mediapi
 ```bash
 cd pipeline
 python -m rehabtwin selftest /tmp/rt_selftest       # synthetic squat with known truth, ~1 min, exits 1 on regression
-python -m pytest tests -q                           # 43 tests (end-to-end ones skip without opensim/pose2sim)
+python -m pytest tests -q                           # 44 tests (end-to-end ones skip without opensim/pose2sim/pylsl)
 ```
 
 ### Real video through HSMR + SKEL (the target path)
@@ -108,18 +108,40 @@ python -m rehabtwin muscles  SESSION --rep 1 --correction squat_knee_valgus_righ
 python -m rehabtwin cues     SESSION --rules squat_posture [--motion SESSION/correction/<spec>/corrected.mot]
 ```
 
+Live loop over Lab Streaming Layer (`pip install -e "pipeline[live]"`), the same engine in real time:
+
+```bash
+python -m rehabtwin lsl-live --rules squat_posture --session SESSION   # posture stream in → cue markers out
+python -m rehabtwin lsl-simulate SESSION --rules squat_posture --speed 1  # stand-in for the IMU suit
+python -m rehabtwin lsl-listen                                          # stand-in for the suit firmware bridge
+```
+The live loop reads tier and validation from `SESSION` (there is no override flag). The
+simulator stamps samples on the recording's own timeline, so rule durations behave the
+same at any replay speed.
+
 | Command | What it does | Guard rails |
 |---|---|---|
 | `correct` | Spec modes `set / clamp / scale / offset / mirror` (e.g. right hip follows the left). OpenSim IK tracks the changed coordinates strongly and the rest weakly, keeping 3 anchor points per foot in place. Reports requested changes, the **compensations** elsewhere, range-of-motion violations and feet drift (`admissible`). | Refused below Tier A without `--illustrative`; then every output says ILLUSTRATION ONLY. Specs ship as TEMPLATEs for a clinician to author. |
 | `muscles` | Ground forces from whole-body Newton (F = m(a_com + g)), split between the feet by the centre of mass and placed by moment balance. Then OpenSim inverse dynamics and static optimisation on the 318-muscle model, with group activation as a fraction of capacity, joint moments (N·m/kg), and measured vs corrected vs weakened. | Valid only for slow double-stance exercises (`grf.feet_planted`, `valid_exercise`). Pelvis residuals and reserve-torque use are reported. Phrased as a what-if on generic muscles, never as a claim about the person's muscles. |
 | `cues` | Streaming `CueEngine` (same code for offline replay and a live suit): threshold with hysteresis, minimum duration, per-actuator refractory period, **faded feedback** (cue share falls from 100 % to ~33 % over the first violations). Writes `cues.json`, LSL-ready `commands.csv`, `cues.html`. | A cue is *sent* only on a Tier-A twin and only for joint/planes listed in a non-synthetic validation report; otherwise it is logged as `would_cue` with the reason. |
 
-Synthetic check (right-knee valgus squat): the valgus correction takes the right-knee
-frontal-plane projection angle from 23.8° to 1.3° with the feet planted (1.6 cm max
-drift, compensation: left hip adduction 3°). The cue rules fire 3 times on the
-measured motion and 0 times on the corrected one. Static optimisation on one rep
-gives a 1.13 BW peak vertical force and 1.18 N·m/kg knee extension moment, with
-quadriceps and gluteus maximus carrying the movement.
+Synthetic check (right-knee valgus squat):
+- **Correction:** the valgus correction takes the right-knee frontal-plane projection angle from 23.8° to
+  0.7°. The body compensates with pelvis list 3.3° and left hip adduction 2.6°.
+- **Feet:** the right foot has to turn by up to 3 cm at the toes (per-frame drift 2.1 cm, just over the
+  2 cm admissibility rule). The model's knee has no independent tibial rotation, so a change in hip
+  rotation with a planted foot must come out at the foot. That is a model limitation worth knowing
+  before trusting any knee-rotation correction.
+- **Cues:** the rules fire 3 times on the measured motion and 0 times on the corrected one.
+- **Muscles:** static optimisation on rep 1 gives a 1.13 BW peak vertical force and a 1.18 N·m/kg knee
+  extension moment, with quadriceps and gluteus maximus carrying the movement. The corrected motion
+  raises right gluteus medius demand from 12 % to 18 % of capacity: holding the knee out costs hip
+  abductor work. A what-if with the right quadriceps at 60 % raises their demand from 52 % to 77 %,
+  with gluteus maximus +23 % and less hamstring co-activation.
+
+Implementation notes learned the hard way: corrected motions are low-pass filtered like
+measured ones, and pelvis translations are tracked rather than left free. A free pelvis
+let IK jitter 6.6 cm sideways, and static optimisation then "needed" 70 N·m reserve torques.
 
 ## Outputs (one folder per session)
 
