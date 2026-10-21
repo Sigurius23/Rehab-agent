@@ -371,10 +371,10 @@ def _svg_bars(groups, variants, title, w=760, row=16):
     left, right = 190, 50
     parts = [f'<svg viewBox="0 0 {w} {h}" role="img" aria-label="{html.escape(title)}" class="chart">',
              f'<text x="8" y="15" class="ct">{html.escape(title)}</text>']
-    lx = w - right
-    for i, n in reversed(list(enumerate(names))):
-        parts.append(f'<text x="{lx}" y="15" class="lg" text-anchor="end" fill="{PALETTE[i % len(PALETTE)]}">{html.escape(n)}</text>')
-        lx -= 7 * len(n) + 14
+    # legend as wrapping HTML (variant names get long): swatch carries the colour, text stays in text colour
+    legend = "".join(f"<span style='display:inline-flex;align-items:center;gap:6px;margin:2px 14px 2px 0'>"
+                     f"<i style='width:12px;height:12px;border-radius:3px;background:{PALETTE[i % len(PALETTE)]}'></i>"
+                     f"{html.escape(n)}</span>" for i, n in enumerate(names))
     scale = (w - left - right)
     for k in range(0, 11, 2):
         x = left + scale * k / 10
@@ -392,7 +392,7 @@ def _svg_bars(groups, variants, title, w=760, row=16):
             y += row
         y += 8
     parts.append("</svg>")
-    return "".join(parts)
+    return f"<div style='font-size:12px;margin-top:12px'>{legend}</div>" + "".join(parts)
 
 
 def write_index(session_dir):
