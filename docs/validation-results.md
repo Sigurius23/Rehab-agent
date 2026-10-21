@@ -170,6 +170,39 @@ One trial and one subject, against a markerless reference: nothing here approves
 which front end to measure against marker mocap first: 5 cameras plus augmenter. It also says which
 signals monocular capture should not drive (pelvis, hip flexion, lumbar).
 
+## 5. The whole chain on the real squat — and where it stops
+
+Same trial (5 phones + augmenter), squat 2 (1.5 s per rep):
+- `cues` with the template rule set fires on every rep: trunk 79° forward and lumbar −40° at the bottom,
+  against template thresholds of 45° and −25°. All cues are "would cue" (Tier C).
+- `correct --spec squat_trunk_upright`: lumbar flexion −42° → −21° and trunk 82° → 62°, feet held within
+  4 mm. The rule check reports `lumbar_rounding` removed and nothing introduced. The subject's shoulder
+  flexion (> 90°) already exceeds the Pose2Sim model's range in the measured motion; it is now listed as
+  a model limit and no longer blocks the correction.
+- `muscles` first re-solves IK with both feet held where they stood. Video IK let the planted feet
+  wander up to 5.9 cm, and OpenCap's own IK of these videos moves the heel at about 12 cm/s median.
+  With the feet held, they stay within 0.9 cm, for a 0.3° mean change in joint angles.
+
+The ground-force estimate then passes its kinematic checks (feet planted, vertical force 0.6–1.7 BW)
+but **fails dynamic consistency**. The pelvis residual moment equals a 56 cm centre-of-pressure shift
+(rule: ≤ 10 cm). The fast descent with an arm swing of about 90° in 0.3 s carries segment angular
+momentum that a quasi-static estimate cannot represent. The report therefore flags every muscle
+number as unreliable for this trial.
+
+The paired what-ifs are internally robust to the left/right split, but they inherit that caveat:
+
+| Variant | Effect |
+|---|---|
+| Ideal back extension exo, 40 N·m | erector spinae −7 to −8 points, 58 % of the time at its cap |
+| Back elastic, 60 N·m/rad | erector spinae −6 points |
+| Trunk-upright correction | abdominals −10 to −12 points |
+
+The synthetic squat is slow, and stays consistent: 4 cm CoP-shift equivalent.
+
+Conclusion for the roadmap: the kinematics side now works on real video. The muscle side needs measured
+ground forces for anything faster than a slow controlled squat, either force plates or pressure insoles
+(gap G-02). The software says so instead of producing confident numbers.
+
 ## Next: the first real accuracy measurement (closes gap D-04 for kinematics)
 
 Use the public **OpenCap LabValidation** dataset (SimTK project "opencap"): 10 subjects;

@@ -8,6 +8,10 @@
 - Live loop: `lsl-live`/`lsl-simulate`/`lsl-listen` (LSL) and `vmc-posture` (SlimeVR VMC → posture signals)
 - `suit-bridge`: cue markers → SenseShift/bHaptics BLE payloads (layouts parsed from the GPL firmware at run time)
 - `muscles --assist`: ideal assistive device (exo sizing upper bound), e.g. `knee_angle_r=40:neg`
+- `muscles`: planted-feet IK prior for double-stance exercises (`--no-plant`), dynamic-consistency verdict from
+  pelvis residuals; real-squat chain documented (validation-results §5)
+- `muscles`: variants (and GRF-split re-runs) in parallel processes, analysis capped at 30 fps; correction
+  admissibility counts only range violations the correction causes
 - Real-video agreement vs OpenCap (5 phones + 1 phone, public LabValidation squat): `rehabtwin augment` (OpenCap
   LSTM via Pose2Sim ONNX), `mp-multiview --opencap-calib --sync`, `mediapipe_lstm_pose2sim` config,
   `examples/opencap_agreement.sh`, `reference_grade` in validation reports

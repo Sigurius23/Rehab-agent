@@ -116,6 +116,10 @@ python -m rehabtwin correct  SESSION --spec squat_knee_valgus_right --illustrati
 python -m rehabtwin muscles  SESSION --rep 1 --correction squat_knee_valgus_right --weaken gluteus_medius_r=0.5 \
                              --assist knee_angle_r=40:neg --passive knee_angle_r=60@20:pos
 # --assist: ideal knee-extension exo, max 40 N·m; --passive: elastic band, 60 N·m/rad beyond 20° knee flexion
+# variants run in parallel (--workers, default up to 4 processes) at ≤ 30 fps (--max-fps): a slow squat does not
+# need 60 Hz static optimisation, and each variant is an independent problem
+# double-stance exercises first re-solve IK with both feet held where they stood (--no-plant to skip): video
+# kinematics let planted feet wander several cm, which the force estimate would differentiate twice
 # haptic posture cues (suit Track 1): offline replay of a rule set, also over a corrected motion
 python -m rehabtwin cues     SESSION --rules squat_posture [--motion SESSION/correction/<spec>/corrected.mot]
 ```
@@ -137,6 +141,11 @@ the load shifted by ± the given amount; a change (variant − measured, same sp
 robust only if it keeps its sign and stays ≥ 2 points of capacity under every split. Expect the
 absolute activation levels to move far more than the changes (±0.15 moved right-quadriceps
 peak demand between 37 % and 67 % on the synthetic squat).
+
+Every muscle study reports **dynamic consistency**. It takes the residual the estimated ground forces leave on the
+pelvis and expresses the moment as the centre-of-pressure shift that would explain it. Above 10 cm, or 10 % BW of
+force, the report says the forces do not fit the motion and that every muscle number is unreliable. This is the
+case for fast squats with arm swing, where segment angular momentum breaks the quasi-static estimate.
 
 `muscles.html` includes a **3D muscle view**: each muscle's line of action (OpenSim path, wrapping
 included) on the moving model, coloured by its static-optimisation activation or by the change

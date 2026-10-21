@@ -276,3 +276,74 @@ def rule_check(rules, time_m, sig_m, time_c, sig_c):
             "introduced": sorted(k for k, v in count.items() if v["corrected"]["violations"] and not v["measured"]["violations"]),
             "note": "Rules replayed without the tier/validation gate: a check of the motion, not of feedback."}
 
+
+
+FOOT_ANCHORS = [{"name": "heel_r", "body": "calcn_r"}, {"name": "toes_r", "body": "toes_r"},
+                {"name": "midfoot_r", "body": "calcn_r", "location": [0.1, 0.0, 0.04]},
+                {"name": "heel_l", "body": "calcn_l"}, {"name": "toes_l", "body": "toes_l"},
+                {"name": "midfoot_l", "body": "calcn_l", "location": [0.1, 0.0, -0.04]}]
+
+
+def plant_feet(model_path, motion_path, out_dir, start=None, stop=None, anchors=FOOT_ANCHORS,
+               anchor_weight=1000.0, other_weight=0.01, translation_weight=0.1, cutoff_hz=6.0):
+    """Double-stance prior: re-solve IK with both feet held at their median position over [start, stop].
+
+    Video kinematics let planted feet wander (OpenCap's own squat IK: ~12 cm/s median calcaneus speed,
+    9 cm excursion), and the quasi-static ground-force estimate differentiates the centre of mass twice.
+    For exercises done without moving the feet, the feet are anchored where they stood and every
+    coordinate is tracked weakly, so the rest of the body keeps its measured motion as far as the
+    planted feet allow (real 5-camera squat: feet 5.6 cm -> 0.9 cm excursion for a 0.3° mean change
+    in joint angles). Returns (planted motion path, qc dict).
+    """
+    osim = _osim()
+    out = Path(out_dir)
+    out.mkdir(parents=True, exist_ok=True)
+    measured = read_table(motion_path)
+    t0 = measured.time[0] if start is None else start
+    t1 = measured.time[-1] if stop is None else stop
+    keep = (measured.time >= t0 - 1e-9) & (measured.time <= t1 + 1e-9)
+    measured = Table(measured.columns, measured.data[keep], measured.time[keep], measured.in_degrees, measured.header)
+    traj = _anchor_trajectories(model_path, measured, anchors)
+    fixed = np.repeat(np.median(traj, axis=0)[None], len(measured.time), axis=0)
+    names = [ANCHOR_PREFIX + a["name"] for a in anchors]
+    _model_with_anchors(model_path, anchors, out / "model_with_anchors.osim")
+    write_trc(out / "anchors.trc", names, fixed, measured.time)
+    m = osim.Model(str(model_path))
+    state = m.initSystem()
+    cs = m.getCoordinateSet()
+    tracked = [c for c in measured.columns if cs.contains(c) and not cs.get(c).isConstrained(state)
+               and not cs.get(c).getLocked(state)]
+    write_table(out / "target.mot", tracked, np.column_stack([measured.col(c) for c in tracked]), measured.time,
+                in_degrees=True, name="plant_target")
+    tasks = [f'<IKMarkerTask name="{escape(n)}"><apply>true</apply><weight>{anchor_weight}</weight></IKMarkerTask>'
+             for n in names]
+    tasks += [f'<IKCoordinateTask name="{escape(c)}"><apply>true</apply><weight>'
+              f'{translation_weight if cs.get(c).getMotionType() == osim.Coordinate.Translational else other_weight}'
+              "</weight><value_type>from_file</value_type></IKCoordinateTask>" for c in tracked]
+    (out / "ik_setup.xml").write_text(f"""<?xml version="1.0" encoding="UTF-8" ?>
+<OpenSimDocument Version="40500"><InverseKinematicsTool name="planted"><results_directory>.</results_directory>
+<model_file>model_with_anchors.osim</model_file><constraint_weight>Inf</constraint_weight><accuracy>1e-5</accuracy>
+<IKTaskSet><objects>{"".join(tasks)}</objects><groups/></IKTaskSet><marker_file>anchors.trc</marker_file>
+<coordinate_file>target.mot</coordinate_file><time_range> {measured.time[0]} {measured.time[-1]}</time_range>
+<report_errors>false</report_errors><output_motion_file>planted_unfiltered.mot</output_motion_file>
+<report_marker_locations>false</report_marker_locations></InverseKinematicsTool></OpenSimDocument>
+""")
+    with _cwd(out):
+        if not osim.InverseKinematicsTool(str(out / "ik_setup.xml")).run():
+            raise RuntimeError(f"planted-feet IK failed ({out / 'ik_setup.xml'})")
+    raw = read_table(out / "planted_unfiltered.mot")
+    fps = 1.0 / float(np.median(np.diff(raw.time)))
+    write_table(out / "planted.mot", raw.columns, lowpass(raw.data, fps, cutoff_hz), raw.time, raw.in_degrees, name="planted")
+    planted = read_table(out / "planted.mot")
+    after = _anchor_trajectories(model_path, planted, anchors)
+    change = {c: float(np.sqrt(np.mean((planted.col(c) - measured.col(c)) ** 2)))
+              for c in tracked if planted.has(c) and cs.get(c).getMotionType() == osim.Coordinate.Rotational}
+    worst = sorted(change.items(), key=lambda kv: -kv[1])[:5]
+
+    def drift(p):
+        return round(float(np.max(np.linalg.norm(p - np.median(p, axis=0), axis=2))), 4)
+    qc = {"method": "IK re-solve with both feet anchored at their median position (double-stance prior)",
+          "feet_max_excursion_m": {"measured": drift(traj), "planted": drift(after)},
+          "coordinate_rms_change_deg": {"mean": round(float(np.mean(list(change.values()))), 2),
+                                        "largest": {c: round(v, 2) for c, v in worst}}}
+    return out / "planted.mot", qc

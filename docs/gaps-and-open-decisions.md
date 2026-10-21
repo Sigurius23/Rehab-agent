@@ -51,6 +51,9 @@
   squat, ±0.15 moves right-quadriceps peak demand between 37 % and 67 % — absolute muscle numbers are far less
   certain than paired what-if differences
 - ✅ Progress over sessions (`rehabtwin progress`): a change is "real" only beyond rep scatter and the validated MDC95
+- ✅ Muscle studies hold the feet where they stood (planted-feet IK prior) and report dynamic consistency; on the
+  real OpenCap squat the quasi-static forces fail it (56 cm CoP-shift residual), so the report marks muscle numbers
+  unreliable — measured ground forces are required beyond slow squats (G-02)
 - ✅ Passive elastic support what-if (`muscles --passive knee_angle_r=60@20:pos`) next to the ideal exo bound
 - ✅ First real-video numbers (`docs/validation-results.md` §4): MediaPipe 5-camera and 1-camera vs OpenCap on a public
   LabValidation squat; phone sync, OpenCap calibration, and OpenCap's LSTM marker augmenter (`rehabtwin augment`)

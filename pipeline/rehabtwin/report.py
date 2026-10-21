@@ -490,6 +490,26 @@ def _muscle_banner(study):
             "estimated, not measured.</p>")
 
 
+def _consistency_span(base, study):
+    e = html.escape
+    out = []
+    for folder, qc in study.get("kinematics_prior", {}).items():
+        out.append(f"<span>planted-feet prior ({e(folder)}): feet {qc['feet_max_excursion_m']['measured'] * 100:.1f} → "
+                   f"{qc['feet_max_excursion_m']['planted'] * 100:.1f} cm, joint angles changed "
+                   f"{qc['coordinate_rms_change_deg']['mean']}° on average</span>")
+    dc = base.get("dynamic_consistency")
+    if dc:
+        out.append(f"<span>dynamic consistency: <b>{'yes' if dc['consistent'] else 'NO'}</b> "
+                   f"(residual ≙ {dc['pelvis_moment_residual_as_cop_shift_m'] * 100:.0f} cm CoP shift, "
+                   f"{dc['pelvis_force_residual_bw'] * 100:.0f} % BW)</span>")
+        if not dc["consistent"]:
+            out.append("<p class='banner'><b>The estimated ground forces do not fit this motion.</b> The pelvis residuals "
+                       "exceed the consistency rule, typically because the movement is too fast for a quasi-static "
+                       "estimate (segment angular momentum, arm swing). Treat every muscle number on this page as "
+                       "unreliable; measure ground forces (force plates or pressure insoles) for this exercise.</p>")
+    return "".join(out)
+
+
 def write_muscles(path, study, view=None):
     """HTML for a muscle-effects study (rehabtwin muscles); ``view`` from ``muscles.view_data``."""
     e = html.escape
@@ -547,7 +567,8 @@ def write_muscles(path, study, view=None):
 <span>vertical GRF: {grf['min_vertical_bw']}–{grf['peak_vertical_bw']} BW</span>
 <span>right-foot share: {grf['right_share_range'][0]}–{grf['right_share_range'][1]}</span>
 <span>feet planted: {'yes' if grf['feet_planted'] else 'NO — estimate invalid'}</span>
-<span>valid exercise for this GRF model: {'yes' if base['valid_exercise'] else 'NO'}</span></div>
+<span>valid exercise for this GRF model: {'yes' if base['valid_exercise'] else 'NO'}</span>
+{_consistency_span(base, study)}</div>
 {_svg_bars(groups, variants, "Peak muscle-group activation (fraction of group capacity)")}
 {_muscle_view(view) if view else ""}
 <h2>Biggest changes</h2>{sens_html}

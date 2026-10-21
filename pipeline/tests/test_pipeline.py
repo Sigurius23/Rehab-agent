@@ -170,6 +170,9 @@ def test_muscle_effects_and_weakness_what_if(selftest_run):
                                    passive=["knee_angle_r=60@20:pos"])
     base = study["runs"]["measured"]
     assert base["grf"]["feet_planted"] and 0.8 < base["grf"]["min_vertical_bw"] <= base["grf"]["peak_vertical_bw"] < 1.4
+    prior = study["kinematics_prior"]["measured"]                    # double stance: feet held where they stood
+    assert prior["feet_max_excursion_m"]["planted"] < 0.01 and prior["coordinate_rms_change_deg"]["mean"] < 1.0
+    assert base["dynamic_consistency"]["consistent"]                  # slow synthetic squat: forces fit the motion
     ga = base["group_activation"]
     # a deep squat is carried by the knee and hip extensors
     top = sorted(ga, key=lambda g: -ga[g]["peak"])[:4]

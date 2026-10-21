@@ -3,7 +3,7 @@
 # measurement -> validation -> correction view -> strength calibration -> muscle effects (+ weakness, ideal exo,
 # passive elastic, GRF sensitivity, 3D muscle view) -> haptic cue replay.
 # Needs the biomech env (pip install -e "pipeline[test]") and `python3 scripts/clone.py --only perfanalytics/pose2sim`.
-# Takes ~40 min on 4 CPU cores (static optimisation dominates). Open OUT/index.html afterwards.
+# Takes ~20 min on 4 CPU cores (static optimisation dominates; muscle variants run in parallel). Open OUT/index.html afterwards.
 set -euo pipefail
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 PY="${BIO_PY:-python}"

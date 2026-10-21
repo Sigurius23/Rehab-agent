@@ -45,6 +45,11 @@ GROUPS = {
 }
 
 VALID_EXERCISES = {"squat", "trunk_flexion", "free_double_stance"}
+# Residuals the estimated ground forces leave on the pelvis. A moment residual is expressed as the
+# centre-of-pressure shift that would explain it; beyond ~10 cm (or 10 % BW of force) the forces and
+# the motion do not belong together (e.g. fast squats with arm swing: segment angular momentum).
+CONSISTENCY_COP_SHIFT_M = 0.10
+CONSISTENCY_FORCE_BW = 0.10
 
 
 def muscle_groups(names):
@@ -314,12 +319,17 @@ def reserves_xml(model_path, path, residual_force=10.0, reserve_force=1.0, ideal
 
 
 def run(model_path, motion_path, out_dir, weaken=None, label="measured", exercise="squat", start=None, stop=None,
-        assist=(), grf_share_bias=0.0, passive=()):
+        assist=(), grf_share_bias=0.0, passive=(), max_fps=None):
     """GRF estimate → ID → SO for one motion. Returns a summary dict (also written to muscles.json)."""
     osim = _osim()
     out = Path(out_dir) / label
     out.mkdir(parents=True, exist_ok=True)
     tab = read_table(motion_path)
+    fps = 1.0 / float(np.median(np.diff(tab.time)))
+    if max_fps and fps > 1.05 * max_fps:      # a slow exercise does not need 60 Hz static optimisation
+        step = int(round(fps / max_fps))
+        tab = Table(tab.columns, tab.data[::step], tab.time[::step], tab.in_degrees, tab.header)
+        fps /= step
     t0 = tab.time[0] if start is None else start
     t1 = tab.time[-1] if stop is None else stop
     write_table(out / "motion.mot", tab.columns, tab.data, tab.time, tab.in_degrees, name="motion")
@@ -377,7 +387,8 @@ def run(model_path, motion_path, out_dir, weaken=None, label="measured", exercis
         summary["caveats"].append("Passive elements are ideal one-sided linear springs on the joint coordinate "
                                   "(no slip, no strap migration, no skin compression); real garments lose much of "
                                   "their nominal stiffness to soft tissue.")
-    summary.update({"label": label, "model_changes": model_info, "time_range_s": [round(t0, 3), round(t1, 3)]})
+    summary.update({"label": label, "model_changes": model_info, "time_range_s": [round(t0, 3), round(t1, 3)],
+                    "analysis_fps": round(fps, 2)})
     (out / "muscles.json").write_text(json.dumps(summary, indent=2) + "\n")
     return summary
 
@@ -408,7 +419,14 @@ def summarise(out, model_path, grf_qc, exercise, assist=()):
         if idt.has(c):
             v = idt.col(c) / mass
             moments[c.replace("_moment", "")] = {"max_Nm_per_kg": round(float(v.max()), 3), "min_Nm_per_kg": round(float(v.min()), 3)}
-    residual = {c: round(float(np.max(np.abs(idt.col(c)))), 1) for c in idt.columns if c.startswith("pelvis_t")}
+    residual = {c: round(float(np.max(np.abs(idt.col(c)))), 1) for c in idt.columns if c.startswith("pelvis_")}
+    weight = mass * 9.81
+    rot = max((v for c, v in residual.items() if c.endswith("_moment")), default=0.0) / weight
+    lin = max((v for c, v in residual.items() if c.endswith("_force")), default=0.0) / weight
+    consistency = {"pelvis_moment_residual_as_cop_shift_m": round(rot, 3), "pelvis_force_residual_bw": round(lin, 3),
+                   "consistent": bool(rot <= CONSISTENCY_COP_SHIFT_M and lin <= CONSISTENCY_FORCE_BW),
+                   "rule": f"pelvis residual moment / body weight <= {CONSISTENCY_COP_SHIFT_M} m and residual force "
+                           f"<= {CONSISTENCY_FORCE_BW} BW"}
     # Reserve torques that SO had to use (N·m) — large values mean muscles could not do it alone.
     reserve_peak = {}
     for r in reserves:
@@ -431,6 +449,7 @@ def summarise(out, model_path, grf_qc, exercise, assist=()):
         "group_activation": group_act,
         "joint_moments": moments,
         "pelvis_residual_force_N": residual,
+        "dynamic_consistency": consistency,
         "reserve_torque_peaks_Nm": reserve_peak,
         "muscles_saturated": sorted(c for c in act.columns if c in fmax and act.col(c).max() > 0.98),
         "caveats": [

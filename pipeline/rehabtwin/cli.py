@@ -18,6 +18,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import shutil
 import sys
 from pathlib import Path
@@ -126,7 +127,7 @@ def strength_calibration(session_dir, tests_file):
 
 
 def muscle_study(session_dir, rep=1, start=None, stop=None, correction=None, weaken=(), assist=(), view_3d=True,
-                 grf_sensitivity=0.0, use_strength=False, passive=()):
+                 grf_sensitivity=0.0, use_strength=False, passive=(), workers=None, max_fps=30.0, plant=True):
     """Measured motion (+ corrected motion, + weakened variants) through GRF estimate → ID → SO."""
     from . import muscles
     session_dir = Path(session_dir)
@@ -168,20 +169,43 @@ def muscle_study(session_dir, rep=1, start=None, stop=None, correction=None, wea
         coord, k, q0, direction = muscles.parse_passive(spec)
         variants.append((f"passive spring {coord} {k:g} N·m/rad from {q0:g}° ({direction})",
                          f"passive_{coord}_{k:g}_{q0:g}_{direction}", motion, {"passive": [spec]}))
+    prior = {}
+    if plant and exercise in muscles.VALID_EXERCISES:
+        # double-stance exercise: hold both feet where they stood before differentiating anything
+        from .correction import plant_feet
+        planted = {}
+        for _, folder, mot, _ in variants:
+            if str(mot) not in planted:
+                planted[str(mot)], prior[folder] = plant_feet(model, mot, out / "kinematics" / folder,
+                                                              start=start - 0.5, stop=stop + 0.5)
+        variants = [(lab, folder, planted[str(mot)], kw) for lab, folder, mot, kw in variants]
     used = {lab: mot for lab, _, mot, _ in variants}     # motion each variant moved with (3D muscle view)
 
-    def run_all(bias=0.0):
-        sfx = f"_grf{bias:+.2f}" if bias else ""
-        return {lab: muscles.run(model, mot, out, label=folder + sfx, exercise=exercise, start=start, stop=stop,
-                                 grf_share_bias=bias, **kw) for lab, folder, mot, kw in variants}
-    runs = run_all()
-    study = {"twin_tier": sess["twin_tier"], "muscle_model": muscle_model, "runs": runs,
+    biases = [0.0] + ([grf_sensitivity, -grf_sensitivity] if grf_sensitivity else [])
+    jobs = [(b, lab, dict(model_path=model, motion_path=mot, out_dir=out, label=folder + (f"_grf{b:+.2f}" if b else ""),
+                          exercise=exercise, start=start, stop=stop, grf_share_bias=b, max_fps=max_fps, **kw))
+            for b in biases for lab, folder, mot, kw in variants]
+    workers = min(len(jobs), workers or max(1, min(4, os.cpu_count() or 1)))
+    if workers > 1:
+        # variants are independent static-optimisation problems: one process each (OpenSim is single-threaded here)
+        import multiprocessing
+        from concurrent.futures import ProcessPoolExecutor
+        with ProcessPoolExecutor(workers, mp_context=multiprocessing.get_context("spawn")) as pool:
+            futures = [pool.submit(muscles.run, **kw) for _, _, kw in jobs]
+            results = [f.result() for f in futures]
+    else:
+        results = [muscles.run(**kw) for _, _, kw in jobs]
+    by_bias = {}
+    for (b, lab, _), r in zip(jobs, results):
+        by_bias.setdefault(b, {})[lab] = r
+    runs = by_bias[0.0]
+    study = {"twin_tier": sess["twin_tier"], "muscle_model": muscle_model, "kinematics_prior": prior, "runs": runs,
              "comparisons": {lab: muscles.compare(runs["measured"], r) for lab, r in runs.items() if lab != "measured"}}
     if grf_sensitivity:
         # The left/right load split is the least certain input. Re-run every variant with the right
         # foot's share shifted both ways: a change is robust only if it keeps its sign and size under
         # every split (paired: variant and measured always share the same split).
-        shifted = {b: run_all(b) for b in (grf_sensitivity, -grf_sensitivity)}
+        shifted = {b: by_bias[b] for b in (grf_sensitivity, -grf_sensitivity)}
         split_runs = {"measured": runs["measured"], **{f"right share {b:+.2f}": r["measured"] for b, r in shifted.items()}}
         study["grf_sensitivity"] = {"right_share_bias": grf_sensitivity, "bands": muscles.grf_bands(split_runs),
                                     "min_change": muscles.MIN_ROBUST_CHANGE}
@@ -347,6 +371,10 @@ def main(argv=None):
                          "lumbar_total_extension=30:pos (physical N·m between pelvis and thorax); repeatable")
     mu.add_argument("--no-3d", action="store_true", help="skip the 3D muscle view (smaller report)")
     mu.add_argument("--strength", action="store_true", help="use the strength-calibrated model (rehabtwin strength)")
+    mu.add_argument("--workers", type=int, help="parallel static-optimisation processes (default: up to 4)")
+    mu.add_argument("--no-plant", action="store_true",
+                    help="use the measured motion as is (default for double-stance exercises: feet held where they stood)")
+    mu.add_argument("--max-fps", type=float, default=30.0, help="analyse at most this frame rate (default 30)")
     mu.add_argument("--passive", action="append", default=[], metavar="COORD=K[@Q0][:pos|neg]",
                     help="passive one-sided spring/elastic, e.g. knee_angle_r=40@10:pos (N·m/rad, slack until 10° "
                          "flexion); back elastic resisting trunk flexion: lumbar_total_extension=60@0:neg; repeatable")
@@ -447,7 +475,7 @@ def main(argv=None):
                           "derived_signals": summary.get("derived_signals"), "report": str(out / "correction.html")}, indent=1))
     elif a.cmd == "muscles":
         study, out = muscle_study(a.session, a.rep, a.start, a.stop, a.correction, a.weaken, a.assist, not a.no_3d,
-                                  a.grf_sensitivity, a.strength, a.passive)
+                                  a.grf_sensitivity, a.strength, a.passive, a.workers, a.max_fps, not a.no_plant)
         for lab, cmp in study["comparisons"].items():
             top = sorted(cmp.items(), key=lambda kv: -abs(kv[1]["change"]))[:5]
             print(lab + ": " + ", ".join(f"{g} {v['base']:.2f}->{v['other']:.2f}" for g, v in top))
