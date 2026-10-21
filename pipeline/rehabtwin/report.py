@@ -10,10 +10,28 @@ from pathlib import Path
 
 import numpy as np
 
+_CSS = """
+:root { --bg:#ffffff; --fg:#111827; --muted:#6b7280; --line:#e5e7eb; --rep:#dbeafe55; --warn:#fef3c7; --warnfg:#92400e; }
+@media (prefers-color-scheme: dark) { :root { --bg:#0b1020; --fg:#e5e7eb; --muted:#9ca3af; --line:#1f2937; --rep:#1e3a8a55; --warn:#451a03; --warnfg:#fde68a; } }
+body { font: 14px/1.5 system-ui, sans-serif; background: var(--bg); color: var(--fg); margin: 0 auto; max-width: 980px; padding: 16px; }
+h1 { font-size: 20px; margin: 8px 0; } h2 { font-size: 16px; margin-top: 28px; }
+.banner { background: var(--warn); color: var(--warnfg); padding: 10px 14px; border-radius: 8px; }
+table { border-collapse: collapse; width: 100%; font-size: 13px; display: block; overflow-x: auto; }
+td, th { border-bottom: 1px solid var(--line); padding: 4px 8px; text-align: left; white-space: nowrap; }
+.b { padding: 1px 6px; border-radius: 10px; font-size: 12px; }
+.validated, .pass { background: #d1fae5; color: #065f46; } .unvalidated, .not-tested { background: #e5e7eb; color: #374151; }
+.fail { background: #fee2e2; color: #991b1b; }
+.chart { width: 100%; height: auto; margin: 8px 0; } .ct { font-size: 13px; fill: var(--fg); font-weight: 600; }
+.ax { font-size: 10px; fill: var(--muted); } .lg { font-size: 11px; font-weight: 600; }
+.grid { stroke: var(--line); } .rep { fill: var(--rep); } .rl { font-size: 10px; fill: var(--muted); }
+.kv span { display: inline-block; margin-right: 18px; } .muted { color: var(--muted); }
+button { font: inherit; padding: 2px 12px; border-radius: 6px; border: 1px solid var(--line); background: var(--bg); color: var(--fg); }
+"""
+
 PALETTE = ["#2563eb", "#dc2626", "#059669", "#d97706", "#7c3aed", "#0891b2"]
 
 
-def _svg_chart(t, series, reps, title, unit="deg", w=760, h=220, ref=None):
+def _svg_chart(t, series, reps, title, unit="deg", w=760, h=220, ref=None, ref_label="reference"):
     """Line chart; ``ref`` = (ref_time, {name: values}) is drawn dashed in the same colours."""
     pad_l, pad_r, pad_t, pad_b = 48, 12, 30, 28
     ref_t, ref_series = ref if ref else (None, {})
@@ -37,7 +55,7 @@ def _svg_chart(t, series, reps, title, unit="deg", w=760, h=220, ref=None):
     lx = w - pad_r
     legend = [(n, PALETTE[i % len(PALETTE)], False) for i, n in enumerate(series)]
     if ref_series:
-        legend.append(("dashed = reference", None, True))
+        legend.append((f"dashed = {ref_label}", None, True))
     for name, col, is_note in reversed(legend):
         parts.append(f'<text x="{lx}" y="15" class="lg" text-anchor="end"'
                      f'{"" if is_note else f" fill={chr(34)}{col}{chr(34)}"}>{html.escape(name)}</text>')
@@ -113,7 +131,7 @@ PLAYER_JS = r"""
     }
     if (D.ref) {
       const kr = Math.min(k, D.ref.pelvis.length - 1);
-      for (const [a, b] of D.bones) if (D.ref[a] && D.ref[b]) line(D.ref[a][kr], D.ref[b][kr], css('--muted'), 2 * (window.devicePixelRatio || 1), [6, 5]);
+      for (const [a, b] of D.bones) if (D.ref[a] && D.ref[b]) line(D.ref[a][kr], D.ref[b][kr], D.ref_color || css('--muted'), 2 * (window.devicePixelRatio || 1), [6, 5]);
     }
     for (const [a, b] of D.bones) if (D.est[a] && D.est[b]) line(D.est[a][k], D.est[b][k], side(a, b), 3 * (window.devicePixelRatio || 1));
     slider.value = k; lab.textContent = D.t[k].toFixed(2) + ' s';
@@ -134,7 +152,8 @@ PLAYER_JS = r"""
 """
 
 
-def _player(skeleton, ref_skeleton=None):
+def _player(skeleton, ref_skeleton=None, ref_label="reference, overlaid on the estimate's pelvis",
+            ref_color=None, align_pelvis=True):
     import json
     from .kinematics import SKELETON_BONES
     t, pos = skeleton
@@ -146,7 +165,7 @@ def _player(skeleton, ref_skeleton=None):
         # pelvis (horizontal shift only: heights above the floor stay as measured).
         rt, rpos = ref_skeleton
         shift = None
-        if "pelvis" in rpos and "pelvis" in pos:
+        if align_pelvis and "pelvis" in rpos and "pelvis" in pos:
             rp = np.stack([np.interp(t, rt, rpos["pelvis"][:, j]) for j in range(3)], axis=1)
             shift = pos["pelvis"] - rp
             shift[:, 1] = 0.0
@@ -155,8 +174,10 @@ def _player(skeleton, ref_skeleton=None):
             q = np.stack([np.interp(t, rt, p[:, j]) for j in range(3)], axis=1)
             ref[b] = np.round(q + (shift if shift is not None else 0.0), 3).tolist()
         data["ref"] = ref
+        if ref_color:
+            data["ref_color"] = ref_color
     legend = ("<span style='color:#2563eb'>right</span> · <span style='color:#dc2626'>left</span>"
-              + (" · <span class='muted'>dashed = reference, overlaid on the estimate's pelvis</span>" if ref_skeleton is not None else ""))
+              + (f" · <span style='color:{ref_color or 'var(--muted)'}'>dashed = {html.escape(ref_label)}</span>" if ref_skeleton is not None else ""))
     return (f"<h2>3D replay</h2><p class='muted'>OpenSim model joint centres from the IK solution; drag to orbit. {legend}</p>"
             "<canvas id='skel' style='width:100%;touch-action:none;cursor:grab'></canvas>"
             "<div class='kv'><button id='skel-play' type='button'>Pause</button> "
@@ -164,6 +185,52 @@ def _player(skeleton, ref_skeleton=None):
             "<span id='skel-time' class='muted'></span></div>"
             f"<script type='application/json' id='skel-data'>{json.dumps(data, separators=(',', ':'))}</script>"
             f"<script>{PLAYER_JS}</script>")
+
+
+def write_correction(path, summary, measured_time, signals_measured, signals_corrected, skeleton, skeleton_corrected):
+    """HTML for one correction: measured (solid) vs corrected (dashed) on the same model."""
+    e = html.escape
+    keys = list(summary["changes"]) + list(summary["compensations"])[:4]
+    charts = []
+    for k in keys:
+        if k in signals_measured:
+            charts.append(_svg_chart(measured_time, {k: signals_measured[k]}, [], f"{k}: measured vs corrected",
+                                     ref=(measured_time, {k: signals_corrected[k]}), ref_label="corrected"))
+    for title, ks in (("Knee frontal-plane projection angle (+ valgus)", ["knee_fppa_r", "knee_fppa_l"]),
+                      ("Trunk vs gravity (sagittal, + forward)", ["torso.sagittal"])):
+        ser = {k: signals_measured[k] for k in ks if k in signals_measured}
+        if ser:
+            charts.append(_svg_chart(measured_time, ser, [], title,
+                                     ref=(measured_time, {k: signals_corrected[k] for k in ser}), ref_label="corrected"))
+    rows = "".join(f"<tr><td>{e(c)}</td><td>requested</td><td>{v['max_abs_change_deg']}</td>"
+                   f"<td>tracking RMSE {v['target_tracking_rmse_deg']}</td></tr>" for c, v in summary["changes"].items())
+    rows += "".join(f"<tr><td>{e(c)}</td><td>compensation</td><td>{v['max_abs_change_deg']}</td>"
+                    f"<td>mean {v['mean_change_deg']:+}</td></tr>" for c, v in summary["compensations"].items())
+    viol = "".join(f"<li>{e(v['coordinate'])}: exceeds range {v['range']} by {v['exceeds_range_by']}°</li>"
+                   for v in summary["range_of_motion_violations"]) or "<li>none</li>"
+    drift = summary["feet_anchor_drift_m"]
+    banner = ("<p class='banner'><b>ILLUSTRATION ONLY.</b> Computed on a generic (Tier "
+              f"{e(summary['twin_tier'])}) skeleton — docs/accuracy.md forbids using it as a correction target "
+              "or for feedback. It shows what the requested change implies for the rest of the body.</p>"
+              if summary["twin_tier"] != "A" else
+              "<p class='banner'><b>Tier A correction target.</b> Clinician review required before use.</p>")
+    doc = f"""<!doctype html><html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1"><title>Correction {e(summary['spec'])}</title>
+<style>{_CSS}</style></head><body>
+<h1>Correction view — {e(summary['spec'])}</h1>
+{banner}
+<p>{e(summary['rationale'])} <span class="muted">Spec author: {e(summary['spec_author'])}.</span></p>
+<div class="kv"><span>admissible: <b>{'yes' if summary['admissible'] else 'no'}</b> ({e(summary['admissible_rule'])})</span>
+<span>feet drift: mean {drift['mean']} m, max {drift['max']} m</span></div>
+{_player(skeleton, skeleton_corrected, ref_label="corrected", ref_color="#059669", align_pelvis=False)}
+{''.join(charts)}
+<h2>What changed</h2>
+<table><tr><th>coordinate</th><th>kind</th><th>max change (°)</th><th></th></tr>{rows}</table>
+<h2>Range-of-motion check</h2><ul>{viol}</ul>
+<p class="muted">Files: {e(summary['measured_motion'])} (measured), {e(summary['corrected_motion'])} (corrected), correction.json.</p>
+</body></html>"""
+    Path(path).write_text(doc)
+    return path
 
 
 def write(path, session, qc, metrics, signals, time, validation=None, reference=None, skeleton=None,
@@ -206,23 +273,7 @@ def write(path, session, qc, metrics, signals, time, validation=None, reference=
     doc = f"""<!doctype html><html lang="en"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Session {e(session['session_id'])}</title>
-<style>
-:root {{ --bg:#ffffff; --fg:#111827; --muted:#6b7280; --line:#e5e7eb; --rep:#dbeafe55; --warn:#fef3c7; --warnfg:#92400e; }}
-@media (prefers-color-scheme: dark) {{ :root {{ --bg:#0b1020; --fg:#e5e7eb; --muted:#9ca3af; --line:#1f2937; --rep:#1e3a8a55; --warn:#451a03; --warnfg:#fde68a; }} }}
-body {{ font: 14px/1.5 system-ui, sans-serif; background: var(--bg); color: var(--fg); margin: 0 auto; max-width: 980px; padding: 16px; }}
-h1 {{ font-size: 20px; margin: 8px 0; }} h2 {{ font-size: 16px; margin-top: 28px; }}
-.banner {{ background: var(--warn); color: var(--warnfg); padding: 10px 14px; border-radius: 8px; }}
-table {{ border-collapse: collapse; width: 100%; font-size: 13px; display: block; overflow-x: auto; }}
-td, th {{ border-bottom: 1px solid var(--line); padding: 4px 8px; text-align: left; white-space: nowrap; }}
-.b {{ padding: 1px 6px; border-radius: 10px; font-size: 12px; }}
-.validated, .pass {{ background: #d1fae5; color: #065f46; }} .unvalidated, .not-tested {{ background: #e5e7eb; color: #374151; }}
-.fail {{ background: #fee2e2; color: #991b1b; }}
-.chart {{ width: 100%; height: auto; margin: 8px 0; }} .ct {{ font-size: 13px; fill: var(--fg); font-weight: 600; }}
-.ax {{ font-size: 10px; fill: var(--muted); }} .lg {{ font-size: 11px; font-weight: 600; }}
-.grid {{ stroke: var(--line); }} .rep {{ fill: var(--rep); }} .rl {{ font-size: 10px; fill: var(--muted); }}
-.kv span {{ display: inline-block; margin-right: 18px; }} .muted {{ color: var(--muted); }}
-button {{ font: inherit; padding: 2px 12px; border-radius: 6px; border: 1px solid var(--line); background: var(--bg); color: var(--fg); }}
-</style></head><body>
+<style>{_CSS}</style></head><body>
 <h1>Session {e(session['session_id'])} — {e(metrics['exercise'])}{' (SYNTHETIC)' if synthetic else ''}</h1>
 <p class="banner"><b>Tier {tier}.</b> {e(metrics['claims'])} Research prototype, not a medical device.</p>
 <div class="kv muted"><span>reps: <b>{metrics['n_reps']}</b></span><span>detection rate: {qc.get('detection_rate')}</span>

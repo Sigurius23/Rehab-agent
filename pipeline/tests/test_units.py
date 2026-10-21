@@ -2,7 +2,7 @@
 import numpy as np
 import pytest
 
-from rehabtwin import filtering, frames, hsmr, opensim_stage, validation
+from rehabtwin import correction, filtering, frames, hsmr, opensim_stage, validation
 from rehabtwin.io_formats import Table, read_table, read_trc, write_table, write_trc
 from rehabtwin.kinematics import _fppa, classify
 from rehabtwin.metrics import segment_reps
@@ -255,3 +255,25 @@ def test_device_gravity_overrides_image_estimates():
     hips = g[0, :2].mean(axis=0) - g[0, 2:].mean(axis=0)
     true = body[:2].mean(axis=0) - body[2:].mean(axis=0)
     assert abs(frames.angle_deg(hips, [0, 1, 0]) - frames.angle_deg(true, [0, 1, 0])) < 1e-6
+
+
+def test_correction_target_modes():
+    t = np.arange(5) * 0.1
+    tab = Table(["a_r", "a_l"], np.array([[0, 1], [2, 1], [4, 1], [6, 1], [8, 1.0]]), t)
+    spec = {"targets": [{"coordinate": "a_r", "mode": "clamp", "max": 5.0}]}
+    assert correction.apply_targets(tab, spec)["a_r"].tolist() == [0, 2, 4, 5, 5]
+    spec = {"targets": [{"coordinate": "a_r", "mode": "scale", "factor": 0.5, "about": 2.0}]}
+    assert correction.apply_targets(tab, spec)["a_r"].tolist() == [1, 2, 3, 4, 5]
+    spec = {"targets": [{"coordinate": "a_r", "mode": "mirror", "from": "a_l"}]}
+    assert correction.apply_targets(tab, spec)["a_r"].tolist() == [1] * 5
+    spec = {"targets": [{"coordinate": "a_r", "mode": "set", "value": 3}, {"coordinate": "a_l", "mode": "offset", "delta": -1}]}
+    out = correction.apply_targets(tab, spec)
+    assert out["a_r"].tolist() == [3] * 5 and out["a_l"].tolist() == [0] * 5
+    with pytest.raises(ValueError):
+        correction.apply_targets(tab, {"targets": [{"coordinate": "missing", "mode": "set", "value": 0}]})
+
+
+def test_correction_specs_load():
+    for name in ("squat_knee_valgus_right", "squat_trunk_upright"):
+        spec = correction.load_spec(name)
+        assert spec["targets"] and spec["anchors"] and "TEMPLATE" in spec["author"]

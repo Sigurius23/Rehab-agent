@@ -140,3 +140,19 @@ def test_validate_cli(selftest_run, tmp_path):
     rep = json.loads((tmp_path / "v.json").read_text())
     assert rep["kinematics_rmse_deg"]["knee_r"]["sagittal"] < 2.0
     assert read_table(out / "opensim" / "ik.mot").has("knee_angle_r")
+
+
+def test_correction_view_on_synthetic_valgus(selftest_run):
+    out, _, _ = selftest_run
+    from rehabtwin.correction import CorrectionRefused
+    with pytest.raises(CorrectionRefused):           # Tier C: no targets without --illustrative
+        cli.run_correction(out, "squat_knee_valgus_right")
+    s, cdir = cli.run_correction(out, "squat_knee_valgus_right", illustrative=True)
+    assert s["status"].startswith("ILLUSTRATION ONLY") and s["admissible"]
+    fppa = s["derived_signals"]["knee_fppa_r"]
+    assert fppa["measured_range"][1] - fppa["corrected_range"][1] > 15      # valgus removed
+    assert s["feet_anchor_drift_m"]["max"] < 0.02                             # feet stay planted
+    assert (cdir / "correction.html").read_text().count("ILLUSTRATION ONLY") >= 1
+    t, _ = cli.run_correction(out, "squat_trunk_upright", illustrative=True)
+    trunk = t["derived_signals"]["torso.sagittal"]
+    assert trunk["measured_range"][1] - trunk["corrected_range"][1] > 8       # less trunk lean

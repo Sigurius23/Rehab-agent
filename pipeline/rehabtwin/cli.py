@@ -6,6 +6,7 @@
   selftest  synth -> process -> validate, exits non-zero if the round trip regresses
   mp-mono   raw MediaPipe dump (adapters/mediapipe_pose.py) -> monocular sequence .npz
   mp-multiview  synchronised raw MediaPipe dumps + Qualisys calibration -> triangulated sequence .npz
+  correct   session folder + correction spec -> corrected motion, correction.json, correction.html
 """
 from __future__ import annotations
 
@@ -75,6 +76,27 @@ def process(seq_path, out_dir, exercise="squat", config=None, mass_kg=None, heig
     records.write_json(out_dir / "session.json", sess)
     report.write(out_dir / "report.html", sess, stage.qc, met, signals, est.time, val, ref_plot, skeleton, ref_skeleton)
     return {"session": sess, "metrics": met, "qc": stage.qc, "validation": val, "motion": motion}
+
+
+def run_correction(session_dir, spec_name, illustrative=False):
+    """Correction view for a processed session (see rehabtwin/correction.py)."""
+    from . import correction
+    spec = correction.load_spec(spec_name)
+    summary, measured, corrected, out = correction.correct(session_dir, spec, illustrative=illustrative)
+    model = Path(session_dir) / json.loads((Path(session_dir) / "session.json").read_text())["pipeline"]["outputs"]["model"]
+    sig_m = {c: measured.col(c) for c in measured.columns}
+    sig_m.update(metrics_mod.derived_signals(measured, model))
+    sig_c = {c: corrected.col(c) for c in corrected.columns}
+    sig_c.update(metrics_mod.derived_signals(corrected, model))
+    for k in ("knee_fppa_r", "knee_fppa_l", "torso.sagittal", "torso.frontal", "lumbar_total.sagittal"):
+        if k in sig_m:
+            summary.setdefault("derived_signals", {})[k] = {
+                "measured_range": [round(float(np.min(sig_m[k])), 2), round(float(np.max(sig_m[k])), 2)],
+                "corrected_range": [round(float(np.min(sig_c[k])), 2), round(float(np.max(sig_c[k])), 2)]}
+    records.write_json(out / "correction.json", summary)
+    report.write_correction(out / "correction.html", summary, measured.time, sig_m, sig_c,
+                            skeleton_positions(model, measured), skeleton_positions(model, corrected))
+    return summary, out
 
 
 def _synth(out_dir, seed=0, **kw):
@@ -148,6 +170,11 @@ def main(argv=None):
     mv.add_argument("--qca", required=True, help="Qualisys .qca.txt calibration")
     mv.add_argument("--out", required=True)
     mv.add_argument("--person-ref", default="UNSPECIFIED")
+    co = sub.add_parser("correct", help="correction view for a processed session")
+    co.add_argument("session")
+    co.add_argument("--spec", required=True, help="name in pipeline/configs/corrections or a path")
+    co.add_argument("--illustrative", action="store_true",
+                    help="allow a labelled illustration on a Tier-B/C body (never a target, never for feedback)")
     a = ap.parse_args(argv)
 
     if a.cmd == "process":
@@ -180,6 +207,15 @@ def main(argv=None):
         seq.save(a.out)
         print(json.dumps({"out": a.out, "frames": seq.n_frames, "valid": int(seq.valid.sum()),
                           **{k: seq.meta[k] for k in ("intrinsics_source", "reprojection_px_median") if k in seq.meta}}))
+    elif a.cmd == "correct":
+        from .correction import CorrectionRefused
+        try:
+            summary, out = run_correction(a.session, a.spec, a.illustrative)
+        except CorrectionRefused as e:
+            print(f"refused: {e}", file=sys.stderr)
+            return 2
+        print(json.dumps({"status": summary["status"], "admissible": summary["admissible"],
+                          "derived_signals": summary.get("derived_signals"), "report": str(out / "correction.html")}, indent=1))
     elif a.cmd == "selftest":
         res, failures = selftest(a.out)
         per = res["validation"]["per_coordinate"]
