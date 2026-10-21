@@ -1,4 +1,6 @@
 """Fast unit tests (numpy/scipy only). Run: python -m pytest pipeline/tests -q"""
+import time
+
 import numpy as np
 import pytest
 
@@ -337,3 +339,72 @@ def test_lsl_live_loop_matches_offline_replay():
     live.join()
     online = [e for e in res["eng"].log if e.get("decision") == "cue"]
     assert len(online) == len(offline) >= 2
+
+
+def _rot_quat(axis, deg):
+    a = np.radians(deg) / 2
+    axis = np.asarray(axis, float) / np.linalg.norm(axis)
+    return np.array([*(axis * np.sin(a)), np.cos(a)])
+
+
+def _vmc_frame(knee_deg=60.0, valgus_deg=8.0, trunk_deg=30.0):
+    """Synthetic SlimeVR-like VMC bundle (Unity left-handed args) for a subject facing +x, right = +z."""
+    from rehabtwin.vmc import rh_to_unity
+    fwd_axis, right_axis = [1, 0, 0], [0, 0, 1]
+    ident = np.array([0.0, 0.0, 0.0, 1.0])
+    rh = {
+        "Hips": ([0, 0.9, 0], ident),
+        "Spine": ([0, 0.1, 0], _rot_quat(right_axis, -trunk_deg)),   # bend forward at the spine (towards +x)
+        "Chest": ([0, 0.2, 0], ident),
+        "Neck": ([0, 0.25, 0], ident),
+        # right thigh: knee pushed medially (towards -z) by valgus/2, shank back out by valgus
+        "RightUpperLeg": ([0, -0.05, 0.1], _rot_quat(fwd_axis, valgus_deg / 2)),
+        "RightLowerLeg": ([0, -0.42, 0], _rot_quat(fwd_axis, -valgus_deg)),
+        "RightFoot": ([0, -0.42, 0], ident),
+        "LeftUpperLeg": ([0, -0.05, -0.1], _rot_quat(right_axis, knee_deg / 2)),
+        "LeftLowerLeg": ([0, -0.42, 0], _rot_quat(right_axis, -knee_deg)),
+        "LeftFoot": ([0, -0.42, 0], ident),
+    }
+    return {name: rh_to_unity(np.array(p, float), q) for name, (p, q) in rh.items()}
+
+
+def test_vmc_forward_kinematics_and_posture_signals():
+    from rehabtwin.vmc import VMCPose
+    pose = VMCPose()
+    for name, (p, q) in _vmc_frame().items():
+        pose.on_bone("/VMC/Ext/Bone/Pos", name, *p, *q)
+    pose.on_root("/VMC/Ext/Root/Pos", "root", 0, 0, 0, 0, 0, 0, 1)
+    s = pose.signals()
+    assert abs(s["knee_angle_l"] - 60.0) < 1e-6 and abs(s["knee_angle_r"] - 8.0) < 1e-6
+    assert abs(s["knee_fppa_r"] - 8.0) < 1e-6          # medial knee = valgus, positive
+    # the fixture bends at the Spine joint: pelvis upright, chest + neck (0.45 m) tilted 30 deg
+    expected_trunk = np.degrees(np.arctan2(0.45 * np.sin(np.radians(30)), 0.1 + 0.45 * np.cos(np.radians(30))))
+    assert abs(s["torso.sagittal"] - expected_trunk) < 1e-6 and abs(s["torso.frontal"]) < 1e-6
+    assert abs(s["lumbar_total.sagittal"] + 30.0) < 1e-6   # spine flexion, negative like OpenSim
+
+
+def test_vmc_over_udp():
+    pytest.importorskip("pythonosc")
+    import threading
+    from pythonosc import osc_bundle_builder, osc_message_builder, udp_client
+    from rehabtwin import vmc
+    got = []
+    port = 39911
+    th = threading.Thread(target=lambda: vmc.serve(port, rate_hz=50, duration_s=1.5, publish_lsl=False,
+                                                    on_signals=lambda t, s: got.append(s), host="127.0.0.1"))
+    th.start()
+    client = udp_client.SimpleUDPClient("127.0.0.1", port)
+    time.sleep(0.3)
+    for _ in range(20):
+        b = osc_bundle_builder.OscBundleBuilder(osc_bundle_builder.IMMEDIATELY)
+        msgs = [("/VMC/Ext/Root/Pos", ["root", 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0])]
+        msgs += [("/VMC/Ext/Bone/Pos", [n, *map(float, p), *map(float, q)]) for n, (p, q) in _vmc_frame(knee_deg=45).items()]
+        for addr, args in msgs:
+            m = osc_message_builder.OscMessageBuilder(address=addr)
+            for a in args:
+                m.add_arg(a)
+            b.add_content(m.build())
+        client.send(b.build())
+        time.sleep(0.05)
+    th.join()
+    assert got and abs(got[-1]["knee_angle_l"] - 45.0) < 1e-3

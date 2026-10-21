@@ -119,6 +119,15 @@ The live loop reads tier and validation from `SESSION` (there is no override fla
 simulator stamps samples on the recording's own timeline, so rule durations behave the
 same at any replay speed.
 
+With an IMU suit, SlimeVR-Server's VMC output (Settings → OSC → VMC, port 39539) replaces the
+simulator:
+`python -m rehabtwin vmc-posture --print`. It rebuilds global joint positions from the VMC
+bone stream (Unity left-handed → right-handed, forward kinematics over the humanoid hierarchy)
+and publishes `torso.sagittal/frontal`, `knee_angle_r/l`, `knee_fppa_r/l` and an approximate
+`lumbar_total.sagittal` with the same names the video pipeline uses, so one rule set covers
+both. IMU yaw drifts, so no transverse-plane signals are offered, and the suit stays Tier C
+until it has been validated against a reference like any other front-end.
+
 | Command | What it does | Guard rails |
 |---|---|---|
 | `correct` | Spec modes `set / clamp / scale / offset / mirror` (e.g. right hip follows the left). OpenSim IK tracks the changed coordinates strongly and the rest weakly, keeping 3 anchor points per foot in place. Reports requested changes, the **compensations** elsewhere, range-of-motion violations and feet drift (`admissible`). | Refused below Tier A without `--illustrative`; then every output says ILLUSTRATION ONLY. Specs ship as TEMPLATEs for a clinician to author. |

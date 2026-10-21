@@ -10,6 +10,7 @@
   muscles   session folder -> estimated GRF, inverse dynamics, static optimisation (+ corrected / weakened what-ifs)
   cues      session folder + haptic rule set -> offline cue replay (gated; never drives hardware)
   lsl-simulate / lsl-live / lsl-listen   live cue loop over Lab Streaming Layer (pip install pylsl)
+  vmc-posture   SlimeVR (VMC/OSC) skeleton -> live posture signals on LSL (pip install python-osc pylsl)
 """
 from __future__ import annotations
 
@@ -284,6 +285,11 @@ def main(argv=None):
     ll.add_argument("--publish-would-cue", action="store_true", help="also publish blocked cues as diagnostics")
     lt = sub.add_parser("lsl-listen", help="print cue markers (stand-in for the suit firmware bridge)")
     lt.add_argument("--duration-s", type=float, default=30.0)
+    vp = sub.add_parser("vmc-posture", help="SlimeVR VMC skeleton -> LSL posture stream for lsl-live")
+    vp.add_argument("--port", type=int, default=39539, help="UDP port SlimeVR sends VMC to")
+    vp.add_argument("--rate-hz", type=float, default=60.0)
+    vp.add_argument("--duration-s", type=float)
+    vp.add_argument("--print", action="store_true", help="also print the signals once per second")
     a = ap.parse_args(argv)
 
     if a.cmd == "process":
@@ -355,6 +361,16 @@ def main(argv=None):
         from . import lsl_bridge
         for c in lsl_bridge.listen(a.duration_s):
             print(json.dumps(c))
+    elif a.cmd == "vmc-posture":
+        from . import vmc
+        last = [0.0]
+
+        def show(t, sig):
+            if a.print and t - last[0] >= 1.0:
+                last[0] = t
+                print(json.dumps({k: round(v, 1) for k, v in sig.items()}))
+        print(f"listening for VMC on udp/{a.port}; publishing LSL stream 'rehabtwin_posture' ({', '.join(vmc.SIGNALS)})")
+        vmc.serve(a.port, a.rate_hz, a.duration_s, publish_lsl=True, on_signals=show)
     elif a.cmd == "selftest":
         res, failures = selftest(a.out)
         per = res["validation"]["per_coordinate"]

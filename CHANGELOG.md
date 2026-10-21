@@ -5,6 +5,7 @@
 - `rehabtwin muscles`: estimated double-stance GRF → inverse dynamics → static optimisation; corrected and
   weakened what-ifs; muscles.html
 - `rehabtwin cues`: haptic posture-cue rule engine (hysteresis, refractory, faded feedback, Tier/validation gate)
+- Live loop: `lsl-live`/`lsl-simulate`/`lsl-listen` (LSL) and `vmc-posture` (SlimeVR VMC → posture signals)
 - **First working slice — `pipeline/` (rehabtwin): video → SKEL → OpenSim.**
   HSMR/SKEL adapter, MediaPipe front-end (mono + calibrated multi-view), gravity
   (device ▸ floor fit ▸ camera-level), OpenSim scale/static IK/marker placement/IK,
