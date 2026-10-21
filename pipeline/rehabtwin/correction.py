@@ -208,7 +208,9 @@ def correct(session_dir, spec, illustrative=False, motion=None, model=None):
             # what the rest of the body had to do to make the requested change with the feet planted
             compensations[c] = {"max_abs_change_deg": round(float(np.max(np.abs(d))), 2),
                                 "mean_change_deg": round(float(np.mean(d)), 2)}
-    limits = []
+    # Range of motion: only what the correction introduces or worsens counts against it. A measured
+    # motion can already leave a model's range (e.g. shoulder flexion > 90° in the Pose2Sim model).
+    limits, pre_existing = [], []
     for c in corrected.columns:
         if not cs.contains(c):
             continue
@@ -217,10 +219,17 @@ def correct(session_dir, spec, illustrative=False, motion=None, model=None):
         lo, hi = co.getRangeMin(), co.getRangeMax()
         if rot:
             lo, hi = np.degrees(lo), np.degrees(hi)
-        v = corrected.col(c)
-        over = float(max(np.max(v - hi), np.max(lo - v), 0.0))
-        if over > 0.5:
-            limits.append({"coordinate": c, "exceeds_range_by": round(over, 2), "range": [round(lo, 1), round(hi, 1)]})
+
+        def over(v):
+            return float(max(np.max(v - hi), np.max(lo - v), 0.0))
+        oc = over(corrected.col(c))
+        om = over(measured.col(c)) if measured.has(c) else 0.0
+        entry = {"coordinate": c, "exceeds_range_by": round(oc, 2), "measured_exceeds_by": round(om, 2),
+                 "range": [round(lo, 1), round(hi, 1)]}
+        if oc > om + 0.5:
+            limits.append(entry)
+        elif om > 0.5:
+            pre_existing.append(entry)
     # feet drift of the final (filtered) motion, by forward kinematics against the measured anchors
     drift = np.linalg.norm(_anchor_trajectories(model, corrected, anchors) - _anchor_trajectories(model, measured, anchors),
                            axis=2)
@@ -239,9 +248,11 @@ def correct(session_dir, spec, illustrative=False, motion=None, model=None):
         "changes": changes,
         "compensations": compensations,
         "range_of_motion_violations": limits,
+        "range_exceeded_in_measured_motion": pre_existing,
         "feet_anchor_drift_m": anchor_err["marker_rms_m"],
         "admissible": bool(not limits and anchor_err["marker_rms_m"]["max"] < spec.get("max_feet_drift_m", 0.02)),
-        "admissible_rule": f"no range-of-motion violation and per-frame feet drift (RMS over anchors) < {spec.get('max_feet_drift_m', 0.02)} m",
+        "admissible_rule": f"no range-of-motion violation introduced or worsened by the correction and per-frame feet "
+                           f"drift (RMS over anchors) < {spec.get('max_feet_drift_m', 0.02)} m",
     }
     (out / "correction.json").write_text(json.dumps(summary, indent=2) + "\n")
     return summary, measured, corrected, out

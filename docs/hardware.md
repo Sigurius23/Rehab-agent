@@ -58,7 +58,10 @@ for rooms/objects rather than moving people, and may only be used here for a
    Floor: marked capture volume, calibration board position logged
 ```
 - Subject distance to D455: keep inside 0.6–6 m ideal range, practically 2–3 m.
-- Cameras separated by 45–90° around the subject; avoid collinear views.
+- Cameras separated by 45–90° around the subject, all seeing the front of the body; avoid collinear views.
+  Measured on a public 5-phone squat (`docs/validation-results.md` §4): two phones ~80° apart matched five;
+  two near-side views 130° apart lost trunk and lumbar (8.7°/14° vs 2.8°/7.6° against OpenCap). One phone
+  cannot resolve pelvis tilt, hip flexion or lumbar flexion (10–26°) — use it for knee FPPA and frontal signals only.
 - iPhone body scan is a separate, static station step (person rotates slowly
   in A-pose, tight clothing) — it is not recorded during dynamic exercise.
 

@@ -148,6 +148,24 @@ What this shows:
    those signals, and the knee and ankle get worse (13–22°). Knee FPPA, hip adduction and frontal pelvis
    stay within 4–8°.
 
+**How many phones?** The same trial with camera subsets, all with the augmenter (RMSE vs OpenCap, °):
+
+| Signal | 2 phones at ±40° (80° apart) | 2 phones at ±65° (130° apart) | 3 phones (−40°, 0°, +40°) | 5 phones |
+|---|---:|---:|---:|---:|
+| Trunk inclination, sagittal / frontal | 2.8 / 3.0 | 8.7 / 6.1 | 3.2 / 1.7 | 2.7 / 2.6 |
+| Pelvis tilt / list | 6.0 / 3.0 | 5.4 / 3.2 | 6.7 / 2.8 | 6.0 / 2.6 |
+| Lumbar flexion | 7.6 | 14.0 | 9.4 | 7.1 |
+| Hip adduction R | 4.2 | 7.5 | 2.6 | 3.2 |
+| Knee flexion R · ankle R | 10.4 · 5.6 | 9.6 · 8.8 | 12.0 · 6.5 | 9.3 · 4.9 |
+| Knee FPPA R / L | 4.1 / 13.0 | 6.0 / 9.3 | 8.9 / 8.6 | 4.7 / 9.5 |
+| IK marker RMS (cm) | 3.2 | 6.1 | 2.4 | 2.4 |
+
+Two phones about 80° apart, both seeing the front of the body, match the five-phone result on almost
+every signal. This is OpenCap's default layout too. Two near-side views 130° apart lose the trunk and
+lumbar. These are differences against a reference built from all five phones, so they favour subsets
+of the same cameras. Still, they support `docs/hardware.md`: two to three phones 45–90° apart,
+facing the subject.
+
 One trial and one subject, against a markerless reference: nothing here approves a use. It does say
 which front end to measure against marker mocap first: 5 cameras plus augmenter. It also says which
 signals monocular capture should not drive (pelvis, hip flexion, lumbar).

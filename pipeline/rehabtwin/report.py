@@ -697,8 +697,12 @@ def write_correction(path, summary, measured_time, signals_measured, signals_cor
                    f"<td>tracking RMSE {v['target_tracking_rmse_deg']}</td></tr>" for c, v in summary["changes"].items())
     rows += "".join(f"<tr><td>{e(c)}</td><td>compensation</td><td>{v['max_abs_change_deg']}</td>"
                     f"<td>mean {v['mean_change_deg']:+}</td></tr>" for c, v in summary["compensations"].items())
-    viol = "".join(f"<li>{e(v['coordinate'])}: exceeds range {v['range']} by {v['exceeds_range_by']}°</li>"
-                   for v in summary["range_of_motion_violations"]) or "<li>none</li>"
+    viol = "".join(f"<li>{e(v['coordinate'])}: exceeds range {v['range']} by {v['exceeds_range_by']}°"
+                   f" (measured motion: {v.get('measured_exceeds_by', 0)}°)</li>"
+                   for v in summary["range_of_motion_violations"]) or "<li>none introduced by the correction</li>"
+    viol += "".join(f"<li class='muted'>{e(v['coordinate'])}: already outside the model's range {v['range']} in the measured "
+                    f"motion (by {v['measured_exceeds_by']}°) — a model limit, not a correction effect</li>"
+                    for v in summary.get("range_exceeded_in_measured_motion", []))
     drift = summary["feet_anchor_drift_m"]
     rc = summary.get("rule_check")
     rule_html = ""
