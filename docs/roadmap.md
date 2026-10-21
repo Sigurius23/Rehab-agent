@@ -23,7 +23,10 @@ Compare joint angles/ROM against a reference (goniometer, lab mocap, or OpenCap)
 on scripted movements. Publish error per joint/movement inside this repo.
 A repo graduates from `experimental`/`extended` to `core` only with a note here.
 
-## Phase 3 — Clinician-authored feedback rules
+## Phase 3 — Clinician-authored feedback rules — 🟡 engine built, gated off until Phase 2 passes
+`rehabtwin cues` (rule engine with faded feedback), `rehabtwin correct` (correction view) and
+`rehabtwin muscles` (muscle effects) exist and run on recorded sessions. Below Tier A, or for
+unvalidated joint/planes, they only produce labelled illustrations and `would_cue` logs.
 Rule checks on measured outputs only (e.g. "knee flexion < target on 3/5 reps"),
 clinician reviews/edits every patient-facing message. Log rule firings.
 

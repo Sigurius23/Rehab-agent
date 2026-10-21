@@ -156,3 +156,30 @@ def test_correction_view_on_synthetic_valgus(selftest_run):
     t, _ = cli.run_correction(out, "squat_trunk_upright", illustrative=True)
     trunk = t["derived_signals"]["torso.sagittal"]
     assert trunk["measured_range"][1] - trunk["corrected_range"][1] > 8       # less trunk lean
+
+
+def test_muscle_effects_and_weakness_what_if(selftest_run):
+    out, res, _ = selftest_run
+    rep = res["metrics"]["reps"][0]
+    study, mdir = cli.muscle_study(out, start=rep["peak_s"] - 0.3, stop=rep["peak_s"] + 0.3,
+                                   weaken=["gluteus_maximus_r=0.5"])
+    base = study["runs"]["measured"]
+    assert base["grf"]["feet_planted"] and 0.8 < base["grf"]["min_vertical_bw"] <= base["grf"]["peak_vertical_bw"] < 1.4
+    ga = base["group_activation"]
+    # a deep squat is carried by the knee and hip extensors
+    top = sorted(ga, key=lambda g: -ga[g]["peak"])[:4]
+    assert any(g.startswith("quadriceps") for g in top) and any(g.startswith("gluteus_maximus") for g in top)
+    knee = base["joint_moments"]["knee_angle_r"]
+    assert 0.5 < -knee["min_Nm_per_kg"] < 2.0          # knee extension moment, N·m/kg
+    weak = study["comparisons"]["gluteus_maximus_r at 50%"]["gluteus_maximus_r"]
+    assert weak["other"] > weak["base"] * 1.3          # the weakened muscle must work closer to its limit
+    assert (mdir / "muscles.html").exists() and (mdir / "study.json").exists()
+
+
+def test_cue_replay_blocked_on_tier_c(selftest_run):
+    out, _, _ = selftest_run
+    result, cdir = cli.cue_replay(out, "squat_posture")
+    pr = result["summary"]["per_rule"]["knee_valgus_r"]
+    assert pr["violations"] == 3 and pr["cues_sent"] == 0 and pr["would_cue"] >= 1
+    assert result["summary"]["commands_sent"] == 0
+    assert (cdir / "commands.csv").read_text().count("\n") == 1     # header only

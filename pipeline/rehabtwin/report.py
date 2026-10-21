@@ -31,7 +31,8 @@ button { font: inherit; padding: 2px 12px; border-radius: 6px; border: 1px solid
 PALETTE = ["#2563eb", "#dc2626", "#059669", "#d97706", "#7c3aed", "#0891b2"]
 
 
-def _svg_chart(t, series, reps, title, unit="deg", w=760, h=220, ref=None, ref_label="reference"):
+def _svg_chart(t, series, reps, title, unit="deg", w=760, h=220, ref=None, ref_label="reference", marks=()):
+    """``marks``: [(time, colour, label)] drawn as vertical ticks (e.g. haptic cues)."""
     """Line chart; ``ref`` = (ref_time, {name: values}) is drawn dashed in the same colours."""
     pad_l, pad_r, pad_t, pad_b = 48, 12, 30, 28
     ref_t, ref_series = ref if ref else (None, {})
@@ -71,6 +72,10 @@ def _svg_chart(t, series, reps, title, unit="deg", w=760, h=220, ref=None, ref_l
     for k in range(6):
         tv = t0 + k * (t1 - t0) / 5
         parts.append(f'<text x="{x(tv):.1f}" y="{h - 8}" class="ax" text-anchor="middle">{tv:.1f}s</text>')
+    for tm, colour, label in marks:
+        if t0 <= tm <= t1:
+            parts.append(f'<line x1="{x(tm):.1f}" x2="{x(tm):.1f}" y1="{pad_t}" y2="{h - pad_b}" stroke="{colour}" '
+                         f'stroke-width="2"><title>{html.escape(label)}</title></line>')
     for i, name in enumerate(series):
         col = PALETTE[i % len(PALETTE)]
         for tt, v, dash in ((t, series[name], ""), (ref_t, ref_series.get(name), ' stroke-dasharray="5 4"')):
@@ -185,6 +190,123 @@ def _player(skeleton, ref_skeleton=None, ref_label="reference, overlaid on the e
             "<span id='skel-time' class='muted'></span></div>"
             f"<script type='application/json' id='skel-data'>{json.dumps(data, separators=(',', ':'))}</script>"
             f"<script>{PLAYER_JS}</script>")
+
+
+def _svg_bars(groups, variants, title, w=760, row=16):
+    """Horizontal grouped bars: one row block per muscle group, one bar per variant (0..1 scale)."""
+    names = list(variants)
+    h = 40 + len(groups) * (row * len(names) + 8)
+    left, right = 190, 50
+    parts = [f'<svg viewBox="0 0 {w} {h}" role="img" aria-label="{html.escape(title)}" class="chart">',
+             f'<text x="8" y="15" class="ct">{html.escape(title)}</text>']
+    lx = w - right
+    for i, n in reversed(list(enumerate(names))):
+        parts.append(f'<text x="{lx}" y="15" class="lg" text-anchor="end" fill="{PALETTE[i % len(PALETTE)]}">{html.escape(n)}</text>')
+        lx -= 7 * len(n) + 14
+    scale = (w - left - right)
+    for k in range(0, 11, 2):
+        x = left + scale * k / 10
+        parts.append(f'<line x1="{x:.1f}" x2="{x:.1f}" y1="26" y2="{h - 6}" class="grid"/>')
+        parts.append(f'<text x="{x:.1f}" y="{h}" class="ax" text-anchor="middle">{k * 10}%</text>')
+    y = 30
+    for g in groups:
+        parts.append(f'<text x="{left - 8}" y="{y + row * len(names) / 2 + 4:.1f}" class="ax" text-anchor="end">{html.escape(g)}</text>')
+        for i, n in enumerate(names):
+            v = variants[n].get(g)
+            if v is not None:
+                parts.append(f'<rect x="{left}" y="{y:.1f}" width="{max(scale * min(v, 1.2), 1):.1f}" height="{row - 4}" '
+                             f'fill="{PALETTE[i % len(PALETTE)]}" rx="2"/>')
+                parts.append(f'<text x="{left + scale * min(v, 1.2) + 4:.1f}" y="{y + row - 6:.1f}" class="ax">{v * 100:.0f}%</text>')
+            y += row
+        y += 8
+    parts.append("</svg>")
+    return "".join(parts)
+
+
+CUE_COLOURS = {"cue": "#059669", "would_cue": "#d97706", "withheld": "#9ca3af"}
+
+
+def write_cues(path, result, time, signals):
+    """HTML for an offline haptic-cue replay (rehabtwin cues)."""
+    e = html.escape
+    summ, spec, log = result["summary"], result["spec"], result["log"]
+    charts, rows = [], []
+    for r in spec["rules"]:
+        if r["signal"] not in signals:
+            continue
+        marks = [(ev["t"], CUE_COLOURS[ev["decision"]], f"{ev['decision']}: {ev.get('reason', r.get('message', ''))}")
+                 for ev in log if ev.get("rule") == r["id"] and "decision" in ev]
+        thr = np.full(len(time), r["threshold"], dtype=float)
+        charts.append(_svg_chart(time, {r["signal"]: signals[r["signal"]]}, [], f"{r['id']}: {r['signal']} {r['op']} {r['threshold']}",
+                                 ref=(time, {r["signal"]: thr}), ref_label="threshold", marks=marks))
+        pr = summ["per_rule"][r["id"]]
+        rows.append(f"<tr><td>{e(r['id'])}</td><td>{e(r['cue']['actuator'])}</td><td>{pr['violations']}</td>"
+                    f"<td>{pr['cues_sent']}</td><td>{pr['would_cue']}</td><td>{pr['withheld_by_schedule']}</td>"
+                    f"<td>{e(pr['gate'] or 'open')}</td></tr>")
+    banner = ("<p class='banner'><b>Replay only — no cue may reach a person from this session.</b> "
+              f"Tier {e(summ['twin_tier'])}; cues need a Tier-A twin and a validated joint/plane "
+              "(docs/accuracy.md). Orange ticks show what <i>would</i> have been cued.</p>"
+              if summ["commands_sent"] == 0 else
+              "<p class='banner'><b>Cues were enabled</b> for validated joint/planes on a Tier-A twin.</p>")
+    legend = " · ".join(f"<span style='color:{c}'>{k.replace('_', ' ')}</span>" for k, c in CUE_COLOURS.items())
+    doc = f"""<!doctype html><html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1"><title>Haptic cue replay</title>
+<style>{_CSS}</style></head><body>
+<h1>Haptic cue replay — {e(spec['name'])}</h1>
+{banner}
+<p class="muted">Rules by: {e(spec.get('author', 'unspecified'))}. Schedule: faded {spec.get('schedule', {}).get('start_fraction', 1)} →
+{spec.get('schedule', {}).get('end_fraction', 0.33)} over {spec.get('schedule', {}).get('fade_events', 6)} violations,
+bandwidth {spec.get('schedule', {}).get('bandwidth_deg', 2)}°, refractory {spec.get('schedule', {}).get('refractory_s', 1)} s. Ticks: {legend}.</p>
+<table><tr><th>rule</th><th>actuator</th><th>violations</th><th>cues sent</th><th>would cue</th><th>withheld (fading)</th><th>gate</th></tr>{''.join(rows)}</table>
+{''.join(charts)}
+</body></html>"""
+    Path(path).write_text(doc)
+    return path
+
+
+def write_muscles(path, study):
+    """HTML for a muscle-effects study (rehabtwin muscles)."""
+    e = html.escape
+    runs = study["runs"]
+    groups = sorted({g for r in runs.values() for g in r["group_activation"]},
+                    key=lambda g: -max(r["group_activation"].get(g, {}).get("peak", 0) for r in runs.values()))
+    groups = [g for g in groups if max(r["group_activation"].get(g, {}).get("peak", 0) for r in runs.values()) >= 0.05]
+    variants = {lab: {g: r["group_activation"][g]["peak"] for g in groups if g in r["group_activation"]} for lab, r in runs.items()}
+    rows = []
+    for lab, cmp in study.get("comparisons", {}).items():
+        top = sorted(cmp.items(), key=lambda kv: -abs(kv[1]["change"]))[:8]
+        cells = "".join(f"<tr><td>{e(lab)}</td><td>{e(g)}</td><td>{v['base'] * 100:.0f}%</td><td>{v['other'] * 100:.0f}%</td>"
+                        f"<td>{v['change'] * 100:+.0f} pts</td></tr>" for g, v in top)
+        rows.append(cells)
+    base = runs["measured"]
+    mom = "".join(f"<tr><td>{e(k)}</td><td>{v['min_Nm_per_kg']}</td><td>{v['max_Nm_per_kg']}</td></tr>"
+                  for k, v in base["joint_moments"].items())
+    reserve_notes = "".join(f"<li>{e(lab)}: {e(', '.join(f'{k} {v} N·m' for k, v in r['reserve_torque_peaks_Nm'].items()) or 'none')}"
+                            f"; saturated muscles: {e(', '.join(r['muscles_saturated']) or 'none')}</li>" for lab, r in runs.items())
+    grf = base["grf"]
+    doc = f"""<!doctype html><html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1"><title>Muscle effects</title>
+<style>{_CSS}</style></head><body>
+<h1>Muscle effects — {e(base['exercise'])}</h1>
+<p class="banner"><b>What-if simulation on a generic (Tier {e(study['twin_tier'])}) muscle model.</b>
+Not a statement about this person's muscles (docs/accuracy.md: no "underdeveloped muscle" claim without
+imaging/strength/EMG evidence). Ground forces are estimated, not measured.</p>
+<div class="kv"><span>window: {base['time_range_s'][0]}–{base['time_range_s'][1]} s</span>
+<span>vertical GRF: {grf['min_vertical_bw']}–{grf['peak_vertical_bw']} BW</span>
+<span>right-foot share: {grf['right_share_range'][0]}–{grf['right_share_range'][1]}</span>
+<span>feet planted: {'yes' if grf['feet_planted'] else 'NO — estimate invalid'}</span>
+<span>valid exercise for this GRF model: {'yes' if base['valid_exercise'] else 'NO'}</span></div>
+{_svg_bars(groups, variants, "Peak muscle-group activation (fraction of group capacity)")}
+<h2>Biggest changes</h2>
+<table><tr><th>variant</th><th>group</th><th>measured</th><th>variant</th><th>change</th></tr>{''.join(rows)}</table>
+<h2>Joint moments, measured (N·m/kg; OpenSim sign convention)</h2>
+<table><tr><th>coordinate</th><th>min</th><th>max</th></tr>{mom}</table>
+<h2>Consistency evidence</h2><ul>{reserve_notes}
+<li>pelvis residuals (measured): {e(', '.join(f'{k} {v}' for k, v in base['pelvis_residual_force_N'].items()))}</li></ul>
+<h2>Caveats</h2><ul>{''.join(f'<li>{e(c)}</li>' for c in base['caveats'])}</ul>
+</body></html>"""
+    Path(path).write_text(doc)
+    return path
 
 
 def write_correction(path, summary, measured_time, signals_measured, signals_corrected, skeleton, skeleton_corrected):

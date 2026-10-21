@@ -2,7 +2,7 @@
 import numpy as np
 import pytest
 
-from rehabtwin import correction, filtering, frames, hsmr, opensim_stage, validation
+from rehabtwin import correction, feedback, filtering, frames, hsmr, opensim_stage, validation
 from rehabtwin.io_formats import Table, read_table, read_trc, write_table, write_trc
 from rehabtwin.kinematics import _fppa, classify
 from rehabtwin.metrics import segment_reps
@@ -277,3 +277,45 @@ def test_correction_specs_load():
     for name in ("squat_knee_valgus_right", "squat_trunk_upright"):
         spec = correction.load_spec(name)
         assert spec["targets"] and spec["anchors"] and "TEMPLATE" in spec["author"]
+
+
+def _rule_spec(**sched):
+    return {"name": "t", "rules": [{"id": "v", "signal": "s", "joint_plane": "knee_r.frontal", "op": ">", "threshold": 10.0,
+                                     "min_duration_s": 0.2, "cue": {"actuator": "a"}}],
+            "schedule": {"bandwidth_deg": 2.0, "refractory_s": 0.0, "start_fraction": 1.0, "end_fraction": 1.0,
+                         "fade_events": 1, **sched}}
+
+
+def test_cue_engine_hysteresis_min_duration_and_gate():
+    t = np.arange(0, 6, 0.01)
+    s = np.zeros_like(t)
+    s[(t > 1) & (t < 1.1)] = 15        # too short: no cue
+    s[(t > 2) & (t < 3)] = 12          # one violation...
+    s[(t >= 2.5) & (t < 2.6)] = 9      # ...dipping below threshold but inside the 2 deg band: still one
+    s[(t > 4) & (t < 5)] = 20          # second violation
+    log, sent = feedback.replay(_rule_spec(), t, {"s": s}, tier="A", allowed_joint_planes=["knee_r.frontal"])
+    decisions = [e for e in log if "decision" in e]
+    assert [d["decision"] for d in decisions] == ["cue", "cue"] and len(sent) == 2
+    assert 2.2 <= decisions[0]["t"] <= 2.23         # after min_duration (violation starts at the first frame > 2 s)
+    log_c, sent_c = feedback.replay(_rule_spec(), t, {"s": s}, tier="C")
+    assert not sent_c and all(e["decision"] == "would_cue" for e in log_c if "decision" in e)
+    log_u, sent_u = feedback.replay(_rule_spec(), t, {"s": s}, tier="A", allowed_joint_planes=[])
+    assert not sent_u and "not validated" in [e for e in log_u if "decision" in e][0]["reason"]
+
+
+def test_cue_engine_faded_schedule_and_refractory():
+    t = np.arange(0, 20, 0.01)
+    s = np.where((t % 2) < 0.5, 15.0, 0.0)          # 10 violations, one every 2 s
+    spec = _rule_spec(start_fraction=1.0, end_fraction=0.25, fade_events=4)
+    log, sent = feedback.replay(spec, t, {"s": s}, tier="A", allowed_joint_planes=["knee_r.frontal"])
+    d = [e["decision"] for e in log if "decision" in e]
+    assert len(d) == 10 and d[0] == "cue" and 3 <= d.count("cue") <= 5    # fades towards 1 in 4
+    spec = _rule_spec(refractory_s=5.0)
+    log, sent = feedback.replay(spec, t, {"s": s}, tier="A", allowed_joint_planes=["knee_r.frontal"])
+    times = [c["timestamp"] for c in sent]
+    assert all(b - a >= 5.0 for a, b in zip(times, times[1:]))
+
+
+def test_feedback_rules_template_loads():
+    spec = feedback.load_rules("squat_posture")
+    assert "TEMPLATE" in spec["author"] and all("joint_plane" in r for r in spec["rules"])

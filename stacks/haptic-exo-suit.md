@@ -9,6 +9,15 @@ SlimeVR trackers (posture sensing) ──► twin (stacks/digital-twin.md)
 ```
 Clone: `python scripts/clone.py --only SlimeVR/SlimeVR-Server,SlimeVR/SlimeVR-Tracker-ESP,senseshift/senseshift-firmware`
 
+**Rule engine implemented:** `pipeline/rehabtwin/feedback.py` (`rehabtwin cues`). Clinician-authored
+rules map a posture signal (e.g. knee frontal-plane projection angle, trunk inclination vs gravity)
+to an actuator, with hysteresis, minimum duration, refractory period and **faded feedback**
+(cue share falls over repetitions to avoid dependence on the cue). The same `CueEngine.update()`
+runs offline on recorded sessions (`commands.csv`, LSL-ready events) and later live. Cues are
+only *sent* for a Tier-A twin on validated joint/planes; everything else is logged as `would_cue`.
+Template rules: `pipeline/configs/feedback/squat_posture.json`. Next hardware step: an LSL
+outlet → SenseShift firmware bridge.
+
 ## Track 2 — Powered joint support (research build, safety-gated)
 ```
 naubiomech/OpenExo (modular exo base: hip/ankle/elbow, mechanics+electronics+control)

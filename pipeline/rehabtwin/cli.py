@@ -7,6 +7,8 @@
   mp-mono   raw MediaPipe dump (adapters/mediapipe_pose.py) -> monocular sequence .npz
   mp-multiview  synchronised raw MediaPipe dumps + Qualisys calibration -> triangulated sequence .npz
   correct   session folder + correction spec -> corrected motion, correction.json, correction.html
+  muscles   session folder -> estimated GRF, inverse dynamics, static optimisation (+ corrected / weakened what-ifs)
+  cues      session folder + haptic rule set -> offline cue replay (gated; never drives hardware)
 """
 from __future__ import annotations
 
@@ -99,6 +101,72 @@ def run_correction(session_dir, spec_name, illustrative=False):
     return summary, out
 
 
+def muscle_study(session_dir, rep=1, start=None, stop=None, correction=None, weaken=()):
+    """Measured motion (+ corrected motion, + weakened variants) through GRF estimate → ID → SO."""
+    from . import muscles
+    session_dir = Path(session_dir)
+    sess = json.loads((session_dir / "session.json").read_text())
+    met = json.loads((session_dir / "metrics.json").read_text())
+    model = session_dir / sess["pipeline"]["outputs"]["model"]
+    motion = session_dir / sess["pipeline"]["outputs"]["motion"]
+    if start is None or stop is None:
+        if not met["reps"]:
+            raise SystemExit("no reps in metrics.json; pass --start/--stop")
+        r = met["reps"][rep - 1]
+        start, stop = r["start_s"], r["stop_s"]
+    exercise = met["exercise"] if met["exercise"] in muscles.VALID_EXERCISES else met["exercise"]
+    out = session_dir / "muscles"
+    runs = {"measured": muscles.run(model, motion, out, label="measured", exercise=exercise, start=start, stop=stop)}
+    if correction:
+        corrected = session_dir / "correction" / correction / "corrected.mot"
+        if not corrected.exists():
+            raise SystemExit(f"{corrected} missing; run 'rehabtwin correct {session_dir} --spec {correction} ...' first")
+        runs[f"corrected: {correction}"] = muscles.run(model, corrected, out, label=f"corrected_{correction}",
+                                                       exercise=exercise, start=start, stop=stop)
+    for spec in weaken:
+        group, factor = spec.split("=")
+        lab = f"{group} at {float(factor) * 100:.0f}%"
+        runs[lab] = muscles.run(model, motion, out, weaken={group: float(factor)}, label=f"weak_{group}_{factor}",
+                                exercise=exercise, start=start, stop=stop)
+    study = {"twin_tier": sess["twin_tier"], "runs": runs,
+             "comparisons": {lab: muscles.compare(runs["measured"], r) for lab, r in runs.items() if lab != "measured"}}
+    records.write_json(out / "study.json", study)
+    report.write_muscles(out / "muscles.html", study)
+    return study, out
+
+
+def cue_replay(session_dir, rules, motion=None):
+    """Offline replay of a haptic rule set over a processed session (never drives hardware)."""
+    import csv
+    from . import feedback
+    session_dir = Path(session_dir)
+    sess = json.loads((session_dir / "session.json").read_text())
+    spec = feedback.load_rules(rules)
+    model = session_dir / sess["pipeline"]["outputs"]["model"]
+    tab = read_table(Path(motion) if motion else session_dir / sess["pipeline"]["outputs"]["motion"])
+    signals = {c: tab.col(c) for c in tab.columns}
+    signals.update(metrics_mod.derived_signals(tab, model))
+    val_path = session_dir / "validation-report.json"
+    allowed = []
+    if val_path.exists():
+        val = json.loads(val_path.read_text())
+        if not val.get("synthetic"):
+            allowed = val.get("feedback_allowed_joint_planes", [])
+    log, sent = feedback.replay(spec, tab.time, signals, tier=sess["twin_tier"], allowed_joint_planes=allowed)
+    summ = feedback.summarise(spec, log, sent, sess["twin_tier"], allowed)
+    out = session_dir / "feedback" / (spec["name"] + (f"__{Path(motion).parent.name}" if motion else ""))
+    out.mkdir(parents=True, exist_ok=True)
+    summ["motion"] = str(motion) if motion else sess["pipeline"]["outputs"]["motion"]
+    result = {"summary": summ, "spec": {k: v for k, v in spec.items() if k != "_path"}, "log": log}
+    records.write_json(out / "cues.json", result)
+    with open(out / "commands.csv", "w", newline="") as fh:   # LSL-ready marker events
+        w = csv.DictWriter(fh, fieldnames=["timestamp", "actuator", "pattern", "intensity", "duration_ms", "rule", "message"])
+        w.writeheader()
+        w.writerows(sent)
+    report.write_cues(out / "cues.html", result, tab.time, signals)
+    return result, out
+
+
 def _synth(out_dir, seed=0, **kw):
     from . import synthetic
     out_dir = Path(out_dir)
@@ -175,6 +243,18 @@ def main(argv=None):
     co.add_argument("--spec", required=True, help="name in pipeline/configs/corrections or a path")
     co.add_argument("--illustrative", action="store_true",
                     help="allow a labelled illustration on a Tier-B/C body (never a target, never for feedback)")
+    mu = sub.add_parser("muscles", help="muscle effects: estimated GRF -> ID -> static optimisation")
+    mu.add_argument("session")
+    mu.add_argument("--rep", type=int, default=1, help="rep from metrics.json to analyse (default 1)")
+    mu.add_argument("--start", type=float)
+    mu.add_argument("--stop", type=float)
+    mu.add_argument("--correction", help="also analyse correction/<spec>/corrected.mot")
+    mu.add_argument("--weaken", action="append", default=[], metavar="GROUP=FACTOR",
+                    help="what-if weakness, e.g. gluteus_medius_r=0.5 (repeatable)")
+    cu = sub.add_parser("cues", help="offline replay of haptic posture-cue rules over a session")
+    cu.add_argument("session")
+    cu.add_argument("--rules", required=True, help="name in pipeline/configs/feedback or a path")
+    cu.add_argument("--motion", help="replay another motion (e.g. correction/<spec>/corrected.mot)")
     a = ap.parse_args(argv)
 
     if a.cmd == "process":
@@ -216,6 +296,17 @@ def main(argv=None):
             return 2
         print(json.dumps({"status": summary["status"], "admissible": summary["admissible"],
                           "derived_signals": summary.get("derived_signals"), "report": str(out / "correction.html")}, indent=1))
+    elif a.cmd == "muscles":
+        study, out = muscle_study(a.session, a.rep, a.start, a.stop, a.correction, a.weaken)
+        for lab, cmp in study["comparisons"].items():
+            top = sorted(cmp.items(), key=lambda kv: -abs(kv[1]["change"]))[:5]
+            print(lab + ": " + ", ".join(f"{g} {v['base']:.2f}->{v['other']:.2f}" for g, v in top))
+        print(f"report: {out / 'muscles.html'}")
+    elif a.cmd == "cues":
+        result, out = cue_replay(a.session, a.rules, a.motion)
+        for rid, pr in result["summary"]["per_rule"].items():
+            print(f"{rid:16s} violations {pr['violations']}  sent {pr['cues_sent']}  would {pr['would_cue']}  gate: {pr['gate'] or 'open'}")
+        print(f"report: {out / 'cues.html'}")
     elif a.cmd == "selftest":
         res, failures = selftest(a.out)
         per = res["validation"]["per_coordinate"]

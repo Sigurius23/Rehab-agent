@@ -1,6 +1,10 @@
 # Changelog
 
 ## Unreleased
+- `rehabtwin correct`: correction view (clinician specs, planted-feet IK, compensations, ROM check, Tier gating)
+- `rehabtwin muscles`: estimated double-stance GRF → inverse dynamics → static optimisation; corrected and
+  weakened what-ifs; muscles.html
+- `rehabtwin cues`: haptic posture-cue rule engine (hysteresis, refractory, faded feedback, Tier/validation gate)
 - **First working slice — `pipeline/` (rehabtwin): video → SKEL → OpenSim.**
   HSMR/SKEL adapter, MediaPipe front-end (mono + calibrated multi-view), gravity
   (device ▸ floor fit ▸ camera-level), OpenSim scale/static IK/marker placement/IK,

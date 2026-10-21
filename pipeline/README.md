@@ -45,7 +45,7 @@ python3 -m venv ~/.venvs/twin-live && ~/.venvs/twin-live/bin/pip install mediapi
 ```bash
 cd pipeline
 python -m rehabtwin selftest /tmp/rt_selftest       # synthetic squat with known truth, ~1 min, exits 1 on regression
-python -m pytest tests -q                           # 35 tests (end-to-end ones skip without opensim/pose2sim)
+python -m pytest tests -q                           # 43 tests (end-to-end ones skip without opensim/pose2sim)
 ```
 
 ### Real video through HSMR + SKEL (the target path)
@@ -93,6 +93,34 @@ marker mocap and its OpenSim IK, see `docs/validation-results.md`). Pose2Sim's
 5-level lumbar spine is compared with single-lumbar-joint models through
 `lumbar_total.* → lumbar_extension/bending/rotation` aliases.
 
+## Beyond measurement: correction view, muscle effects, haptic cues
+
+Three commands work on a processed session folder. All three are gated by
+`docs/accuracy.md`: on a Tier-B/C body they produce labelled illustrations or
+replays and never targets or live cues.
+
+```bash
+# "how it would look fixed": clinician-authored changes, re-solved with the feet planted
+python -m rehabtwin correct  SESSION --spec squat_knee_valgus_right --illustrative
+# muscle effects: estimated GRF → inverse dynamics → static optimisation (+ what-ifs)
+python -m rehabtwin muscles  SESSION --rep 1 --correction squat_knee_valgus_right --weaken gluteus_medius_r=0.5
+# haptic posture cues (suit Track 1): offline replay of a rule set, also over a corrected motion
+python -m rehabtwin cues     SESSION --rules squat_posture [--motion SESSION/correction/<spec>/corrected.mot]
+```
+
+| Command | What it does | Guard rails |
+|---|---|---|
+| `correct` | Spec modes `set / clamp / scale / offset / mirror` (e.g. right hip follows the left). OpenSim IK tracks the changed coordinates strongly and the rest weakly, keeping 3 anchor points per foot in place. Reports requested changes, the **compensations** elsewhere, range-of-motion violations and feet drift (`admissible`). | Refused below Tier A without `--illustrative`; then every output says ILLUSTRATION ONLY. Specs ship as TEMPLATEs for a clinician to author. |
+| `muscles` | Ground forces from whole-body Newton (F = m(a_com + g)), split between the feet by the centre of mass and placed by moment balance. Then OpenSim inverse dynamics and static optimisation on the 318-muscle model, with group activation as a fraction of capacity, joint moments (N·m/kg), and measured vs corrected vs weakened. | Valid only for slow double-stance exercises (`grf.feet_planted`, `valid_exercise`). Pelvis residuals and reserve-torque use are reported. Phrased as a what-if on generic muscles, never as a claim about the person's muscles. |
+| `cues` | Streaming `CueEngine` (same code for offline replay and a live suit): threshold with hysteresis, minimum duration, per-actuator refractory period, **faded feedback** (cue share falls from 100 % to ~33 % over the first violations). Writes `cues.json`, LSL-ready `commands.csv`, `cues.html`. | A cue is *sent* only on a Tier-A twin and only for joint/planes listed in a non-synthetic validation report; otherwise it is logged as `would_cue` with the reason. |
+
+Synthetic check (right-knee valgus squat): the valgus correction takes the right-knee
+frontal-plane projection angle from 23.8° to 1.3° with the feet planted (1.6 cm max
+drift, compensation: left hip adduction 3°). The cue rules fire 3 times on the
+measured motion and 0 times on the corrected one. Static optimisation on one rep
+gives a 1.13 BW peak vertical force and 1.18 N·m/kg knee extension moment, with
+quadriceps and gluteus maximus carrying the movement.
+
 ## Outputs (one folder per session)
 
 | File | Content |
@@ -106,6 +134,9 @@ marker mocap and its OpenSim IK, see `docs/validation-results.md`). Pose2Sim's
 | `validation-report.json` | RMSE per joint × plane, gates, `approved_for` (`schemas/validation-report.schema.json`) |
 | `session.json` | provenance, tier, accuracy layers, upstream commit pins (`schemas/session.schema.json`) |
 | `report.html` | self-contained charts (reference dashed when present), per-rep table, gates |
+| `correction/<spec>/` | `corrected.mot`, `correction.json`, `correction.html` (measured vs corrected 3D replay) |
+| `muscles/` | per variant: `grf.mot`, `inverse_dynamics.sto`, static-optimisation activations/forces, `muscles.json`; `study.json`, `muscles.html` |
+| `feedback/<rules>/` | `cues.json` (event log + summary), `commands.csv` (actuator events), `cues.html` |
 
 ## Design decisions worth knowing
 
