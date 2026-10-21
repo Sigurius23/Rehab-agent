@@ -354,3 +354,118 @@ def compare(base, other):
             out[g] = {"base": b, "other": o, "change": round(o - b, 3),
                       "relative": round((o - b) / b, 3) if b > 1e-3 else None}
     return out
+
+
+def _xform(transform, v):
+    R, p = transform.R(), transform.p()
+    return [sum(R.get(i, j) * v.get(j) for j in range(3)) + p.get(i) for i in range(3)]
+
+
+def simplify_polyline(P, tol):
+    """Douglas-Peucker: drop points within ``tol`` of the chord (wrap surfaces are densely sampled)."""
+    if len(P) < 3:
+        return P
+    a, b = P[0], P[-1]
+    ab = b - a
+    d = np.linalg.norm(np.cross(P - a, ab), axis=1) / (np.linalg.norm(ab) or 1.0)
+    i = int(np.argmax(d))
+    if d[i] <= tol:
+        return P[[0, -1]]
+    return np.vstack([simplify_polyline(P[:i + 1], tol)[:-1], simplify_polyline(P[i:], tol)])
+
+
+def path_frames(model_path, motion_path, times, tol_mm=3.0):
+    """Muscle lines of action in ground at ``times`` for the 3D muscle view.
+
+    Returns (muscle names, max isometric forces, paths, bodies) where ``paths[k][m]`` is a flat
+    [x, y, z, ...] polyline in integer mm, including the points on wrapping surfaces (drawn the
+    way OpenSim's own visualiser draws a GeometryPath, simplified to ``tol_mm``), and
+    ``bodies[name][k]`` the body origins (mm) for the bone lines.
+    """
+    osim = _osim()
+    from .kinematics import SKELETON_BODIES
+    model = osim.Model(str(model_path))
+    state = model.initSystem()
+    tab = read_table(motion_path)
+    cs = model.getCoordinateSet()
+    cols = [c for c in tab.columns if cs.contains(c)]
+    data = tab.data.copy()
+    if not tab.in_degrees:      # _set_state expects degrees for rotational coordinates
+        for j, c in enumerate(tab.columns):
+            if c in cols and cs.get(c).getMotionType() == osim.Coordinate.Rotational:
+                data[:, j] = np.degrees(data[:, j])
+    interp = Table(tab.columns, np.column_stack([np.interp(times, tab.time, data[:, j]) for j in range(len(tab.columns))]),
+                   np.asarray(times, float), True)
+    ms = model.getMuscles()
+    names = [ms.get(i).getName() for i in range(ms.getSize())]
+    fmax = [ms.get(i).getMaxIsometricForce() for i in range(ms.getSize())]
+    geo = [osim.GeometryPath.safeDownCast(ms.get(i).getPath()) for i in range(ms.getSize())]
+    bodies = {b: [] for b in SKELETON_BODIES if model.getBodySet().contains(b)}
+    paths = []
+    for k in range(len(times)):
+        _set_state(model, state, interp, k, cs, cols)
+        frame = []
+        for g in geo:
+            pts = []
+            cur = g.getCurrentPath(state)
+            for i in range(cur.getSize()):
+                pp = cur.get(i)
+                pwp = osim.PathWrapPoint.safeDownCast(pp)
+                if pwp is not None:
+                    X = pwp.getParentFrame().getTransformInGround(state)
+                    surface = pwp.getWrapPath(state)
+                    for j in range(surface.getSize()):
+                        pts.extend(_xform(X, surface.get(j)))
+                else:
+                    loc = pp.getLocationInGround(state)
+                    pts.extend(loc.get(j) for j in range(3))
+            P = simplify_polyline(np.asarray(pts, float).reshape(-1, 3) * 1000.0, tol_mm)
+            frame.append(np.rint(P).astype(int).ravel().tolist())
+        paths.append(frame)
+        for b in bodies:
+            p = model.getBodySet().get(b).getPositionInGround(state)
+            bodies[b].append([int(round(p.get(j) * 1000)) for j in range(3)])
+    return names, fmax, paths, bodies
+
+
+def activation_frames(run_dir, names, times):
+    """SO activations of ``names`` resampled at ``times`` as integer percent ([k][m]); None if absent."""
+    act = read_table(Path(run_dir) / "so_StaticOptimization_activation.sto")
+    out = np.zeros((len(times), len(names)), int)
+    for m, n in enumerate(names):
+        if act.has(n):
+            out[:, m] = np.rint(np.clip(np.interp(times, act.time, act.col(n)), 0, 1) * 100)
+    return out.tolist()
+
+
+def view_data(model_path, run_dirs, motions, start, stop, max_fps=20.0):
+    """Data for the 3D muscle view.
+
+    ``run_dirs``: {label: SO output folder}; ``motions``: {label: motion file the run used}.
+    Paths are computed once per distinct motion; capacities come from each run's dynamics model,
+    so a weakened group is visibly thinner.
+    """
+    osim = _osim()
+    first = read_table(next(iter(motions.values())))
+    fps = 1.0 / float(np.median(np.diff(first.time)))
+    step = max(1, int(round(fps / max_fps)))
+    sel = first.time[(first.time >= start - 1e-9) & (first.time <= stop + 1e-9)][::step]
+    times = [round(float(t), 4) for t in sel]
+    view = {"t": times, "fps": fps / step, "motions": {}, "runs": {}}
+    by_file = {}
+    for label, motion in motions.items():
+        key = str(Path(motion).resolve())
+        if key not in by_file:
+            names, fmax, paths, bodies = path_frames(model_path, motion, times)
+            by_file[key] = f"m{len(by_file)}"
+            view["motions"][by_file[key]] = {"paths": paths, "bodies": bodies}
+            view["muscles"] = names
+            view["groups"] = {m: g for g, ms in muscle_groups(names).items() for m in ms}
+        model = osim.Model(str(Path(run_dirs[label]) / "model_dynamics.osim"))
+        cap = model.getMuscles()
+        view["runs"][label] = {"motion": by_file[key],
+                               "fmax": [round(cap.get(n).getMaxIsometricForce()) for n in view["muscles"]],
+                               "act": activation_frames(run_dirs[label], view["muscles"], times)}
+    from .kinematics import SKELETON_BONES
+    view["bones"] = [b for b in SKELETON_BONES if "head_top" not in b]
+    return view

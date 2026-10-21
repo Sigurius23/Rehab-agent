@@ -181,6 +181,20 @@ def test_muscle_effects_and_weakness_what_if(selftest_run):
     q = study["comparisons"]["ideal exo knee_angle_r <= 40 N·m (neg)"]["quadriceps_r"]
     assert q["other"] < 0.8 * q["base"]                               # knee-extension assist offloads the quadriceps
     assert (mdir / "muscles.html").exists() and (mdir / "study.json").exists()
+    # 3D muscle view: one path per muscle per frame, activations per variant, weakened capacity visible
+    page = (mdir / "muscles.html").read_text()
+    view = json.loads(page.split("id='mus-data'>", 1)[1].split("</script>", 1)[0])
+    assert set(view["runs"]) == set(study["runs"]) and len(view["motions"]) == 1    # no corrected variant here
+    n, frames = len(view["muscles"]), len(view["t"])
+    paths = view["motions"]["m0"]["paths"]
+    assert n > 50 and len(paths) == frames and all(len(f) == n for f in paths)
+    assert all(len(p) >= 6 and len(p) % 3 == 0 for p in paths[0])                  # >= 2 points, xyz in mm
+    pelvis = np.array(view["motions"]["m0"]["bodies"]["pelvis"][0])
+    assert np.abs(np.array(paths[0][0]).reshape(-1, 3) - pelvis).max() < 1500
+    m = view["muscles"].index("glmax1_r")
+    weak_run, base_run = view["runs"]["gluteus_maximus_r at 50%"], view["runs"]["measured"]
+    assert weak_run["fmax"][m] == pytest.approx(0.5 * base_run["fmax"][m], abs=1)
+    assert len(weak_run["act"]) == frames and all(0 <= a <= 100 for row in weak_run["act"] for a in row)
 
 
 def test_cue_replay_blocked_on_tier_c(selftest_run):

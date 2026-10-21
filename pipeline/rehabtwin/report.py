@@ -116,8 +116,8 @@ PLAYER_JS = r"""
     const x = p[0] - cx, y = p[1] - 0.9, z = p[2] - cz;
     const cy = Math.cos(yaw), sy = Math.sin(yaw), cp = Math.cos(pitch), sp = Math.sin(pitch);
     const x1 = cy * x + sy * z, z1 = -sy * x + cy * z;
-    const y2 = cp * y - sp * z1, z2 = sp * y + cp * z1;
-    const s = cv.height / 2.6 * 3.5 / (3.5 + z2);
+    const y2 = cp * y + sp * z1, z2 = -sp * y + cp * z1;   // pitch > 0: camera above, looking down
+    const s = cv.height / 2.6 * 4.5 / (4.5 + z2);
     return [cv.width / 2 + s * x1, cv.height * 0.52 - s * y2];
   }
   function line(a, b, col, w, dash) {
@@ -130,9 +130,9 @@ PLAYER_JS = r"""
     const dpr = window.devicePixelRatio || 1, w = cv.clientWidth;
     if (cv.width !== Math.round(w * dpr)) { cv.width = Math.round(w * dpr); cv.height = Math.round(w * 0.6 * dpr); }
     ctx.clearRect(0, 0, cv.width, cv.height);
-    for (let i = -5; i <= 5; i++) {  // floor grid (y = 0), 20 cm
-      line([cx + i * 0.2, 0, cz - 1], [cx + i * 0.2, 0, cz + 1], css('--muted'), 0.6);
-      line([cx - 1, 0, cz + i * 0.2], [cx + 1, 0, cz + i * 0.2], css('--muted'), 0.6);
+    for (let i = -4; i <= 4; i++) {  // floor grid (y = 0), 20 cm
+      line([cx + i * 0.2, 0, cz - 0.8], [cx + i * 0.2, 0, cz + 0.8], css('--muted'), 0.6);
+      line([cx - 0.8, 0, cz + i * 0.2], [cx + 0.8, 0, cz + i * 0.2], css('--muted'), 0.6);
     }
     if (D.ref) {
       const kr = Math.min(k, D.ref.pelvis.length - 1);
@@ -190,6 +190,178 @@ def _player(skeleton, ref_skeleton=None, ref_label="reference, overlaid on the e
             "<span id='skel-time' class='muted'></span></div>"
             f"<script type='application/json' id='skel-data'>{json.dumps(data, separators=(',', ':'))}</script>"
             f"<script>{PLAYER_JS}</script>")
+
+
+# Muscle colour scales (OKLab-interpolated; each arm checked as a one-hue ordinal ramp with the
+# dataviz validator against the report surfaces): activation = one red hue, light -> dark on a
+# light page and dark -> light on a dark page; change vs measured = blue (less) - grey - red (more).
+MUSCLE_RAMPS = {
+    "light": {"seq": ("#dc9a90", "#9a1d1a"), "div": ("#1f5fae", "#bdbbb4", "#a8201d")},
+    "dark": {"seq": ("#7a4741", "#ffb4a9"), "div": ("#8cc0fa", "#55544e", "#ff9890")},
+}
+
+
+def _oklab_ramp(stops, n):
+    """n colours interpolated in OKLab through ``stops`` (hex)."""
+    m1 = np.array([[0.4122214708, 0.5363325363, 0.0514459929], [0.2119034982, 0.6806995451, 0.1073969566],
+                   [0.0883024619, 0.2817188376, 0.6299787005]])
+    m2 = np.array([[0.2104542553, 0.7936177850, -0.0040720468], [1.9779984951, -2.4285922050, 0.4505937099],
+                   [0.0259040371, 0.7827717662, -0.8086757660]])
+
+    def to_lab(h):
+        c = np.array([int(h[i:i + 2], 16) / 255 for i in (1, 3, 5)])
+        c = np.where(c <= 0.04045, c / 12.92, ((c + 0.055) / 1.055) ** 2.4)
+        return m2 @ np.cbrt(m1 @ c)
+
+    def to_hex(lab):
+        c = np.clip(np.linalg.solve(m1, np.linalg.solve(m2, lab) ** 3), 0, 1)
+        c = np.where(c <= 0.0031308, 12.92 * c, 1.055 * c ** (1 / 2.4) - 0.055)
+        return "#" + "".join(f"{int(round(v * 255)):02x}" for v in c)
+
+    labs = [to_lab(h) for h in stops]
+    out = []
+    for k in range(n):
+        u = k / (n - 1) * (len(stops) - 1)
+        i = min(int(u), len(stops) - 2)
+        out.append(to_hex(labs[i] * (1 - (u - i)) + labs[i + 1] * (u - i)))
+    return out
+
+
+MUSCLE_JS = r"""
+(function () {
+  const D = JSON.parse(document.getElementById('mus-data').textContent);
+  const $ = id => document.getElementById(id);
+  const cv = $('mus'), ctx = cv.getContext('2d'), slider = $('mus-t'), btn = $('mus-play'), lab = $('mus-time');
+  const selRun = $('mus-run'), selMode = $('mus-mode'), tip = $('mus-tip'), topEl = $('mus-top'), leg = $('mus-legend');
+  const css = n => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+  const dark = () => window.matchMedia && matchMedia('(prefers-color-scheme: dark)').matches;
+  let yaw = -0.6, pitch = 0.3, k = 0, playing = true, drag = null, last = 0, hover = null, segs = [];
+  slider.max = D.t.length - 1;
+  for (const r of Object.keys(D.runs)) selRun.add(new Option(r, r));
+  const P0 = D.motions[D.runs[D.base].motion].bodies.pelvis;
+  let cx = 0, cz = 0; for (const p of P0) { cx += p[0]; cz += p[2]; } cx /= P0.length; cz /= P0.length;
+  const fref = Math.max(...D.runs[D.base].fmax);
+  const top = (D.motions[D.runs[D.base].motion].bodies.head || P0).reduce((h, p) => Math.max(h, p[1]), 0) / 1000 + 0.15;
+  function proj(x, y, z) {   // fit: floor to top of the head over the window
+    x = (x - cx) / 1000; y = y / 1000 - top / 2; z = (z - cz) / 1000;
+    const cy = Math.cos(yaw), sy = Math.sin(yaw), cp = Math.cos(pitch), sp = Math.sin(pitch);
+    const x1 = cy * x + sy * z, z1 = -sy * x + cy * z, y2 = cp * y + sp * z1, z2 = -sp * y + cp * z1;
+    const s = cv.height / (top * 1.2) * 4.5 / (4.5 + z2);
+    return [cv.width / 2 + s * x1, cv.height * 0.46 - s * y2];
+  }
+  const change = () => selMode.value === 'change' && selRun.value !== D.base;
+  function value(run, m) { return change() ? run.act[k][m] - D.runs[D.base].act[k][m] : run.act[k][m]; }
+  function colour(v) {
+    const L = D.lut[dark() ? 'dark' : 'light'];
+    if (change()) { const u = (Math.max(-D.span, Math.min(D.span, v)) + D.span) / (2 * D.span); return L.div[Math.round(u * (L.div.length - 1))]; }
+    return L.seq[Math.round(Math.min(100, v) / 100 * (L.seq.length - 1))];
+  }
+  function legend() {
+    const L = D.lut[dark() ? 'dark' : 'light'], c = change() ? L.div : L.seq;
+    const ticks = change() ? ['-' + D.span + ' pts (less)', '0', '+' + D.span + ' pts (more)'] : ['0%', '50%', '100% of capacity'];
+    leg.innerHTML = '<div style="height:10px;border-radius:5px;background:linear-gradient(90deg,' + c.join(',') + ')"></div>' +
+      '<div style="display:flex;justify-content:space-between" class="muted">' + ticks.map(t => '<span>' + t + '</span>').join('') + '</div>';
+  }
+  function draw() {
+    const dpr = window.devicePixelRatio || 1, w = cv.clientWidth;
+    if (cv.width !== Math.round(w * dpr)) { cv.width = Math.round(w * dpr); cv.height = Math.round(Math.min(w * 0.75, 640) * dpr); }
+    ctx.clearRect(0, 0, cv.width, cv.height);
+    const run = D.runs[selRun.value], mot = D.motions[run.motion], paths = mot.paths[k];
+    ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+    ctx.strokeStyle = css('--line'); ctx.lineWidth = dpr;
+    for (let i = -4; i <= 4; i++) for (const [a, b] of [[[i * 200, -800], [i * 200, 800]], [[-800, i * 200], [800, i * 200]]]) {
+      const p = proj(cx + a[0], 0, cz + a[1]), q = proj(cx + b[0], 0, cz + b[1]);
+      ctx.beginPath(); ctx.moveTo(p[0], p[1]); ctx.lineTo(q[0], q[1]); ctx.stroke();
+    }
+    ctx.strokeStyle = css('--muted'); ctx.lineWidth = 1.5 * dpr;
+    for (const [a, b] of D.bones) if (mot.bodies[a] && mot.bodies[b]) {
+      const p = proj(...mot.bodies[a][k]), q = proj(...mot.bodies[b][k]);
+      ctx.beginPath(); ctx.moveTo(p[0], p[1]); ctx.lineTo(q[0], q[1]); ctx.stroke();
+    }
+    const order = paths.map((_, m) => m).sort((a, b) => Math.abs(value(run, a)) - Math.abs(value(run, b)));
+    segs = [];
+    for (const m of order) {
+      const pts = paths[m]; if (pts.length < 6) continue;
+      ctx.beginPath(); ctx.strokeStyle = colour(value(run, m));
+      ctx.lineWidth = dpr * (0.6 + 2.6 * Math.sqrt(run.fmax[m] / fref)) * (hover === m ? 2 : 1);
+      let prev = null;
+      for (let i = 0; i < pts.length; i += 3) {
+        const p = proj(pts[i], pts[i + 1], pts[i + 2]);
+        if (prev) { ctx.lineTo(p[0], p[1]); segs.push([m, prev[0], prev[1], p[0], p[1]]); } else ctx.moveTo(p[0], p[1]);
+        prev = p;
+      }
+      ctx.stroke();
+    }
+    const ranked = paths.map((_, m) => m).sort((a, b) => Math.abs(value(run, b)) - Math.abs(value(run, a))).slice(0, 6);
+    topEl.textContent = (change() ? 'Biggest changes now: ' : 'Most active now: ') +
+      ranked.map(m => D.muscles[m] + ' ' + (change() ? (value(run, m) > 0 ? '+' : '') + value(run, m) + ' pts' : value(run, m) + '%')).join(' · ');
+    slider.value = k; lab.textContent = D.t[k].toFixed(2) + ' s';
+    if (hover !== null) showTip(run);
+  }
+  let tipXY = [0, 0];
+  function showTip(run) {
+    const m = hover, base = D.runs[D.base];
+    tip.style.display = 'block'; tip.style.left = (tipXY[0] + 14) + 'px'; tip.style.top = (tipXY[1] + 10) + 'px';
+    tip.innerHTML = '<b>' + D.muscles[m] + '</b> (' + (D.groups[D.muscles[m]] || 'other') + ')<br>activation ' + run.act[k][m] + '%' +
+      (selRun.value !== D.base ? ' · measured ' + base.act[k][m] + '%' : '') + '<br>capacity ' + run.fmax[m] + ' N' +
+      (run.fmax[m] !== base.fmax[m] ? ' (measured model ' + base.fmax[m] + ' N)' : '');
+  }
+  function nearest(x, y) {
+    let best = null, bd = 8 * (window.devicePixelRatio || 1);
+    for (const [m, x1, y1, x2, y2] of segs) {
+      const dx = x2 - x1, dy = y2 - y1, L = dx * dx + dy * dy || 1, u = Math.max(0, Math.min(1, ((x - x1) * dx + (y - y1) * dy) / L));
+      const d = Math.hypot(x - x1 - u * dx, y - y1 - u * dy);
+      if (d <= bd) { bd = d; best = m; }   // later segments are drawn on top: prefer them on ties
+    }
+    return best;
+  }
+  function tick(ts) {
+    if (playing && ts - last > 1000 / D.fps) { k = (k + 1) % D.t.length; last = ts; draw(); }
+    requestAnimationFrame(tick);
+  }
+  cv.addEventListener('pointerdown', e => { drag = [e.clientX, e.clientY, yaw, pitch]; cv.setPointerCapture(e.pointerId); });
+  cv.addEventListener('pointermove', e => {
+    if (drag) { yaw = drag[2] + (e.clientX - drag[0]) / 150; pitch = Math.max(-1.2, Math.min(1.2, drag[3] + (e.clientY - drag[1]) / 150)); draw(); return; }
+    const r = cv.getBoundingClientRect(), dpr = window.devicePixelRatio || 1;
+    tipXY = [e.clientX - r.left, e.clientY - r.top];
+    const h = nearest(tipXY[0] * dpr, tipXY[1] * dpr);
+    if (h !== hover) { hover = h; if (h === null) tip.style.display = 'none'; draw(); } else if (h !== null) showTip(D.runs[selRun.value]);
+  });
+  cv.addEventListener('pointerup', () => { drag = null; });
+  cv.addEventListener('pointerleave', () => { hover = null; tip.style.display = 'none'; draw(); });
+  slider.addEventListener('input', () => { k = +slider.value; playing = false; btn.textContent = 'Play'; draw(); });
+  btn.addEventListener('click', () => { playing = !playing; btn.textContent = playing ? 'Pause' : 'Play'; });
+  const onSel = () => { selMode.disabled = selRun.value === D.base; legend(); draw(); };
+  selRun.addEventListener('change', onSel); selMode.addEventListener('change', onSel);
+  if (window.matchMedia) matchMedia('(prefers-color-scheme: dark)').addEventListener('change', onSel);
+  window.addEventListener('resize', draw);
+  onSel(); requestAnimationFrame(tick);
+})();
+"""
+
+
+def _muscle_view(view, span_pts=30):
+    """3D muscle view: lines of action coloured by SO activation, one scenario at a time."""
+    import json
+    data = dict(view, base="measured", span=span_pts,
+                lut={mode: {"seq": _oklab_ramp(r["seq"], 21), "div": _oklab_ramp(r["div"], 21)}
+                     for mode, r in MUSCLE_RAMPS.items()})
+    return ("<h2>3D muscle view</h2><p class='muted'>Muscle lines of action on the session model (OpenSim paths, "
+            "wrapping included), coloured by the static-optimisation activation of each muscle. Line width ∝ √(max "
+            "isometric force), so a weakened group draws thinner. Drag to orbit; hover a muscle for its numbers. "
+            "Weakened and exo variants reuse the measured motion; a corrected variant moves the body as corrected.</p>"
+            "<div class='kv'><label>variant <select id='mus-run'></select></label> "
+            "<label>colour <select id='mus-mode'><option value='act'>activation</option>"
+            "<option value='change'>change vs measured</option></select></label></div>"
+            "<div style='position:relative'><canvas id='mus' style='width:100%;touch-action:none;cursor:grab'></canvas>"
+            "<div id='mus-tip' style='display:none;position:absolute;pointer-events:none;background:var(--bg);"
+            "border:1px solid var(--line);border-radius:6px;padding:4px 8px;font-size:12px;white-space:nowrap'></div></div>"
+            "<div id='mus-legend' style='max-width:360px;font-size:12px'></div>"
+            "<div class='kv'><button id='mus-play' type='button'>Pause</button> "
+            "<input id='mus-t' type='range' min='0' value='0' style='width:60%;vertical-align:middle'> "
+            "<span id='mus-time' class='muted'></span></div><p id='mus-top' style='font-size:13px'></p>"
+            f"<script type='application/json' id='mus-data'>{json.dumps(data, separators=(',', ':'))}</script>"
+            f"<script>{MUSCLE_JS}</script>")
 
 
 def _svg_bars(groups, variants, title, w=760, row=16):
@@ -297,8 +469,8 @@ bandwidth {spec.get('schedule', {}).get('bandwidth_deg', 2)}°, refractory {spec
     return path
 
 
-def write_muscles(path, study):
-    """HTML for a muscle-effects study (rehabtwin muscles)."""
+def write_muscles(path, study, view=None):
+    """HTML for a muscle-effects study (rehabtwin muscles); ``view`` from ``muscles.view_data``."""
     e = html.escape
     runs = study["runs"]
     groups = sorted({g for r in runs.values() for g in r["group_activation"]},
@@ -335,6 +507,7 @@ imaging/strength/EMG evidence). Ground forces are estimated, not measured.</p>
 <span>feet planted: {'yes' if grf['feet_planted'] else 'NO — estimate invalid'}</span>
 <span>valid exercise for this GRF model: {'yes' if base['valid_exercise'] else 'NO'}</span></div>
 {_svg_bars(groups, variants, "Peak muscle-group activation (fraction of group capacity)")}
+{_muscle_view(view) if view else ""}
 <h2>Biggest changes</h2>
 <table><tr><th>variant</th><th>group</th><th>measured</th><th>variant</th><th>change</th></tr>{''.join(rows)}</table>
 {exo_html}

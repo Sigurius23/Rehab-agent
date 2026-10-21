@@ -8,6 +8,8 @@
 - Live loop: `lsl-live`/`lsl-simulate`/`lsl-listen` (LSL) and `vmc-posture` (SlimeVR VMC → posture signals)
 - `suit-bridge`: cue markers → SenseShift/bHaptics BLE payloads (layouts parsed from the GPL firmware at run time)
 - `muscles --assist`: ideal assistive device (exo sizing upper bound), e.g. `knee_angle_r=40:neg`
+- 3D muscle view in `muscles.html`: activation-coloured muscle paths per variant, change-vs-measured mode,
+  capacity-scaled widths; 3D replays now view from above (camera pitch sign fixed)
 - `examples/synthetic_demo.sh`: every command on the synthetic squat; `docs/architecture.md` stage → module map
 - **First working slice — `pipeline/` (rehabtwin): video → SKEL → OpenSim.**
   HSMR/SKEL adapter, MediaPipe front-end (mono + calibrated multi-view), gravity

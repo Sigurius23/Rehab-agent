@@ -106,7 +106,7 @@ def run_correction(session_dir, spec_name, illustrative=False):
     return summary, out
 
 
-def muscle_study(session_dir, rep=1, start=None, stop=None, correction=None, weaken=(), assist=()):
+def muscle_study(session_dir, rep=1, start=None, stop=None, correction=None, weaken=(), assist=(), view_3d=True):
     """Measured motion (+ corrected motion, + weakened variants) through GRF estimate → ID → SO."""
     from . import muscles
     session_dir = Path(session_dir)
@@ -122,12 +122,14 @@ def muscle_study(session_dir, rep=1, start=None, stop=None, correction=None, wea
     exercise = met["exercise"] if met["exercise"] in muscles.VALID_EXERCISES else met["exercise"]
     out = session_dir / "muscles"
     runs = {"measured": muscles.run(model, motion, out, label="measured", exercise=exercise, start=start, stop=stop)}
+    used = {"measured": motion}     # motion each variant moved with (for the 3D muscle view)
     if correction:
         corrected = session_dir / "correction" / correction / "corrected.mot"
         if not corrected.exists():
             raise SystemExit(f"{corrected} missing; run 'rehabtwin correct {session_dir} --spec {correction} ...' first")
         runs[f"corrected: {correction}"] = muscles.run(model, corrected, out, label=f"corrected_{correction}",
                                                        exercise=exercise, start=start, stop=stop)
+        used[f"corrected: {correction}"] = corrected
     for spec in weaken:
         group, factor = spec.split("=")
         lab = f"{group} at {float(factor) * 100:.0f}%"
@@ -141,7 +143,9 @@ def muscle_study(session_dir, rep=1, start=None, stop=None, correction=None, wea
     study = {"twin_tier": sess["twin_tier"], "runs": runs,
              "comparisons": {lab: muscles.compare(runs["measured"], r) for lab, r in runs.items() if lab != "measured"}}
     records.write_json(out / "study.json", study)
-    report.write_muscles(out / "muscles.html", study)
+    view = muscles.view_data(model, {lab: out / r["label"] for lab, r in runs.items()},
+                             {lab: used.get(lab, motion) for lab in runs}, start, stop) if view_3d else None
+    report.write_muscles(out / "muscles.html", study, view)
     report.write_index(session_dir)
     return study, out
 
@@ -278,6 +282,7 @@ def main(argv=None):
                     help="what-if weakness, e.g. gluteus_medius_r=0.5 (repeatable)")
     mu.add_argument("--assist", action="append", default=[], metavar="COORD=NM[:pos|neg]",
                     help="ideal assistive device, e.g. knee_angle_r=40:neg (extension only); repeatable")
+    mu.add_argument("--no-3d", action="store_true", help="skip the 3D muscle view (smaller report)")
     cu = sub.add_parser("cues", help="offline replay of haptic posture-cue rules over a session")
     cu.add_argument("session")
     cu.add_argument("--rules", required=True, help="name in pipeline/configs/feedback or a path")
@@ -346,7 +351,7 @@ def main(argv=None):
         print(json.dumps({"status": summary["status"], "admissible": summary["admissible"],
                           "derived_signals": summary.get("derived_signals"), "report": str(out / "correction.html")}, indent=1))
     elif a.cmd == "muscles":
-        study, out = muscle_study(a.session, a.rep, a.start, a.stop, a.correction, a.weaken, a.assist)
+        study, out = muscle_study(a.session, a.rep, a.start, a.stop, a.correction, a.weaken, a.assist, not a.no_3d)
         for lab, cmp in study["comparisons"].items():
             top = sorted(cmp.items(), key=lambda kv: -abs(kv[1]["change"]))[:5]
             print(lab + ": " + ", ".join(f"{g} {v['base']:.2f}->{v['other']:.2f}" for g, v in top))

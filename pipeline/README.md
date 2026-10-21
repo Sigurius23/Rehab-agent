@@ -109,6 +109,12 @@ python -m rehabtwin muscles  SESSION --rep 1 --correction squat_knee_valgus_righ
 python -m rehabtwin cues     SESSION --rules squat_posture [--motion SESSION/correction/<spec>/corrected.mot]
 ```
 
+`muscles.html` includes a **3D muscle view**: each muscle's line of action (OpenSim path, wrapping
+included) on the moving model, coloured by its static-optimisation activation or by the change
+against the measured run, with line width ∝ √(max isometric force), so a weakened group draws
+thinner. Pick the variant (measured / corrected / weakened / exo); hover a muscle for its numbers.
+`--no-3d` leaves it out.
+
 Live loop over Lab Streaming Layer (`pip install -e "pipeline[live]"`), the same engine in real time:
 
 ```bash
