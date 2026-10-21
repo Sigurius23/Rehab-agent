@@ -77,6 +77,26 @@ def test_floor_fit_recovers_camera_pitch():
     assert abs(frames.angle_deg(up, rot_x(8) @ [0, 1, 0])) < 0.01 and rms < 1e-9 and n == 200
 
 
+def test_floor_fit_ignores_a_raised_foot():
+    rng = np.random.default_rng(4)
+    T = 60
+    names = ["RHEE", "RTOE", "LHEE", "LTOE"]
+    pts = np.zeros((T, 4, 3))
+    pts[:, 0] = [-0.10, 0.0, 0.10]
+    pts[:, 1] = [0.15, 0.0, 0.12]
+    pts[:, 2] = [-0.10, 0.25 + 0.05 * np.sin(np.arange(T) / 5)[0], -0.10]  # left foot never touches down
+    pts[:, 3] = [0.15, 0.30, -0.12]
+    pts[:, 2, 1] = 0.25 + 0.05 * np.sin(np.arange(T) / 5)
+    pts += rng.normal(0, 0.002, pts.shape)
+    pts[:, :2, 0] += np.linspace(0, 0.02, T)[:, None]  # small stance-foot sway, still ~collinear
+    with pytest.raises(ValueError):  # one stance foot cannot define a plane...
+        frames.estimate_floor_up(pts, names, names, [0, 1, 0])
+    both = pts.copy()
+    both[: T // 2, 2:, 1] = [0.0, 0.0]  # ...but once the left foot lands, the plane is found
+    up, rms, n = frames.estimate_floor_up(both @ rot_x(10).T, names, names, [0, 1, 0])
+    assert frames.angle_deg(up, rot_x(10) @ [0, 1, 0]) < 1.5 and rms < 0.01
+
+
 def test_floor_fit_rejects_collinear_feet():
     pts = np.zeros((10, 3, 3))
     pts[:, :, 0] = np.linspace(0, 0.3, 3)
@@ -171,6 +191,8 @@ def test_validation_bias_gates_and_synthetic_never_approves():
     assert rep["gates"]["hip_r.frontal_rmse_le_5deg"] == "fail"
     assert rep["feedback_allowed_joint_planes"] == ["knee_r.sagittal"] and rep["approved_for"] == ["screening"]
     assert validation.report(cmp, "P", "test", ["squat"], synthetic=True)["approved_for"] == []
+    bad = validation.compare(Table(ref.columns, ref.data + [9.0, 9.0, 0.0], t), ref)
+    assert validation.report(bad, "P", "test", ["squat"])["approved_for"] == []  # nothing passed
 
 
 def test_validation_finds_time_lag():

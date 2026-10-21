@@ -11,7 +11,7 @@ from datetime import date
 
 import numpy as np
 
-from .kinematics import classify
+from .kinematics import classify_signal as classify
 from .io_formats import Table
 
 # docs/accuracy.md "Project acceptance targets" (engineering targets, clinician to confirm)
@@ -107,12 +107,15 @@ def report(cmp, person_ref, reference_system, movements, synthetic=False, extra=
     """A validation-report (schemas/validation-report.schema.json)."""
     kin = by_joint_plane(cmp["coordinates"])
     gates, allowed = gate(kin, per_coord=cmp["coordinates"])
-    if synthetic:
-        approved = []  # a synthetic round trip licenses nothing clinically
-    elif not allowed:
-        approved = ["screening"]
+    if synthetic or not allowed:
+        # A synthetic round trip licenses nothing clinically, and a validation
+        # where no joint/plane met its target licenses nothing beyond what the
+        # tier already allows (Tier C: adherence and rep counting, no angles).
+        approved = []
+    elif all(v != "fail" for v in gates.values()):
+        approved = ["screening", "posture-feedback"]
     else:
-        approved = ["screening", "posture-feedback"] if all(v != "fail" for v in gates.values()) else ["screening"]
+        approved = ["screening"]
     rep = {
         "person_ref": person_ref,
         "date": date.today().isoformat(),

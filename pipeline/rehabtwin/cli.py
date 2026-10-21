@@ -4,6 +4,8 @@
   validate  estimate .mot vs reference .mot -> validation-report.json
   synth     write a synthetic SKEL-like sequence with known truth
   selftest  synth -> process -> validate, exits non-zero if the round trip regresses
+  mp-mono   raw MediaPipe dump (adapters/mediapipe_pose.py) -> monocular sequence .npz
+  mp-multiview  synchronised raw MediaPipe dumps + Qualisys calibration -> triangulated sequence .npz
 """
 from __future__ import annotations
 
@@ -23,7 +25,8 @@ from .sequence import MarkerSequence
 
 
 def process(seq_path, out_dir, exercise="squat", config=None, mass_kg=None, height_m=None,
-            reference=None, reference_system=None, person_ref=None, tier=None, video=None, max_lag_s=0.0):
+            reference=None, reference_system=None, person_ref=None, tier=None, video=None, max_lag_s=0.0,
+            reference_model=None):
     seq_path, out_dir = Path(seq_path), Path(out_dir)
     out_dir.mkdir(parents=True, exist_ok=True)
     seq = MarkerSequence.load(seq_path)
@@ -38,9 +41,15 @@ def process(seq_path, out_dir, exercise="squat", config=None, mass_kg=None, heig
     tier = tier or seq.meta.get("tier", "C")
     person_ref = person_ref or seq.meta.get("person_ref", "UNSPECIFIED")
 
-    val = None
+    derived = metrics_mod.derived_signals(est, stage.scaled_model)
+    val, ref_plot = None, None
     if reference:
-        cmp = validation.compare(est, read_table(reference), max_lag_s=max_lag_s)
+        ref_tab = read_table(reference)
+        ref_model = Path(reference_model) if reference_model else Path(reference).parent / "model_scaled.osim"
+        if ref_model.exists():  # posture signals (inclination vs gravity, FPPA) can be validated too
+            ref_tab = metrics_mod.with_signals(ref_tab, metrics_mod.derived_signals(ref_tab, ref_model))
+        cmp = validation.compare(metrics_mod.with_signals(est, derived), ref_tab, max_lag_s=max_lag_s)
+        ref_plot = (ref_tab.time + cmp["lag_s"], {c: ref_tab.col(c) for c in ref_tab.columns})
         val = validation.report(cmp, person_ref, reference_system or str(reference), [exercise],
                                 synthetic=bool(seq.meta.get("synthetic")))
         records.validate(val, "validation-report")
@@ -51,7 +60,7 @@ def process(seq_path, out_dir, exercise="squat", config=None, mass_kg=None, heig
                                        allowed_joint_planes=(val or {}).get("feedback_allowed_joint_planes", ())
                                        if val and not val["synthetic"] else (),
                                        imputed_times=imputed_t,
-                                       validation_ref="validation-report.json" if val else None)
+                                       validation_ref="validation-report.json" if val else None, derived=derived)
     records.write_json(out_dir / "metrics.json", met)
     outputs = {"model": stage.scaled_model.relative_to(out_dir), "motion": motion.relative_to(out_dir),
                "metrics": "metrics.json", "qc": "qc.json", "report": "report.html"}
@@ -61,7 +70,7 @@ def process(seq_path, out_dir, exercise="squat", config=None, mass_kg=None, heig
                                   config_name=Path(cfg["_path"]).name, outputs=outputs, validation_report=val)
     records.validate(sess, "session")
     records.write_json(out_dir / "session.json", sess)
-    report.write(out_dir / "report.html", sess, stage.qc, met, signals, est.time, val)
+    report.write(out_dir / "report.html", sess, stage.qc, met, signals, est.time, val, ref_plot)
     return {"session": sess, "metrics": met, "qc": stage.qc, "validation": val, "motion": motion}
 
 
@@ -73,19 +82,20 @@ def _synth(out_dir, seed=0, **kw):
     seq.meta.update({"person_ref": "SYNTHETIC-NOT-A-PATIENT", "tier": "C", "session_id": out_dir.name,
                      "default_config": "skel105_pose2sim"})
     seq.save(out_dir / "skel_seq.npz")
-    return out_dir / "skel_seq.npz", truth["mot"]
+    return out_dir / "skel_seq.npz", truth["mot"], truth["model"]
 
 
 # Regression limits for the synthetic round trip (deg). These guard the
 # software, not the measurement — real accuracy comes from a real reference.
 SELFTEST_LIMITS = {"knee_angle_r": 2.0, "knee_angle_l": 2.0, "hip_flexion_r": 2.5, "hip_flexion_l": 2.5,
                    "ankle_angle_r": 2.5, "ankle_angle_l": 2.5, "pelvis_tilt": 2.5, "hip_adduction_r": 2.0,
-                   "L5_S1_Flex_Ext": 1.5}
+                   "L5_S1_Flex_Ext": 1.5, "torso.sagittal": 2.0, "torso.frontal": 2.0, "knee_fppa_r": 3.0}
 
 
 def selftest(out_dir):
-    seq_path, truth = _synth(out_dir)
-    res = process(seq_path, out_dir, exercise="squat", reference=truth, reference_system="synthetic truth (rehabtwin.synthetic)")
+    seq_path, truth, truth_model = _synth(out_dir)
+    res = process(seq_path, out_dir, exercise="squat", reference=truth, reference_model=truth_model,
+                  reference_system="synthetic truth (rehabtwin.synthetic)")
     per = res["validation"]["per_coordinate"]
     failures = {c: per[c]["rmse_deg"] for c, lim in SELFTEST_LIMITS.items() if per[c]["rmse_deg"] > lim}
     return res, failures
@@ -104,6 +114,8 @@ def main(argv=None):
     p.add_argument("--reference", help="reference .mot for validation (e.g. marker-mocap IK)")
     p.add_argument("--reference-system", help="what the reference is, for the report")
     p.add_argument("--max-lag-s", type=float, default=0.0, help="search a time offset for unsynchronised references")
+    p.add_argument("--reference-model", help="OpenSim model of the reference (default: model_scaled.osim next to it); "
+                                             "enables validation of trunk/pelvis inclination and knee FPPA")
     p.add_argument("--person-ref", help="pseudonymous subject reference (never a name)")
     p.add_argument("--tier", choices=["A", "B", "C"])
     p.add_argument("--video")
@@ -121,11 +133,21 @@ def main(argv=None):
     s.add_argument("--seed", type=int, default=0)
     t = sub.add_parser("selftest", help="synthetic round trip")
     t.add_argument("out")
+    m = sub.add_parser("mp-mono", help="MediaPipe raw dump -> monocular sequence")
+    m.add_argument("raw")
+    m.add_argument("out")
+    m.add_argument("--focal-px", type=float, help="calibrated focal length; default assumes a 75 deg diagonal FOV")
+    m.add_argument("--person-ref", default="UNSPECIFIED")
+    mv = sub.add_parser("mp-multiview", help="MediaPipe raw dumps + calibration -> triangulated sequence")
+    mv.add_argument("raws", nargs="+", help="one raw dump per camera, in calibration camera order")
+    mv.add_argument("--qca", required=True, help="Qualisys .qca.txt calibration")
+    mv.add_argument("--out", required=True)
+    mv.add_argument("--person-ref", default="UNSPECIFIED")
     a = ap.parse_args(argv)
 
     if a.cmd == "process":
         res = process(a.sequence, a.out, a.exercise, a.config, a.mass_kg, a.height_m, a.reference,
-                      a.reference_system, a.person_ref, a.tier, a.video, a.max_lag_s)
+                      a.reference_system, a.person_ref, a.tier, a.video, a.max_lag_s, a.reference_model)
         print(json.dumps({"reps": res["metrics"]["n_reps"], "tier": res["metrics"]["tier"],
                           "ik_marker_rms_m": res["qc"]["ik"]["marker_rms_m"], "report": str(Path(a.out) / "report.html")}, indent=2))
     elif a.cmd == "validate":
@@ -135,8 +157,22 @@ def main(argv=None):
         records.write_json(a.out, rep)
         print(json.dumps({"kinematics_rmse_deg": rep["kinematics_rmse_deg"], "approved_for": rep["approved_for"]}, indent=1))
     elif a.cmd == "synth":
-        seq, truth = _synth(a.out, a.seed)
-        print(f"wrote {seq} and {truth}")
+        seq, truth, model = _synth(a.out, a.seed)
+        print(f"wrote {seq}, {truth} and {model}")
+    elif a.cmd in ("mp-mono", "mp-multiview"):
+        from . import mediapipe_front as mf
+        if a.cmd == "mp-mono":
+            seq = mf.monocular_sequence(dict(np.load(a.raw)), focal_px=a.focal_px,
+                                        meta={"person_ref": a.person_ref, "raw": str(a.raw)})
+        else:
+            cams = mf.read_qca(a.qca)
+            if len(cams) != len(a.raws):
+                raise SystemExit(f"{len(a.raws)} dumps but {len(cams)} cameras in {a.qca}")
+            seq, err = mf.multiview_sequence([dict(np.load(r)) for r in a.raws], cams,
+                                             meta={"person_ref": a.person_ref, "raws": [str(r) for r in a.raws]})
+        seq.save(a.out)
+        print(json.dumps({"out": a.out, "frames": seq.n_frames, "valid": int(seq.valid.sum()),
+                          **{k: seq.meta[k] for k in ("intrinsics_source", "reprojection_px_median") if k in seq.meta}}))
     elif a.cmd == "selftest":
         res, failures = selftest(a.out)
         per = res["validation"]["per_coordinate"]

@@ -54,6 +54,16 @@ def classify(coord):
     return None, None
 
 
+def classify_signal(name):
+    """(joint, plane) for coordinates and derived signals ('torso.sagittal', 'knee_fppa_r', 'lumbar_total.frontal')."""
+    if "." in name:
+        body, plane = name.split(".", 1)
+        return ("lumbar" if body == "lumbar_total" else f"{body}_segment"), plane
+    if name.startswith("knee_fppa_"):
+        return f"knee_{name[-1]}", "frontal"
+    return classify(name)
+
+
 def primary_lumbar(columns):
     """The lumbar coordinate that carries the trunk motion (L5_S1 in Pose2Sim, lumbar_* in Rajagopal)."""
     for c in ("L5_S1_Flex_Ext", "lumbar_extension"):

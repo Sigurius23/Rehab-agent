@@ -128,7 +128,19 @@ def model_marker_positions(model_path, names):
 
 # --------------------------------------------------------------- frames
 
-def to_ground(seq: MarkerSequence, cfg):
+def foot_marker_heights(model_path, foot_names):
+    """Height of each foot marker above the lowest one with the model's feet flat (default pose).
+
+    Foot markers sit at different heights above the sole (back of heel vs.
+    plantar points); the floor fit subtracts these so contact samples really
+    lie on one plane. Only differences matter, so the common offset is irrelevant.
+    """
+    pos = model_marker_positions(model_path, foot_names)
+    y = pos[:, 1]
+    return {n: float(v - np.nanmin(y)) for n, v in zip(foot_names, y) if np.isfinite(v)}
+
+
+def to_ground(seq: MarkerSequence, cfg, marker_heights=None):
     """Return (names, points (T,N,3) in OpenSim ground, qc dict)."""
     names, pts = seq.all_points()
     fcfg = cfg.get("frames", {})
@@ -146,7 +158,8 @@ def to_ground(seq: MarkerSequence, cfg):
     qc["up_mode_requested"] = mode
     floor = None
     try:
-        n, rms, npts = frames.estimate_floor_up(world, names, fcfg.get("foot_markers", []), camera_up)
+        n, rms, npts = frames.estimate_floor_up(world, names, fcfg.get("foot_markers", []), camera_up,
+                                                marker_heights=marker_heights)
         floor = {"normal": n.round(4).tolist(), "rms_m": round(rms, 4), "n_points": npts,
                  "tilt_vs_camera_level_deg": round(frames.angle_deg(n, camera_up), 2)}
     except ValueError as e:
@@ -162,7 +175,8 @@ def to_ground(seq: MarkerSequence, cfg):
                      and floor["tilt_vs_camera_level_deg"] <= fcfg.get("floor_max_tilt_deg", 20.0))
     if use_floor:
         up = np.asarray(floor["normal"])
-    qc["up_source"] = "floor plane fit" if use_floor else "camera-level assumption"
+    fallback = "input y axis (calibrated lab frame)" if seq.frame == "yup_world" else "camera-level assumption"
+    qc["up_source"] = "floor plane fit" if use_floor else fallback
     R1 = frames.rotation_between(up, [0.0, 1.0, 0.0])
     world = frames.apply(R1, world)
     R2, t2 = frames.to_opensim_ground(world, names, [0.0, 1.0, 0.0],
@@ -328,13 +342,17 @@ def run(seq: MarkerSequence, cfg: dict, out_dir, mass_kg=None, height_m=None) ->
     od.mkdir(parents=True, exist_ok=True)
     qc = {"config": Path(cfg["_path"]).name, "n_frames": seq.n_frames, "fps": seq.fps}
 
-    # 1. frames
-    names, pts, frame_qc = to_ground(seq, cfg)
-    qc["frames"] = frame_qc
-
-    # 2. model
-    generic, model_names, notes = prepare_model(cfg, od, set(names))
+    # 1. model (its foot geometry informs the floor fit)
+    generic, model_names, notes = prepare_model(cfg, od, set(seq.all_points()[0]))
     qc["model_notes"] = notes
+    foot = [n for n in cfg.get("frames", {}).get("foot_markers", []) if n in model_names]
+    heights = foot_marker_heights(generic, foot) if foot else None
+
+    # 2. frames
+    names, pts, frame_qc = to_ground(seq, cfg, heights)
+    qc["frames"] = frame_qc
+    if heights:
+        qc["frames"]["foot_marker_heights_m"] = {k: round(v, 4) for k, v in heights.items()}
     missing = sorted(set(names) - set(model_names))
     qc["markers_in_data_not_in_model"] = missing
     use = [names.index(n) for n in model_names]

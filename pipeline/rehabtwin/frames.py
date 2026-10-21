@@ -42,16 +42,42 @@ def apply(R, pts, t=None):
     return out if t is None else out + t
 
 
-def estimate_floor_up(markers, names, foot_names, approx_up, lowest_fraction=0.2):
+def estimate_floor_up(markers, names, foot_names, approx_up, lowest_fraction=0.2, inlier_m=0.015,
+                      max_tilt_deg=30.0, iters=300, seed=0, min_spread_m=0.04, marker_heights=None, refine=2):
     """Fit the floor plane to foot markers when they are lowest along ``approx_up``.
 
-    Returns (up_unit_vector, rms_residual_m, n_points). The sign is chosen to
-    agree with ``approx_up``.
+    Candidate contact samples are the lowest ``lowest_fraction`` of each foot
+    marker's trajectory; a RANSAC plane (normal within ``max_tilt_deg`` of
+    ``approx_up``, with no foot sample clearly below it) then rejects feet that
+    never touch down (e.g. a raised leg).
+    ``marker_heights`` ({name: metres above the sole with the foot flat}) are
+    subtracted along the current up estimate, and the fit is repeated
+    ``refine`` times with the improved normal.
+
+    Returns (up_unit_vector, rms_residual_m, n_inliers). Raises ValueError if
+    the contact points cannot define a plane (too few, or nearly collinear —
+    e.g. one stance foot only).
     """
+    approx_up = _unit(np.asarray(approx_up, float))
+    up = approx_up
+    heights = marker_heights or {}
+    result = None
+    for _ in range(1 + (refine if heights else 0)):
+        shifted = markers.copy()
+        for n, h in heights.items():
+            if n in names:
+                shifted[:, names.index(n)] -= h * up
+        result = _fit_floor(shifted, names, foot_names, approx_up, lowest_fraction, inlier_m,
+                            max_tilt_deg, iters, seed, min_spread_m)
+        up = result[0]
+    return result
+
+
+def _fit_floor(markers, names, foot_names, approx_up, lowest_fraction, inlier_m, max_tilt_deg, iters, seed,
+               min_spread_m):
     idx = [names.index(n) for n in foot_names if n in names]
     if len(idx) < 3:
         raise ValueError("need at least 3 foot markers for a floor fit")
-    approx_up = _unit(np.asarray(approx_up, float))
     pts = []
     for i in idx:
         traj = markers[:, i, :]
@@ -66,16 +92,43 @@ def estimate_floor_up(markers, names, foot_names, approx_up, lowest_fraction=0.2
     pts = np.concatenate(pts)
     if len(pts) < 3:
         raise ValueError("not enough foot samples for a floor fit")
-    centred = pts - pts.mean(axis=0)
+    all_feet = np.concatenate([markers[:, i, :] for i in idx])
+    all_feet = all_feet[np.isfinite(all_feet).all(axis=1)]
+    rng = np.random.default_rng(seed)
+    best, best_score = None, -np.inf
+    cos_max = np.cos(np.radians(max_tilt_deg))
+    for _ in range(iters):
+        a, b, c = pts[rng.choice(len(pts), 3, replace=False)]
+        n = np.cross(b - a, c - a)
+        if np.linalg.norm(n) < 1e-9:
+            continue
+        n = _unit(n)
+        if n @ approx_up < 0:
+            n = -n
+        if n @ approx_up < cos_max:
+            continue
+        inl = np.abs((pts - a) @ n) <= inlier_m
+        # Feet cannot be under the floor: penalise planes that leave samples below them.
+        below = ((all_feet - a) @ n < -2 * inlier_m).mean()
+        score = inl.sum() * (1.0 - below) ** 2
+        if score > best_score:
+            best, best_score = inl, score
+    if best is None or best.sum() < 3:
+        raise ValueError("no floor plane found among foot contact candidates")
+    inl_pts = pts[best]
+    centred = inl_pts - inl_pts.mean(axis=0)
     _, s, vt = np.linalg.svd(centred, full_matrices=False)
+    # A narrow contact cloud (one stance foot, collinear points) cannot fix the
+    # tilt about its long axis: require real spread in both in-plane directions.
+    spread = s[:2] / np.sqrt(len(inl_pts))
+    if spread[1] < min_spread_m:
+        raise ValueError(f"foot contact points span only {spread[1] * 100:.1f} cm across; floor plane undetermined "
+                         "(need both feet on the ground at some point)")
     normal = vt[-1]
     if np.dot(normal, approx_up) < 0:
         normal = -normal
-    # A degenerate (collinear) foot cloud gives a meaningless normal.
-    if s[1] < 1e-6 or s[1] / max(s[0], 1e-12) < 0.05:
-        raise ValueError("foot markers are nearly collinear; floor plane undetermined")
     rms = float(np.sqrt(np.mean((centred @ normal) ** 2)))
-    return normal, rms, len(pts)
+    return normal, rms, int(best.sum())
 
 
 def angle_deg(a, b):

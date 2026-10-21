@@ -15,7 +15,7 @@ from scipy.signal import find_peaks
 
 from .config import CONFIG_DIR
 from .io_formats import Table
-from .kinematics import classify, segment_orientations
+from .kinematics import classify_signal, segment_orientations
 
 
 def load_exercises():
@@ -40,17 +40,24 @@ def derived_signals(table: Table, model_path):
 
 def describe_signal(name):
     """(joint, plane, unit, meaning) for coordinates and derived signals."""
-    if name.endswith((".sagittal", ".frontal")) and "." in name:
-        body, plane = name.split(".")
+    joint, plane = classify_signal(name)
+    if name.startswith("lumbar_total."):
+        meaning = "sum of lumbar-level angles"
+    elif "." in name:
         meaning = {"sagittal": "forward lean vs vertical (+ forward)",
                    "frontal": "sideways lean vs vertical (+ to subject's right)"}[plane]
-        if body == "lumbar_total":
-            return "lumbar", plane, "deg", "sum of lumbar-level angles"
-        return f"{body}_segment", plane, "deg", meaning
-    if name.startswith("knee_fppa_"):
-        return f"knee_{name[-1]}", "frontal", "deg", "knee frontal-plane projection angle (+ valgus)"
-    joint, plane = classify(name)
-    return joint, plane, "deg", "OpenSim coordinate"
+    elif name.startswith("knee_fppa_"):
+        meaning = "knee frontal-plane projection angle (+ valgus)"
+    else:
+        meaning = "OpenSim coordinate"
+    return joint, plane, "deg", meaning
+
+
+def with_signals(table: Table, signals: dict) -> Table:
+    """``table`` plus derived signals as extra columns (for validation of posture signals)."""
+    names = [n for n in signals if n not in table.columns]
+    data = np.column_stack([table.data] + [np.asarray(signals[n], float) for n in names]) if names else table.data
+    return Table(table.columns + names, data, table.time, table.in_degrees, table.header)
 
 
 def segment_reps(signal, fps, min_prominence_deg, min_rep_s):
@@ -68,12 +75,12 @@ def segment_reps(signal, fps, min_prominence_deg, min_rep_s):
 
 
 def compute(table: Table, model_path, exercise="squat", tier="C", allowed_joint_planes=(),
-            imputed_times=(), validation_ref=None):
+            imputed_times=(), validation_ref=None, derived=None):
     """Per-rep metrics + session summary (dict ready for metrics.json)."""
     prof = load_exercises()[exercise]
     fps = 1.0 / float(np.median(np.diff(table.time)))
     signals = {c: table.col(c) for c in table.columns}
-    signals.update(derived_signals(table, model_path))
+    signals.update(derived if derived is not None else derived_signals(table, model_path))
     key = [k for k in prof["key"] if k in signals]
     drivers = [d for d in prof.get("driver", []) if d in signals]
     reps = []

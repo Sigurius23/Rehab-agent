@@ -13,9 +13,11 @@ import numpy as np
 PALETTE = ["#2563eb", "#dc2626", "#059669", "#d97706", "#7c3aed", "#0891b2"]
 
 
-def _svg_chart(t, series, reps, title, unit="deg", w=760, h=220):
-    pad_l, pad_r, pad_t, pad_b = 48, 12, 24, 28
-    vals = np.concatenate([np.asarray(v, float) for v in series.values()])
+def _svg_chart(t, series, reps, title, unit="deg", w=760, h=220, ref=None):
+    """Line chart; ``ref`` = (ref_time, {name: values}) is drawn dashed in the same colours."""
+    pad_l, pad_r, pad_t, pad_b = 48, 12, 30, 28
+    ref_t, ref_series = ref if ref else (None, {})
+    vals = np.concatenate([np.asarray(v, float) for v in list(series.values()) + list(ref_series.values())])
     vals = vals[np.isfinite(vals)]
     lo, hi = (float(vals.min()), float(vals.max())) if len(vals) else (0.0, 1.0)
     if hi - lo < 1e-6:
@@ -32,6 +34,14 @@ def _svg_chart(t, series, reps, title, unit="deg", w=760, h=220):
 
     parts = [f'<svg viewBox="0 0 {w} {h}" role="img" aria-label="{html.escape(title)}" class="chart">',
              f'<text x="{pad_l}" y="15" class="ct">{html.escape(title)} ({unit})</text>']
+    lx = w - pad_r
+    legend = [(n, PALETTE[i % len(PALETTE)], False) for i, n in enumerate(series)]
+    if ref_series:
+        legend.append(("dashed = reference", None, True))
+    for name, col, is_note in reversed(legend):
+        parts.append(f'<text x="{lx}" y="15" class="lg" text-anchor="end"'
+                     f'{"" if is_note else f" fill={chr(34)}{col}{chr(34)}"}>{html.escape(name)}</text>')
+        lx -= 7 * len(name) + 14
     for r in reps:
         parts.append(f'<rect x="{x(r["start_s"]):.1f}" y="{pad_t}" width="{x(r["stop_s"]) - x(r["start_s"]):.1f}" '
                      f'height="{h - pad_t - pad_b}" class="rep"/>')
@@ -43,14 +53,16 @@ def _svg_chart(t, series, reps, title, unit="deg", w=760, h=220):
     for k in range(6):
         tv = t0 + k * (t1 - t0) / 5
         parts.append(f'<text x="{x(tv):.1f}" y="{h - 8}" class="ax" text-anchor="middle">{tv:.1f}s</text>')
-    for i, (name, v) in enumerate(series.items()):
-        v = np.asarray(v, float)
-        step = max(1, len(v) // 600)
-        pts = " ".join(f"{x(tt):.1f},{y(vv):.1f}" for tt, vv in zip(t[::step], v[::step]) if np.isfinite(vv))
+    for i, name in enumerate(series):
         col = PALETTE[i % len(PALETTE)]
-        parts.append(f'<polyline points="{pts}" fill="none" stroke="{col}" stroke-width="1.6"/>')
-        parts.append(f'<text x="{w - pad_r - 4}" y="{pad_t + 14 + 13 * i}" class="lg" fill="{col}" '
-                     f'text-anchor="end">{html.escape(name)}</text>')
+        for tt, v, dash in ((t, series[name], ""), (ref_t, ref_series.get(name), ' stroke-dasharray="5 4"')):
+            if v is None:
+                continue
+            v = np.asarray(v, float)
+            step = max(1, len(v) // 600)
+            keep = [(a, b) for a, b in zip(tt[::step], v[::step]) if np.isfinite(b) and t0 <= a <= t1]
+            pts = " ".join(f"{x(a):.1f},{y(b):.1f}" for a, b in keep)
+            parts.append(f'<polyline points="{pts}" fill="none" stroke="{col}" stroke-width="1.6"{dash}/>')
     parts.append("</svg>")
     return "".join(parts)
 
@@ -66,7 +78,8 @@ CHARTS = [
 ]
 
 
-def write(path, session, qc, metrics, signals, time, validation=None):
+def write(path, session, qc, metrics, signals, time, validation=None, reference=None):
+    """``reference``: optional (time, {signal: values}) drawn dashed on the charts."""
     tier = metrics["tier"]
     e = html.escape
     synthetic = session.get("synthetic")
@@ -87,7 +100,10 @@ def write(path, session, qc, metrics, signals, time, validation=None):
     for title, keys in CHARTS:
         ser = {k: signals[k] for k in keys if k in signals}
         if ser:
-            charts.append(_svg_chart(time, ser, metrics["reps"], title))
+            ref = None
+            if reference is not None:
+                ref = (reference[0], {k: reference[1][k] for k in ser if k in reference[1]})
+            charts.append(_svg_chart(time, ser, metrics["reps"], title, ref=ref))
     ik = qc.get("ik", {})
     fr = qc.get("frames", {})
     val_html = ""
@@ -123,7 +139,8 @@ td, th {{ border-bottom: 1px solid var(--line); padding: 4px 8px; text-align: le
 <span>IK marker RMS: {ik.get('marker_rms_m', {}).get('mean')} m (p95 {ik.get('marker_rms_m', {}).get('p95')})</span></div>
 {''.join(charts)}
 <h2>Per-rep values</h2>
-<table><tr><th>rep</th><th>time (s)</th><th>dur (s)</th>{rep_head}<th></th></tr>{''.join(rep_rows)}</table>
+{f"<table><tr><th>rep</th><th>time (s)</th><th>dur (s)</th>{rep_head}<th></th></tr>{''.join(rep_rows)}</table>" if rep_rows
+ else f"<p class='muted'>No reps segmented (exercise profile '{e(metrics['exercise'])}'{' has no rep driver' if not metrics['rep_driver'] else ''}).</p>"}
 <h2>Session summary</h2>
 <table><tr><th>signal</th><th>plane</th><th>min</th><th>max</th><th>rep-peak mean</th><th>rep-peak SD</th><th>status</th></tr>{''.join(rows)}</table>
 {val_html}
