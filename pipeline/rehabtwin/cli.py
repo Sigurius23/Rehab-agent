@@ -106,7 +106,7 @@ def run_correction(session_dir, spec_name, illustrative=False):
     return summary, out
 
 
-def muscle_study(session_dir, rep=1, start=None, stop=None, correction=None, weaken=()):
+def muscle_study(session_dir, rep=1, start=None, stop=None, correction=None, weaken=(), assist=()):
     """Measured motion (+ corrected motion, + weakened variants) through GRF estimate → ID → SO."""
     from . import muscles
     session_dir = Path(session_dir)
@@ -133,6 +133,11 @@ def muscle_study(session_dir, rep=1, start=None, stop=None, correction=None, wea
         lab = f"{group} at {float(factor) * 100:.0f}%"
         runs[lab] = muscles.run(model, motion, out, weaken={group: float(factor)}, label=f"weak_{group}_{factor}",
                                 exercise=exercise, start=start, stop=stop)
+    for spec in assist:
+        coord, torque, lo, hi = muscles.parse_assist(spec)
+        lab = f"ideal exo {coord} <= {torque:g} N·m" + ("" if (lo, hi) == (-1.0, 1.0) else f" ({spec.split(':')[1]})")
+        runs[lab] = muscles.run(model, motion, out, label=f"exo_{spec.replace('=', '_').replace(':', '_')}",
+                                exercise=exercise, start=start, stop=stop, assist=[spec])
     study = {"twin_tier": sess["twin_tier"], "runs": runs,
              "comparisons": {lab: muscles.compare(runs["measured"], r) for lab, r in runs.items() if lab != "measured"}}
     records.write_json(out / "study.json", study)
@@ -271,6 +276,8 @@ def main(argv=None):
     mu.add_argument("--correction", help="also analyse correction/<spec>/corrected.mot")
     mu.add_argument("--weaken", action="append", default=[], metavar="GROUP=FACTOR",
                     help="what-if weakness, e.g. gluteus_medius_r=0.5 (repeatable)")
+    mu.add_argument("--assist", action="append", default=[], metavar="COORD=NM[:pos|neg]",
+                    help="ideal assistive device, e.g. knee_angle_r=40:neg (extension only); repeatable")
     cu = sub.add_parser("cues", help="offline replay of haptic posture-cue rules over a session")
     cu.add_argument("session")
     cu.add_argument("--rules", required=True, help="name in pipeline/configs/feedback or a path")
@@ -339,7 +346,7 @@ def main(argv=None):
         print(json.dumps({"status": summary["status"], "admissible": summary["admissible"],
                           "derived_signals": summary.get("derived_signals"), "report": str(out / "correction.html")}, indent=1))
     elif a.cmd == "muscles":
-        study, out = muscle_study(a.session, a.rep, a.start, a.stop, a.correction, a.weaken)
+        study, out = muscle_study(a.session, a.rep, a.start, a.stop, a.correction, a.weaken, a.assist)
         for lab, cmp in study["comparisons"].items():
             top = sorted(cmp.items(), key=lambda kv: -abs(kv[1]["change"]))[:5]
             print(lab + ": " + ", ".join(f"{g} {v['base']:.2f}->{v['other']:.2f}" for g, v in top))

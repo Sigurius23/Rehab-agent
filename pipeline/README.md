@@ -45,7 +45,7 @@ python3 -m venv ~/.venvs/twin-live && ~/.venvs/twin-live/bin/pip install mediapi
 ```bash
 cd pipeline
 python -m rehabtwin selftest /tmp/rt_selftest       # synthetic squat with known truth, ~1 min, exits 1 on regression
-python -m pytest tests -q                           # 47 tests (end-to-end ones skip without opensim/pose2sim/pylsl)
+python -m pytest tests -q                           # 49 tests (end-to-end ones skip without opensim/pose2sim/pylsl)
 ```
 
 ### Real video through HSMR + SKEL (the target path)
@@ -103,7 +103,8 @@ replays and never targets or live cues.
 # "how it would look fixed": clinician-authored changes, re-solved with the feet planted
 python -m rehabtwin correct  SESSION --spec squat_knee_valgus_right --illustrative
 # muscle effects: estimated GRF → inverse dynamics → static optimisation (+ what-ifs)
-python -m rehabtwin muscles  SESSION --rep 1 --correction squat_knee_valgus_right --weaken gluteus_medius_r=0.5
+python -m rehabtwin muscles  SESSION --rep 1 --correction squat_knee_valgus_right --weaken gluteus_medius_r=0.5 \
+                             --assist knee_angle_r=40:neg      # ideal knee-extension exo, max 40 N·m
 # haptic posture cues (suit Track 1): offline replay of a rule set, also over a corrected motion
 python -m rehabtwin cues     SESSION --rules squat_posture [--motion SESSION/correction/<spec>/corrected.mot]
 ```
@@ -145,6 +146,7 @@ untested step is a physical BLE write.
 |---|---|---|
 | `correct` | Spec modes `set / clamp / scale / offset / mirror` (e.g. right hip follows the left). OpenSim IK tracks the changed coordinates strongly and the rest weakly, keeping 3 anchor points per foot in place. Reports requested changes, the **compensations** elsewhere, range-of-motion violations and feet drift (`admissible`). | Refused below Tier A without `--illustrative`; then every output says ILLUSTRATION ONLY. Specs ship as TEMPLATEs for a clinician to author. |
 | `muscles` | Ground forces from whole-body Newton (F = m(a_com + g)), split between the feet by the centre of mass and placed by moment balance. Then OpenSim inverse dynamics and static optimisation on the 318-muscle model, with group activation as a fraction of capacity, joint moments (N·m/kg), and measured vs corrected vs weakened. | Valid only for slow double-stance exercises (`grf.feet_planted`, `valid_exercise`). Pelvis residuals and reserve-torque use are reported. Phrased as a what-if on generic muscles, never as a claim about the person's muscles. |
+| `muscles --assist` | **Ideal assistive device** (exoskeleton what-if, after Dembia et al. 2017): a torque actuator at a joint, capped at the device's max torque (optionally one direction only), that the optimiser uses as it sees fit. Reports the device torque profile (peak, mean, time at cap) and which muscles it offloads. | An upper bound on the benefit (massless, instantaneous, optimal control). Offloading a muscle also removes the training stimulus, so the caveat recommends assist-as-needed. |
 | `cues` | Streaming `CueEngine` (same code for offline replay and a live suit): threshold with hysteresis, minimum duration, per-actuator refractory period, **faded feedback** (cue share falls from 100 % to ~33 % over the first violations). Writes `cues.json`, LSL-ready `commands.csv`, `cues.html`. | A cue is *sent* only on a Tier-A twin and only for joint/planes listed in a non-synthetic validation report; otherwise it is logged as `would_cue` with the reason. |
 
 Synthetic check (right-knee valgus squat):
@@ -160,6 +162,10 @@ Synthetic check (right-knee valgus squat):
   raises right gluteus medius demand from 12 % to 18 % of capacity: holding the knee out costs hip
   abductor work. A what-if with the right quadriceps at 60 % raises their demand from 52 % to 77 %,
   with gluteus maximus +23 % and less hamstring co-activation.
+- **Ideal exo:** a 40 N·m knee-extension device sits at its cap for 51 % of the rep and lowers
+  right quadriceps demand from 52 % to 32 %. The knee moment peaks near 83 N·m for this 70 kg
+  subject, so 40 N·m cannot carry it alone. A 40 N·m hip-extension device lowers gluteus maximus
+  from 46 % to 25 % and halves hamstring demand.
 
 Implementation notes learned the hard way: corrected motions are low-pass filtered like
 measured ones, and pelvis translations are tracked rather than left free. A free pelvis

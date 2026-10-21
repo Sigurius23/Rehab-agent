@@ -164,7 +164,7 @@ def test_muscle_effects_and_weakness_what_if(selftest_run):
     out, res, _ = selftest_run
     rep = res["metrics"]["reps"][0]
     study, mdir = cli.muscle_study(out, start=rep["peak_s"] - 0.3, stop=rep["peak_s"] + 0.3,
-                                   weaken=["gluteus_maximus_r=0.5"])
+                                   weaken=["gluteus_maximus_r=0.5"], assist=["knee_angle_r=40:neg"])
     base = study["runs"]["measured"]
     assert base["grf"]["feet_planted"] and 0.8 < base["grf"]["min_vertical_bw"] <= base["grf"]["peak_vertical_bw"] < 1.4
     ga = base["group_activation"]
@@ -175,6 +175,11 @@ def test_muscle_effects_and_weakness_what_if(selftest_run):
     assert 0.5 < -knee["min_Nm_per_kg"] < 2.0          # knee extension moment, N·m/kg
     weak = study["comparisons"]["gluteus_maximus_r at 50%"]["gluteus_maximus_r"]
     assert weak["other"] > weak["base"] * 1.3          # the weakened muscle must work closer to its limit
+    exo = study["runs"]["ideal exo knee_angle_r <= 40 N·m (neg)"]
+    dev = exo["assistive_devices"]["knee_angle_r"]
+    assert 5 < dev["peak_abs_Nm"] <= 40.0 + 1e-6                     # used, never above its cap
+    q = study["comparisons"]["ideal exo knee_angle_r <= 40 N·m (neg)"]["quadriceps_r"]
+    assert q["other"] < 0.8 * q["base"]                               # knee-extension assist offloads the quadriceps
     assert (mdir / "muscles.html").exists() and (mdir / "study.json").exists()
 
 

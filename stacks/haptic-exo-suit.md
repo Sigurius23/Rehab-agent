@@ -30,6 +30,12 @@ naubiomech/OpenExo (modular exo base: hip/ankle/elbow, mechanics+electronics+con
 ```
 Clone: `python scripts/clone.py --only naubiomech/OpenExo,neurobionics/opensourceleg,mjbots/moteus,simplefoc/Arduino-FOC,CEINMS/CEINMS,mitkof6/OpenSimRT`
 
+**Sizing a device before building it:** `rehabtwin muscles SESSION --assist knee_angle_r=40:neg`
+adds an ideal assistive actuator (capped torque, chosen direction) to the subject's
+static-optimisation problem. It shows how much torque, when, and which muscles it offloads,
+for any joint including `L5_S1_Flex_Ext` (lumbar support). It is an upper bound for an
+ideal device and should inform an assist-as-needed controller, not constant support.
+
 ⚠️ No turnkey open repo provides powered *spinal* posture support. Track 2 is joint
 assistance adapted from OpenExo. Before anything load-bearing touches a person:
 hardware e-stop, firmware torque limits, clinician-set range limits, and a written

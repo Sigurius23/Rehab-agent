@@ -466,3 +466,10 @@ def test_live_chain_posture_to_suit_payloads(tmp_path):
     assert len(sent) == 1 and sent[0]["actuator"] == "thigh_r_lateral"
     on = [e for e in transport.log if e["device"] == "thigh_r" and e["payload_hex"] != "00" * 6]
     assert on and on[0]["payload_hex"] == f"{60:02x}" * 6     # 0.6 intensity on all 6 sleeve motors
+
+
+def test_parse_assist():
+    from rehabtwin.muscles import parse_assist
+    assert parse_assist("knee_angle_r=40") == ("knee_angle_r", 40.0, -1.0, 1.0)
+    assert parse_assist("hip_flexion_l=25.5:neg") == ("hip_flexion_l", 25.5, -1.0, 0.0)
+    assert parse_assist("L5_S1_Flex_Ext=30:pos")[2:] == (0.0, 1.0)

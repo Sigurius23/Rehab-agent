@@ -180,8 +180,28 @@ def dynamics_model(model_path, out_path, weaken=None):
     return {"weakened": {g: {"factor": weaken[g], "muscles": len(m)} for g, m in applied.items()}}
 
 
-def reserves_xml(model_path, path, residual_force=10.0, reserve_force=1.0, ideal_force=200.0):
-    """Pelvis residuals, weak reserves where muscles act, ideal torque actuators elsewhere (arms, neck)."""
+def exo_optimal_force(cap_nm):
+    """Optimal force for a 'free' ideal device: big enough that (torque/opt)^2 is negligible."""
+    return max(1000.0, 100.0 * cap_nm)
+
+
+def parse_assist(spec):
+    """'knee_angle_r=40' (both directions) or 'knee_angle_r=40:neg' / ':pos' -> (coord, max N·m, lo, hi)."""
+    coord, rest = spec.split("=", 1)
+    torque, _, direction = rest.partition(":")
+    lo, hi = {"": (-1.0, 1.0), "pos": (0.0, 1.0), "neg": (-1.0, 0.0)}[direction]
+    return coord, float(torque), lo, hi
+
+
+def reserves_xml(model_path, path, residual_force=10.0, reserve_force=1.0, ideal_force=200.0, assist=()):
+    """Pelvis residuals, weak reserves where muscles act, ideal torque actuators elsewhere (arms, neck).
+
+    ``assist``: ideal assistive devices (Dembia et al. 2017 style) as ``parse_assist`` tuples:
+    a torque actuator capped at its max torque that is (practically) free to use up to that cap.
+    Static optimisation charges every actuator its squared control, so the device is given a
+    very large optimal force with its control bounded to cap / optimal force: its cost becomes
+    negligible and the result is the most a device of that size could offload.
+    """
     osim = _osim()
     model = osim.Model(str(model_path))
     state = model.initSystem()
@@ -201,11 +221,19 @@ def reserves_xml(model_path, path, residual_force=10.0, reserve_force=1.0, ideal
         items.append(f'<CoordinateActuator name="reserve_{n}"><coordinate>{n}</coordinate>'
                      f"<optimal_force>{opt}</optimal_force><min_control>-Inf</min_control><max_control>Inf</max_control>"
                      "</CoordinateActuator>")
+    for coord, torque, lo, hi in assist:
+        if not cs.contains(coord):
+            raise ValueError(f"assist: no coordinate {coord!r} in the model")
+        opt = exo_optimal_force(torque)
+        items.append(f'<CoordinateActuator name="exo_{coord}"><coordinate>{coord}</coordinate>'
+                     f"<optimal_force>{opt}</optimal_force><min_control>{lo * torque / opt}</min_control>"
+                     f"<max_control>{hi * torque / opt}</max_control></CoordinateActuator>")
     Path(path).write_text('<?xml version="1.0" encoding="UTF-8" ?>\n<OpenSimDocument Version="40500">'
                           f'<ForceSet name="reserves"><objects>{"".join(items)}</objects><groups/></ForceSet></OpenSimDocument>\n')
 
 
-def run(model_path, motion_path, out_dir, weaken=None, label="measured", exercise="squat", start=None, stop=None):
+def run(model_path, motion_path, out_dir, weaken=None, label="measured", exercise="squat", start=None, stop=None,
+        assist=()):
     """GRF estimate → ID → SO for one motion. Returns a summary dict (also written to muscles.json)."""
     osim = _osim()
     out = Path(out_dir) / label
@@ -218,7 +246,8 @@ def run(model_path, motion_path, out_dir, weaken=None, label="measured", exercis
     write_table(out / "grf.mot", names, grf, tab.time, in_degrees=False, name="estimated_grf")
     (out / "external_loads.xml").write_text(_external_loads_xml("grf.mot"))
     model_info = dynamics_model(model_path, out / "model_dynamics.osim", weaken)
-    reserves_xml(out / "model_dynamics.osim", out / "reserves.xml")
+    assist = [parse_assist(a) if isinstance(a, str) else a for a in assist]
+    reserves_xml(out / "model_dynamics.osim", out / "reserves.xml", assist=assist)
 
     (out / "id_setup.xml").write_text(f"""<?xml version="1.0" encoding="UTF-8" ?>
 <OpenSimDocument Version="40500"><InverseDynamicsTool name="id">
@@ -250,13 +279,13 @@ def run(model_path, motion_path, out_dir, weaken=None, label="measured", exercis
             raise RuntimeError(f"inverse dynamics failed ({out})")
         if not osim.AnalyzeTool(str(out / "so_setup.xml")).run():
             raise RuntimeError(f"static optimisation failed ({out})")
-    summary = summarise(out, model_path, grf_qc, exercise)
+    summary = summarise(out, model_path, grf_qc, exercise, assist)
     summary.update({"label": label, "model_changes": model_info, "time_range_s": [round(t0, 3), round(t1, 3)]})
     (out / "muscles.json").write_text(json.dumps(summary, indent=2) + "\n")
     return summary
 
 
-def summarise(out, model_path, grf_qc, exercise):
+def summarise(out, model_path, grf_qc, exercise, assist=()):
     osim = _osim()
     act = read_table(out / "so_StaticOptimization_activation.sto")
     model = osim.Model(str(out / "model_dynamics.osim"))
@@ -290,9 +319,16 @@ def summarise(out, model_path, grf_qc, exercise):
         peak = float(np.max(np.abs(act.col(r))))
         if peak > 1.0:
             reserve_peak[r[len("reserve_"):]] = round(peak, 2)
+    exo = {}
+    for coord, torque, lo, hi in assist:
+        tq = act.col(f"exo_{coord}") * exo_optimal_force(torque)     # control x optimal force
+        exo[coord] = {"max_torque_Nm": torque, "direction": {(-1.0, 1.0): "both", (0.0, 1.0): "pos", (-1.0, 0.0): "neg"}[(lo, hi)],
+                      "peak_abs_Nm": round(float(np.max(np.abs(tq))), 2), "mean_abs_Nm": round(float(np.mean(np.abs(tq))), 2),
+                      "time_at_cap_fraction": round(float(np.mean(np.abs(tq) > 0.98 * torque)), 3)}
     return {
         "exercise": exercise,
         "valid_exercise": exercise in VALID_EXERCISES,
+        "assistive_devices": exo,
         "grf": grf_qc,
         "group_activation": group_act,
         "joint_moments": moments,
@@ -303,7 +339,9 @@ def summarise(out, model_path, grf_qc, exercise):
             "Ground reaction forces are estimated (quasi-static double stance), not measured.",
             "Generic (scaled) muscle parameters: no personalised strength, no EMG calibration.",
             "Static optimisation minimises summed squared activation; real recruitment differs (co-contraction).",
-        ],
+        ] + (["Assistive devices are ideal (massless, instantaneous, optimally controlled): an upper bound on "
+              "the benefit. Offloading a muscle in training also removes training stimulus - consider "
+              "assist-as-needed rather than constant support."] if assist else []),
     }
 
 

@@ -314,6 +314,11 @@ def write_muscles(path, study):
     base = runs["measured"]
     mom = "".join(f"<tr><td>{e(k)}</td><td>{v['min_Nm_per_kg']}</td><td>{v['max_Nm_per_kg']}</td></tr>"
                   for k, v in base["joint_moments"].items())
+    exo_rows = "".join(f"<tr><td>{e(lab)}</td><td>{e(c)}</td><td>{v['max_torque_Nm']}</td><td>{e(v['direction'])}</td>"
+                       f"<td>{v['peak_abs_Nm']}</td><td>{v['mean_abs_Nm']}</td><td>{v['time_at_cap_fraction'] * 100:.0f}%</td></tr>"
+                       for lab, r in runs.items() for c, v in r.get("assistive_devices", {}).items())
+    exo_html = (f"<h2>Ideal assistive devices</h2><table><tr><th>variant</th><th>joint</th><th>cap (N·m)</th><th>direction</th>"
+                f"<th>peak (N·m)</th><th>mean (N·m)</th><th>time at cap</th></tr>{exo_rows}</table>" if exo_rows else "")
     reserve_notes = "".join(f"<li>{e(lab)}: {e(', '.join(f'{k} {v} N·m' for k, v in r['reserve_torque_peaks_Nm'].items()) or 'none')}"
                             f"; saturated muscles: {e(', '.join(r['muscles_saturated']) or 'none')}</li>" for lab, r in runs.items())
     grf = base["grf"]
@@ -332,11 +337,12 @@ imaging/strength/EMG evidence). Ground forces are estimated, not measured.</p>
 {_svg_bars(groups, variants, "Peak muscle-group activation (fraction of group capacity)")}
 <h2>Biggest changes</h2>
 <table><tr><th>variant</th><th>group</th><th>measured</th><th>variant</th><th>change</th></tr>{''.join(rows)}</table>
+{exo_html}
 <h2>Joint moments, measured (N·m/kg; OpenSim sign convention)</h2>
 <table><tr><th>coordinate</th><th>min</th><th>max</th></tr>{mom}</table>
 <h2>Consistency evidence</h2><ul>{reserve_notes}
 <li>pelvis residuals (measured): {e(', '.join(f'{k} {v}' for k, v in base['pelvis_residual_force_N'].items()))}</li></ul>
-<h2>Caveats</h2><ul>{''.join(f'<li>{e(c)}</li>' for c in base['caveats'])}</ul>
+<h2>Caveats</h2><ul>{''.join(f'<li>{e(c)}</li>' for c in dict.fromkeys(c for r in runs.values() for c in r['caveats']))}</ul>
 </body></html>"""
     Path(path).write_text(doc)
     return path
