@@ -22,7 +22,7 @@ td, th { border-bottom: 1px solid var(--line); padding: 4px 8px; text-align: lef
 .validated, .pass { background: #d1fae5; color: #065f46; } .unvalidated, .not-tested { background: #e5e7eb; color: #374151; }
 .fail { background: #fee2e2; color: #991b1b; }
 .chart { width: 100%; height: auto; margin: 8px 0; } .ct { font-size: 13px; fill: var(--fg); font-weight: 600; }
-.ax { font-size: 10px; fill: var(--muted); } .lg { font-size: 11px; font-weight: 600; }
+.ax { font-size: 10px; fill: var(--muted); } .lg { font-size: 11px; font-weight: 600; } .note { fill: var(--muted); }
 .grid { stroke: var(--line); } .rep { fill: var(--rep); } .rl { font-size: 10px; fill: var(--muted); }
 .kv span { display: inline-block; margin-right: 18px; } .muted { color: var(--muted); }
 button { font: inherit; padding: 2px 12px; border-radius: 6px; border: 1px solid var(--line); background: var(--bg); color: var(--fg); }
@@ -58,8 +58,8 @@ def _svg_chart(t, series, reps, title, unit="deg", w=760, h=220, ref=None, ref_l
     if ref_series:
         legend.append((f"dashed = {ref_label}", None, True))
     for name, col, is_note in reversed(legend):
-        parts.append(f'<text x="{lx}" y="15" class="lg" text-anchor="end"'
-                     f'{"" if is_note else f" fill={chr(34)}{col}{chr(34)}"}>{html.escape(name)}</text>')
+        fill = 'class="lg note"' if is_note else f'class="lg" fill="{col}"'
+        parts.append(f'<text x="{lx}" y="15" {fill} text-anchor="end">{html.escape(name)}</text>')
         lx -= 7 * len(name) + 14
     for r in reps:
         parts.append(f'<rect x="{x(r["start_s"]):.1f}" y="{pad_t}" width="{x(r["stop_s"]) - x(r["start_s"]):.1f}" '
@@ -285,6 +285,7 @@ def write_cues(path, result, time, signals):
 <meta name="viewport" content="width=device-width, initial-scale=1"><title>Haptic cue replay</title>
 <style>{_CSS}</style></head><body>
 <h1>Haptic cue replay — {e(spec['name'])}</h1>
+<p class="muted">Motion replayed: {e(str(summ.get('motion', 'session motion')))}</p>
 {banner}
 <p class="muted">Rules by: {e(spec.get('author', 'unspecified'))}. Schedule: faded {spec.get('schedule', {}).get('start_fraction', 1)} →
 {spec.get('schedule', {}).get('end_fraction', 0.33)} over {spec.get('schedule', {}).get('fade_events', 6)} violations,
