@@ -38,7 +38,7 @@
     "needs-review": "Needs review — source list gave no usable description",
     "private": "Private — listed but not publicly cloneable"
   },
-  "count": 108,
+  "count": 110,
   "repos": [
     {
       "id": 1,
@@ -170,7 +170,7 @@
         "smpl",
         "biomechanics"
       ],
-      "notes": "Core skeleton model for the SMPL->OpenSim path.",
+      "notes": "Core skeleton model for the SMPL->OpenSim path. rehabtwin reads SKEL's 24 anatomical joints + 105 BSM skin markers; SKEL q = 0 is used as the neutral static trial for OpenSim scaling.",
       "upstream_path": "upstream/MarilynKeller/SKEL"
     },
     {
@@ -769,7 +769,7 @@
         "skeleton",
         "reconstruction"
       ],
-      "notes": "Direct image/video -> biomechanical skeleton path; high rehab relevance.",
+      "notes": "Direct image/video -> biomechanical skeleton path; high rehab relevance. Front-end of pipeline/ (adapters/hsmr_to_skelseq.py). Needs the gated SKEL model (skel.is.tue.mpg.de) and its checkpoint from HuggingFace. Quirk: demo resizes inputs with (H, W) passed as (W, H) — a 3840x2160 video runs at 1080x608; the adapter replicates this.",
       "upstream_path": "upstream/IsshikiHugh/HSMR"
     },
     {
@@ -955,7 +955,7 @@
         "markerless",
         "triangulation"
       ],
-      "notes": "Best-documented open path: cameras -> OpenSim kinematics. Strong rehab candidate.",
+      "notes": "Best-documented open path: cameras -> OpenSim kinematics. Strong rehab candidate. Used by pipeline/ (rehabtwin): Model_Pose2Sim_muscles_flex.osim + Markers_SKEL.xml/Markers_Mediapipe.xml. Known issue (2026-10-21): the 7 head markers in Markers_SKEL.xml carry torso-frame coordinates (top of head ~0.5 m too high); rehabtwin re-expresses them (configs/skel105_pose2sim.json).",
       "upstream_path": "upstream/perfanalytics/pose2sim"
     },
     {
@@ -2910,6 +2910,64 @@
       ],
       "notes": "Higher-resolution static surface reconstruction from the RGB cameras than iPhone LiDAR; subject must hold still — breathing/movement is the accuracy limit. License (GitHub API, 2026-10-21): NOASSERTION.",
       "upstream_path": "upstream/alicevision/Meshroom"
+    },
+    {
+      "id": 109,
+      "slug": "utahmobl/opencap-monocular",
+      "owner": "utahmobl",
+      "name": "opencap-monocular",
+      "url": "https://github.com/utahmobl/opencap-monocular",
+      "description": "OpenCap Monocular — 3D human kinematics and musculoskeletal dynamics from a single smartphone video (WHAM pose, camera/pose optimisation, OpenSim IK and export)",
+      "language": "Python",
+      "stars_snapshot": null,
+      "forks_snapshot": null,
+      "updated_snapshot": "2026-06-12 (git, 2026-10-21)",
+      "private": false,
+      "category": "pose-mocap",
+      "pipeline_stages": [
+        "pose",
+        "body-model",
+        "biomechanics"
+      ],
+      "tier": "core",
+      "tags": [
+        "opencap",
+        "monocular",
+        "smartphone",
+        "wham",
+        "opensim",
+        "validation"
+      ],
+      "notes": "Best-validated single-phone path to OpenSim found so far: preprint arXiv 2603.24733 reports 4.8 deg mean absolute error vs marker mocap for walking, squats and sit-to-stand. Its validation code reads the OpenCap LabValidation dataset (videos + marker-mocap IK). License: PolyForm Noncommercial 1.0.0; needs SMPL weights (MPI, non-commercial). Benchmark rehabtwin's monocular front-ends against it.",
+      "upstream_path": "upstream/utahmobl/opencap-monocular"
+    },
+    {
+      "id": 110,
+      "slug": "davidpagnon/Sports2D",
+      "owner": "davidpagnon",
+      "name": "Sports2D",
+      "url": "https://github.com/davidpagnon/Sports2D",
+      "description": "Sports2D — joint and segment angles from a single video (RTMPose), with optional OpenSim inverse kinematics",
+      "language": "Python",
+      "stars_snapshot": null,
+      "forks_snapshot": null,
+      "updated_snapshot": "2026-10-20 (git, 2026-10-21)",
+      "private": false,
+      "category": "pose-mocap",
+      "pipeline_stages": [
+        "pose",
+        "biomechanics"
+      ],
+      "tier": "extended",
+      "tags": [
+        "sports2d",
+        "monocular",
+        "2d-angles",
+        "rtmpose",
+        "opensim"
+      ],
+      "notes": "Same author as Pose2Sim; BSD-3-Clause. Planar (2D) angles are only valid when the movement plane faces the camera — useful for quick sagittal screening, not for frontal/transverse posture. Ships a demo video.",
+      "upstream_path": "upstream/davidpagnon/Sports2D"
     }
   ]
 }

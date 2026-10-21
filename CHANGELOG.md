@@ -1,6 +1,17 @@
 # Changelog
 
 ## Unreleased
+- **First working slice — `pipeline/` (rehabtwin): video → SKEL → OpenSim.**
+  HSMR/SKEL adapter, MediaPipe front-end (mono + calibrated multi-view), gravity
+  (device ▸ floor fit ▸ camera-level), OpenSim scale/static IK/marker placement/IK,
+  rep and posture metrics, validation per joint × plane, schema-valid session records,
+  HTML report; synthetic selftest; 35 tests; CI job
+- `docs/validation-results.md`: synthetic round trip (~1°) and real-video monocular vs
+  4-camera result (MediaPipe monocular fails all gates)
+- `stacks/video-skel-opensim.md`; catalog +2 (utahmobl/opencap-monocular, davidpagnon/Sports2D) → 110 repos
+- Schemas: monocular sessions (null reprojection, single-stream sync), pipeline provenance,
+  synthetic flag and feedback_allowed_joint_planes on validation reports
+- Gaps D-09 (licensing), D-10 (gravity), D-11 (monocular front-end); D-04 points at OpenCap LabValidation
 - Gap pass: resolved all `needs-review` entries; added kalibr, apriltag, Meshroom (108 repos)
 - CI, unit tests, schemas + synthetic example, validation protocol, environment isolation
 - Metadata enrichment (`scripts/enrich_metadata.py`) and clone pinning (`scripts/record_pins.py`, `catalog/pins.json`)

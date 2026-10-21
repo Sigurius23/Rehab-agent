@@ -20,3 +20,21 @@ jobs:
         run: |
           python3 scripts/generate_catalog.py
           git diff --exit-code catalog/repos.csv catalog/repos.yaml docs/catalog.md
+
+  pipeline:
+    # rehabtwin: unit tests + OpenSim end-to-end round trips against synthetic truth
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install rehabtwin (OpenSim 4.6 wheel from PyPI)
+        run: pip install -e "pipeline[test]"
+      - name: Clone the Pose2Sim OpenSim model and marker sets
+        run: python3 scripts/clone.py --only perfanalytics/pose2sim
+      - name: Tests
+        run: cd pipeline && python -m pytest tests -q
+      - name: Selftest (synthetic squat, fails on regression)
+        run: cd pipeline && python -m rehabtwin selftest "$RUNNER_TEMP/selftest"

@@ -84,6 +84,10 @@ for rooms/objects rather than moving people, and may only be used here for a
    > 2 cm on a long segment triggers investigation, not silent acceptance.
 7. **Session record** (one folder per session): raw streams, calibration files,
    sync offsets, QC results, twin tier (A/B/C), software + upstream commit pins.
+8. **Gravity per camera:** phones record the device gravity vector (ARKit/CoreMotion)
+   with every capture; fixed cameras get it from the calibration board or a spirit
+   level. Without it, every trunk/pelvis inclination from that camera is off by the
+   camera's tilt (measured: 26° on a real setup, `docs/validation-results.md`).
 
 ## Software map (all already in the catalog)
 

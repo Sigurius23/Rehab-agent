@@ -63,7 +63,7 @@ repos:
     language: "Python"
     updated_snapshot: "Feb 25 (snapshot)"
     description: "SKEL — From Skin to Skeleton: biomechanically accurate 3D digital humans (SIGGRAPH Asia 2023)"
-    notes: "Core skeleton model for the SMPL->OpenSim path."
+    notes: "Core skeleton model for the SMPL->OpenSim path. rehabtwin reads SKEL's 24 anatomical joints + 105 BSM skin markers; SKEL q = 0 is used as the neutral static trial for OpenSim scaling."
     upstream_path: "upstream/MarilynKeller/SKEL"
     stars_snapshot: 370
     forks_snapshot: 49
@@ -385,7 +385,7 @@ repos:
     language: "Python"
     updated_snapshot: "Mar 6 (snapshot)"
     description: "Reconstructing Humans with a Biomechanically Accurate Skeleton (CVPR 2025 Oral)"
-    notes: "Direct image/video -> biomechanical skeleton path; high rehab relevance."
+    notes: "Direct image/video -> biomechanical skeleton path; high rehab relevance. Front-end of pipeline/ (adapters/hsmr_to_skelseq.py). Needs the gated SKEL model (skel.is.tue.mpg.de) and its checkpoint from HuggingFace. Quirk: demo resizes inputs with (H, W) passed as (W, H) — a 3840x2160 video runs at 1080x608; the adapter replicates this."
     upstream_path: "upstream/IsshikiHugh/HSMR"
     stars_snapshot: 634
     forks_snapshot: 55
@@ -483,7 +483,7 @@ repos:
     language: "Python"
     updated_snapshot: "12 hours ago (snapshot)"
     description: "Markerless kinematics with any cameras — from 2D pose estimation to 3D OpenSim motion"
-    notes: "Best-documented open path: cameras -> OpenSim kinematics. Strong rehab candidate."
+    notes: "Best-documented open path: cameras -> OpenSim kinematics. Strong rehab candidate. Used by pipeline/ (rehabtwin): Model_Pose2Sim_muscles_flex.osim + Markers_SKEL.xml/Markers_Mediapipe.xml. Known issue (2026-10-21): the 7 head markers in Markers_SKEL.xml carry torso-frame coordinates (top of head ~0.5 m too high); rehabtwin re-expresses them (configs/skel105_pose2sim.json)."
     upstream_path: "upstream/perfanalytics/pose2sim"
     stars_snapshot: 852
     forks_snapshot: 117
@@ -1512,3 +1512,31 @@ repos:
     private: false
     pipeline_stages: ["capture", "body-model"]
     tags: ["meshroom", "photogrammetry", "alicevision", "surface-reconstruction"]
+  - slug: "utahmobl/opencap-monocular"
+    url: "https://github.com/utahmobl/opencap-monocular"
+    category: "pose-mocap"
+    tier: "core"
+    language: "Python"
+    updated_snapshot: "2026-06-12 (git, 2026-10-21)"
+    description: "OpenCap Monocular — 3D human kinematics and musculoskeletal dynamics from a single smartphone video (WHAM pose, camera/pose optimisation, OpenSim IK and export)"
+    notes: "Best-validated single-phone path to OpenSim found so far: preprint arXiv 2603.24733 reports 4.8 deg mean absolute error vs marker mocap for walking, squats and sit-to-stand. Its validation code reads the OpenCap LabValidation dataset (videos + marker-mocap IK). License: PolyForm Noncommercial 1.0.0; needs SMPL weights (MPI, non-commercial). Benchmark rehabtwin's monocular front-ends against it."
+    upstream_path: "upstream/utahmobl/opencap-monocular"
+    stars_snapshot: null
+    forks_snapshot: null
+    private: false
+    pipeline_stages: ["pose", "body-model", "biomechanics"]
+    tags: ["opencap", "monocular", "smartphone", "wham", "opensim", "validation"]
+  - slug: "davidpagnon/Sports2D"
+    url: "https://github.com/davidpagnon/Sports2D"
+    category: "pose-mocap"
+    tier: "extended"
+    language: "Python"
+    updated_snapshot: "2026-10-20 (git, 2026-10-21)"
+    description: "Sports2D — joint and segment angles from a single video (RTMPose), with optional OpenSim inverse kinematics"
+    notes: "Same author as Pose2Sim; BSD-3-Clause. Planar (2D) angles are only valid when the movement plane faces the camera — useful for quick sagittal screening, not for frontal/transverse posture. Ships a demo video."
+    upstream_path: "upstream/davidpagnon/Sports2D"
+    stars_snapshot: null
+    forks_snapshot: null
+    private: false
+    pipeline_stages: ["pose", "biomechanics"]
+    tags: ["sports2d", "monocular", "2d-angles", "rtmpose", "opensim"]

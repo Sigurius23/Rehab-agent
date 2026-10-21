@@ -1,13 +1,22 @@
 # Roadmap
 
 ## Phase 0 — Meta-repo (this repo) ✅
-Catalog all 70 repos, tier them, provide clone/list/validate tooling.
+Catalog the upstream repos (110 today), tier them, provide clone/list/validate tooling.
 
-## Phase 1 — One honest end-to-end slice (weeks, not months)
-Pick ONE stack (`stacks/markerless-video.md`): record a healthy volunteer doing
-one exercise (e.g. sit-to-stand or knee flexion), run it to OpenSim joint angles,
-view it in aitviewer-skel. Success = a clinician can open the outputs and agree
-or disagree with the measured angles. No patient data, no feedback generation yet.
+## Phase 1 — One honest end-to-end slice (weeks, not months) — 🟡 software done, measurement pending
+Slice chosen: **video → SKEL → OpenSim** (`stacks/video-skel-opensim.md`, code in
+`pipeline/`). It produces a scaled OpenSim model, joint angles, posture vs gravity,
+QC, a validation report and an HTML report a clinician can open and disagree with.
+- ✅ Back-end verified against synthetic truth (~1° joint angles, 0.35° trunk lean vs gravity).
+- ✅ Real-video run (Pose2Sim demo): MediaPipe monocular fails every gate against 4 cameras →
+  MediaPipe is a test front-end only (`docs/validation-results.md`).
+- ⬜ HSMR/SKEL on the OpenCap LabValidation dataset vs marker mocap (needs the gated SKEL model + GPU).
+- ⬜ One healthy volunteer, one exercise, recorded with the selected hardware and device gravity.
+No patient data, no feedback generation yet.
+
+Note: this Phase-1 slice is Tier C by construction (statistical body). The Tier-A
+onboarding path (`docs/environments.md` install order: imaging → biomech) plugs into the
+same back-end by swapping the OpenSim model in `pipeline/configs/`.
 
 ## Phase 2 — Measurement validation
 Compare joint angles/ROM against a reference (goniometer, lab mocap, or OpenCap)
