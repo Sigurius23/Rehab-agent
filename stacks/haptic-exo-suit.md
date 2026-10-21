@@ -16,8 +16,10 @@ to an actuator, with hysteresis, minimum duration, refractory period and **faded
 runs offline on recorded sessions (`commands.csv`, LSL-ready events) and later live. Cues are
 only *sent* for a Tier-A twin on validated joint/planes; everything else is logged as `would_cue`.
 Template rules: `pipeline/configs/feedback/squat_posture.json`. Live sensing is wired too:
-`rehabtwin vmc-posture` turns SlimeVR's VMC stream into the same posture signals. The
-remaining hardware step is an LSL `rehabtwin_cues` → SenseShift firmware bridge (serial/BLE).
+`rehabtwin vmc-posture` turns SlimeVR's VMC stream into the same posture signals.  The
+actuation side exists as well: `rehabtwin suit-bridge` encodes cues as bHaptics-protocol BLE
+payloads for SenseShift firmware (X40 vest nibble encoding, 6-motor sleeves), with a dry-run
+mode. The physical BLE write (bleak) is the only untested step.
 
 ## Track 2 — Powered joint support (research build, safety-gated)
 ```

@@ -408,3 +408,61 @@ def test_vmc_over_udp():
         time.sleep(0.05)
     th.join()
     assert got and abs(got[-1]["knee_angle_l"] - 45.0) < 1e-3
+
+
+FAKE_BH = """
+#define BH_LAYOUT_TACTSUITX40 {                                              \\
+""" + "".join(f"    {{ Target::{'ChestFront' if i < 10 or i >= 30 else 'ChestBack'}, BH_LAYOUT_TACTSUITX40_MAKE_POINT({(i % 2) + (2 if i >= 20 else 0)}, {(i % 10) // 2}) }}, \\\n" for i in range(40)) + """  }
+#define BH_LAYOUT_TACTOSY2 {                                              \\
+""" + "".join(f"    BH_LAYOUT_TACTOSY2_MAKE_POINT({i % 3}, {i // 3}), \\\n" for i in range(6)) + """  }
+"""
+
+
+def test_suit_payload_encoding_and_patterns(tmp_path):
+    from rehabtwin import suit
+    levels = np.zeros(40)
+    levels[[0, 3, 39]] = [1.0, 0.5, 1.0]
+    p = suit.encode_vest(levels)
+    assert len(p) == 20 and p[0] == 0xF0 and p[1] == 0x08 and p[19] == 0x0F
+    assert suit.encode_plain([0.6, 0, 1.2]) == bytes([60, 0, 100])
+    assert [suit.envelope("double", t, 1.0) for t in (0.1, 0.5, 0.7, 1.1)] == [1.0, 0.0, 1.0, 0.0]
+    hdr = tmp_path / "devices.hpp"
+    hdr.write_text(FAKE_BH)
+    assert len(suit.parse_layout("TACTSUITX40", hdr)) == 40 and len(suit.parse_layout("TACTOSY2", hdr)) == 6
+    d = suit.SuitDriver("suit_bhaptics", header=hdr)
+    assert d.add({"actuator": "thigh_r_lateral", "intensity": 0.6, "duration_ms": 200}, 0.0)
+    assert not d.add({"actuator": "nonexistent"}, 0.0) and d.unknown == {"nonexistent"}
+    assert d.frame(0.1)["thigh_r"] == bytes([60] * 6) and d.frame(0.3)["thigh_r"] == bytes(6)
+    d.add({"actuator": "upper_back_center", "intensity": 1.0, "duration_ms": 300}, 1.0)
+    vest = d.frame(1.1)["vest"]
+    assert sum(bin(b).count("1") for b in vest) == 4 * 4      # 4 motors at full (4 bits each)
+
+
+def test_live_chain_posture_to_suit_payloads(tmp_path):
+    """IMU-like posture stream -> CueEngine -> cue markers -> suit payloads, all over LSL."""
+    pytest.importorskip("pylsl")
+    import threading
+    from rehabtwin import lsl_bridge, suit
+    hdr = tmp_path / "devices.hpp"
+    hdr.write_text(FAKE_BH)
+    spec = feedback.load_rules("squat_posture")
+    t = np.arange(0, 4, 0.02)
+    sig = {"knee_fppa_r": np.where((t > 1) & (t < 2), 18.0, 2.0), "torso.sagittal": np.full_like(t, 10.0)}
+    res = {}
+    transport = suit.DryRunTransport()
+    threads = [
+        threading.Thread(target=lambda: res.update(eng=lsl_bridge.run_live(
+            spec, "A", ["knee_r.frontal"], duration_s=15, source="rt_chain_posture"))),
+        threading.Thread(target=lambda: suit.run_bridge(suit.SuitDriver("suit_bhaptics", header=hdr), transport,
+                                                        duration_s=4.0, rate_hz=50)),
+    ]
+    for th in threads:
+        th.start()
+    time.sleep(0.5)
+    lsl_bridge.stream_posture(t, sig, speed=2.0, name="rt_chain_posture")
+    for th in threads:
+        th.join()
+    sent = [e for e in res["eng"].log if e.get("decision") == "cue"]
+    assert len(sent) == 1 and sent[0]["actuator"] == "thigh_r_lateral"
+    on = [e for e in transport.log if e["device"] == "thigh_r" and e["payload_hex"] != "00" * 6]
+    assert on and on[0]["payload_hex"] == f"{60:02x}" * 6     # 0.6 intensity on all 6 sleeve motors

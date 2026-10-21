@@ -45,7 +45,7 @@ python3 -m venv ~/.venvs/twin-live && ~/.venvs/twin-live/bin/pip install mediapi
 ```bash
 cd pipeline
 python -m rehabtwin selftest /tmp/rt_selftest       # synthetic squat with known truth, ~1 min, exits 1 on regression
-python -m pytest tests -q                           # 44 tests (end-to-end ones skip without opensim/pose2sim/pylsl)
+python -m pytest tests -q                           # 47 tests (end-to-end ones skip without opensim/pose2sim/pylsl)
 ```
 
 ### Real video through HSMR + SKEL (the target path)
@@ -127,6 +127,19 @@ and publishes `torso.sagittal/frontal`, `knee_angle_r/l`, `knee_fppa_r/l` and an
 `lumbar_total.sagittal` with the same names the video pipeline uses, so one rule set covers
 both. IMU yaw drifts, so no transverse-plane signals are offered, and the suit stays Tier C
 until it has been validated against a reference like any other front-end.
+
+The last hop drives the suit: `python -m rehabtwin suit-bridge [--ble vest=AA:BB:…]` reads the
+cue markers and writes bHaptics-protocol payloads to SenseShift firmware (ESP32 DIY vest and
+sleeves). The vest takes 20 bytes with one 4-bit intensity per motor; sleeves take one byte
+per motor. The mapping from rule actuators to motors is in `configs/feedback/suit_bhaptics.json`,
+and motor layouts are parsed from your SenseShift clone at run time (GPL-3.0, not copied).
+Without `--ble` it is a dry run that logs the payloads.
+
+```
+SlimeVR ─VMC─► vmc-posture ─LSL─► lsl-live (CueEngine, gated) ─LSL─► suit-bridge ─BLE─► SenseShift vest/sleeves
+```
+The chain is covered by a test from posture stream to payload bytes. The one remaining
+untested step is a physical BLE write.
 
 | Command | What it does | Guard rails |
 |---|---|---|

@@ -11,6 +11,7 @@
   cues      session folder + haptic rule set -> offline cue replay (gated; never drives hardware)
   lsl-simulate / lsl-live / lsl-listen   live cue loop over Lab Streaming Layer (pip install pylsl)
   vmc-posture   SlimeVR (VMC/OSC) skeleton -> live posture signals on LSL (pip install python-osc pylsl)
+  suit-bridge   LSL cue markers -> SenseShift/bHaptics BLE payloads (dry run or BLE via bleak)
 """
 from __future__ import annotations
 
@@ -290,6 +291,12 @@ def main(argv=None):
     vp.add_argument("--rate-hz", type=float, default=60.0)
     vp.add_argument("--duration-s", type=float)
     vp.add_argument("--print", action="store_true", help="also print the signals once per second")
+    sb = sub.add_parser("suit-bridge", help="LSL cue markers -> haptic suit payloads")
+    sb.add_argument("--mapping", default="suit_bhaptics", help="name in pipeline/configs/feedback or a path")
+    sb.add_argument("--ble", action="append", default=[], metavar="DEVICE=ADDRESS",
+                    help="BLE address per mapped device (e.g. vest=AA:BB:CC:DD:EE:FF); omit for a dry run")
+    sb.add_argument("--duration-s", type=float)
+    sb.add_argument("--log", help="write the dry-run payload log to this JSON file")
     a = ap.parse_args(argv)
 
     if a.cmd == "process":
@@ -371,6 +378,22 @@ def main(argv=None):
                 print(json.dumps({k: round(v, 1) for k, v in sig.items()}))
         print(f"listening for VMC on udp/{a.port}; publishing LSL stream 'rehabtwin_posture' ({', '.join(vmc.SIGNALS)})")
         vmc.serve(a.port, a.rate_hz, a.duration_s, publish_lsl=True, on_signals=show)
+    elif a.cmd == "suit-bridge":
+        from . import suit
+        driver = suit.SuitDriver(a.mapping)
+        if a.ble:
+            transport = suit.BleTransport(dict(x.split("=", 1) for x in a.ble))
+        else:
+            transport = suit.DryRunTransport()
+            print("dry run: payloads are logged, nothing is written to hardware")
+        suit.run_bridge(driver, transport, a.duration_s)
+        if isinstance(transport, suit.DryRunTransport):
+            for e in transport.log:
+                print(json.dumps(e))
+            if a.log:
+                Path(a.log).write_text(json.dumps(transport.log, indent=1))
+        if driver.unknown:
+            print(f"warning: cues for unmapped actuators ignored: {sorted(driver.unknown)}", file=sys.stderr)
     elif a.cmd == "selftest":
         res, failures = selftest(a.out)
         per = res["validation"]["per_coordinate"]

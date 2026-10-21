@@ -2144,7 +2144,7 @@
         "full-body-tracking",
         "suit"
       ],
-      "notes": "Sensor-suit hub: the wearable side of the 1:1 twin without cameras. License (GitHub API, 2026-10-21): Apache-2.0.",
+      "notes": "Sensor-suit hub: the wearable side of the 1:1 twin without cameras. License (GitHub API, 2026-10-21): Apache-2.0. pipeline/ reads its VMC output (`rehabtwin vmc-posture`) for live posture cues.",
       "upstream_path": "upstream/SlimeVR/SlimeVR-Server"
     },
     {
@@ -2551,7 +2551,7 @@
         "bhaptics-protocol",
         "vibrotactile"
       ],
-      "notes": "The posture-cueing suit: vibrate where posture breaks. Haptic cueing is buildable today, unlike powered spinal support. License (GitHub API, 2026-10-21): GPL-3.0.",
+      "notes": "The posture-cueing suit: vibrate where posture breaks. Haptic cueing is buildable today, unlike powered spinal support. License (GitHub API, 2026-10-21): GPL-3.0. pipeline/ drives it via `rehabtwin suit-bridge` (bHaptics BLE payloads; layouts parsed from devices.hpp at run time).",
       "upstream_path": "upstream/senseshift/senseshift-firmware"
     },
     {

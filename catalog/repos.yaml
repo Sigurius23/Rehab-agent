@@ -1113,7 +1113,7 @@ repos:
     language: "Fluent"
     updated_snapshot: "2026-10-18 (live API 2026-10-21)"
     description: "SlimeVR Server — server for the SlimeVR open full-body tracking ecosystem; fuses IMU trackers into a full-body pose"
-    notes: "Sensor-suit hub: the wearable side of the 1:1 twin without cameras. License (GitHub API, 2026-10-21): Apache-2.0."
+    notes: "Sensor-suit hub: the wearable side of the 1:1 twin without cameras. License (GitHub API, 2026-10-21): Apache-2.0. pipeline/ reads its VMC output (`rehabtwin vmc-posture`) for live posture cues."
     upstream_path: "upstream/SlimeVR/SlimeVR-Server"
     stars_snapshot: 1047
     forks_snapshot: 257
@@ -1323,7 +1323,7 @@ repos:
     language: "C++"
     updated_snapshot: "2026-10-05 (live API 2026-10-21)"
     description: "SenseShift firmware — open-source firmware for DIY haptic-feedback devices (vest, gloves, sleeves), compatible with bHaptics and OpenGloves protocols"
-    notes: "The posture-cueing suit: vibrate where posture breaks. Haptic cueing is buildable today, unlike powered spinal support. License (GitHub API, 2026-10-21): GPL-3.0."
+    notes: "The posture-cueing suit: vibrate where posture breaks. Haptic cueing is buildable today, unlike powered spinal support. License (GitHub API, 2026-10-21): GPL-3.0. pipeline/ drives it via `rehabtwin suit-bridge` (bHaptics BLE payloads; layouts parsed from devices.hpp at run time)."
     upstream_path: "upstream/senseshift/senseshift-firmware"
     stars_snapshot: 149
     forks_snapshot: 22
