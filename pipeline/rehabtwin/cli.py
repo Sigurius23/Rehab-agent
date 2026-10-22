@@ -87,6 +87,8 @@ def process(seq_path, out_dir, exercise="squat", config=None, mass_kg=None, heig
     sess = records.session_record(seq, stage.qc, out_dir, tier, person_ref, video=video,
                                   config_name=Path(cfg["_path"]).name, outputs=outputs, validation_report=val,
                                   tier_source=tier_source)
+    # derived results copy this id; index.html marks the ones from an earlier processing STALE
+    sess["pipeline"].update(records.processing_stamp(stage.scaled_model, motion, tier))
     records.validate(sess, "session")
     records.write_json(out_dir / "session.json", sess)
     report.write(out_dir / "report.html", sess, stage.qc, met, signals, est.time, val, ref_plot, skeleton, ref_skeleton)
@@ -98,8 +100,9 @@ def run_correction(session_dir, spec_name, illustrative=False):
     """Correction view for a processed session (see rehabtwin/correction.py)."""
     from . import correction
     spec = correction.load_spec(spec_name)
+    sess = json.loads((Path(session_dir) / "session.json").read_text())
     summary, measured, corrected, out = correction.correct(session_dir, spec, illustrative=illustrative)
-    model = Path(session_dir) / json.loads((Path(session_dir) / "session.json").read_text())["pipeline"]["outputs"]["model"]
+    model = Path(session_dir) / sess["pipeline"]["outputs"]["model"]
     sig_m = {c: measured.col(c) for c in measured.columns}
     sig_m.update(metrics_mod.derived_signals(measured, model))
     sig_c = {c: corrected.col(c) for c in corrected.columns}
@@ -111,7 +114,7 @@ def run_correction(session_dir, spec_name, illustrative=False):
                 "corrected_range": [round(float(np.min(sig_c[k])), 2), round(float(np.max(sig_c[k])), 2)]}
     if spec.get("check_rules"):
         summary["rule_check"] = correction.rule_check(spec["check_rules"], measured.time, sig_m, corrected.time, sig_c)
-    records.write_json(out / "correction.json", summary)
+    records.write_json(out / "correction.json", records.stamp(sess, summary))
     report.write_correction(out / "correction.html", summary, measured.time, sig_m, sig_c,
                             skeleton_positions(model, measured), skeleton_positions(model, corrected))
     report.write_index(session_dir)
@@ -128,7 +131,7 @@ def strength_calibration(session_dir, tests_file):
     rec = strength.calibrate(session_dir / sess["pipeline"]["outputs"]["model"], spec["tests"], out)
     rec.update({k: spec[k] for k in ("device", "protocol", "tester", "date") if k in spec})
     rec["model"] = sess["pipeline"]["outputs"]["model"]
-    records.write_json(out / "strength.json", rec)
+    records.write_json(out / "strength.json", records.stamp(sess, rec))
     report.write_strength(out / "strength.html", rec, sess["twin_tier"])
     report.write_index(session_dir)
     return rec, out
@@ -154,6 +157,10 @@ def muscle_study(session_dir, rep=1, start=None, stop=None, correction=None, wea
         if not model.exists():
             raise SystemExit(f"{model} missing; run 'rehabtwin strength {session_dir} --tests FILE' first")
         st = json.loads((session_dir / "strength" / "strength.json").read_text())
+        why = records.stale_reason(sess, st)
+        if why:     # capacities fitted on an earlier model (other mass/scaling) must not drive this one
+            raise records.StaleResult(f"strength/strength.json is stale ({why}); re-run "
+                                      f"'rehabtwin strength {session_dir} --tests FILE' before --strength")
         muscle_model = {"source": "strength-calibrated (dynamometry)", "tests": [t["action"] for t in st["tests"]],
                         "calibrated_muscles": st["calibrated_muscles"], "symmetry": st["symmetry"]}
     motion = session_dir / sess["pipeline"]["outputs"]["motion"]
@@ -166,10 +173,14 @@ def muscle_study(session_dir, rep=1, start=None, stop=None, correction=None, wea
     out = session_dir / "muscles"
     # every variant: (label, output folder, motion, extra muscles.run arguments)
     variants = [("measured", "measured", motion, {})]
+    stale_inputs = []
     if correction:
         corrected = session_dir / "correction" / correction / "corrected.mot"
         if not corrected.exists():
             raise SystemExit(f"{corrected} missing; run 'rehabtwin correct {session_dir} --spec {correction} ...' first")
+        cj = corrected.parent / "correction.json"
+        if cj.exists() and records.warn_if_stale(sess, json.loads(cj.read_text()), f"correction/{correction}"):
+            stale_inputs.append(f"correction/{correction}")
         variants.append((f"corrected: {correction}", f"corrected_{correction}", corrected, {}))
     for spec in weaken:
         group, factor = spec.split("=")
@@ -231,7 +242,7 @@ def muscle_study(session_dir, rep=1, start=None, stop=None, correction=None, wea
                 changes = [v["change"]] + [a[g]["change"] for a in alt if g in a]
                 v["change_range_over_grf_split"] = [min(changes), max(changes)]
                 v["robust_to_grf_split"] = muscles.robust_to_grf(changes)
-    records.write_json(out / "study.json", study)
+    records.write_json(out / "study.json", records.stamp(sess, study, stale_inputs))
     view = muscles.view_data(model, {lab: out / r["label"] for lab, r in runs.items()},
                              {lab: used.get(lab, motion) for lab in runs}, start, stop) if view_3d else None
     report.write_muscles(out / "muscles.html", study, view)
@@ -247,6 +258,9 @@ def cue_replay(session_dir, rules, motion=None):
     sess = json.loads((session_dir / "session.json").read_text())
     spec = feedback.load_rules(rules)
     model = session_dir / sess["pipeline"]["outputs"]["model"]
+    cj = Path(motion).parent / "correction.json" if motion else None      # replaying a corrected motion
+    stale_inputs = [f"correction/{cj.parent.name}"] if cj and cj.exists() and records.warn_if_stale(
+        sess, json.loads(cj.read_text()), f"correction/{cj.parent.name}") else []
     tab = read_table(Path(motion) if motion else session_dir / sess["pipeline"]["outputs"]["motion"])
     signals = {c: tab.col(c) for c in tab.columns}
     signals.update(metrics_mod.derived_signals(tab, model))
@@ -258,7 +272,7 @@ def cue_replay(session_dir, rules, motion=None):
     out.mkdir(parents=True, exist_ok=True)
     summ["motion"] = str(motion) if motion else sess["pipeline"]["outputs"]["motion"]
     result = {"summary": summ, "spec": {k: v for k, v in spec.items() if k != "_path"}, "log": log}
-    records.write_json(out / "cues.json", result)
+    records.write_json(out / "cues.json", records.stamp(sess, result, stale_inputs))
     with open(out / "commands.csv", "w", newline="") as fh:   # LSL-ready marker events
         w = csv.DictWriter(fh, fieldnames=["timestamp", "actuator", "pattern", "intensity", "duration_ms", "rule", "message"])
         w.writeheader()
@@ -516,7 +530,7 @@ def main(argv=None):
             study, out = muscle_study(a.session, a.rep, a.start, a.stop, a.correction, a.weaken, a.assist, not a.no_3d,
                                       a.grf_sensitivity, a.strength, a.passive, a.workers, a.max_fps, not a.no_plant,
                                       a.illustrative)
-        except CorrectionRefused as e:
+        except (CorrectionRefused, records.StaleResult) as e:
             print(f"refused: {e}", file=sys.stderr)
             return 2
         for lab, cmp in study["comparisons"].items():

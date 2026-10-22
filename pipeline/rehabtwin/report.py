@@ -396,31 +396,41 @@ def _svg_bars(groups, variants, title, w=760, row=16):
 
 
 def write_index(session_dir):
-    """index.html for a session folder: every report it holds, with its status line."""
+    """index.html for a session folder: every report it holds, with its status line.
+
+    Derived reports carry the ``processing_id`` they were computed from; one that does not match
+    session.json (re-processed since: other mass, tier or motion) stays listed but marked STALE.
+    """
     import json
+    from .records import stale_reason
     d = Path(session_dir)
     e = html.escape
     sess = json.loads((d / "session.json").read_text())
-    items = [("Session report", "report.html", f"Tier {sess['twin_tier']} · {sess['pipeline']['front_end']}")]
+    items = [("Session report", "report.html", f"Tier {sess['twin_tier']} · {sess['pipeline']['front_end']}", None)]
     for c in sorted((d / "correction").glob("*/correction.json")):
         j = json.loads(c.read_text())
         items.append((f"Correction view: {j['spec']}", str(c.parent.relative_to(d) / "correction.html"),
-                      f"{j['status']} · admissible: {'yes' if j['admissible'] else 'no'}"))
+                      f"{j['status']} · admissible: {'yes' if j['admissible'] else 'no'}", stale_reason(sess, j)))
     if (d / "strength" / "strength.json").exists():
         st = json.loads((d / "strength" / "strength.json").read_text())
         flags = [a for a, v in st["symmetry"].items() if v["flag"]]
         items.append(("Strength calibration", "strength/strength.html",
-                      f"{len(st['tests'])} tests" + (f" · LSI < 90 %: {', '.join(flags)}" if flags else "")))
+                      f"{len(st['tests'])} tests" + (f" · LSI < 90 %: {', '.join(flags)}" if flags else ""),
+                      stale_reason(sess, st)))
     if (d / "muscles" / "study.json").exists():
         st = json.loads((d / "muscles" / "study.json").read_text())
         items.append(("Muscle effects", "muscles/muscles.html",
-                      st.get("muscle_model", {}).get("source", "generic") + " · variants: " + ", ".join(st["runs"])))
+                      st.get("muscle_model", {}).get("source", "generic") + " · variants: " + ", ".join(st["runs"]),
+                      stale_reason(sess, st)))
     for c in sorted((d / "feedback").glob("*/cues.json")):
-        j = json.loads(c.read_text())["summary"]
+        cues = json.loads(c.read_text())
+        j = cues["summary"]
         items.append((f"Haptic cue replay: {c.parent.name}", str(c.parent.relative_to(d) / "cues.html"),
-                      f"cues sent: {j['commands_sent']} · {sum(r['would_cue'] for r in j['per_rule'].values())} would-cue"))
-    rows = "".join(f"<tr><td><a href='{e(href)}'>{e(title)}</a></td><td class='muted'>{e(note)}</td></tr>"
-                   for title, href, note in items if (d / href).exists())
+                      f"cues sent: {j['commands_sent']} · {sum(r['would_cue'] for r in j['per_rule'].values())} would-cue",
+                      stale_reason(sess, cues)))
+    rows = "".join(f"<tr><td><a href='{e(href)}'>{e(title)}</a></td><td class='muted'>"
+                   + (f"<span class='b fail'>STALE</span> {e(why)} · " if why else "") + f"{e(note)}</td></tr>"
+                   for title, href, note, why in items if (d / href).exists())
     doc = f"""<!doctype html><html lang="en"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1"><title>Session {e(sess['session_id'])}</title>
 <style>{_CSS} a {{ color: inherit; }}</style></head><body>

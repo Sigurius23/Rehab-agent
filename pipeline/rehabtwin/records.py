@@ -1,9 +1,11 @@
 """Session records (schemas/session.schema.json) and schema validation."""
 from __future__ import annotations
 
+import hashlib
 import json
 import platform
 import subprocess
+import sys
 from datetime import datetime, timezone
 from pathlib import Path
 
@@ -126,3 +128,56 @@ def _default(o):
     if isinstance(o, Path):
         return str(o)
     raise TypeError(type(o))
+
+
+# ------------------------------------------------------------- processing stamps
+
+class StaleResult(ValueError):
+    """A derived result (strength, correction, ...) describes an earlier processing of the session."""
+
+
+def processing_stamp(model, motion, tier):
+    """``pipeline.processing_id`` + ``processed_at`` for session.json.
+
+    Derived results (correction, strength, muscles, cues) copy the id they were computed from, so after
+    re-processing (new mass, tier or motion) the folder can tell which of them no longer describe it.
+    A content hash, not a random id: re-processing to the same model, motion and tier keeps them current.
+    """
+    h = hashlib.sha256()
+    for p in (model, motion):
+        b = Path(p).read_bytes()
+        h.update(len(b).to_bytes(8, "little") + b)
+    h.update(str(tier).encode())
+    return {"processing_id": h.hexdigest()[:16],
+            "processed_at": datetime.now(timezone.utc).replace(microsecond=0).isoformat()}
+
+
+def stamp(sess, doc, stale_inputs=()):
+    """Record in derived ``doc`` the processing it was computed from (and stale inputs it was built on)."""
+    doc["processing_id"] = (sess.get("pipeline") or {}).get("processing_id")
+    if stale_inputs:
+        doc["stale_inputs"] = list(stale_inputs)
+    return doc
+
+
+def stale_reason(sess, doc):
+    """Why derived record ``doc`` does not describe the session's current processing (None if it does).
+
+    Fails closed: a session or record without a stamp predates stamps and cannot be shown to match.
+    """
+    cur, got = (sess.get("pipeline") or {}).get("processing_id"), doc.get("processing_id")
+    if cur and got == cur:
+        return f"built on stale {', '.join(doc['stale_inputs'])}" if doc.get("stale_inputs") else None
+    if not cur:
+        return "session.json predates processing stamps, so nothing derived can be shown to match it"
+    if not got:
+        return "computed before processing stamps"
+    return f"computed from processing {got}, the session is now {cur}"
+
+
+def warn_if_stale(sess, doc, what):
+    """Warn (stderr) when a consumer uses a stale derived input it can still run with; returns the reason."""
+    why = stale_reason(sess, doc)
+    if why:
+        print(f"warning: {what} is stale ({why}); re-run it on the current processing", file=sys.stderr)
+    return why

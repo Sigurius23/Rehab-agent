@@ -266,6 +266,12 @@ let IK jitter 6.6 cm sideways, and static optimisation then "needed" 70 N·m res
 | `muscles/` | per variant: `grf.mot`, `inverse_dynamics.sto`, static-optimisation activations/forces, `muscles.json`; `study.json`, `muscles.html` |
 | `feedback/<rules>/` | `cues.json` (event log + summary), `commands.csv` (actuator events), `cues.html` |
 
+Re-processing into an existing folder rewrites `session.json` with a new `pipeline.processing_id`
+(hash of scaled model + motion + tier). Correction, strength, muscle and cue results store the id
+they were computed from; `index.html` keeps a mismatching one listed but marks it **STALE**,
+`muscles --strength` refuses a stale `strength.json`, and a muscle study or cue replay of a stale
+correction warns and is itself marked stale.
+
 ## Design decisions worth knowing
 
 - **Markers, not angle copying.** SKEL's 46 pose parameters share names with OpenSim
