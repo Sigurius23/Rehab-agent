@@ -12,7 +12,7 @@ from datetime import date
 import numpy as np
 
 from .kinematics import classify_signal as classify
-from .io_formats import Table
+from .io_formats import Table, to_degrees
 
 # docs/accuracy.md "Project acceptance targets" (engineering targets, clinician to confirm)
 TARGETS_DEG = {"sagittal": 3.0, "frontal": 5.0, "transverse": 5.0}
@@ -66,7 +66,13 @@ def _apply_aliases(est: Table, ref: Table, aliases):
 
 
 def compare(est: Table, ref: Table, max_lag_s=0.0, coords=None, aliases=None):
-    """Per-coordinate error statistics of ``est`` against ``ref`` (both in degrees)."""
+    """Per-coordinate error statistics of ``est`` against ``ref`` in degrees.
+
+    Radian tables (``inDegrees=no``, e.g. a lab's SI-unit IK) are converted first: compared raw, an
+    identical motion scored 72 deg RMSE. Only angular planes are compared, so the by-name split
+    of ``to_degrees`` without a model is enough here.
+    """
+    est, ref = to_degrees(est), to_degrees(ref)
     ref, aliased = _apply_aliases(est, ref, DEFAULT_ALIASES if aliases is None else aliases)
     shared = [c for c in est.columns if c in ref.columns]
     angular = [c for c in shared if classify(c)[1] in ("sagittal", "frontal", "transverse")]

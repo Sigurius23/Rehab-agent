@@ -707,3 +707,123 @@ def test_live_loop_refuses_foreign_or_ambiguous_posture_streams():
     log = res["eng"].log
     assert any(e.get("event") == "source_mismatch" for e in log)
     assert not [e for e in log if e.get("decision") == "cue"] and [e for e in log if e.get("decision") == "would_cue"]
+
+
+# ------------------------------------------------- radian tables (inDegrees=no)
+
+_NOT_ANGLES = ("pelvis_tx", "pelvis_ty", "knee_angle_r_beta", "Abs_t1")   # metres, or radians even in degree files
+
+
+def _squat_deg(n=150, fps=50.0):
+    """One 3 s squat-like rep in degree-file units: (time, columns, data)."""
+    t = np.arange(n) / fps
+    s = 0.5 * (1 - np.cos(2 * np.pi * t / 3.0))
+    cols = {"pelvis_tilt": -10 * s, "pelvis_tx": 0.05 * s, "pelvis_ty": 0.9 - 0.3 * s, "hip_flexion_r": 90 * s,
+            "knee_angle_r": 100 * s, "knee_angle_r_beta": np.radians(100 * s), "ankle_angle_r": 25 * s,
+            "L5_S1_Flex_Ext": -8 * s, "L4_L5_Flex_Ext": -8 * s, "Abs_t1": 0.01 * s}
+    return t, list(cols), np.column_stack(list(cols.values()))
+
+
+def _radian_file(path, t, cols, deg, angles=None):
+    """The same motion as an OpenSim SI-unit file (inDegrees=no)."""
+    rad = deg.copy()
+    for j, c in enumerate(cols):
+        if (c not in _NOT_ANGLES) if angles is None else angles[j]:
+            rad[:, j] = np.radians(rad[:, j])
+    write_table(path, cols, rad, t, in_degrees=False)
+    return read_table(path)
+
+
+def _pose2sim_model():
+    pytest.importorskip("opensim")
+    from rehabtwin.config import load_config, resolve
+    try:
+        return resolve(load_config("skel105_pose2sim")["model"])
+    except FileNotFoundError:
+        pytest.skip("Pose2Sim model not cloned (scripts/clone.py)")
+
+
+def test_to_degrees_converts_angles_only(tmp_path):
+    from rehabtwin.io_formats import to_degrees
+    t, cols, deg = _squat_deg()
+    rad = _radian_file(tmp_path / "rad.mot", t, cols, deg)
+    assert not rad.in_degrees
+    back = to_degrees(rad)
+    assert back.in_degrees and back.header["inDegrees"] == "yes" and back.columns == cols
+    assert np.allclose(back.data, deg, atol=1e-5)      # translations and coupled *_beta untouched
+    tab = Table(cols, deg, t)
+    assert to_degrees(tab) is tab                      # degree tables pass through, no model needed
+
+
+def test_validation_radian_reference_matches_identical_degree_motion(tmp_path):
+    t, cols, deg = _squat_deg()
+    est, ref = Table(cols, deg, t), _radian_file(tmp_path / "ref.mot", t, cols, deg)
+    for a, b in ((est, ref), (ref, est)):              # radian reference, then radian estimate
+        per = validation.compare(a, b)["coordinates"]
+        assert {"knee_angle_r", "hip_flexion_r", "L5_S1_Flex_Ext"} <= set(per)
+        assert max(s["rmse_deg"] for s in per.values()) < 1e-4
+        assert per["knee_angle_r"]["reference_rom_deg"] == pytest.approx(100.0, abs=0.1)
+
+
+def test_derived_signals_and_with_signals_independent_of_file_units(tmp_path, monkeypatch):
+    from rehabtwin import metrics
+    t, cols, deg = _squat_deg()
+    # the OpenSim part (segment_orientations) converts per coordinate itself; the lumbar totals did not
+    monkeypatch.setattr(metrics, "segment_orientations",
+                        lambda model, tab: ({}, {"r": np.zeros(len(tab.time)), "l": np.zeros(len(tab.time))}))
+    rad = _radian_file(tmp_path / "rad.mot", t, cols, deg)
+    a, b = metrics.derived_signals(Table(cols, deg, t), None), metrics.derived_signals(rad, None)
+    assert np.allclose(a["lumbar_total.sagittal"], deg[:, cols.index("L5_S1_Flex_Ext")] * 2)
+    assert set(a) == set(b) and all(np.allclose(a[k], b[k], atol=1e-5) for k in a)
+    w = metrics.with_signals(rad, b)                   # degree signals must not sit under a radian flag
+    assert w.in_degrees and np.allclose(w.col("knee_angle_r"), deg[:, cols.index("knee_angle_r")], atol=1e-5)
+
+
+def test_rotational_mask_follows_model_motion_types():
+    import opensim as osim
+
+    from rehabtwin.io_formats import rotational
+    model = _pose2sim_model()
+    m = osim.Model(str(model))          # keep the model alive while its coordinate set is used
+    cs = m.getCoordinateSet()
+    names = [cs.get(i).getName() for i in range(cs.getSize())]
+    by_model = rotational(names, model)
+    assert by_model.tolist() == [cs.get(i).getMotionType() == osim.Coordinate.Rotational for i in range(cs.getSize())]
+    assert by_model.tolist() == rotational(names).tolist()       # the by-name rule agrees on the pipeline's model
+    assert not by_model[names.index("Abs_t1")] and not by_model[names.index("knee_angle_r_beta")]
+    assert rotational(["extra_tx", "extra_angle"], model).tolist() == [False, True]   # unknown columns: by name
+
+
+def test_cue_replay_fires_identically_for_radian_motion(tmp_path):
+    import json
+
+    import opensim as osim
+
+    from rehabtwin import cli
+    model = _pose2sim_model()
+    m = osim.Model(str(model))          # keep the model alive while its coordinate set is used
+    cs = m.getCoordinateSet()
+    names = [cs.get(i).getName() for i in range(cs.getSize())]
+    t = np.arange(150) / 50.0
+    s = 0.5 * (1 - np.cos(2 * np.pi * t / 3.0))
+    deg = np.zeros((len(t), len(names)))
+    deg[:, names.index("pelvis_ty")] = 0.95
+    for c in names:
+        if c.endswith("Flex_Ext"):                     # 6 levels x -10 deg: lumbar_total < -25 for ~1 s
+            deg[:, names.index(c)] = -10 * s
+    (tmp_path / "deg").mkdir()
+    (tmp_path / "rad").mkdir()
+    write_table(tmp_path / "deg" / "m.mot", names, deg, t)
+    _radian_file(tmp_path / "rad" / "m.mot", t, names, deg,
+                 angles=[cs.get(i).getMotionType() == osim.Coordinate.Rotational for i in range(cs.getSize())])
+    (tmp_path / "session.json").write_text(json.dumps({
+        "twin_tier": "C", "person_ref": "P1", "session_id": "s", "started_at": "2026-01-01T00:00:00",
+        "pipeline": {"front_end": "test", "outputs": {"model": str(model), "motion": "deg/m.mot"}}}))
+    res = {u: cli.cue_replay(tmp_path, "squat_posture", motion=tmp_path / u / "m.mot")[0] for u in ("deg", "rad")}
+    per = {u: r["summary"]["per_rule"] for u, r in res.items()}
+    assert per["deg"]["lumbar_rounding"]["violations"] == 1
+    for rid in per["deg"]:
+        assert per["rad"][rid]["violations"] == per["deg"][rid]["violations"], rid
+        assert per["rad"][rid]["peaks"] == pytest.approx(per["deg"][rid]["peaks"], abs=0.02), rid
+    dec = {u: [(e["t"], e["rule"], e["decision"]) for e in r["log"] if "decision" in e] for u, r in res.items()}
+    assert dec["rad"] == dec["deg"]

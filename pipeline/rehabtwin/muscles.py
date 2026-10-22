@@ -23,7 +23,7 @@ from pathlib import Path
 import numpy as np
 
 from .filtering import lowpass
-from .io_formats import Table, read_table, write_table
+from .io_formats import Table, read_table, to_degrees, write_table
 from .opensim_stage import _cwd, _osim
 
 # Muscle groups of the Pose2Sim / Lai-Uhlrich / Rajagopal muscle set (names without _r/_l)
@@ -67,6 +67,7 @@ def muscle_groups(names):
 
 
 def _set_state(model, state, table, f, cs, cols):
+    """Pose ``model`` at frame ``f`` of a degree table (``to_degrees`` first)."""
     import opensim as osim
     for c in cols:
         co = cs.get(c)
@@ -83,6 +84,7 @@ def estimate_grf(model_path, table: Table, cutoff_hz=6.0, max_foot_speed=0.15, s
     osim = _osim()
     model = osim.Model(str(model_path))
     state = model.initSystem()
+    table = to_degrees(table, model)
     cs = model.getCoordinateSet()
     cols = [c for c in table.columns if cs.contains(c)]
     T = len(table.time)
@@ -324,7 +326,7 @@ def run(model_path, motion_path, out_dir, weaken=None, label="measured", exercis
     osim = _osim()
     out = Path(out_dir) / label
     out.mkdir(parents=True, exist_ok=True)
-    tab = read_table(motion_path)
+    tab = to_degrees(read_table(motion_path), model_path)
     fps = 1.0 / float(np.median(np.diff(tab.time)))
     if max_fps and fps > 1.05 * max_fps:      # a slow exercise does not need 60 Hz static optimisation
         step = int(round(fps / max_fps))
@@ -377,7 +379,7 @@ def run(model_path, motion_path, out_dir, weaken=None, label="measured", exercis
     for dev in model_info["passive"]:
         coord, k, q0, direction = dev["coordinate"], dev["stiffness_Nm_per_rad"], dev["slack_deg"], dev["direction"]
         q = tab.col(dev["model_coordinate"])[window]
-        q = dev["coupling_gain"] * (q if tab.in_degrees else np.degrees(q))      # physical joint/trunk angle
+        q = dev["coupling_gain"] * q      # physical joint/trunk angle (deg)
         tq = passive_torque(k, q0, direction, q)
         summary["passive_devices"][coord] = {"stiffness_Nm_per_rad": k, "slack_deg": q0, "direction": direction,
                                              "peak_abs_Nm": round(float(np.max(np.abs(tq))), 2),
@@ -505,15 +507,10 @@ def path_frames(model_path, motion_path, times, tol_mm=3.0):
     from .kinematics import SKELETON_BODIES
     model = osim.Model(str(model_path))
     state = model.initSystem()
-    tab = read_table(motion_path)
+    tab = to_degrees(read_table(motion_path), model)
     cs = model.getCoordinateSet()
     cols = [c for c in tab.columns if cs.contains(c)]
-    data = tab.data.copy()
-    if not tab.in_degrees:      # _set_state expects degrees for rotational coordinates
-        for j, c in enumerate(tab.columns):
-            if c in cols and cs.get(c).getMotionType() == osim.Coordinate.Rotational:
-                data[:, j] = np.degrees(data[:, j])
-    interp = Table(tab.columns, np.column_stack([np.interp(times, tab.time, data[:, j]) for j in range(len(tab.columns))]),
+    interp = Table(tab.columns, np.column_stack([np.interp(times, tab.time, tab.data[:, j]) for j in range(len(tab.columns))]),
                    np.asarray(times, float), True)
     ms = model.getMuscles()
     names = [ms.get(i).getName() for i in range(ms.getSize())]

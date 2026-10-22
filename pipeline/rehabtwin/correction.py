@@ -28,7 +28,7 @@ from xml.sax.saxutils import escape
 import numpy as np
 
 from .config import CONFIG_DIR
-from .io_formats import Table, read_table, write_table, write_trc
+from .io_formats import Table, read_table, to_degrees, write_table, write_trc
 from .filtering import lowpass
 from .opensim_stage import _cwd, _osim
 
@@ -83,6 +83,7 @@ def _anchor_trajectories(model_path, table, anchors):
     osim = _osim()
     model = osim.Model(str(model_path))
     state = model.initSystem()
+    table = to_degrees(table, model)
     cs = model.getCoordinateSet()
     cols = [c for c in table.columns if cs.contains(c)]
     pos = np.zeros((len(table.time), len(anchors), 3))
@@ -126,7 +127,7 @@ def correct(session_dir, spec, illustrative=False, motion=None, model=None):
     model = Path(model or session_dir / sess["pipeline"]["outputs"]["model"])
     out = session_dir / "correction" / spec["name"]
     out.mkdir(parents=True, exist_ok=True)
-    measured = read_table(motion)
+    measured = to_degrees(read_table(motion), model)     # spec values and target.mot are degrees
 
     # 1. target trajectories for every coordinate (corrected ones replaced)
     targets = apply_targets(measured, spec)
@@ -298,7 +299,7 @@ def plant_feet(model_path, motion_path, out_dir, start=None, stop=None, anchors=
     osim = _osim()
     out = Path(out_dir)
     out.mkdir(parents=True, exist_ok=True)
-    measured = read_table(motion_path)
+    measured = to_degrees(read_table(motion_path), model_path)     # target.mot is written in degrees
     t0 = measured.time[0] if start is None else start
     t1 = measured.time[-1] if stop is None else stop
     keep = (measured.time >= t0 - 1e-9) & (measured.time <= t1 + 1e-9)

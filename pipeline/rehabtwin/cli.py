@@ -28,7 +28,7 @@ import numpy as np
 from . import metrics as metrics_mod
 from . import opensim_stage, records, report, validation
 from .config import load_config, resolve
-from .io_formats import read_table
+from .io_formats import read_table, to_degrees
 from .kinematics import skeleton_positions
 from .sequence import MarkerSequence
 
@@ -63,6 +63,7 @@ def process(seq_path, out_dir, exercise="squat", config=None, mass_kg=None, heig
     if reference:
         ref_tab = read_table(reference)
         ref_model = Path(reference_model) if reference_model else Path(reference).parent / "model_scaled.osim"
+        ref_tab = to_degrees(ref_tab, ref_model if ref_model.exists() else None)
         if ref_model.exists():  # posture signals (inclination vs gravity, FPPA) can be validated too
             ref_skeleton = skeleton_positions(ref_model, ref_tab)
             ref_tab = metrics_mod.with_signals(ref_tab, metrics_mod.derived_signals(ref_tab, ref_model))
@@ -247,7 +248,7 @@ def cue_replay(session_dir, rules, motion=None):
     sess = json.loads((session_dir / "session.json").read_text())
     spec = feedback.load_rules(rules)
     model = session_dir / sess["pipeline"]["outputs"]["model"]
-    tab = read_table(Path(motion) if motion else session_dir / sess["pipeline"]["outputs"]["motion"])
+    tab = to_degrees(read_table(Path(motion) if motion else session_dir / sess["pipeline"]["outputs"]["motion"]), model)
     signals = {c: tab.col(c) for c in tab.columns}
     signals.update(metrics_mod.derived_signals(tab, model))
     _, tier, allowed, gate_closed = _session_gate(session_dir, spec)
@@ -553,7 +554,8 @@ def main(argv=None):
         from . import feedback, lsl_bridge
         sess, _, _, _ = _session_gate(a.session)
         spec = feedback.load_rules(a.rules)
-        tab = read_table(Path(a.session) / sess["pipeline"]["outputs"]["motion"])
+        tab = to_degrees(read_table(Path(a.session) / sess["pipeline"]["outputs"]["motion"]),
+                         Path(a.session) / sess["pipeline"]["outputs"]["model"])
         derived = metrics_mod.derived_signals(tab, Path(a.session) / sess["pipeline"]["outputs"]["model"])
         sig = lsl_bridge.session_signals(tab, derived, [r["signal"] for r in spec["rules"]])
         print(f"streaming {len(sig)} signals x {len(tab.time)} samples as '{lsl_bridge.POSTURE_STREAM}'")
