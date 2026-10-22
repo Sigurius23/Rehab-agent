@@ -48,14 +48,35 @@ def software_versions():
     return out
 
 
+def parse_started_at(text):
+    """Normalised ISO 8601 recording time; refuses a timestamp without UTC offset, which would order
+    sessions recorded in different time zones (or across a DST change) wrongly."""
+    try:
+        dt = datetime.fromisoformat(str(text))
+    except ValueError as e:
+        raise ValueError(f"started_at {text!r} is not an ISO 8601 timestamp (e.g. 2026-10-21T09:30:00+02:00)") from e
+    if dt.tzinfo is None:
+        raise ValueError(f"started_at {text!r} needs a UTC offset (e.g. 2026-10-21T09:30:00+02:00 or ...Z)")
+    return dt.isoformat()
+
+
 def session_record(seq, qc, out_dir: Path, tier, person_ref, video=None, front_end=None, config_name=None,
-                   outputs=None, validation_report=None, tier_source=None):
+                   outputs=None, validation_report=None, tier_source=None, started_at=None):
+    """``started_at``: recording time (parse_started_at); without it and without one in the sequence
+    metadata the processing time stands in, and started_at_source says so (progress warns)."""
     meta = seq.meta
     synthetic = bool(meta.get("synthetic", False))
+    if started_at:
+        when, when_source = started_at, "argument"
+    elif meta.get("started_at"):
+        when, when_source = meta["started_at"], "sequence metadata"
+    else:
+        when, when_source = datetime.now(timezone.utc).replace(microsecond=0).isoformat(), "processing time"
     rec = {
         "session_id": meta.get("session_id") or out_dir.name,
         "person_ref": person_ref,
-        "started_at": meta.get("started_at") or datetime.now(timezone.utc).replace(microsecond=0).isoformat(),
+        "started_at": when,
+        "started_at_source": when_source,
         "synthetic": synthetic,
         "twin_tier": tier,
         "tier_source": tier_source or {"tier": tier, "basis": "unspecified"},

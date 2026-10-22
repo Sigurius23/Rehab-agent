@@ -630,12 +630,17 @@ Use <code>rehabtwin muscles SESSION --strength</code> to simulate with these cap
 
 
 def _svg_trend(points, title, unit, w=360, h=180):
-    """One signal across sessions: mean of rep peaks with ±1 SD bars (native tooltips on points)."""
+    """One signal across sessions: mean of rep peaks with ±1 SD bars (native tooltips on points).
+
+    A session without reps has no mean: it keeps its slot on the time axis, marked "no reps", and
+    the line skips it."""
     e = html.escape
     pad_l, pad_r, pad_t, pad_b = 44, 14, 26, 34
-    vals = [p["mean"] for p in points]
-    lo = min(v - (p["sd"] or 0) for v, p in zip(vals, points))
-    hi = max(v + (p["sd"] or 0) for v, p in zip(vals, points))
+    have = [p for p in points if p["mean"] is not None]
+    if not have:
+        return ""
+    lo = min(p["mean"] - (p["sd"] or 0) for p in have)
+    hi = max(p["mean"] + (p["sd"] or 0) for p in have)
     span = max(hi - lo, 2.0)
     lo, hi = lo - 0.15 * span, hi + 0.15 * span
     n = len(points)
@@ -652,9 +657,14 @@ def _svg_trend(points, title, unit, w=360, h=180):
         v = lo + k * (hi - lo) / 3
         parts.append(f'<line x1="{pad_l}" x2="{w - pad_r}" y1="{y(v):.1f}" y2="{y(v):.1f}" class="grid"/>'
                      f'<text x="{pad_l - 5}" y="{y(v) + 3:.1f}" class="ax" text-anchor="end">{v:.0f}</text>')
-    parts.append(f'<polyline points="{" ".join(f"{x(i):.1f},{y(v):.1f}" for i, v in enumerate(vals))}" fill="none" '
-                 f'stroke="{col}" stroke-width="2"/>')
+    line = " ".join(f"{x(i):.1f},{y(p['mean']):.1f}" for i, p in enumerate(points) if p["mean"] is not None)
+    parts.append(f'<polyline points="{line}" fill="none" stroke="{col}" stroke-width="2"/>')
     for i, p in enumerate(points):
+        if p["mean"] is None:
+            parts.append(f'<text x="{x(i):.1f}" y="{(h + pad_t - pad_b) / 2:.1f}" class="ax" text-anchor="middle">'
+                         f'no reps</text><text x="{x(i):.1f}" y="{h - 12}" class="ax" text-anchor="middle">'
+                         f'{e(p["started_at"][:10])}</text>')
+            continue
         if p["sd"]:
             parts.append(f'<line x1="{x(i):.1f}" x2="{x(i):.1f}" y1="{y(p["mean"] - p["sd"]):.1f}" '
                          f'y2="{y(p["mean"] + p["sd"]):.1f}" stroke="{col}" stroke-width="2"/>')
@@ -673,14 +683,20 @@ def write_progress(path, prog):
     verdict_class = {"real change (beyond rep scatter and measurement error)": "pass",
                      "within measurement error": "not-tested", "within rep-to-rep scatter": "not-tested"}
     rows = []
+
+    def num(v, f=".1f"):     # None: a session without reps
+        return "–" if v is None else format(v, f)
     for sig, j in prog["first_to_last"].items():
         if not j:
             continue
         cls = verdict_class.get(j["verdict"], "unvalidated")
-        rows.append(f"<tr><td>{e(sig)}</td><td>{j['from']:.1f}</td><td>{j['to']:.1f}</td><td>{j['change']:+.1f} {e(j['unit'])}</td>"
+        rows.append(f"<tr><td>{e(sig)}</td><td>{num(j['from'])}</td><td>{num(j['to'])}</td>"
+                    f"<td>{num(j['change'], '+.1f')} {e(j['unit'])}</td>"
                     f"<td>{j.get('rep_threshold', '–')}</td><td>{j.get('mdc95', '–')}</td>"
                     f"<td><span class='b {cls}'>{e(j['verdict'])}</span></td></tr>")
-    sess = "".join(f"<tr><td>{e(s['session_id'])}</td><td>{e(s['started_at'])}</td><td>{e(s['tier'])}</td>"
+    pt = " <span class=muted>(processing time)</span>"
+    sess = "".join(f"<tr><td>{e(s['session_id'])}</td><td>{e(s['started_at'])}"
+                   f"{pt if s.get('started_at_source') == 'processing time' else ''}</td><td>{e(s['tier'])}</td>"
                    f"<td>{e(s['front_end'])}</td><td>{s['n_reps']}</td></tr>" for s in prog["sessions"])
     first = prog["first_to_last"]
     charts = "".join(_svg_trend(prog["series"][sig], f"{sig} (mean of rep peaks)", first[sig]["unit"])
@@ -691,8 +707,8 @@ def write_progress(path, prog):
 <style>{_CSS}</style></head><body>
 <h1>Progress over {len(prog['sessions'])} sessions</h1>
 <p class="banner"><b>A change is only called real when it beats both the rep-to-rep scatter and the validated
-measurement error.</b> Without a validation of that joint × plane the size of a change is unknown, even when it is
-consistent across reps.</p>{warn}
+measurement error.</b> Without a marker-mocap validation of that joint × plane the size of a change is unknown, even
+when it is consistent across reps.</p>{warn}
 <h2>First → last session</h2>
 <table><tr><th>signal</th><th>first</th><th>last</th><th>change</th><th>rep threshold</th><th>MDC95</th><th>verdict</th></tr>
 {''.join(rows)}</table>

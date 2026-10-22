@@ -76,6 +76,17 @@ def segment_reps(signal, fps, min_prominence_deg, min_rep_s):
     return reps
 
 
+def rep_peak_stats(peaks):
+    """(mean, sample SD) of the rep peaks, None where undefined.
+
+    ddof=1: progress.judge feeds the SD into a t-test, and the population SD (ddof=0) understates the
+    scatter by sqrt((n-1)/n) (×0.82 with 3 reps), inflating false "beyond rep scatter" calls.
+    """
+    peaks = np.asarray(peaks, float)
+    mean = round(float(peaks.mean()), 2) if len(peaks) else None
+    return mean, (round(float(peaks.std(ddof=1)), 2) if len(peaks) > 1 else None)
+
+
 def compute(table: Table, model_path, exercise="squat", tier="C", allowed_joint_planes=(),
             imputed_times=(), validation_ref=None, derived=None):
     """Per-rep metrics + session summary (dict ready for metrics.json)."""
@@ -119,10 +130,9 @@ def compute(table: Table, model_path, exercise="squat", tier="C", allowed_joint_
     summary = {}
     for k in key:
         s = signals[k]
-        peaks = [r["values"][k]["at_peak"] for r in rep_out]
+        mean, sd = rep_peak_stats([r["values"][k]["at_peak"] for r in rep_out])
         summary[k] = {**label(k), "session_min": round(float(s.min()), 2), "session_max": round(float(s.max()), 2),
-                      "rep_peak_mean": round(float(np.mean(peaks)), 2) if peaks else None,
-                      "rep_peak_sd": round(float(np.std(peaks)), 2) if len(peaks) > 1 else None}
+                      "rep_peak_mean": mean, "rep_peak_sd": sd}
     return {
         "exercise": exercise,
         "tier": tier,
