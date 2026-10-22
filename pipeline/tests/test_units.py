@@ -954,3 +954,111 @@ def test_mp_multiview_sync_refuses_or_warns(tmp_path, capsys):
     assert abs((sync["lags_frames"][1] + 25 + 60) % 120 - 60) <= 2 and sync["max_lag_s"] == 3.0     # -25 or an alias
     assert sync["diagnostics"][0] is None and sync["diagnostics"][1]["ambiguous"]
     assert sync["warnings"] and sync["warnings"][0] == sync["diagnostics"][1]["warning"]
+
+
+# ------------------------------------------------------------- mirrored (selfie) clips
+
+def _mp_dump(raised="R", tx=0.1, w=640, h=480, f=500.0, T=5):
+    """Raw MediaPipe dump of a subject facing the camera with one wrist raised (camera frame, y down).
+
+    Facing the camera, the subject's right side is on the image's left (x < 0). The raised side is also
+    the near, more visible one, so every per-landmark array differs between sides. Frame 2 is undetected.
+    """
+    left = [1, 2, 3, 7, 9] + list(range(11, 33, 2))
+    right = [4, 5, 6, 8, 10] + list(range(12, 33, 2))
+    y = [-0.62, -0.62, -0.62, -0.6, -0.55, -0.45, -0.2, 0.0, 0.05, 0.05, 0.03, 0.0, 0.45, 0.85, 0.88, 0.9]
+    up = right if raised == "R" else left
+    X, vis = np.zeros((33, 3)), np.full(33, 0.6)
+    X[0] = [0.0, -0.65, -0.1]
+    for k, (l, r) in enumerate(zip(left, right)):
+        X[l], X[r] = [0.04 + 0.01 * k, y[k], 0.02 * k], [-0.04 - 0.01 * k, y[k], 0.02 * k]
+    for i in up:
+        vis[i], X[i, 2] = 0.95, X[i, 2] - 0.05
+    X[up[7:11], 1] = -0.9                       # wrist, pinky, index, thumb above the head
+    world = np.stack([X + [0.0, 0.01 * t, 0.0] for t in range(T)])
+    cam = world + [tx, 0.0, 3.0]
+    xy = f * cam[..., :2] / cam[..., 2:] + [w / 2, h / 2]
+    raw = dict(image_xy=xy, image_z=0.5 * world[..., 2], visibility=np.tile(vis, (T, 1)),
+               presence=np.tile(vis - 0.05, (T, 1)), world=world, detected=np.ones(T, bool),
+               fps=np.array(30.0), size=np.array([w, h]))
+    for k in ("image_xy", "image_z", "world"):
+        raw[k][2] = np.nan
+    raw["visibility"][2] = raw["presence"][2] = 0.0
+    raw["detected"][2] = False
+    return raw
+
+
+def _raised(seq, side):
+    """Frames (of the valid ones) where ``side``'s wrist is above its shoulder (y down)."""
+    n, m = seq.marker_names, seq.markers[seq.valid]
+    return m[:, n.index(side + "Wrist"), 1] < m[:, n.index(side + "Shoulder"), 1]
+
+
+def test_unmirror_is_self_inverse_pure_and_swaps_named_pairs():
+    from rehabtwin.mediapipe_front import BLAZEPOSE_LR_SWAP, POSE2SIM_MEDIAPIPE, unmirror_raw
+    sw = BLAZEPOSE_LR_SWAP
+    assert sorted(sw) == list(range(33)) and (sw[sw] == np.arange(33)).all() and sw[0] == 0
+    assert all(sw[i] == POSE2SIM_MEDIAPIPE["R" + n[1:]] for n, i in POSE2SIM_MEDIAPIPE.items() if n[0] == "L")
+    raw = _mp_dump()
+    before = {k: np.array(v, copy=True) for k, v in raw.items()}
+    once, twice = unmirror_raw(raw), unmirror_raw(unmirror_raw(raw))
+    for k in raw:
+        np.testing.assert_array_equal(twice[k], raw[k])
+        np.testing.assert_array_equal(raw[k], before[k])          # input untouched
+    assert not np.allclose(once["image_xy"][0], raw["image_xy"][0])
+
+
+def test_unmirror_recovers_the_raised_right_wrist_of_a_selfie_clip():
+    from rehabtwin.mediapipe_front import PER_LANDMARK, monocular_sequence, unmirror_raw
+    truth = _mp_dump("R", tx=0.1)
+    selfie = _mp_dump("L", tx=-0.1)       # the same scene mirrored: MediaPipe calls the raised wrist "left"
+    un = unmirror_raw(selfie)
+    for k in PER_LANDMARK:
+        np.testing.assert_allclose(un[k], truth[k], atol=1e-9)
+    bug = monocular_sequence(selfie)
+    assert _raised(bug, "L").all() and not _raised(bug, "R").any()          # the silent swap
+    seq = monocular_sequence(selfie, mirrored=True)
+    assert _raised(seq, "R").all() and not _raised(seq, "L").any()
+    np.testing.assert_allclose(seq.markers, monocular_sequence(truth).markers, atol=1e-6)
+    assert seq.meta["mirrored"] and seq.meta["camera_facing"] == "front"
+    assert seq.meta["unmirrored_by"] == "rehabtwin mp-mono --mirrored" and not bug.meta["mirrored"]
+
+
+def test_unmirror_negates_world_x():
+    from rehabtwin.mediapipe_front import unmirror_raw
+    selfie = _mp_dump("L", tx=-0.1)
+    un = unmirror_raw(selfie)
+    ok = selfie["detected"]
+    assert (selfie["world"][ok, 15, 0] > 0).all() and (un["world"][ok, 16, 0] < 0).all()   # RWrist on camera's left
+    np.testing.assert_array_equal(un["world"][:, 16], selfie["world"][:, 15] * [-1, 1, 1])
+    np.testing.assert_array_equal(un["world"][:, 0], selfie["world"][:, 0] * [-1, 1, 1])  # nose: sign only
+
+
+def test_mirrored_flag_in_adapter_and_mp_mono(tmp_path, monkeypatch):
+    import importlib.util
+    import json
+    import sys
+    from rehabtwin import cli
+    from rehabtwin.mediapipe_front import monocular_sequence, unmirror_raw
+    path = Path(__file__).resolve().parents[1] / "adapters" / "mediapipe_pose.py"
+    spec = importlib.util.spec_from_file_location("mediapipe_pose_adapter", path)
+    adapter = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(adapter)                       # cv2/mediapipe are only needed inside run()
+    selfie = _mp_dump("L", tx=-0.1)
+    monkeypatch.setattr(adapter, "run", lambda video, model: dict(selfie))
+    monkeypatch.setattr(sys, "argv", ["mp", "clip.mp4", "--model", "m.task", "--out", str(tmp_path / "a.npz"),
+                                      "--mirrored"])
+    adapter.main()
+    dump = dict(np.load(tmp_path / "a.npz"))
+    meta = json.loads(str(dump["meta_json"]))
+    assert meta["mirrored"] is True and meta["camera_facing"] == "front"
+    np.testing.assert_array_equal(dump["image_xy"], unmirror_raw(selfie)["image_xy"])
+    seq = monocular_sequence(dump)                         # already fixed: no flag needed, provenance kept
+    assert _raised(seq, "R").all() and seq.meta["unmirrored_by"] == "mediapipe_pose.py --mirrored"
+    with pytest.raises(ValueError, match="already un-mirrored"):
+        monocular_sequence(dump, mirrored=True)            # a second flip would swap the sides back
+    # a dump made without the flag is fixed by mp-mono --mirrored
+    np.savez(tmp_path / "b.npz", **selfie, meta_json=np.array(json.dumps({"video": "clip.mp4"})))
+    cli.main(["mp-mono", str(tmp_path / "b.npz"), str(tmp_path / "b_seq.npz"), "--mirrored"])
+    seq = MarkerSequence.load(tmp_path / "b_seq.npz")
+    assert _raised(seq, "R").all() and not _raised(seq, "L").any() and seq.meta["mirrored"] is True

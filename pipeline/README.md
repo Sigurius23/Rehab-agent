@@ -76,6 +76,10 @@ python -m rehabtwin mp-mono clip_mp.npz clip_seq.npz [--focal-px F] [--gravity-u
 python -m rehabtwin process clip_seq.npz out/ --config mediapipe33_pose2sim --exercise sit_to_stand
 ```
 
+A mirrored front-camera ("selfie") clip swaps every left/right landmark silently. Pass
+`--mirrored` to the adapter (or to `mp-mono` for a dump made without it); see the mirroring
+check in `docs/hardware.md`.
+
 Several phones (OpenCap-style checkerboard calibration, unsynchronised starts) and OpenCap's LSTM
 anatomical-marker augmenter, which the pelvis needs (validation-results §4):
 

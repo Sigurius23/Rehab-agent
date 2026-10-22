@@ -91,6 +91,13 @@ for rooms/objects rather than moving people, and may only be used here for a
    with every capture; fixed cameras get it from the calibration board or a spirit
    level. Without it, every trunk/pelvis inclination from that camera is off by the
    camera's tilt (measured: 26° on a real setup, `docs/validation-results.md`).
+9. **Mirroring check per camera:** front ("selfie") cameras often record the mirrored
+   preview, and MediaPipe then swaps every left/right landmark without any error
+   (a right-knee valgus cue would go to the left knee). Before recording, have the
+   subject face the camera and raise their right hand: it must appear on the
+   **left** of the image. If it appears on the right, use the rear camera, turn off
+   mirroring, or pass `--mirrored` (`adapters/mediapipe_pose.py`, or `rehabtwin mp-mono`
+   for a dump already made); the setting is recorded in the dump/sequence meta.
 
 ## Software map (all already in the catalog)
 

@@ -366,6 +366,8 @@ def main(argv=None):
     m.add_argument("--person-ref", default="UNSPECIFIED")
     m.add_argument("--gravity-up-cv", help="up direction in OpenCV camera coords 'x,y,z' (phone IMU / calibration)")
     m.add_argument("--gravity-source", default="user supplied")
+    m.add_argument("--mirrored", action="store_true",
+                   help="clip is a mirrored front-camera (selfie) recording dumped without the adapter's --mirrored")
     mv = sub.add_parser("mp-multiview", help="MediaPipe raw dumps + calibration -> triangulated sequence")
     mv.add_argument("raws", nargs="+", help="one raw dump per camera, in calibration camera order")
     cal = mv.add_mutually_exclusive_group(required=True)
@@ -479,7 +481,7 @@ def main(argv=None):
             meta = {"person_ref": a.person_ref, "raw": str(a.raw)}
             if a.gravity_up_cv:
                 meta.update(gravity_up_cv=[float(v) for v in a.gravity_up_cv.split(",")], gravity_source=a.gravity_source)
-            seq = mf.monocular_sequence(dict(np.load(a.raw)), focal_px=a.focal_px, meta=meta)
+            seq = mf.monocular_sequence(dict(np.load(a.raw)), focal_px=a.focal_px, meta=meta, mirrored=a.mirrored)
         else:
             if a.qca:
                 cams, up, source = mf.read_qca(a.qca), "z", "Qualisys calibration file"

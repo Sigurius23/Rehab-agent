@@ -12,6 +12,7 @@ triangulated (weighted DLT) — the classic markerless reference.
 """
 from __future__ import annotations
 
+import json
 from pathlib import Path
 
 import numpy as np
@@ -25,6 +26,35 @@ POSE2SIM_MEDIAPIPE = {
     "LHip": 23, "RHip": 24, "LKnee": 25, "RKnee": 26, "LAnkle": 27, "RAnkle": 28,
     "LHeel": 29, "RHeel": 30, "LBigToe": 31, "RBigToe": 32,
 }
+# BlazePose index of each landmark's left/right counterpart (nose is its own; 1-3 eyes <-> 4-6, 7/8 ears,
+# 9/10 mouth, then odd = left / even = right from the shoulders down)
+BLAZEPOSE_LR_SWAP = np.array([0, 4, 5, 6, 1, 2, 3, 8, 7, 10, 9] + [i + 1 if i % 2 else i - 1 for i in range(11, 33)])
+PER_LANDMARK = ("image_xy", "image_z", "visibility", "presence", "world")
+
+
+def unmirror_raw(raw):
+    """Raw MediaPipe dump of a horizontally mirrored clip -> the dump of the true scene. Pure, self-inverse.
+
+    Front ("selfie") cameras record a mirrored preview. MediaPipe labels sides by appearance, so on a
+    mirrored clip every landmark is swapped left/right and nothing looks wrong (a right-knee cue would
+    go to the left knee). Undo it: reflect image x about the centre, swap left/right landmark indices in
+    every per-landmark array and negate the camera-aligned world x. Normalised x spans the image edges
+    (principal point w/2, as in ``monocular_sequence``), so the reflection is x -> w - x, not w - 1 - x.
+    """
+    out = dict(raw)
+    for k in PER_LANDMARK:
+        if k in out:
+            out[k] = np.asarray(out[k], float)[:, BLAZEPOSE_LR_SWAP]      # fancy indexing copies
+    if "image_xy" in out:
+        out["image_xy"][..., 0] = float(np.ravel(raw["size"])[0]) - out["image_xy"][..., 0]
+    if "world" in out:
+        out["world"][..., 0] *= -1.0
+    return out
+
+
+def dump_meta(raw):
+    """The adapter's ``meta_json`` of a raw dump as a dict ({} for dumps written without one)."""
+    return json.loads(str(raw["meta_json"])) if "meta_json" in raw else {}
 
 
 def assumed_focal_px(w, h, diag_fov_deg=75.0):
@@ -52,8 +82,19 @@ def solve_translation(X, uv, f, c, w=None):
     return t
 
 
-def monocular_sequence(raw, focal_px=None, min_visibility=0.5, meta=None):
-    """MarkerSequence (frame='opencv_camera') from one camera's raw MediaPipe dump."""
+def monocular_sequence(raw, focal_px=None, min_visibility=0.5, meta=None, mirrored=False):
+    """MarkerSequence (frame='opencv_camera') from one camera's raw MediaPipe dump.
+
+    ``mirrored``: the clip is a mirrored front-camera recording dumped without the adapter's
+    ``--mirrored``; it is un-mirrored here. A dump the adapter already un-mirrored is refused,
+    since a second flip would swap left and right again.
+    """
+    src = dump_meta(raw)
+    if mirrored:
+        if src.get("mirrored"):
+            raise ValueError("dump was already un-mirrored by mediapipe_pose.py --mirrored; "
+                             "un-mirroring again would swap left/right back")
+        raw = unmirror_raw(raw)
     w, h = (int(v) for v in raw["size"])
     f = focal_px or assumed_focal_px(w, h)
     c = (w / 2.0, h / 2.0)
@@ -73,7 +114,11 @@ def monocular_sequence(raw, focal_px=None, min_visibility=0.5, meta=None):
     valid = np.asarray(raw["detected"], bool) & np.isfinite(markers).all(axis=2).sum(axis=1).astype(bool)
     m = {"source": "MediaPipe Pose (monocular)", "intrinsics_source":
          f"{'calibrated' if focal_px else 'assumed (75 deg diagonal FOV)'} focal {f:.1f} px, principal point at image centre",
-         "focal_px": f, "tier": "C", "default_config": "mediapipe33_pose2sim", "min_visibility": min_visibility}
+         "focal_px": f, "tier": "C", "default_config": "mediapipe33_pose2sim", "min_visibility": min_visibility,
+         "camera_facing": "front" if mirrored else src.get("camera_facing", "unspecified"),
+         "mirrored": bool(mirrored or src.get("mirrored"))}
+    if m["mirrored"]:
+        m["unmirrored_by"] = "rehabtwin mp-mono --mirrored" if mirrored else "mediapipe_pose.py --mirrored"
     m.update(meta or {})
     return MarkerSequence(fps=float(raw["fps"]), frame="opencv_camera", marker_names=names, markers=markers,
                           valid=valid, meta=m)

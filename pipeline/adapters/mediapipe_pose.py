@@ -13,16 +13,26 @@ Output keys: image_xy (T,33,2) pixels, image_z (T,33) relative depth,
 visibility/presence (T,33), world (T,33,3) metres (hip-centred, camera-aligned:
 x right, y down, z away from the camera), detected (T,), fps, size (w, h).
 Missing detections are NaN — nothing is filled in here.
+
+Front ("selfie") cameras usually record a mirrored preview: MediaPipe then labels
+every landmark with the wrong side and nothing looks wrong. Pass ``--mirrored``
+for such clips; the dump is un-mirrored (``rehabtwin.mediapipe_front.unmirror_raw``)
+and meta_json records ``camera_facing``/``mirrored``.
 """
 import argparse
 import json
+import sys
 from pathlib import Path
 
-import cv2
 import numpy as np
+
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))  # pipeline/ -> import rehabtwin
+
+from rehabtwin.mediapipe_front import unmirror_raw  # noqa: E402
 
 
 def run(video, model, num_poses=1, min_conf=0.5):
+    import cv2
     import mediapipe as mp
     from mediapipe.tasks.python import BaseOptions, vision
 
@@ -69,9 +79,15 @@ def main():
     ap.add_argument("video")
     ap.add_argument("--model", required=True, help="pose_landmarker_*.task")
     ap.add_argument("--out", required=True)
+    ap.add_argument("--mirrored", action="store_true",
+                    help="mirrored front-camera (selfie) clip: un-mirror landmarks so left/right are the subject's")
     a = ap.parse_args()
     out = run(a.video, a.model)
-    out["meta_json"] = np.array(json.dumps({"video": str(a.video), "model": Path(a.model).name}))
+    if a.mirrored:
+        out = unmirror_raw(out)
+    out["meta_json"] = np.array(json.dumps({"video": str(a.video), "model": Path(a.model).name,
+                                            "camera_facing": "front" if a.mirrored else "unspecified",
+                                            "mirrored": a.mirrored}))
     np.savez_compressed(a.out, **out)
     print(json.dumps({"out": a.out, "frames": int(len(out["detected"])), "detected": int(out["detected"].sum()),
                       "fps": float(out["fps"]), "size": out["size"].tolist()}))
