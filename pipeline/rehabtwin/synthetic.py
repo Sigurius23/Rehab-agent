@@ -29,6 +29,7 @@ DEFAULT_SUBJECT_SCALES = {
     "humerus_r": 1.03, "humerus_l": 1.03, "ulna_r": 1.02, "radius_r": 1.02, "ulna_l": 1.02, "radius_l": 1.02,
     "hand_r": 1.0, "hand_l": 1.0,
 }
+SUBJECT_MASS_KG = 72.0      # the synthetic body's true mass (recorded in meta: the session's mass is known)
 
 
 def squat_motion(fps=30.0, duration_s=12.0, reps=3, depth_knee_deg=95.0, valgus_r_deg=6.0):
@@ -94,7 +95,7 @@ def generate(cfg, out_dir, fps=30.0, duration_s=12.0, seed=0, noise_m=0.004, dri
             sc.setScaleFactors(osim.Vec3(f, f, f))
             sc.setApply(True)
             scale_set.cloneAndAppend(sc)
-    model.scale(state, scale_set, True, 72.0)
+    model.scale(state, scale_set, True, SUBJECT_MASS_KG)
     # Subject-specific marker discrepancy: the subject's skin points are not
     # exactly where the generic marker set puts them (joint centres are exact).
     for i in range(model.getMarkerSet().getSize()):
@@ -183,7 +184,7 @@ def generate(cfg, out_dir, fps=30.0, duration_s=12.0, seed=0, noise_m=0.004, dri
         static_markers=static[mk_idx], static_joints=static[jc_idx], skel_poses=skel_poses,
         meta={"source": "synthetic", "synthetic": True, "generator": "rehabtwin.synthetic.generate",
               "seed": seed, "noise_m": noise_m, "drift_m": drift_m, "marker_offset_m": marker_offset_m, "dropouts": [list(d) for d in dropouts],
-              "scales": scales or DEFAULT_SUBJECT_SCALES, "camera_eye": list(camera_eye)},
+              "scales": scales or DEFAULT_SUBJECT_SCALES, "camera_eye": list(camera_eye), "mass_kg": SUBJECT_MASS_KG},
     )
     write_table(out_dir / "truth.mot", coord_names, truth, t, in_degrees=True, name="synthetic_truth")
     return seq, {"time": t, "coord_names": coord_names, "coords": truth, "model": true_model,

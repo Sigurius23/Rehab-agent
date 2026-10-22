@@ -477,6 +477,18 @@ bandwidth {spec.get('schedule', {}).get('bandwidth_deg', 2)}°, refractory {spec
     return path
 
 
+def _body_mass(bm, used_kg):
+    """(header span, banner): ground forces are m (a_com + g), so every number below scales with this mass."""
+    e = html.escape
+    bm = bm or {"source": "unknown", "assumed": True}
+    span = f"<span>body mass {used_kg} kg ({e(str(bm['source']))})</span>"
+    kg = used_kg if bm.get("kg") is None else f"{bm['kg']:g}"
+    banner = (f"<p class='banner'><b>body mass assumed ({kg} kg): every force, torque and activation scales with "
+              "it.</b> Re-process the session with <code>--mass-kg</code> before reading any number here as this "
+              "person's.</p>" if bm.get("assumed") else "")
+    return span, banner
+
+
 def _muscle_banner(study):
     e = html.escape
     mm = study.get("muscle_model", {})
@@ -563,12 +575,13 @@ def write_muscles(path, study, view=None):
     reserve_notes = "".join(f"<li>{e(lab)}: {e(', '.join(f'{k} {v} N·m' for k, v in r['reserve_torque_peaks_Nm'].items()) or 'none')}"
                             f"; saturated muscles: {e(', '.join(r['muscles_saturated']) or 'none')}</li>" for lab, r in runs.items())
     grf = base["grf"]
+    mass_span, mass_banner = _body_mass(study.get("body_mass"), grf["body_mass_kg"])
     doc = f"""<!doctype html><html lang="en"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1"><title>Muscle effects</title>
 <style>{_CSS}</style></head><body>
 <h1>Muscle effects — {e(base['exercise'])}</h1>
-{_muscle_banner(study)}
-<div class="kv"><span>window: {base['time_range_s'][0]}–{base['time_range_s'][1]} s</span>
+{_muscle_banner(study)}{mass_banner}
+<div class="kv"><span>window: {base['time_range_s'][0]}–{base['time_range_s'][1]} s</span>{mass_span}
 <span>vertical GRF: {grf['min_vertical_bw']}–{grf['peak_vertical_bw']} BW</span>
 <span>right-foot share: {grf['right_share_range'][0]}–{grf['right_share_range'][1]}</span>
 <span>feet planted: {'yes' if grf['feet_planted'] else 'NO — estimate invalid'}</span>
@@ -593,6 +606,7 @@ def write_strength(path, rec, tier):
     """HTML for a strength calibration (rehabtwin strength)."""
     e = html.escape
     mass = rec["body_mass_kg"]
+    mass_span, mass_banner = _body_mass(rec.get("body_mass"), mass)
     bound = " <span class='b fail'>at bound</span>"
     low = "<span class='b fail'>below 90%</span>"
     rows = "".join(
@@ -613,8 +627,8 @@ def write_strength(path, rec, tier):
 <p class="banner"><b>Measured joint strength, generic muscle geometry (Tier {e(tier)}).</b> Each factor is the
 person's torque relative to the generic model's capacity for that test's prime movers; it rescales their
 maximum isometric force and nothing else. "Weak" here means weak in the measured test — the factor says
-nothing about muscle size or why.</p>
-<div class="kv"><span>body mass {mass} kg</span><span>muscles calibrated: {rec['calibrated_muscles']} of {rec['total_muscles']}</span>
+nothing about muscle size or why.</p>{mass_banner}
+<div class="kv">{mass_span}<span>muscles calibrated: {rec['calibrated_muscles']} of {rec['total_muscles']}</span>
 {''.join(f"<span>{e(k)}: {e(str(rec[k]))}</span>" for k in ("device", "protocol", "tester", "date") if k in rec)}</div>
 <h2>Tests</h2>
 <table><tr><th>action</th><th>posture</th><th>measured (N·m)</th><th>N·m/kg</th><th>generic model (N·m)</th>

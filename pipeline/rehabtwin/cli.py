@@ -121,16 +121,40 @@ def run_correction(session_dir, spec_name, illustrative=False):
     return summary, out
 
 
-def strength_calibration(session_dir, tests_file):
+class AssumedMassRefused(ValueError):
+    pass
+
+
+def _session_mass(session_dir, allow_assumed_mass=False):
+    """Body mass the session model was scaled to, from qc.json; refuse muscle/strength work on an assumed one.
+
+    Ground forces are m (a_com + g), so every joint torque, muscle force, activation and N·m/kg scales
+    with the mass: a silent config default must not pass as this person's numbers. Fails closed: a
+    session without a recorded source counts as assumed.
+    """
+    qc = Path(session_dir) / "qc.json"
+    subj = json.loads(qc.read_text()).get("subject", {}) if qc.exists() else {}
+    bm = {"kg": subj.get("mass_kg"), "source": subj.get("mass_source", "unknown")}
+    bm["assumed"] = bm["source"] not in opensim_stage.KNOWN_MASS_SOURCES
+    if bm["assumed"] and not allow_assumed_mass:
+        raise AssumedMassRefused(
+            f"body mass {bm['source']} ({bm['kg']} kg): every force, torque and activation scales with it. "
+            "Re-process with --mass-kg, or pass allow_assumed_mass=True (--allow-assumed-mass) for results "
+            "labelled as resting on an assumed mass.")
+    return bm
+
+
+def strength_calibration(session_dir, tests_file, allow_assumed_mass=False):
     """Dynamometer torques → strength-calibrated copy of the session model (SESSION/strength/)."""
     from . import strength
     session_dir = Path(session_dir)
     sess = json.loads((session_dir / "session.json").read_text())
+    body_mass = _session_mass(session_dir, allow_assumed_mass)
     spec = json.loads(Path(tests_file).read_text())
     out = session_dir / "strength"
     rec = strength.calibrate(session_dir / sess["pipeline"]["outputs"]["model"], spec["tests"], out)
     rec.update({k: spec[k] for k in ("device", "protocol", "tester", "date") if k in spec})
-    rec["model"] = sess["pipeline"]["outputs"]["model"]
+    rec["model"], rec["body_mass"] = sess["pipeline"]["outputs"]["model"], body_mass
     records.write_json(out / "strength.json", rec)
     report.write_strength(out / "strength.html", rec, sess["twin_tier"])
     report.write_index(session_dir)
@@ -139,7 +163,7 @@ def strength_calibration(session_dir, tests_file):
 
 def muscle_study(session_dir, rep=1, start=None, stop=None, correction=None, weaken=(), assist=(), view_3d=True,
                  grf_sensitivity=0.0, use_strength=False, passive=(), workers=None, max_fps=30.0, plant=True,
-                 illustrative=False):
+                 illustrative=False, allow_assumed_mass=False):
     """Measured motion (+ corrected motion, + weakened variants) through GRF estimate → ID → SO."""
     from . import muscles
     session_dir = Path(session_dir)
@@ -149,6 +173,7 @@ def muscle_study(session_dir, rep=1, start=None, stop=None, correction=None, wea
         raise CorrectionRefused(
             f"twin tier {sess['twin_tier']}: docs/accuracy.md forbids assistance profiles from an unvalidated tier. "
             "Re-run with illustrative=True (--illustrative) for a labelled design-space bound, not a device profile.")
+    body_mass = _session_mass(session_dir, allow_assumed_mass)
     met = json.loads((session_dir / "metrics.json").read_text())
     model = session_dir / sess["pipeline"]["outputs"]["model"]
     muscle_model = {"source": "generic (scaled literature muscle parameters)"}
@@ -200,7 +225,8 @@ def muscle_study(session_dir, rep=1, start=None, stop=None, correction=None, wea
 
     biases = [0.0] + ([grf_sensitivity, -grf_sensitivity] if grf_sensitivity else [])
     jobs = [(b, lab, dict(model_path=model, motion_path=mot, out_dir=out, label=folder + (f"_grf{b:+.2f}" if b else ""),
-                          exercise=exercise, start=start, stop=stop, grf_share_bias=b, max_fps=max_fps, **kw))
+                          exercise=exercise, start=start, stop=stop, grf_share_bias=b, max_fps=max_fps,
+                          muscle_model=muscle_model, **kw))
             for b in biases for lab, folder, mot, kw in variants]
     workers = min(len(jobs), workers or max(1, min(4, os.cpu_count() or 1)))
     if workers > 1:
@@ -216,7 +242,8 @@ def muscle_study(session_dir, rep=1, start=None, stop=None, correction=None, wea
     for (b, lab, _), r in zip(jobs, results):
         by_bias.setdefault(b, {})[lab] = r
     runs = by_bias[0.0]
-    study = {"twin_tier": sess["twin_tier"], "muscle_model": muscle_model, "kinematics_prior": prior, "runs": runs,
+    study = {"twin_tier": sess["twin_tier"], "muscle_model": muscle_model, "body_mass": body_mass,
+             "kinematics_prior": prior, "runs": runs,
              "devices_status": (None if not (assist or passive) else "target" if sess["twin_tier"] == "A"
                                 else "ILLUSTRATION ONLY - design-space bound on a generic body, not an assistance profile"),
              "comparisons": {lab: muscles.compare(runs["measured"], r) for lab, r in runs.items() if lab != "measured"}}
@@ -417,12 +444,16 @@ def main(argv=None):
     mu.add_argument("--passive", action="append", default=[], metavar="COORD=K[@Q0][:pos|neg]",
                     help="passive one-sided spring/elastic, e.g. knee_angle_r=40@10:pos (N·m/rad, slack until 10° "
                          "flexion); back elastic resisting trunk flexion: lumbar_total_extension=60@0:neg; repeatable")
+    mu.add_argument("--allow-assumed-mass", action="store_true",
+                    help="run although the session was processed without --mass-kg (report labelled as assumed mass)")
     mu.add_argument("--grf-sensitivity", type=float, default=0.0, metavar="SHARE",
                     help="also re-run with the right foot's load share shifted by +/-SHARE (e.g. 0.15) and flag "
                          "which changes are larger than the band that GRF split alone causes")
     stp = sub.add_parser("strength", help="calibrate muscle capacities from dynamometer joint torques")
     stp.add_argument("session")
     stp.add_argument("--tests", required=True, help="JSON with measured isometric torques (see configs/strength/)")
+    stp.add_argument("--allow-assumed-mass", action="store_true",
+                     help="run although the session was processed without --mass-kg (report labelled as assumed mass)")
     pg = sub.add_parser("progress", help="compare sessions: which changes beat rep scatter and measurement error")
     pg.add_argument("sessions", nargs="+")
     pg.add_argument("--out", required=True, help="folder for progress.json / progress.html")
@@ -533,8 +564,8 @@ def main(argv=None):
         try:
             study, out = muscle_study(a.session, a.rep, a.start, a.stop, a.correction, a.weaken, a.assist, not a.no_3d,
                                       a.grf_sensitivity, a.strength, a.passive, a.workers, a.max_fps, not a.no_plant,
-                                      a.illustrative)
-        except CorrectionRefused as e:
+                                      a.illustrative, a.allow_assumed_mass)
+        except (CorrectionRefused, AssumedMassRefused) as e:
             print(f"refused: {e}", file=sys.stderr)
             return 2
         for lab, cmp in study["comparisons"].items():
@@ -542,7 +573,11 @@ def main(argv=None):
             print(lab + ": " + ", ".join(f"{g} {v['base']:.2f}->{v['other']:.2f}" for g, v in top))
         print(f"report: {out / 'muscles.html'}")
     elif a.cmd == "strength":
-        rec, out = strength_calibration(a.session, a.tests)
+        try:
+            rec, out = strength_calibration(a.session, a.tests, a.allow_assumed_mass)
+        except AssumedMassRefused as e:
+            print(f"refused: {e}", file=sys.stderr)
+            return 2
         for t in rec["tests"]:
             print(f"{t['action']:24s} measured {t['measured_Nm']:7.1f} N·m  generic model {t['generic_model_Nm']:7.1f}  "
                   f"factor {t['factor']:.2f}{'  AT BOUND' if t['at_bound'] else ''}")
