@@ -75,8 +75,8 @@ def process(seq_path, out_dir, exercise="squat", config=None, mass_kg=None, heig
         if analysed["trial_s"] > 0 else 1.0
     stage.qc["analysed_segment"] = analysed
     (out_dir / "qc.json").write_text(json.dumps(stage.qc, indent=2))
-    if len(stage.motions) > 1:
-        print(f"note: {len(stage.motions)} segments; metrics and validation use the longest, "
+    if analysed["of"] > 1 or analysed["fraction"] < report.PARTIAL_TRIAL:
+        print(f"note: {analysed['of']} solved segment(s); metrics and validation use "
               f"{analysed['start_s']}-{analysed['stop_s']} s ({analysed['fraction']:.0%} of the trial)", file=sys.stderr)
     pstamp = records.processing_stamp(stage.scaled_model, motion, tier, exercise)
 

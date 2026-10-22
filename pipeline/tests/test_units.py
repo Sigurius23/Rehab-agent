@@ -1355,6 +1355,12 @@ def test_report_flags_missing_markers_and_unsolved_frames(tmp_path):
         "min_target_weight": 0.5, "frames": 15, "spans": [{"start_frame": 40, "stop_frame": 55, "duration_s": 0.5}]}}
     page = report.write(tmp_path / "r.html", sess, qc, met, {}, np.arange(3.0)).read_text()
     assert "⚠ missing markers" in page and "15 frames not solved: fewer than 50% of the IK marker weight" in page
+    assert "Metrics cover" not in page
+    seg = {"segment": 1, "start_s": 8.733, "stop_s": 9.833, "trial_s": 9.833}
+    for of, fraction, shown in ((1, 1.0, None), (1, 0.112, "one solved segment"), (3, 0.6, "segment 1 of 3")):
+        qc["analysed_segment"] = {**seg, "of": of, "fraction": fraction}
+        page = report.write(tmp_path / "r.html", sess, qc, met, {}, np.arange(3.0)).read_text()
+        assert (f"Metrics cover {shown} only" in page) if shown else "Metrics cover" not in page
 
 
 # ------------------------------------------------------------- body mass

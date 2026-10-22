@@ -29,6 +29,7 @@ button { font: inherit; padding: 2px 12px; border-radius: 6px; border: 1px solid
 """
 
 PALETTE = ["#2563eb", "#dc2626", "#059669", "#d97706", "#7c3aed", "#0891b2"]
+PARTIAL_TRIAL = 0.95      # metrics covering less of the trial than this are flagged (qc.analysed_segment)
 
 
 def _svg_chart(t, series, reps, title, unit="deg", w=760, h=220, ref=None, ref_label="reference", marks=()):
@@ -850,8 +851,9 @@ def write(path, session, qc, metrics, signals, time, validation=None, reference=
         gap_html += (f"<p class='muted'>{un['frames']} frames not solved: fewer than {un['min_target_weight']:.0%} of "
                      f"the IK marker weight had a target there ({len(un['spans'])} spans, see qc.json).</p>")
     seg = qc.get("analysed_segment")
-    if seg and seg["of"] > 1:
-        gap_html += (f"<p class='muted'><b>Metrics cover segment {seg['segment']} of {seg['of']} only</b>, "
+    if seg and (seg["of"] > 1 or seg["fraction"] < PARTIAL_TRIAL):
+        which = f"segment {seg['segment']} of {seg['of']}" if seg["of"] > 1 else "one solved segment"
+        gap_html += (f"<p class='muted'><b>Metrics cover {which} only</b>, "
                      f"{seg['start_s']}–{seg['stop_s']} s ({seg['fraction']:.0%} of the {seg['trial_s']} s trial): "
                      "reps outside it are not counted.</p>")
     val_html = ""
