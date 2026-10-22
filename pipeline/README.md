@@ -267,10 +267,15 @@ let IK jitter 6.6 cm sideways, and static optimisation then "needed" 70 N·m res
 | `feedback/<rules>/` | `cues.json` (event log + summary), `commands.csv` (actuator events), `cues.html` |
 
 Re-processing into an existing folder rewrites `session.json` with a new `pipeline.processing_id`
-(hash of scaled model + motion + tier). Correction, strength, muscle and cue results store the id
-they were computed from; `index.html` keeps a mismatching one listed but marks it **STALE**,
-`muscles --strength` refuses a stale `strength.json`, and a muscle study or cue replay of a stale
-correction warns and is itself marked stale.
+(hash of scaled model + motion + tier + exercise). Validation, correction, strength, muscle and cue
+results store the id they were computed from; `index.html` keeps a mismatching one listed but marks
+it **STALE**, `muscles --strength` refuses a stale `strength.json`, and a muscle study or cue replay
+of a stale correction warns and is itself marked stale. The feedback gate (`cues`, `lsl-live`) only
+trusts the `validation-report.json` that `process --reference` wrote for the current processing:
+one left over from an earlier run (or copied in from `rehabtwin validate`) closes it. `process`
+removes the old stamp before it rewrites the model, so a run that fails half-way leaves everything
+derived stale; sessions processed before stamps existed need one `process` run before
+`strength`/`muscles --strength`.
 
 ## Design decisions worth knowing
 

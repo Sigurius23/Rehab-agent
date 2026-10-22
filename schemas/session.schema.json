@@ -67,8 +67,9 @@
         "software": {"type": "object", "additionalProperties": {"type": "string"}},
         "upstream_pins": {"type": "object", "additionalProperties": {"type": "string"}},
         "outputs": {"type": "object", "additionalProperties": {"type": "string"}},
-        "processing_id": {"type": "string", "description": "sha256 (truncated) of scaled model + motion + tier. Derived results (correction, strength, muscles, cues) store the id they were computed from; a mismatch marks them STALE."},
-        "processed_at": {"type": "string", "format": "date-time"}
+        "processing_id": {"type": "string", "description": "sha256 (truncated) of scaled model + motion + tier + exercise. Derived results (validation, correction, strength, muscles, cues) store the id they were computed from; a mismatch marks them STALE."},
+        "processed_at": {"type": "string", "format": "date-time"},
+        "reprocessing_started_at": {"type": "string", "format": "date-time", "description": "Set (and processing_id removed) while process rewrites the folder; left behind only by a run that did not finish."}
       }
     },
     "accuracy_layers": {
