@@ -80,6 +80,7 @@ def process(seq_path, out_dir, exercise="squat", config=None, mass_kg=None, heig
                                        allowed_joint_planes=(val or {}).get("feedback_allowed_joint_planes", ())
                                        if val and not val["synthetic"] else (),
                                        imputed_times=imputed_t,
+                                       missing_times=np.asarray(stage.qc["missing_target_frames"], float) / seq.fps,
                                        validation_ref="validation-report.json" if val else None, derived=derived)
     records.write_json(out_dir / "metrics.json", met)
     outputs = {"model": stage.scaled_model.relative_to(out_dir), "motion": motion.relative_to(out_dir),

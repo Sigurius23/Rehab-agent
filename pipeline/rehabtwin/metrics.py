@@ -88,8 +88,13 @@ def rep_peak_stats(peaks):
 
 
 def compute(table: Table, model_path, exercise="squat", tier="C", allowed_joint_planes=(),
-            imputed_times=(), validation_ref=None, derived=None):
-    """Per-rep metrics + session summary (dict ready for metrics.json)."""
+            imputed_times=(), validation_ref=None, derived=None, missing_times=()):
+    """Per-rep metrics + session summary (dict ready for metrics.json).
+
+    ``imputed_times`` / ``missing_times``: frames where a marker was bridged / a weighted marker had
+    no IK target; a rep touching them is flagged (its joints there rest on interpolation or on
+    the other markers alone).
+    """
     prof = load_exercises()[exercise]
     table = to_degrees(table, model_path)
     fps = 1.0 / float(np.median(np.diff(table.time)))
@@ -102,6 +107,7 @@ def compute(table: Table, model_path, exercise="squat", tier="C", allowed_joint_
         drive = np.mean([signals[d] for d in drivers], axis=0)
         reps = segment_reps(drive, fps, prof["min_prominence_deg"], prof["min_rep_s"])
     imputed = np.asarray(sorted(imputed_times), float)
+    missing = np.asarray(sorted(missing_times), float)
 
     def label(name):
         joint, plane, unit, meaning = describe_signal(name)
@@ -113,6 +119,7 @@ def compute(table: Table, model_path, exercise="squat", tier="C", allowed_joint_
     for i, (a, p, b) in enumerate(reps):
         t0, tp, t1 = table.time[a], table.time[p], table.time[b]
         touches_imputed = bool(len(imputed) and ((imputed >= t0) & (imputed <= t1)).any())
+        touches_missing = bool(len(missing) and ((missing >= t0) & (missing <= t1)).any())
         vals = {}
         for k in key:
             s = signals[k][a:b + 1]
@@ -125,7 +132,8 @@ def compute(table: Table, model_path, exercise="squat", tier="C", allowed_joint_
                 asym[k[:-2]] = {"r_minus_l_at_peak": round(r - l, 2)}
         rep_out.append({"rep": i + 1, "start_s": round(float(t0), 3), "peak_s": round(float(tp), 3),
                         "stop_s": round(float(t1), 3), "duration_s": round(float(t1 - t0), 3),
-                        "contains_imputed_frames": touches_imputed, "values": vals, "asymmetry": asym})
+                        "contains_imputed_frames": touches_imputed, "contains_missing_markers": touches_missing,
+                        "values": vals, "asymmetry": asym})
 
     summary = {}
     for k in key:

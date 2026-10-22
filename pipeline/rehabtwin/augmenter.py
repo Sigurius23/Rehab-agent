@@ -78,8 +78,15 @@ def predict(pts, height_m, mass_kg, part, version="v0.3"):
     return {n: y[:, k] for k, n in enumerate(RESPONSES[part])}
 
 
-def augment(seq: MarkerSequence, height_m, mass_kg, version="v0.3", config="mediapipe_lstm_pose2sim"):
-    """Sequence with the 43 augmented markers appended (frame ``yup_world``)."""
+def augment(seq: MarkerSequence, height_m, mass_kg, version="v0.3", config="mediapipe_lstm_pose2sim", max_gap_s=0.2):
+    """Sequence with the 43 augmented markers appended (frame ``yup_world``).
+
+    The LSTM needs dense input, so every gap is interpolated before it runs, but a part's
+    outputs are NaN wherever one of its inputs was missing for longer than ``max_gap_s``
+    (the stage's bridging limit): a marker predicted from a frozen keypoint is not data. The
+    stage does not solve frames left without most of the IK marker weight (lower part masked).
+    Frames predicted from bridged (short-gap) inputs are listed in meta for the stage's QC.
+    """
     X = np.asarray(seq.markers, float)
     meta = dict(seq.meta)
     if seq.frame == "opencv_camera":
@@ -96,12 +103,25 @@ def augment(seq: MarkerSequence, height_m, mass_kg, version="v0.3", config="medi
     missing = sorted({f for p in FEATURES.values() for f in p} - set(pts))
     if missing:
         raise ValueError(f"augmenter inputs missing from the sequence: {missing}")
-    new = {**predict(pts, height_m, mass_kg, "lower", version), **predict(pts, height_m, mass_kg, "upper", version)}
+    # raw inputs and inputs with only bridgeable gaps filled; NaN propagates into Neck, midHip and the toes
+    feats = [keypoint_features({n: A[:, k] for k, n in enumerate(seq.marker_names)})
+             for A in (X, interpolate_gaps(X, int(round(max_gap_s * seq.fps))))]
+    new, masked, bridged = {}, {}, np.zeros(len(X), bool)
+    for part in ("lower", "upper"):
+        gone = [~np.isfinite(np.stack([d[f] for f in FEATURES[part] + ["midHip"]], axis=1)).all(axis=(1, 2))
+                for d in feats]
+        lost = gone[1]
+        bridged |= gone[0] & ~lost
+        for n, v in predict(pts, height_m, mass_kg, part, version).items():
+            new[n] = np.where(lost[:, None], np.nan, v)
+        masked[part] = int((lost & valid).sum())
     names = list(seq.marker_names) + list(new)
     out = np.concatenate([X, np.stack([new[n] for n in new], axis=1)], axis=1)
     out[~valid] = np.nan
     meta.update(default_config=config, augmenter={
         "model": f"OpenCap LSTM marker augmenter {version} (Uhlrich et al. 2023, Apache-2.0) via Pose2Sim ONNX",
-        "height_m": height_m, "mass_kg": mass_kg, "synthesised_inputs": ["Neck", "midHip", "RSmallToe", "LSmallToe"]})
+        "height_m": height_m, "mass_kg": mass_kg, "synthesised_inputs": ["Neck", "midHip", "RSmallToe", "LSmallToe"],
+        "max_gap_s": max_gap_s, "frames_masked_input_gap": masked,
+        "imputed_input_frames": seq.frame_index[bridged & valid].tolist()})  # the stage lists these as imputed
     return MarkerSequence(fps=seq.fps, marker_names=names, markers=out, frame="yup_world", valid=valid,
                           frame_index=seq.frame_index, meta=meta)

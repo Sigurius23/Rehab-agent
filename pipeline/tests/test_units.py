@@ -1166,3 +1166,163 @@ def test_session_record_started_at(tmp_path):
     argv = ["process", str(tmp_path / "missing.npz"), str(tmp_path / "out"), "--started-at", "2026-10-21"]
     assert cli.main(argv) == 2
     assert not (tmp_path / "out").exists()
+
+
+# ------------------------------------------------- per-marker gap policy
+
+def test_interpolate_gaps_bridges_only_up_to_max_gap():
+    x = np.arange(20.0)
+    x[3:5] = np.nan            # 2 samples: bridged
+    x[8:15] = np.nan           # 7 samples: stays NaN instead of becoming a straight line
+    y = filtering.interpolate_gaps(x, max_gap=3)
+    assert np.allclose(y[:8], np.arange(8)) and np.isnan(y[8:15]).all() and np.allclose(y[15:], np.arange(15, 20))
+    assert np.allclose(filtering.interpolate_gaps(x), np.arange(20))   # unlimited fill (augmenter input) unchanged
+
+
+def test_interpolate_gaps_holds_edges_only_up_to_max_gap():
+    x = np.r_[[np.nan] * 2, np.arange(5.0), [np.nan] * 6]
+    y = filtering.interpolate_gaps(x, max_gap=3)
+    assert np.allclose(y[:2], 0.0)       # short leading run held
+    assert np.isnan(y[7:]).all()         # a long trailing run is not frozen at the last value
+
+
+def test_lowpass_filters_each_finite_stretch_and_keeps_nan():
+    fps = 100.0
+    t = np.arange(600) / fps
+    truth = np.sin(2 * np.pi * t)
+    x = truth + np.random.default_rng(0).normal(0, 0.05, t.shape)
+    x[250:300] = np.nan
+    x[400:405] = 7.0           # 5-sample stretch between gaps: too short to filter, kept as-is
+    x[395:400] = x[405:410] = np.nan
+    y = filtering.lowpass(np.stack([x, truth], axis=1), fps, 6.0)
+    assert np.array_equal(np.isnan(y[:, 0]), np.isnan(x))           # NaN stays exactly where it was
+    assert np.allclose(y[:250, 0], filtering.lowpass(x[:250], fps, 6.0))
+    assert np.allclose(y[300:395, 0], filtering.lowpass(x[300:395], fps, 6.0))
+    assert np.allclose(y[400:405, 0], 7.0)
+    ok = np.isfinite(x) & (np.abs(x) < 5)
+    assert np.std(y[ok, 0] - truth[ok]) < 0.5 * np.std(x[ok] - truth[ok])
+    assert np.allclose(y[:, 1], filtering.lowpass(truth, fps, 6.0))  # complete columns: unchanged
+
+
+def test_condition_markers_bridges_short_marker_gaps_and_reports_long_ones():
+    fps, T = 30.0, 120
+    t = np.arange(T) / fps
+    pts = np.stack([np.stack([np.sin(t + k), np.cos(t + k), np.full(T, k)], axis=1) for k in range(3)], axis=1)
+    pts[20:23, 0] = np.nan     # 0.1 s -> bridged, imputed
+    pts[40:81, 1] = np.nan     # 1.37 s (the audit's frozen LKnee) -> no IK target, not imputed
+    pts[:10, 2] = np.nan       # 0.33 s at the start -> not held
+    valid = np.ones(T, bool)
+    valid[100:102] = False     # front-end rejected the frame: a (bridged) gap for every marker
+    upstream = np.zeros(T, bool)
+    upstream[5] = True         # an augmented marker predicted from a bridged keypoint
+    segs, clean, qc = opensim_stage.condition_markers(["A", "B", "C"], pts, valid, np.arange(T) + 100, fps,
+                                                      {"max_gap_s": 0.2, "min_segment_s": 1.0}, upstream)
+    assert segs == [(0, T)]
+    assert np.isfinite(clean[20:23, 0]).all() and np.isnan(clean[40:81, 1]).all() and np.isnan(clean[:10, 2]).all()
+    assert np.isfinite(clean[10:, 2]).all() and np.isfinite(np.delete(clean[:, 1], range(40, 81), axis=0)).all()
+    assert qc["imputed_frames"] == [105, 120, 121, 122, 200, 201]
+    a, b, c = (qc["imputed_by_marker"][n] for n in "ABC")
+    assert a["imputed_spans"][0] == {"start_frame": 120, "stop_frame": 123, "duration_s": 0.1} and a["missing_s"] == 0
+    assert b["missing_spans"] == [{"start_frame": 140, "stop_frame": 181, "duration_s": 1.367}]
+    assert b["imputed_s"] == round(2 / fps, 3) and b["coverage"] == round((T - 43) / T, 4)
+    assert c["missing_spans"] == [{"start_frame": 100, "stop_frame": 110, "duration_s": 0.333}]
+
+
+def test_augmenter_masks_outputs_where_inputs_had_long_gaps(monkeypatch):
+    from rehabtwin import augmenter
+    base = {"RShoulder": (0.2, 1.4, 0), "LShoulder": (-0.2, 1.4, 0), "RHip": (0.1, 0.9, 0), "LHip": (-0.1, 0.9, 0),
+            "RKnee": (0.1, 0.5, 0), "LKnee": (-0.1, 0.5, 0), "RAnkle": (0.1, 0.1, 0), "LAnkle": (-0.1, 0.1, 0),
+            "RHeel": (0.1, 0.05, -0.05), "LHeel": (-0.1, 0.05, -0.05), "RBigToe": (0.1, 0.02, 0.15),
+            "LBigToe": (-0.1, 0.02, 0.15), "RElbow": (0.25, 1.1, 0), "LElbow": (-0.25, 1.1, 0),
+            "RWrist": (0.25, 0.85, 0), "LWrist": (-0.25, 0.85, 0)}
+    names, T = list(base), 90
+    X = np.array([base[n] for n in names])[None] + np.random.default_rng(1).normal(0, 0.005, (T, len(names), 3))
+    X[10:13, names.index("RWrist")] = np.nan    # 0.1 s: bridged, outputs kept
+    X[40:81, names.index("LKnee")] = np.nan     # 1.37 s: lower-body outputs masked there
+    dense = []
+
+    def fake_predict(pts, height_m, mass_kg, part, version="v0.3"):
+        dense.append(all(np.isfinite(pts[f]).all() for f in augmenter.FEATURES[part] + ["midHip"]))
+        return {n: pts["midHip"] + 0.01 * k for k, n in enumerate(augmenter.RESPONSES[part])}
+    monkeypatch.setattr(augmenter, "predict", fake_predict)
+    out = augmenter.augment(MarkerSequence(fps=30.0, marker_names=names, markers=X, frame="yup_world"), 1.75, 70.0)
+    m = {n: out.markers[:, out.marker_names.index(n)] for n in out.marker_names}
+    assert dense == [True, True]                # the LSTM still gets gap-free input
+    for n in augmenter.RESPONSES["lower"]:
+        assert np.isnan(m[n][40:81]).all() and np.isfinite(np.delete(m[n], range(40, 81), axis=0)).all(), n
+    assert all(np.isfinite(m[n]).all() for n in augmenter.RESPONSES["upper"])   # LKnee does not feed the upper model
+    assert np.isnan(m["LKnee"][40:81]).all() and np.isnan(m["RWrist"][10:13]).all()  # raw inputs never filled
+    assert out.meta["augmenter"]["frames_masked_input_gap"] == {"lower": 41, "upper": 0}
+    assert out.meta["augmenter"]["imputed_input_frames"] == [10, 11, 12]   # bridged inputs, listed for the stage QC
+
+
+def test_report_lists_marker_gaps(tmp_path):
+    from rehabtwin import report
+    sess = {"session_id": "s1", "pipeline": {"front_end": "f", "back_end": "b", "config": "c", "software": {}}}
+    met = {"tier": "C", "claims": "", "exercise": "squat", "n_reps": 0, "rep_driver": None, "summary": {}, "reps": []}
+    clean = {"coverage": 1.0, "imputed_s": 0.0, "imputed_spans": [], "missing_s": 0.0, "missing_spans": []}
+    gap = {**clean, "coverage": 0.7, "missing_s": 1.367, "missing_spans": [{"start_frame": 40, "stop_frame": 81}]}
+    qc = {"imputed_frames": [], "filter": {"max_gap_s": 0.2}, "imputed_by_marker": {"RKnee": clean, "LKnee": gap}}
+    page = report.write(tmp_path / "r.html", sess, qc, met, {}, np.arange(3.0)).read_text()
+    assert "Marker gaps in 1 of 2 markers" in page and "LKnee 0.0 s bridged, 1.367 s missing" in page
+    qc["imputed_by_marker"]["LKnee"] = clean
+    assert "Marker gaps" not in report.write(tmp_path / "r.html", sess, qc, met, {}, np.arange(3.0)).read_text()
+
+
+def test_trc_missing_last_marker_and_whole_rows_are_read_by_opensim(tmp_path):
+    osim = pytest.importorskip("opensim")
+    T, M = 20, 4
+    pts = np.random.default_rng(0).normal(size=(T, M, 3))
+    pts[5:9, M - 1] = np.nan   # the last marker: an empty trailing field used to cost the row a column
+    pts[12:14] = np.nan        # rows between segments
+    path = write_trc(tmp_path / "gaps.trc", [f"m{i}" for i in range(M)], pts, np.arange(T) / 60)
+    assert all(len(r.split("\t")) == 2 + 3 * M for r in path.read_text().splitlines()[6:] if r)
+    tab = osim.TimeSeriesTableVec3(str(path))
+    back = np.array([[[tab.getRowAtIndex(i)[j].get(k) for k in range(3)] for j in range(M)] for i in range(T)])
+    assert np.array_equal(np.isnan(back), np.isnan(pts)) and np.allclose(back[np.isfinite(back)], pts[np.isfinite(pts)], atol=1e-6)
+    assert np.array_equal(np.isnan(read_trc(path)[1]), np.isnan(pts))
+
+
+def test_condition_markers_splits_where_too_little_ik_weight_has_a_target():
+    fps, T = 30.0, 150
+    t = np.arange(T) / fps
+    pts = np.stack([np.stack([np.sin(t + k), np.cos(t + k), np.full(T, k)], axis=1) for k in range(4)], axis=1)
+    pts[40:50, :2] = np.nan    # both heavy markers lost (augmenter lower body masked): IK would fail or freeze
+    pts[60:75, 0] = np.nan     # long gaps that overlap for only 5 frames (<= max_gap):
+    pts[70:85, 1] = np.nan     # the overlap must split the trial, not be bridged
+    pts[100:120, 3] = np.nan   # an unweighted marker: neither coverage nor rep flags care
+    segs, clean, qc = opensim_stage.condition_markers(
+        list("ABCD"), pts, np.ones(T, bool), np.arange(T) + 1000, fps, {"max_gap_s": 0.2, "min_segment_s": 1.0},
+        weights=[10.0, 10.0, 1.0, 0.0], min_target_weight=0.5)
+    assert segs == [(0, 40), (75, T)]           # [50, 70) is covered but shorter than min_segment_s
+    assert np.isnan(clean[40:75]).all() and np.isfinite(clean[:40]).all()
+    assert qc["unsolved"] == {"min_target_weight": 0.5, "frames": 15, "spans": [
+        {"start_frame": 1040, "stop_frame": 1050, "duration_s": 0.333},
+        {"start_frame": 1070, "stop_frame": 1075, "duration_s": 0.167}]}
+    assert qc["missing_target_frames"] == list(range(1075, 1085))   # B lost in a solved frame; D has no weight
+    assert qc["imputed_by_marker"]["D"]["missing_spans"] == [{"start_frame": 1100, "stop_frame": 1120, "duration_s": 0.667}]
+    w = np.isfinite(clean).all(axis=2)[[s for a, b in segs for s in range(a, b)]] @ [10.0, 10.0, 1.0, 0.0]
+    assert (w >= 0.5 * 21).all()                 # every solved frame keeps most of the weight
+
+
+def test_metrics_flag_reps_with_missing_markers():
+    from rehabtwin import metrics
+    fps = 30.0
+    t = np.arange(300) / fps
+    knee = 45.0 * (1 - np.cos(2 * np.pi * t / 2.5))    # 4 reps of 2.5 s
+    tab = Table(["knee_angle_r", "knee_angle_l"], np.stack([knee, knee], axis=1), t)
+    met, _ = metrics.compute(tab, None, "squat", derived={}, imputed_times=[0.5], missing_times=np.arange(160, 170) / fps)
+    assert [r["contains_imputed_frames"] for r in met["reps"]] == [True, False, False, False]
+    assert [r["contains_missing_markers"] for r in met["reps"]] == [False, False, True, False]
+
+
+def test_report_flags_missing_markers_and_unsolved_frames(tmp_path):
+    from rehabtwin import report
+    sess = {"session_id": "s1", "pipeline": {"front_end": "f", "back_end": "b", "config": "c", "software": {}}}
+    rep = {"rep": 1, "start_s": 0.0, "stop_s": 1.0, "duration_s": 1.0, "values": {}, "contains_imputed_frames": False,
+           "contains_missing_markers": True}
+    met = {"tier": "C", "claims": "", "exercise": "squat", "n_reps": 1, "rep_driver": None, "summary": {}, "reps": [rep]}
+    qc = {"imputed_frames": [], "imputed_by_marker": {}, "unsolved": {
+        "min_target_weight": 0.5, "frames": 15, "spans": [{"start_frame": 40, "stop_frame": 55, "duration_s": 0.5}]}}
+    page = report.write(tmp_path / "r.html", sess, qc, met, {}, np.arange(3.0)).read_text()
+    assert "⚠ missing markers" in page and "15 frames not solved: fewer than 50% of the IK marker weight" in page

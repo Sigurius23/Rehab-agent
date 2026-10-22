@@ -800,7 +800,8 @@ def write(path, session, qc, metrics, signals, time, validation=None, reference=
     rep_rows = []
     for r in metrics["reps"]:
         cells = "".join(f"<td>{r['values'][k]['at_peak']}</td>" for k in list(metrics["summary"])[:6])
-        flag = " ⚠ imputed frames" if r["contains_imputed_frames"] else ""
+        flag = (" ⚠ imputed frames" if r["contains_imputed_frames"] else "") + (
+            " ⚠ missing markers" if r.get("contains_missing_markers") else "")
         rep_rows.append(f"<tr><td>{r['rep']}</td><td>{r['start_s']}–{r['stop_s']}</td><td>{r['duration_s']}</td>{cells}<td>{flag}</td></tr>")
     rep_head = "".join(f"<th>{e(k)} @peak</th>" for k in list(metrics["summary"])[:6])
     charts = []
@@ -813,6 +814,17 @@ def write(path, session, qc, metrics, signals, time, validation=None, reference=
             charts.append(_svg_chart(time, ser, metrics["reps"], title, ref=ref))
     ik = qc.get("ik", {})
     fr = qc.get("frames", {})
+    gaps = sorted(((n, g) for n, g in qc.get("imputed_by_marker", {}).items() if g["imputed_spans"] or g["missing_spans"]),
+                  key=lambda ng: -(ng[1]["imputed_s"] + ng[1]["missing_s"]))
+    gap_html = "" if not gaps else (
+        f"<p class='muted'>Marker gaps in {len(gaps)} of {len(qc['imputed_by_marker'])} markers (bridged up to "
+        f"{qc.get('filter', {}).get('max_gap_s', '?')} s, longer gaps left without an IK target): "
+        + "; ".join(f"{e(n)} {g['imputed_s']} s bridged, {g['missing_s']} s missing" for n, g in gaps[:5])
+        + (f"; {len(gaps) - 5} more in qc.json" if len(gaps) > 5 else "") + ".</p>")
+    un = qc.get("unsolved", {})
+    if un.get("frames"):
+        gap_html += (f"<p class='muted'>{un['frames']} frames not solved: fewer than {un['min_target_weight']:.0%} of "
+                     f"the IK marker weight had a target there ({len(un['spans'])} spans, see qc.json).</p>")
     val_html = ""
     if validation:
         gate_rows = "".join(f"<tr><td>{e(g)}</td><td><span class='b {v}'>{v}</span></td></tr>"
@@ -829,6 +841,7 @@ def write(path, session, qc, metrics, signals, time, validation=None, reference=
 <div class="kv muted"><span>reps: <b>{metrics['n_reps']}</b></span><span>detection rate: {qc.get('detection_rate')}</span>
 <span>imputed frames: {len(qc.get('imputed_frames', []))}</span><span>gravity: {e(str(fr.get('up_source')))}</span>
 <span>IK marker RMS: {ik.get('marker_rms_m', {}).get('mean')} m (p95 {ik.get('marker_rms_m', {}).get('p95')})</span></div>
+{gap_html}
 {_player(skeleton, ref_skeleton) if skeleton is not None else ''}
 {''.join(charts)}
 <h2>Per-rep values</h2>

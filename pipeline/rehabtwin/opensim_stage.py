@@ -5,12 +5,14 @@ Steps (all intermediate files are written to ``out_dir/opensim``):
 1. prepare the generic model: attach the configured marker set, apply
    recorded marker-location fixes, add virtual joint-centre markers;
 2. transform the sequence into OpenSim ground (gravity up, x = heading);
-3. bridge short gaps, split at long ones, low-pass filter (logged);
+3. bridge short gaps, split at long ones, leave long per-marker gaps
+   empty (NaN in the TRC), do not solve frames where less than half the
+   IK marker weight has a target, low-pass each finite stretch (all logged);
 4. build a static trial (SKEL q = 0 neutral pose, or the stillest window)
    and rigidly register it onto the model's default pose;
 5. ScaleTool (measurement scaling + marker placement) -> subject .osim;
 6. InverseKinematicsTool per segment -> .mot (+ marker errors .sto);
-7. QC summary (marker RMS, imputed frames, up-vector estimates).
+7. QC summary (marker RMS, imputed frames + per-marker gaps, up-vector estimates).
 """
 from __future__ import annotations
 
@@ -223,11 +225,16 @@ def static_points(seq: MarkerSequence, ground_names, ground_pts, valid_mask, cfg
 
 # ---------------------------------------------------------------- XML
 
+def marker_weight(n, weights, default_w):
+    """IK weight of marker ``n``; a virtual joint-centre marker falls back to its joint's weight."""
+    return weights.get(n, weights.get(n[len(JC_PREFIX):] if n.startswith(JC_PREFIX) else "", default_w))
+
+
 def _tasks_xml(names, weights, default_w, coord_tasks=None):
     """IKTaskSet XML. ``coord_tasks``: {coordinate: {"weight": w, "value": v (internal units) | "from_file": True}}."""
     out = []
     for n in names:
-        w = weights.get(n, weights.get(n[len(JC_PREFIX):] if n.startswith(JC_PREFIX) else "", default_w))
+        w = marker_weight(n, weights, default_w)
         out.append(f'<IKMarkerTask name="{escape(n)}"><apply>{"true" if w > 0 else "false"}</apply>'
                    f"<weight>{w}</weight></IKMarkerTask>")
     for c, spec in (coord_tasks or {}).items():
@@ -346,6 +353,77 @@ def ik_setup_xml(cfg, model, trc, t_range, out_dir, name, marker_names, coord_fi
 """
 
 
+# ------------------------------------------------------------ gaps
+
+def condition_markers(names, pts, valid, frame_index, fps, fcfg, upstream_imputed=None, weights=None,
+                      min_target_weight=0.5):
+    """Gap policy + low-pass for (T, N, 3) points -> (segments, clean points, gap QC).
+
+    Whole-frame gaps <= max_gap_s are bridged, longer ones split segments. Inside a segment
+    each marker is bridged only over its own gaps <= max_gap_s; a longer one stays NaN, so IK
+    has no target for that marker there. A frame where less than ``min_target_weight`` of the
+    IK marker ``weights`` (N,) has a target is not solved: IK would fail to assemble or hold
+    the unobserved joints at its warm start (e.g. augmenter outputs masked over a lost knee).
+    Such frames split the segment like a long gap; they are never bridged.
+    ``upstream_imputed`` (T,) marks frames already built on bridged data (augmenter inputs).
+    """
+    max_gap_s = fcfg.get("max_gap_s", 0.2)
+    segs, _ = filtering.plan_segments(valid, fps, max_gap_s, fcfg.get("min_segment_s", 1.0))
+    raw = np.where(np.asarray(valid, bool)[:, None, None], pts, np.nan)  # a rejected frame is a gap for every marker
+    clean = np.full_like(raw, np.nan)
+    for a, b in segs:
+        seg = filtering.interpolate_gaps(raw[a:b], int(round(max_gap_s * fps)))
+        clean[a:b] = filtering.lowpass(seg, fps, fcfg.get("cutoff_hz", 6.0), fcfg.get("order", 4))
+    w = np.ones(len(names)) if weights is None else np.asarray(weights, float)
+    covered = np.isfinite(clean).all(axis=2) @ w >= min_target_weight * w.sum()
+    min_len = max(int(round(fcfg.get("min_segment_s", 1.0) * fps)), 2)
+    planned = np.zeros(len(raw), bool)
+    for a, b in segs:
+        planned[a:b] = True
+    segs = [(a + s, a + e) for a, b in segs for s, e in filtering.runs(covered[a:b]) if e - s >= min_len]
+    solved = np.zeros(len(raw), bool)
+    for a, b in segs:
+        solved[a:b] = True
+    clean[~solved] = np.nan
+    qc = gap_qc(names, raw, clean, segs, frame_index, fps, upstream_imputed, w)
+    qc["unsolved"] = {"min_target_weight": min_target_weight, "frames": int((planned & ~covered).sum()),
+                      "spans": _spans(planned & ~covered, frame_index, fps)}
+    return segs, clean, qc
+
+
+def _spans(mask, frame_index, fps):
+    return [{"start_frame": int(frame_index[a]), "stop_frame": int(frame_index[b - 1]) + 1,
+             "duration_s": round((b - a) / fps, 3)} for a, b in filtering.runs(mask)]
+
+
+def gap_qc(names, raw, clean, segs, frame_index, fps, upstream_imputed=None, weights=None):
+    """Per-marker imputed (bridged) and missing (no IK target) spans and coverage over solved frames.
+
+    ``imputed_frames`` lists every frame in which any marker was bridged (here or upstream) and
+    ``missing_target_frames`` every frame in which a weighted marker had no target, so metrics
+    flag reps built on imputed or partly unobserved data even when only one marker was lost.
+    """
+    solved = np.zeros(len(raw), bool)
+    for a, b in segs:
+        solved[a:b] = True
+    seen = np.isfinite(raw).all(axis=2) & solved[:, None]
+    target = np.isfinite(clean).all(axis=2)
+    imputed, missing = target & ~seen, solved[:, None] & ~target
+    by_marker = {n: {"coverage": round(float(seen[:, j].sum() / max(solved.sum(), 1)), 4),
+                     "imputed_s": round(float(imputed[:, j].sum() / fps), 3),
+                     "imputed_spans": _spans(imputed[:, j], frame_index, fps),
+                     "missing_s": round(float(missing[:, j].sum() / fps), 3),
+                     "missing_spans": _spans(missing[:, j], frame_index, fps)}
+                 for j, n in enumerate(names)}
+    any_imputed = imputed.any(axis=1)
+    if upstream_imputed is not None:
+        any_imputed |= solved & upstream_imputed
+    weighted = np.ones(len(names), bool) if weights is None else np.asarray(weights) > 0
+    return {"imputed_frames": [int(frame_index[f]) for f in np.flatnonzero(any_imputed)],
+            "missing_target_frames": [int(frame_index[f]) for f in np.flatnonzero(missing[:, weighted].any(axis=1))],
+            "imputed_by_marker": by_marker}
+
+
 # ------------------------------------------------------------- the stage
 
 def run(seq: MarkerSequence, cfg: dict, out_dir, mass_kg=None, height_m=None) -> StageResult:
@@ -377,23 +455,31 @@ def run(seq: MarkerSequence, cfg: dict, out_dir, mass_kg=None, height_m=None) ->
     # 3. segments, gaps, filtering
     fcfg = cfg.get("filter", {})
     valid = seq.valid & np.isfinite(pts).any(axis=(1, 2))
-    segs, imputed = filtering.plan_segments(valid, seq.fps, fcfg.get("max_gap_s", 0.2), fcfg.get("min_segment_s", 1.0))
+    upstream = np.isin(seq.frame_index, seq.meta.get("augmenter", {}).get("imputed_input_frames", []))
+    ik = cfg.get("ik", {})
+    weights = [marker_weight(n, ik.get("weights", {}), ik.get("default_weight", 1.0)) for n in names]
+    segs, clean, gap_qc = condition_markers(names, pts, valid, seq.frame_index, seq.fps, fcfg, upstream, weights,
+                                            ik.get("min_target_weight", 0.5))
     if not segs:
-        raise ValueError("no segment long enough to solve (check detection rate / min_segment_s)")
-    clean = np.full_like(pts, np.nan)
-    for a, b in segs:
-        seg = filtering.interpolate_gaps(pts[a:b])
-        clean[a:b] = filtering.lowpass(seg, seq.fps, fcfg.get("cutoff_hz", 6.0), fcfg.get("order", 4))
+        un = gap_qc["unsolved"]
+        raise ValueError("no segment long enough to solve (check detection rate / min_segment_s)" + (
+            f"; {un['frames']} frames had targets for less than {un['min_target_weight']:.0%} of the IK marker "
+            "weight (long per-marker gaps, or augmenter outputs masked over a keypoint lost > max_gap_s; "
+            "a keypoint-only config solves from the remaining keypoints)" if un["frames"] else ""))
     qc["segments"] = [{"start_frame": int(seq.frame_index[a]), "stop_frame": int(seq.frame_index[b - 1]) + 1,
                        "duration_s": round((b - a) / seq.fps, 3)} for a, b in segs]
-    qc["imputed_frames"] = [int(seq.frame_index[f]) for f in imputed]
+    qc.update(gap_qc)
     qc["detection_rate"] = round(float(seq.valid.mean()), 4)
-    qc["filter"] = {"type": "butterworth zero-lag", "cutoff_hz": fcfg.get("cutoff_hz", 6.0), "order": fcfg.get("order", 4)}
+    qc["filter"] = {"type": "butterworth zero-lag", "cutoff_hz": fcfg.get("cutoff_hz", 6.0), "order": fcfg.get("order", 4),
+                    "max_gap_s": fcfg.get("max_gap_s", 0.2)}
     times = seq.times
     write_trc(od / "markers_dynamic.trc", names, clean, times)
 
     # 4. static trial, registered onto the model default pose
-    static, static_desc = static_points(seq, names, clean, valid, cfg)
+    try:  # prefer a window where every marker has a target (long per-marker gaps stay NaN)
+        static, static_desc = static_points(seq, names, clean, valid & np.isfinite(clean).all(axis=(1, 2)), cfg)
+    except ValueError:
+        static, static_desc = static_points(seq, names, clean, valid, cfg)
     model_static = model_marker_positions(generic, names)
     reg_names = [n for n in cfg.get("static", {}).get("registration_markers", names) if n in names]
     reg = [names.index(n) for n in reg_names]
