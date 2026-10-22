@@ -450,12 +450,14 @@ def write_cues(path, result, time, signals):
         charts.append(_svg_chart(time, {r["signal"]: signals[r["signal"]]}, [], f"{r['id']}: {r['signal']} {r['op']} {r['threshold']}",
                                  ref=(time, {r["signal"]: thr}), ref_label="threshold", marks=marks))
         pr = summ["per_rule"][r["id"]]
-        rows.append(f"<tr><td>{e(r['id'])}</td><td>{e(r['cue']['actuator'])}</td><td>{pr['violations']}</td>"
+        viol = "<b>not evaluated</b> (signal missing)" if pr.get("unevaluated") else pr["violations"]
+        rows.append(f"<tr><td>{e(r['id'])}</td><td>{e(r['cue']['actuator'])}</td><td>{viol}</td>"
                     f"<td>{pr['cues_sent']}</td><td>{pr['would_cue']}</td><td>{pr['withheld_by_schedule']}</td>"
                     f"<td>{e(pr['gate'] or 'open')}</td></tr>")
     banner = ("<p class='banner'><b>Replay only — no cue may reach a person from this session.</b> "
               f"Tier {e(summ['twin_tier'])}; cues need a Tier-A twin and a validated joint/plane "
-              "(docs/accuracy.md). Orange ticks show what <i>would</i> have been cued.</p>"
+              f"(docs/accuracy.md). Validation gate: {e(summ.get('validation_gate', 'n/a'))}. "
+              "Orange ticks show what <i>would</i> have been cued.</p>"
               if summ["commands_sent"] == 0 else
               "<p class='banner'><b>Cues were enabled</b> for validated joint/planes on a Tier-A twin.</p>")
     legend = " · ".join(f"<span style='color:{c}'>{k.replace('_', ' ')}</span>" for k, c in CUE_COLOURS.items())
@@ -546,6 +548,8 @@ def write_muscles(path, study, view=None):
     exo_rows = "".join(f"<tr><td>{e(lab)}</td><td>{e(c)}</td><td>{v['max_torque_Nm']}</td><td>{e(v['direction'])}</td>"
                        f"<td>{v['peak_abs_Nm']}</td><td>{v['mean_abs_Nm']}</td><td>{v['time_at_cap_fraction'] * 100:.0f}%</td></tr>"
                        for lab, r in runs.items() for c, v in r.get("assistive_devices", {}).items())
+    dev_banner = (f"<p class='banner'><b>{e(study['devices_status'])}.</b></p>"
+                  if study.get("devices_status", "target") not in (None, "target") else "")
     exo_html = (f"<h2>Ideal assistive devices</h2><table><tr><th>variant</th><th>joint</th><th>cap (N·m)</th><th>direction</th>"
                 f"<th>peak (N·m)</th><th>mean (N·m)</th><th>time at cap</th></tr>{exo_rows}</table>" if exo_rows else "")
     pas_rows = "".join(f"<tr><td>{e(lab)}</td><td>{e(c)}</td><td>{v['stiffness_Nm_per_rad']:g}</td><td>{v['slack_deg']:g}°</td>"
@@ -555,6 +559,7 @@ def write_muscles(path, study, view=None):
     exo_html += (f"<h2>Passive elastic supports</h2><table><tr><th>variant</th><th>joint</th><th>stiffness (N·m/rad)</th>"
                  f"<th>slack until</th><th>resists</th><th>peak (N·m)</th><th>mean (N·m)</th><th>engaged</th></tr>"
                  f"{pas_rows}</table>" if pas_rows else "")
+    exo_html = dev_banner + exo_html if exo_html else ""
     reserve_notes = "".join(f"<li>{e(lab)}: {e(', '.join(f'{k} {v} N·m' for k, v in r['reserve_torque_peaks_Nm'].items()) or 'none')}"
                             f"; saturated muscles: {e(', '.join(r['muscles_saturated']) or 'none')}</li>" for lab, r in runs.items())
     grf = base["grf"]

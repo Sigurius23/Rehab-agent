@@ -27,7 +27,7 @@ import numpy as np
 
 from . import metrics as metrics_mod
 from . import opensim_stage, records, report, validation
-from .config import load_config
+from .config import load_config, resolve
 from .io_formats import read_table
 from .kinematics import skeleton_positions
 from .sequence import MarkerSequence
@@ -35,11 +35,20 @@ from .sequence import MarkerSequence
 
 def process(seq_path, out_dir, exercise="squat", config=None, mass_kg=None, height_m=None,
             reference=None, reference_system=None, person_ref=None, tier=None, video=None, max_lag_s=0.0,
-            reference_model=None, reference_grade="marker-mocap"):
+            reference_model=None, reference_grade=None, model_provenance=None):
+    from . import tiers
     seq_path, out_dir = Path(seq_path), Path(out_dir)
-    out_dir.mkdir(parents=True, exist_ok=True)
     seq = MarkerSequence.load(seq_path)
+    synthetic = bool(seq.meta.get("synthetic"))
+    if reference and not synthetic and reference_grade is None:
+        raise ValueError("a reference needs reference_grade ('marker-mocap' or 'markerless'): an unlabelled "
+                         "reference must not be able to approve feedback")
+    person_ref = person_ref or seq.meta.get("person_ref", "UNSPECIFIED")
     cfg = load_config(config or seq.meta.get("default_config", "skel105_pose2sim"))
+    # refuse before any work: the tier must be supported by evidence, not by a flag
+    tier, tier_source = tiers.resolve(tier or seq.meta.get("tier", "C"), person_ref, synthetic, model_provenance,
+                                      resolve(cfg["model"]))
+    out_dir.mkdir(parents=True, exist_ok=True)
     if seq_path.resolve() != (out_dir / "skel_seq.npz").resolve():
         shutil.copy(seq_path, out_dir / "skel_seq.npz")
     stage = opensim_stage.run(seq, cfg, out_dir, mass_kg=mass_kg, height_m=height_m)
@@ -47,8 +56,6 @@ def process(seq_path, out_dir, exercise="squat", config=None, mass_kg=None, heig
         print(f"note: {len(stage.motions)} segments; metrics use the longest", file=sys.stderr)
     motion = max(stage.motions, key=lambda p: len(read_table(p).time))
     est = read_table(motion)
-    tier = tier or seq.meta.get("tier", "C")
-    person_ref = person_ref or seq.meta.get("person_ref", "UNSPECIFIED")
 
     derived = metrics_mod.derived_signals(est, stage.scaled_model)
     skeleton = skeleton_positions(stage.scaled_model, est)
@@ -62,7 +69,7 @@ def process(seq_path, out_dir, exercise="squat", config=None, mass_kg=None, heig
         cmp = validation.compare(metrics_mod.with_signals(est, derived), ref_tab, max_lag_s=max_lag_s)
         ref_plot = (ref_tab.time + cmp["lag_s"], {c: ref_tab.col(c) for c in ref_tab.columns})
         val = validation.report(cmp, person_ref, reference_system or str(reference), [exercise],
-                                synthetic=bool(seq.meta.get("synthetic")), reference_grade=reference_grade)
+                                synthetic=synthetic, reference_grade=reference_grade or "synthetic")
         records.validate(val, "validation-report")
         records.write_json(out_dir / "validation-report.json", val)
 
@@ -78,7 +85,8 @@ def process(seq_path, out_dir, exercise="squat", config=None, mass_kg=None, heig
     if val:
         outputs["validation_report"] = "validation-report.json"
     sess = records.session_record(seq, stage.qc, out_dir, tier, person_ref, video=video,
-                                  config_name=Path(cfg["_path"]).name, outputs=outputs, validation_report=val)
+                                  config_name=Path(cfg["_path"]).name, outputs=outputs, validation_report=val,
+                                  tier_source=tier_source)
     records.validate(sess, "session")
     records.write_json(out_dir / "session.json", sess)
     report.write(out_dir / "report.html", sess, stage.qc, met, signals, est.time, val, ref_plot, skeleton, ref_skeleton)
@@ -127,11 +135,17 @@ def strength_calibration(session_dir, tests_file):
 
 
 def muscle_study(session_dir, rep=1, start=None, stop=None, correction=None, weaken=(), assist=(), view_3d=True,
-                 grf_sensitivity=0.0, use_strength=False, passive=(), workers=None, max_fps=30.0, plant=True):
+                 grf_sensitivity=0.0, use_strength=False, passive=(), workers=None, max_fps=30.0, plant=True,
+                 illustrative=False):
     """Measured motion (+ corrected motion, + weakened variants) through GRF estimate → ID → SO."""
     from . import muscles
     session_dir = Path(session_dir)
     sess = json.loads((session_dir / "session.json").read_text())
+    if (assist or passive) and sess["twin_tier"] != "A" and not illustrative:
+        from .correction import CorrectionRefused
+        raise CorrectionRefused(
+            f"twin tier {sess['twin_tier']}: docs/accuracy.md forbids assistance profiles from an unvalidated tier. "
+            "Re-run with illustrative=True (--illustrative) for a labelled design-space bound, not a device profile.")
     met = json.loads((session_dir / "metrics.json").read_text())
     model = session_dir / sess["pipeline"]["outputs"]["model"]
     muscle_model = {"source": "generic (scaled literature muscle parameters)"}
@@ -200,6 +214,8 @@ def muscle_study(session_dir, rep=1, start=None, stop=None, correction=None, wea
         by_bias.setdefault(b, {})[lab] = r
     runs = by_bias[0.0]
     study = {"twin_tier": sess["twin_tier"], "muscle_model": muscle_model, "kinematics_prior": prior, "runs": runs,
+             "devices_status": (None if not (assist or passive) else "target" if sess["twin_tier"] == "A"
+                                else "ILLUSTRATION ONLY - design-space bound on a generic body, not an assistance profile"),
              "comparisons": {lab: muscles.compare(runs["measured"], r) for lab, r in runs.items() if lab != "measured"}}
     if grf_sensitivity:
         # The left/right load split is the least certain input. Re-run every variant with the right
@@ -234,14 +250,10 @@ def cue_replay(session_dir, rules, motion=None):
     tab = read_table(Path(motion) if motion else session_dir / sess["pipeline"]["outputs"]["motion"])
     signals = {c: tab.col(c) for c in tab.columns}
     signals.update(metrics_mod.derived_signals(tab, model))
-    val_path = session_dir / "validation-report.json"
-    allowed = []
-    if val_path.exists():
-        val = json.loads(val_path.read_text())
-        if not val.get("synthetic"):
-            allowed = val.get("feedback_allowed_joint_planes", [])
-    log, sent = feedback.replay(spec, tab.time, signals, tier=sess["twin_tier"], allowed_joint_planes=allowed)
-    summ = feedback.summarise(spec, log, sent, sess["twin_tier"], allowed)
+    _, tier, allowed, gate_closed = _session_gate(session_dir, spec)
+    log, sent = feedback.replay(spec, tab.time, signals, tier=tier, allowed_joint_planes=allowed)
+    summ = feedback.summarise(spec, log, sent, tier, allowed)
+    summ["validation_gate"] = gate_closed or "open"
     out = session_dir / "feedback" / (spec["name"] + (f"__{Path(motion).parent.name}" if motion else ""))
     out.mkdir(parents=True, exist_ok=True)
     summ["motion"] = str(motion) if motion else sess["pipeline"]["outputs"]["motion"]
@@ -256,17 +268,30 @@ def cue_replay(session_dir, rules, motion=None):
     return result, out
 
 
-def _session_gate(session_dir):
-    """(tier, allowed joint/planes) from a session's own records — the live loop has no bypass."""
+def _session_gate(session_dir, spec=None):
+    """(session, tier, allowed joint/planes, why closed) from a session's own records — no bypass.
+
+    Feedback joint/planes are only taken from a validation report that is marker-mocap graded,
+    not synthetic, for the same person, and covers the rule set's exercise. Anything else closes
+    the gate (fail closed: a report without a grade predates grades and counts as unknown).
+    """
     session_dir = Path(session_dir)
     sess = json.loads((session_dir / "session.json").read_text())
-    allowed = []
     val_path = session_dir / "validation-report.json"
-    if val_path.exists():
-        val = json.loads(val_path.read_text())
-        if not val.get("synthetic"):
-            allowed = val.get("feedback_allowed_joint_planes", [])
-    return sess, sess["twin_tier"], allowed
+    if not val_path.exists():
+        return sess, sess["twin_tier"], [], "no validation report"
+    val = json.loads(val_path.read_text())
+    why = None
+    if val.get("synthetic"):
+        why = "validation is synthetic"
+    elif val.get("reference_grade") != "marker-mocap":
+        why = f"validation reference grade is {val.get('reference_grade', 'unknown')!r}, not marker-mocap"
+    elif val.get("person_ref") != sess.get("person_ref"):
+        why = f"validation is for {val.get('person_ref')!r}, session is {sess.get('person_ref')!r}"
+    elif spec is not None and spec.get("exercise") not in val.get("movements", []):
+        why = f"rule set exercise {spec.get('exercise')!r} not among validated movements {val.get('movements')}"
+    allowed = [] if why else val.get("feedback_allowed_joint_planes", [])
+    return sess, sess["twin_tier"], allowed, why
 
 
 def _synth(out_dir, seed=0, **kw):
@@ -308,13 +333,14 @@ def main(argv=None):
     p.add_argument("--height-m", type=float)
     p.add_argument("--reference", help="reference .mot for validation (e.g. marker-mocap IK)")
     p.add_argument("--reference-system", help="what the reference is, for the report")
-    p.add_argument("--reference-grade", default="marker-mocap", choices=["marker-mocap", "markerless"],
+    p.add_argument("--reference-grade", choices=["marker-mocap", "markerless"],
                    help="markerless = another video system (agreement only; approves nothing)")
     p.add_argument("--max-lag-s", type=float, default=0.0, help="search a time offset for unsynchronised references")
     p.add_argument("--reference-model", help="OpenSim model of the reference (default: model_scaled.osim next to it); "
                                              "enables validation of trunk/pelvis inclination and knee FPPA")
     p.add_argument("--person-ref", help="pseudonymous subject reference (never a name)")
-    p.add_argument("--tier", choices=["A", "B", "C"])
+    p.add_argument("--tier", choices=["A", "B", "C"], help="B/A need --model-provenance (default C)")
+    p.add_argument("--model-provenance", help="JSON record that grants Tier B/A for this person and model (rehabtwin/tiers.py)")
     p.add_argument("--video")
     v = sub.add_parser("validate", help="compare two .mot files")
     v.add_argument("estimate")
@@ -325,7 +351,8 @@ def main(argv=None):
     v.add_argument("--movement", action="append", default=[])
     v.add_argument("--max-lag-s", type=float, default=0.0)
     v.add_argument("--synthetic", action="store_true")
-    v.add_argument("--reference-grade", default="marker-mocap", choices=["marker-mocap", "markerless"])
+    v.add_argument("--reference-grade", choices=["marker-mocap", "markerless"],
+                   help="required unless --synthetic: only marker-mocap can approve feedback")
     s = sub.add_parser("synth", help="write a synthetic sequence + truth")
     s.add_argument("out")
     s.add_argument("--seed", type=int, default=0)
@@ -370,6 +397,8 @@ def main(argv=None):
                     help="ideal assistive device, e.g. knee_angle_r=40:neg (extension only); trunk: "
                          "lumbar_total_extension=30:pos (physical N·m between pelvis and thorax); repeatable")
     mu.add_argument("--no-3d", action="store_true", help="skip the 3D muscle view (smaller report)")
+    mu.add_argument("--illustrative", action="store_true",
+                    help="allow --assist/--passive below Tier A as a labelled design-space bound (never a device profile)")
     mu.add_argument("--strength", action="store_true", help="use the strength-calibrated model (rehabtwin strength)")
     mu.add_argument("--workers", type=int, help="parallel static-optimisation processes (default: up to 4)")
     mu.add_argument("--no-plant", action="store_true",
@@ -408,6 +437,8 @@ def main(argv=None):
     vp.add_argument("--rate-hz", type=float, default=60.0)
     vp.add_argument("--duration-s", type=float)
     vp.add_argument("--print", action="store_true", help="also print the signals once per second")
+    vp.add_argument("--host", default="127.0.0.1",
+                    help="address to listen on (default localhost; 0.0.0.0 exposes posture input to the network)")
     sb = sub.add_parser("suit-bridge", help="LSL cue markers -> haptic suit payloads")
     sb.add_argument("--mapping", default="suit_bhaptics", help="name in pipeline/configs/feedback or a path")
     sb.add_argument("--ble", action="append", default=[], metavar="DEVICE=ADDRESS",
@@ -417,15 +448,21 @@ def main(argv=None):
     a = ap.parse_args(argv)
 
     if a.cmd == "process":
-        res = process(a.sequence, a.out, a.exercise, a.config, a.mass_kg, a.height_m, a.reference,
-                      a.reference_system, a.person_ref, a.tier, a.video, a.max_lag_s, a.reference_model,
-                      a.reference_grade)
+        try:
+            res = process(a.sequence, a.out, a.exercise, a.config, a.mass_kg, a.height_m, a.reference,
+                          a.reference_system, a.person_ref, a.tier, a.video, a.max_lag_s, a.reference_model,
+                          a.reference_grade, a.model_provenance)
+        except ValueError as e:      # includes tiers.TierRefused
+            print(f"refused: {e}", file=sys.stderr)
+            return 2
         print(json.dumps({"reps": res["metrics"]["n_reps"], "tier": res["metrics"]["tier"],
                           "ik_marker_rms_m": res["qc"]["ik"]["marker_rms_m"], "report": str(Path(a.out) / "report.html")}, indent=2))
     elif a.cmd == "validate":
+        if not a.synthetic and not a.reference_grade:
+            raise SystemExit("--reference-grade is required (marker-mocap or markerless)")
         cmp = validation.compare(read_table(a.estimate), read_table(a.reference), max_lag_s=a.max_lag_s)
         rep = validation.report(cmp, a.person_ref, a.reference_system, a.movement, synthetic=a.synthetic,
-                                reference_grade=a.reference_grade)
+                                reference_grade=a.reference_grade or "synthetic")
         records.validate(rep, "validation-report")
         records.write_json(a.out, rep)
         print(json.dumps({"kinematics_rmse_deg": rep["kinematics_rmse_deg"], "approved_for": rep["approved_for"]}, indent=1))
@@ -474,8 +511,14 @@ def main(argv=None):
         print(json.dumps({"status": summary["status"], "admissible": summary["admissible"],
                           "derived_signals": summary.get("derived_signals"), "report": str(out / "correction.html")}, indent=1))
     elif a.cmd == "muscles":
-        study, out = muscle_study(a.session, a.rep, a.start, a.stop, a.correction, a.weaken, a.assist, not a.no_3d,
-                                  a.grf_sensitivity, a.strength, a.passive, a.workers, a.max_fps, not a.no_plant)
+        from .correction import CorrectionRefused
+        try:
+            study, out = muscle_study(a.session, a.rep, a.start, a.stop, a.correction, a.weaken, a.assist, not a.no_3d,
+                                      a.grf_sensitivity, a.strength, a.passive, a.workers, a.max_fps, not a.no_plant,
+                                      a.illustrative)
+        except CorrectionRefused as e:
+            print(f"refused: {e}", file=sys.stderr)
+            return 2
         for lab, cmp in study["comparisons"].items():
             top = sorted(cmp.items(), key=lambda kv: -abs(kv[1]["change"]))[:5]
             print(lab + ": " + ", ".join(f"{g} {v['base']:.2f}->{v['other']:.2f}" for g, v in top))
@@ -508,18 +551,22 @@ def main(argv=None):
         print(f"report: {out / 'cues.html'}")
     elif a.cmd == "lsl-simulate":
         from . import feedback, lsl_bridge
-        sess, _, _ = _session_gate(a.session)
+        sess, _, _, _ = _session_gate(a.session)
         spec = feedback.load_rules(a.rules)
         tab = read_table(Path(a.session) / sess["pipeline"]["outputs"]["motion"])
         derived = metrics_mod.derived_signals(tab, Path(a.session) / sess["pipeline"]["outputs"]["model"])
         sig = lsl_bridge.session_signals(tab, derived, [r["signal"] for r in spec["rules"]])
         print(f"streaming {len(sig)} signals x {len(tab.time)} samples as '{lsl_bridge.POSTURE_STREAM}'")
-        lsl_bridge.stream_posture(tab.time, sig, speed=a.speed)
+        lsl_bridge.stream_posture(tab.time, sig, speed=a.speed, session_id=sess["session_id"],
+                                  front_end=sess["pipeline"]["front_end"])
     elif a.cmd == "lsl-live":
         from . import feedback, lsl_bridge
-        _, tier, allowed = _session_gate(a.session)
-        eng = lsl_bridge.run_live(feedback.load_rules(a.rules), tier, allowed, a.duration_s,
-                                  publish_would_cue=a.publish_would_cue)
+        spec = feedback.load_rules(a.rules)
+        sess, tier, allowed, why = _session_gate(a.session, spec)
+        if why:
+            print(f"feedback gate closed: {why}", file=sys.stderr)
+        eng = lsl_bridge.run_live(spec, tier, allowed, a.duration_s, publish_would_cue=a.publish_would_cue,
+                                  expect_session=sess["session_id"], expect_front_end=sess["pipeline"]["front_end"])
         print(json.dumps([e for e in eng.log if "decision" in e], indent=1))
     elif a.cmd == "lsl-listen":
         from . import lsl_bridge
@@ -534,12 +581,15 @@ def main(argv=None):
                 last[0] = t
                 print(json.dumps({k: round(v, 1) for k, v in sig.items()}))
         print(f"listening for VMC on udp/{a.port}; publishing LSL stream 'rehabtwin_posture' ({', '.join(vmc.SIGNALS)})")
-        vmc.serve(a.port, a.rate_hz, a.duration_s, publish_lsl=True, on_signals=show)
+        if a.host not in ("127.0.0.1", "localhost", "::1"):
+            print(f"warning: listening on {a.host}: any host that can reach udp/{a.port} can inject posture",
+                  file=sys.stderr)
+        vmc.serve(a.port, a.rate_hz, a.duration_s, publish_lsl=True, on_signals=show, host=a.host)
     elif a.cmd == "suit-bridge":
         from . import suit
         driver = suit.SuitDriver(a.mapping)
         if a.ble:
-            transport = suit.BleTransport(dict(x.split("=", 1) for x in a.ble))
+            transport = suit.BleTransport(dict(x.split("=", 1) for x in a.ble), devices=list(driver.layouts))
         else:
             transport = suit.DryRunTransport()
             print("dry run: payloads are logged, nothing is written to hardware")
@@ -549,6 +599,8 @@ def main(argv=None):
                 print(json.dumps(e))
             if a.log:
                 Path(a.log).write_text(json.dumps(transport.log, indent=1))
+        if driver.rejected:
+            print(f"warning: {len(driver.rejected)} cues dropped by the on-time share cap", file=sys.stderr)
         if driver.unknown:
             print(f"warning: cues for unmapped actuators ignored: {sorted(driver.unknown)}", file=sys.stderr)
     elif a.cmd == "selftest":

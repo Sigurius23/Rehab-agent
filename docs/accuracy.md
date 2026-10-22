@@ -106,6 +106,9 @@ Repos: [TotalSegmentator](https://github.com/wasserth/TotalSegmentator) ·
   and a capacity-scaled simulation, not a statement about muscle size.
 - No "corrected posture" target generated from a generic skeleton; correction
   targets are computed on the patient's own joint geometry and range limits.
-- No exoskeleton assistance profile derived from an unvalidated tier.
+- No exoskeleton assistance profile derived from an unvalidated tier (`muscles --assist/--passive`
+  below Tier A only runs with `--illustrative` and is labelled a design-space bound).
+- The tier is granted by evidence, not by a flag: Tier B/A needs a model-provenance record bound to
+  the session's person and model (`rehabtwin/tiers.py`); only marker-mocap validations open feedback.
 - If a layer has not been validated for a given person, the twin must *display
   that gap* ("muscle layer: generic, not yet personalised") instead of hiding it.

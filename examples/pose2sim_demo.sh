@@ -40,10 +40,10 @@ print(c.K[0, 0], ','.join(f'{v:.6f}' for v in up))")"
   --config mediapipe33_pose2sim --person-ref POSE2SIM-DEMO
 "$BIO_PY" -m rehabtwin process "$OUT/cam01_mono_seq.npz" "$OUT/monocular" --exercise free \
   --config mediapipe33_pose2sim --person-ref POSE2SIM-DEMO \
-  --reference "$OUT/multiview/opensim/ik.mot" \
+  --reference "$OUT/multiview/opensim/ik.mot" --reference-grade markerless \
   --reference-system "4-camera MediaPipe triangulation + OpenSim IK (markerless, same keypoint model)"
 "$BIO_PY" -m rehabtwin process "$OUT/cam01_mono_gravity_seq.npz" "$OUT/monocular_gravity" --exercise free \
   --config mediapipe33_pose2sim --person-ref POSE2SIM-DEMO \
-  --reference "$OUT/multiview/opensim/ik.mot" \
+  --reference "$OUT/multiview/opensim/ik.mot" --reference-grade markerless \
   --reference-system "4-camera MediaPipe triangulation + OpenSim IK (markerless, same keypoint model)"
 echo "open $OUT/monocular*/report.html and $OUT/monocular*/validation-report.json"

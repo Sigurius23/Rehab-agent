@@ -176,9 +176,19 @@ The live loop reads tier and validation from `SESSION` (there is no override fla
 simulator stamps samples on the recording's own timeline, so rule durations behave the
 same at any replay speed.
 
+Feedback gate (offline replay and live loop alike), which fails closed:
+- The session must be Tier A.
+- Its validation report must be graded `marker-mocap`, not synthetic, for the same `person_ref`, and
+  list the rule set's exercise.
+- Live, the posture stream must carry the session's id and front end in its LSL tags. Otherwise the
+  loop runs at Tier C and nothing is sent: an IMU stream cannot borrow a video session's approval.
+- Two streams with the same name are refused rather than guessed.
+- LSL streams are visible to the whole local network, so run the live loop on a trusted network.
+
 With an IMU suit, SlimeVR-Server's VMC output (Settings → OSC → VMC, port 39539) replaces the
 simulator:
-`python -m rehabtwin vmc-posture --print`. It rebuilds global joint positions from the VMC
+`python -m rehabtwin vmc-posture --print`. It listens on localhost only unless you pass `--host`, and stops
+publishing 0.5 s after the last VMC packet, so a dropped tracker cannot freeze a pose. It rebuilds global joint positions from the VMC
 bone stream (Unity left-handed → right-handed, forward kinematics over the humanoid hierarchy)
 and publishes `torso.sagittal/frontal`, `knee_angle_r/l`, `knee_fppa_r/l` and an approximate
 `lumbar_total.sagittal` with the same names the video pipeline uses, so one rule set covers
@@ -191,6 +201,16 @@ sleeves). The vest takes 20 bytes with one 4-bit intensity per motor; sleeves ta
 per motor. The mapping from rule actuators to motors is in `configs/feedback/suit_bhaptics.json`,
 and motor layouts are parsed from your SenseShift clone at run time (GPL-3.0, not copied).
 Without `--ble` it is a dry run that logs the payloads.
+
+The bridge is fail-safe. SenseShift holds a motor at its last level, so every exit (end of
+`--duration-s`, Ctrl-C, an error) sends an acknowledged all-off frame before disconnecting. Each cue
+is capped:
+- at most 1 s long;
+- at most 0.8 intensity;
+- at most 30 % on-time per actuator over 10 s.
+
+A mapping's `limits` may lower these caps, never raise them. `--ble` names that are not devices in
+the mapping are refused.
 
 ```
 SlimeVR ─VMC─► vmc-posture ─LSL─► lsl-live (CueEngine, gated) ─LSL─► suit-bridge ─BLE─► SenseShift vest/sleeves
@@ -264,9 +284,18 @@ let IK jitter 6.6 cm sideways, and static optimisation then "needed" 70 N·m res
 - **Gravity is measured, never inferred from the trunk.** Priority: device gravity →
   floor-plane fit (RANSAC, sole-height corrected, needs both feet down at some point)
   → camera-level assumption. The chosen source is in `qc.json` and the report header.
-- **Claims follow the tier.** Monocular video is Tier C: `feedback_eligible` is false
-  for every number; a synthetic validation never approves anything; a validation in
-  which no joint/plane meets its target approves nothing.
+- **Claims follow the tier, and the tier follows evidence.** Every session is Tier C unless `process`
+  gets `--tier B|A --model-provenance FILE`. That JSON record (fields in `rehabtwin/tiers.py`) names
+  the person, the personalised model with its sha256, the evidence and the approver. It is refused
+  for synthetic input, for another person, or for a model other than the one the config uses, and
+  the session records why it has its tier (`tier_source`).
+- Monocular video is Tier C: `feedback_eligible` is false for every number.
+- A reference must be graded (`--reference-grade marker-mocap|markerless`); only marker-mocap
+  can approve anything.
+- A synthetic validation never approves anything, and neither does a validation in which no
+  joint/plane meets its target.
+- `muscles --assist/--passive` on a Tier-B/C body needs `--illustrative` and is labelled a
+  design-space bound, not an assistance profile.
 
 ## Known upstream issues handled here (drafted reports: `docs/upstream-issues.md`)
 

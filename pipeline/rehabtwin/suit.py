@@ -14,6 +14,11 @@ Motor layouts are parsed at run time from your SenseShift clone
 (``lib/bhaptics/senseshift/bh/devices.hpp``) rather than copied here.
 Which way a layout's x axis faces on the body must be checked on the
 hardware once; the mapping file says which motors each cue uses.
+
+Safety: SenseShift keeps a motor at its last level until told otherwise, so the bridge always
+ends with an all-off frame (normal end, Ctrl-C or error). Each cue is capped in duration and
+intensity, and each actuator in on-time share over a sliding window (mapping ``limits`` may
+lower these caps, never raise them).
 """
 from __future__ import annotations
 
@@ -109,23 +114,47 @@ class _Active:
     intensity: float
 
 
+LIMITS = {"max_cue_ms": 1000.0, "max_intensity": 0.8, "max_on_share": 0.3, "window_s": 10.0}
+
+
 class SuitDriver:
-    """Turns cue commands into per-device payload frames."""
+    """Turns cue commands into per-device payload frames, within hard safety caps."""
 
     def __init__(self, mapping, header=None):
         self.spec, self.layouts, self.motors = load_mapping(mapping, header)
+        lim = self.spec.get("limits", {})
+        self.limits = {k: min(float(lim.get(k, v)), v) if k != "window_s" else float(lim.get(k, v))
+                       for k, v in LIMITS.items()}
         self.active = []
         self.unknown = set()
+        self.rejected = []
+        self.history = {}           # actuator -> [(start, duration)] inside the duty window
 
     def add(self, cmd, now):
         act = cmd["actuator"]
         if act not in self.motors:
             self.unknown.add(act)
             return False
+        lim = self.limits
+        dur = min(max(float(cmd.get("duration_ms", 250)), 0.0), lim["max_cue_ms"]) / 1000.0
+        inten = min(max(float(cmd.get("intensity", 0.5)), 0.0), lim["max_intensity"])
+        hist = [(t0, d) for t0, d in self.history.get(act, []) if t0 + d > now - lim["window_s"]]
+        on = sum(min(t0 + d, now) - max(t0, now - lim["window_s"]) for t0, d in hist if t0 < now)
+        if (on + dur) / lim["window_s"] > lim["max_on_share"]:
+            self.rejected.append({"t": round(now, 3), "actuator": act, "reason": "on-time share cap"})
+            self.history[act] = hist
+            return False
+        hist.append((now, dur))
+        self.history[act] = hist
         dev, idx = self.motors[act]
-        self.active.append(_Active(dev, idx, now, cmd.get("duration_ms", 250) / 1000.0,
-                                   cmd.get("pattern", "pulse"), float(cmd.get("intensity", 0.5))))
+        self.active.append(_Active(dev, idx, now, dur, cmd.get("pattern", "pulse"), inten))
         return True
+
+    def all_off(self):
+        """Zero payload for every device (stops every motor)."""
+        self.active = []
+        return {dev: (encode_vest(np.zeros(len(layout))) if enc == "vest" else encode_plain(np.zeros(len(layout))))
+                for dev, (layout, enc) in self.layouts.items()}
 
     def frame(self, now):
         """{device: payload bytes} for every device (all-zero payload when idle, which stops the motors)."""
@@ -149,49 +178,68 @@ class DryRunTransport:
     def __init__(self):
         self.log, self.last = [], {}
 
-    def send(self, device, payload, t):
-        if self.last.get(device) != payload:
+    def send(self, device, payload, t, force=False):
+        if force or self.last.get(device) != payload:
             self.last[device] = payload
             self.log.append({"t": round(t, 3), "device": device, "payload_hex": payload.hex()})
+
+    def close(self):
+        pass
 
 
 class BleTransport:  # pragma: no cover - needs hardware
     """Writes payloads to SenseShift/bHaptics devices with bleak (pip install bleak)."""
 
-    def __init__(self, addresses):
+    def __init__(self, addresses, devices=None):
         import asyncio
         from bleak import BleakClient
+        unknown = sorted(set(addresses) - set(devices or addresses))
+        if unknown:
+            raise ValueError(f"--ble names {unknown} are not devices in the mapping ({sorted(devices)})")
         self.loop = asyncio.new_event_loop()
         self.clients = {dev: BleakClient(addr) for dev, addr in addresses.items()}
         for c in self.clients.values():
             self.loop.run_until_complete(c.connect())
         self.last = {}
 
-    def send(self, device, payload, t):
-        if self.last.get(device) == payload or device not in self.clients:
+    def send(self, device, payload, t, force=False):
+        if device not in self.clients or (not force and self.last.get(device) == payload):
             return
         self.last[device] = payload
-        self.loop.run_until_complete(self.clients[device].write_gatt_char(BH_MOTOR_CHAR, payload, response=False))
+        # all-off frames go with response, so the stop is acknowledged
+        self.loop.run_until_complete(self.clients[device].write_gatt_char(BH_MOTOR_CHAR, payload, response=force))
+
+    def close(self):
+        for c in self.clients.values():
+            try:
+                self.loop.run_until_complete(c.disconnect())
+            except Exception:
+                pass
 
 
 def run_bridge(driver, transport, duration_s=None, rate_hz=20.0, source="rehabtwin_cues", resolve_timeout=10.0):
     """LSL cue markers -> payload frames at ``rate_hz`` until ``duration_s`` (or forever)."""
     import pylsl
-    found = pylsl.resolve_byprop("name", source, timeout=resolve_timeout)
-    if not found:
-        raise RuntimeError(f"no LSL stream named {source!r}")
-    inlet = pylsl.StreamInlet(found[0])
+    from .lsl_bridge import resolve_one
+    inlet = pylsl.StreamInlet(resolve_one(pylsl, source, resolve_timeout))
     t0 = time.monotonic()
-    while duration_s is None or time.monotonic() - t0 < duration_s:
-        now = time.monotonic() - t0
-        while True:
-            sample, _ = inlet.pull_sample(timeout=0.0)
-            if sample is None:
-                break
-            cmd = json.loads(sample[0])
-            if "diagnostic" not in cmd:     # would_cue diagnostics never drive motors
-                driver.add(cmd, now)
-        for dev, payload in driver.frame(now).items():
-            transport.send(dev, payload, now)
-        time.sleep(1.0 / rate_hz)
+    now = 0.0
+    try:
+        while duration_s is None or time.monotonic() - t0 < duration_s:
+            now = time.monotonic() - t0
+            while True:
+                sample, _ = inlet.pull_sample(timeout=0.0)
+                if sample is None:
+                    break
+                cmd = json.loads(sample[0])
+                if "diagnostic" not in cmd:     # would_cue diagnostics never drive motors
+                    driver.add(cmd, now)
+            for dev, payload in driver.frame(now).items():
+                transport.send(dev, payload, now)
+            time.sleep(1.0 / rate_hz)
+    finally:
+        # whatever ended the loop (duration, Ctrl-C, an exception), leave every motor off
+        for dev, payload in driver.all_off().items():
+            transport.send(dev, payload, now, force=True)
+        transport.close()
     return transport

@@ -49,7 +49,7 @@ def software_versions():
 
 
 def session_record(seq, qc, out_dir: Path, tier, person_ref, video=None, front_end=None, config_name=None,
-                   outputs=None, validation_report=None):
+                   outputs=None, validation_report=None, tier_source=None):
     meta = seq.meta
     synthetic = bool(meta.get("synthetic", False))
     rec = {
@@ -58,6 +58,7 @@ def session_record(seq, qc, out_dir: Path, tier, person_ref, video=None, front_e
         "started_at": meta.get("started_at") or datetime.now(timezone.utc).replace(microsecond=0).isoformat(),
         "synthetic": synthetic,
         "twin_tier": tier,
+        "tier_source": tier_source or {"tier": tier, "basis": "unspecified"},
         "hardware": [{"device_id": "cam1", "type": "rgb-camera",
                       "serial_or_name": meta.get("camera", "unknown monocular camera")}],
         "streams": [],
@@ -67,7 +68,7 @@ def session_record(seq, qc, out_dir: Path, tier, person_ref, video=None, front_e
             "reprojection_error_px": None,
         },
         "sync": {"method": "single-stream", "max_offset_ms_after_correction": None},
-        "accuracy_layers": accuracy_layers(tier, qc, validation_report),
+        "accuracy_layers": accuracy_layers(tier, qc, validation_report, tier_source),
         "pipeline": {
             "front_end": front_end or meta.get("source", "unknown"),
             "back_end": "rehabtwin.opensim_stage (OpenSim scale + IK)",
@@ -86,7 +87,7 @@ def session_record(seq, qc, out_dir: Path, tier, person_ref, video=None, front_e
     return rec
 
 
-def accuracy_layers(tier, qc, validation_report=None):
+def accuracy_layers(tier, qc, validation_report=None, tier_source=None):
     """What this session can honestly say about each docs/accuracy.md layer."""
     kin = "unvalidated"
     kin_err = "no reference comparison for this setup/movement (docs/validation-protocol.md step 5)"
@@ -94,9 +95,17 @@ def accuracy_layers(tier, qc, validation_report=None):
         kin = "personalised" if validation_report.get("feedback_allowed_joint_planes") else "unvalidated"
         kin_err = f"see validation report; passing joint/planes: {', '.join(validation_report.get('feedback_allowed_joint_planes', [])) or 'none'}"
     ik = qc.get("ik", {}).get("marker_rms_m", {})
+    if (tier_source or {}).get("basis") == "model-provenance record":
+        ev = f"per provenance record {tier_source['file']} ({tier_source.get('evidence', '')}); model is still " \
+             "scaled by marker pairs in this pipeline"
+        bones = {"status": "personalised", "error": ev}
+        joints = {"status": "personalised" if tier == "A" else "generic", "error": ev}
+    else:
+        bones = {"status": "generic", "error": "statistical skeleton (SKEL/OpenSim scaled), no imaging"}
+        joints = {"status": "generic", "error": "regressed from body shape and scaled, not measured"}
     return {
-        "bone_geometry": {"status": "generic", "error": "statistical skeleton (SKEL/OpenSim scaled), no imaging"},
-        "joint_centres": {"status": "generic", "error": "regressed from body shape and scaled, not measured"},
+        "bone_geometry": bones,
+        "joint_centres": joints,
         "surface_shape": {"status": "unvalidated", "error": "estimated from video; no scan/tape comparison"},
         "kinematics": {"status": kin, "error": f"{kin_err}; IK marker RMS mean {ik.get('mean', '?')} m"},
         "muscle_geometry": {"status": "generic", "error": "generic Hill-type muscles, not personalised"},

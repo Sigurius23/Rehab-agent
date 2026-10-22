@@ -1,5 +1,6 @@
 """Fast unit tests (numpy/scipy only). Run: python -m pytest pipeline/tests -q"""
 import time
+from pathlib import Path
 
 import numpy as np
 import pytest
@@ -435,7 +436,7 @@ def test_suit_payload_encoding_and_patterns(tmp_path):
     assert d.frame(0.1)["thigh_r"] == bytes([60] * 6) and d.frame(0.3)["thigh_r"] == bytes(6)
     d.add({"actuator": "upper_back_center", "intensity": 1.0, "duration_ms": 300}, 1.0)
     vest = d.frame(1.1)["vest"]
-    assert sum(bin(b).count("1") for b in vest) == 4 * 4      # 4 motors at full (4 bits each)
+    assert sorted({b >> 4 for b in vest} | {b & 15 for b in vest}) == [0, 12]   # 4 motors capped at 0.8 -> 12/15
 
 
 def test_live_chain_posture_to_suit_payloads(tmp_path):
@@ -581,3 +582,128 @@ def test_opencap_calibration_reader_is_numpy_only(tmp_path):
     (tmp_path / "Cam0" / "evil.pickle").write_bytes(pickle.dumps({"intrinsicMat": Evil()}))
     with pytest.raises(pickle.UnpicklingError):
         read_opencap_calibration([tmp_path / "Cam0" / "evil.pickle"])
+
+
+
+def test_suit_caps_and_all_off_on_any_exit(tmp_path, monkeypatch):
+    from rehabtwin import suit
+    hdr = tmp_path / "devices.hpp"
+    hdr.write_text(FAKE_BH)
+    d = suit.SuitDriver("suit_bhaptics", header=hdr)
+    assert d.add({"actuator": "thigh_r_lateral", "intensity": 5.0, "duration_ms": 60000}, 0.0)
+    a = d.active[-1]
+    assert a.intensity == suit.LIMITS["max_intensity"] and a.duration == suit.LIMITS["max_cue_ms"] / 1000
+    # on-time share: 1 s cues every second exhaust the 30 % budget of the 10 s window
+    accepted = [d.add({"actuator": "thigh_r_lateral", "intensity": 0.5, "duration_ms": 1000}, float(t)) for t in range(1, 6)]
+    assert accepted.count(True) == 2 and d.rejected
+    # the bridge ends with an all-off frame even when the cue source dies mid-cue
+    transport = suit.DryRunTransport()
+
+    class Inlet:
+        def __init__(self, *_):
+            self.n = 0
+
+        def pull_sample(self, timeout=0.0):
+            self.n += 1
+            if self.n == 1:
+                return ['{"actuator": "thigh_r_lateral", "intensity": 0.6, "duration_ms": 900}'], 0.0
+            if self.n > 3:
+                raise KeyboardInterrupt
+            return None, None
+
+    class FakeLsl:
+        StreamInlet = Inlet
+
+        @staticmethod
+        def resolve_byprop(*_, **__):
+            class Info:
+                def source_id(self):
+                    return "x"
+            return [Info()]
+    monkeypatch.setitem(__import__("sys").modules, "pylsl", FakeLsl)
+    with pytest.raises(KeyboardInterrupt):
+        suit.run_bridge(suit.SuitDriver("suit_bhaptics", header=hdr), transport, rate_hz=200)
+    last = {}
+    for e in transport.log:
+        last[e["device"]] = e["payload_hex"]
+    assert last and all(set(h) == {"0"} for h in last.values())
+
+
+def test_rules_report_unevaluated_signals():
+    spec = _rule_spec()
+    t = np.arange(0, 2, 0.02)
+    log, _ = feedback.replay(spec, t, {"other": np.zeros_like(t)}, tier="A", allowed_joint_planes=["knee_r.frontal"])
+    pr = feedback.summarise(spec, log, [], "A", ["knee_r.frontal"])["per_rule"]
+    assert all(v["unevaluated"] and v["violations"] == 0 for v in pr.values())
+
+
+def test_tier_needs_provenance_bound_to_model(tmp_path):
+    import hashlib
+    import json
+    from rehabtwin.tiers import TierRefused, resolve
+    model = tmp_path / "p42.osim"
+    model.write_text("<OpenSimDocument/>")
+    rec = {"tier": "A", "person_ref": "P42", "model": "p42.osim", "model_sha256": hashlib.sha256(model.read_bytes()).hexdigest(),
+           "evidence": "MRI segmentation", "approved_by": "clinician"}
+    prov = tmp_path / "prov.json"
+    prov.write_text(json.dumps(rec))
+    assert resolve(None, "P42")[0] == "C"
+    for kwargs in ({}, {"synthetic": True, "provenance": prov, "model_path": model},
+                   {"provenance": prov, "model_path": tmp_path / "other.osim"}):
+        if "model_path" in kwargs and not Path(kwargs["model_path"]).exists():
+            Path(kwargs["model_path"]).write_text("<different/>")
+        with pytest.raises(TierRefused):
+            resolve("A", "P42", **kwargs)
+    with pytest.raises(TierRefused):
+        resolve("A", "P43", provenance=prov, model_path=model)          # someone else's record
+    tier, src = resolve("A", "P42", provenance=prov, model_path=model)
+    assert tier == "A" and src["basis"] == "model-provenance record" and src["model_sha256"] == rec["model_sha256"]
+    assert resolve("B", "P42", provenance=prov, model_path=model)[0] == "B"   # lower than granted is fine
+
+
+def test_session_gate_fails_closed(tmp_path):
+    import json
+    from rehabtwin import cli
+    spec = {"exercise": "squat"}
+    (tmp_path / "session.json").write_text(json.dumps({"twin_tier": "A", "person_ref": "P1", "session_id": "s"}))
+    good = {"synthetic": False, "reference_grade": "marker-mocap", "person_ref": "P1", "movements": ["squat"],
+            "feedback_allowed_joint_planes": ["knee_r.frontal"]}
+    cases = [({}, ["knee_r.frontal"]), ({"reference_grade": "markerless"}, []), ({"reference_grade": None}, []),
+             ({"person_ref": "P2"}, []), ({"movements": ["walk"]}, []), ({"synthetic": True}, [])]
+    for change, allowed in cases:
+        (tmp_path / "validation-report.json").write_text(json.dumps({**good, **change}))
+        _, tier, got, why = cli._session_gate(tmp_path, spec)
+        assert got == allowed and (why is None) == bool(allowed), change
+
+
+def test_live_loop_refuses_foreign_or_ambiguous_posture_streams():
+    pytest.importorskip("pylsl")
+    import threading
+    from rehabtwin import lsl_bridge
+
+    class Info:
+        def __init__(self, sid):
+            self.sid = sid
+
+        def source_id(self):
+            return self.sid
+
+    class Two:
+        @staticmethod
+        def resolve_byprop(*_, **__):
+            return [Info("a"), Info("b")]
+    with pytest.raises(RuntimeError, match="refusing to guess"):
+        lsl_bridge.resolve_one(Two, "rehabtwin_posture", 1.0)
+    # an IMU stream must not inherit the video session's approval: tags differ -> Tier C, nothing sent
+    t = np.arange(0, 4, 0.02)
+    s = np.where((t % 2) < 0.6, 15.0, 0.0)
+    res = {}
+    live = threading.Thread(target=lambda: res.update(eng=lsl_bridge.run_live(
+        _rule_spec(), "A", ["knee_r.frontal"], duration_s=15, source="rt_tag_posture",
+        expect_session="video-session", expect_front_end="MediaPipe")))
+    live.start()
+    lsl_bridge.stream_posture(t, {"s": s}, speed=4.0, name="rt_tag_posture", session_id="other", front_end="SlimeVR")
+    live.join()
+    log = res["eng"].log
+    assert any(e.get("event") == "source_mismatch" for e in log)
+    assert not [e for e in log if e.get("decision") == "cue"] and [e for e in log if e.get("decision") == "would_cue"]

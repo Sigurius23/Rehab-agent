@@ -1,6 +1,15 @@
 # Changelog
 
 ## Unreleased
+- **Safety gates:**
+  - Tier B/A only with a model-provenance record bound to the model by sha256 (`--model-provenance`).
+  - `--reference-grade` is required with any reference.
+  - The feedback gate needs a marker-mocap validation for the same person and exercise.
+  - The live loop downgrades foreign or untagged posture streams to Tier C and refuses ambiguous LSL resolves.
+  - `vmc-posture` listens on localhost by default and stops on stale data.
+  - `suit-bridge` always ends all-off, with duration, intensity and on-time caps.
+  - Unevaluated rules are reported.
+  - Device what-ifs below Tier A need `--illustrative`.
 - `rehabtwin correct`: correction view (clinician specs, planted-feet IK, compensations, ROM check, Tier gating)
 - `rehabtwin muscles`: estimated double-stance GRF → inverse dynamics → static optimisation; corrected and
   weakened what-ifs; muscles.html

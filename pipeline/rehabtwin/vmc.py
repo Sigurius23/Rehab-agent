@@ -34,6 +34,7 @@ PARENTS = {
     "RightShoulder": ("UpperChest", "Chest"), "RightUpperArm": ("RightShoulder", "UpperChest", "Chest"),
     "RightLowerArm": ("RightUpperArm",), "RightHand": ("RightLowerArm",),
 }
+FRONT_END = "SlimeVR VMC (IMU suit)"
 SIGNALS = ["torso.sagittal", "torso.frontal", "knee_angle_r", "knee_angle_l", "knee_fppa_r", "knee_fppa_l",
            "lumbar_total.sagittal"]
 
@@ -65,6 +66,7 @@ class VMCPose:
         self.root = (np.zeros(3), np.array([0.0, 0.0, 0.0, 1.0]))
         self.lock = threading.Lock()
         self.frames = 0
+        self.last_frame = None      # time.monotonic() of the latest root packet
 
     # OSC handlers (python-osc dispatcher signature: address, *args)
     def on_bone(self, address, name, px, py, pz, qx, qy, qz, qw):
@@ -75,6 +77,7 @@ class VMCPose:
         with self.lock:
             self.root = unity_to_rh((px, py, pz), (qx, qy, qz, qw))
             self.frames += 1
+            self.last_frame = time.monotonic()
 
     def global_positions(self):
         with self.lock:
@@ -144,8 +147,17 @@ def posture_signals(pos):
     return out
 
 
-def serve(port=39539, rate_hz=60.0, duration_s=None, publish_lsl=True, on_signals=None, host="0.0.0.0"):
-    """Receive VMC, sample posture at ``rate_hz``; publish an LSL posture stream and/or call ``on_signals``."""
+STALE_S = 0.5    # no VMC packet for this long: stop publishing rather than repeat a frozen pose
+
+
+def serve(port=39539, rate_hz=60.0, duration_s=None, publish_lsl=True, on_signals=None, host="127.0.0.1",
+          stale_s=STALE_S):
+    """Receive VMC, sample posture at ``rate_hz``; publish an LSL posture stream and/or call ``on_signals``.
+
+    Listens on localhost unless told otherwise (any host that can reach the port could inject
+    posture). Samples are only published while VMC packets keep arriving; after ``stale_s``
+    without one the stream goes quiet, so a dropped tracker cannot freeze a cue-worthy pose.
+    """
     from pythonosc import dispatcher, osc_server
     pose = VMCPose()
     d = dispatcher.Dispatcher()
@@ -157,18 +169,14 @@ def serve(port=39539, rate_hz=60.0, duration_s=None, publish_lsl=True, on_signal
     outlet = None
     if publish_lsl:
         import pylsl
-        info = pylsl.StreamInfo("rehabtwin_posture", "Posture", len(SIGNALS), rate_hz, "float32", "rehabtwin_posture_vmc")
-        ch = info.desc().append_child("channels")
-        for n in SIGNALS:
-            c = ch.append_child("channel")
-            c.append_child_value("label", n)
-            c.append_child_value("unit", "deg")
-        outlet = pylsl.StreamOutlet(info)
+        from .lsl_bridge import posture_info
+        outlet = pylsl.StreamOutlet(posture_info(pylsl, SIGNALS, rate_hz, session_id="", front_end=FRONT_END))
     t0 = time.monotonic()
     try:
         while duration_s is None or time.monotonic() - t0 < duration_s:
             time.sleep(1.0 / rate_hz)
-            if not pose.frames:
+            if not pose.frames or time.monotonic() - pose.last_frame > stale_s:
+                pose.stale_skips = getattr(pose, "stale_skips", 0) + 1
                 continue
             sig = pose.signals()
             if not sig:

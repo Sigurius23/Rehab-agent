@@ -62,6 +62,7 @@ class CueEngine:
 
     def __post_init__(self):
         self.state = {r["id"]: _RuleState() for r in self.spec["rules"]}
+        self.evaluated = {r["id"]: 0 for r in self.spec["rules"]}   # samples where the rule's signal was usable
         self.last_cue = {}
         sch = self.spec.get("schedule", {})
         self.bandwidth = sch.get("bandwidth_deg", 2.0)
@@ -88,6 +89,7 @@ class CueEngine:
         for r in self.spec["rules"]:
             if r["signal"] not in signals or not np.isfinite(signals[r["signal"]]):
                 continue
+            self.evaluated[r["id"]] += 1
             v = float(signals[r["signal"]])
             st = self.state[r["id"]]
             op = OPS[r["op"]]
@@ -142,6 +144,8 @@ def replay(spec, time, signals, tier="C", allowed_joint_planes=()):
     sent = []
     for k, t in enumerate(time):
         sent += eng.update(float(t), {n: v[k] for n, v in signals.items()})
+    for rid, n in eng.evaluated.items():
+        eng.log.append({"rule": rid, "event": "evaluated_samples", "n": n, "of": len(time)})
     return eng.log, sent
 
 
@@ -150,7 +154,11 @@ def summarise(spec, log, sent, tier, allowed):
     for r in spec["rules"]:
         ev = [e for e in log if e.get("rule") == r["id"] and "decision" in e]
         ends = [e for e in log if e.get("rule") == r["id"] and e.get("event") == "violation_end"]
+        ev_n = next((e["n"] for e in log if e.get("rule") == r["id"] and e.get("event") == "evaluated_samples"), None)
         per_rule[r["id"]] = {
+            "evaluated_samples": ev_n,
+            # a rule whose signal never arrived reports no violations because it never looked
+            "unevaluated": ev_n == 0,
             "violations": len(ev),
             "cues_sent": sum(e["decision"] == "cue" for e in ev),
             "would_cue": sum(e["decision"] == "would_cue" for e in ev),

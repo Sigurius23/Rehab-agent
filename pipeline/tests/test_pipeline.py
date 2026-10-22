@@ -163,11 +163,14 @@ def test_correction_view_on_synthetic_valgus(selftest_run):
 
 
 def test_muscle_effects_and_weakness_what_if(selftest_run):
+    from rehabtwin.correction import CorrectionRefused
     out, res, _ = selftest_run
     rep = res["metrics"]["reps"][0]
+    with pytest.raises(CorrectionRefused):          # Tier C: no device profile without --illustrative
+        cli.muscle_study(out, start=rep["peak_s"] - 0.1, stop=rep["peak_s"] + 0.1, assist=["knee_angle_r=40:neg"])
     study, mdir = cli.muscle_study(out, start=rep["peak_s"] - 0.3, stop=rep["peak_s"] + 0.3,
                                    weaken=["gluteus_maximus_r=0.5"], assist=["knee_angle_r=40:neg"],
-                                   passive=["knee_angle_r=60@20:pos"])
+                                   passive=["knee_angle_r=60@20:pos"], illustrative=True)
     base = study["runs"]["measured"]
     assert base["grf"]["feet_planted"] and 0.8 < base["grf"]["min_vertical_bw"] <= base["grf"]["peak_vertical_bw"] < 1.4
     prior = study["kinematics_prior"]["measured"]                    # double stance: feet held where they stood
