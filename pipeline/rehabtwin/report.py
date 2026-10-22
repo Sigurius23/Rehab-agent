@@ -784,7 +784,8 @@ def write(path, session, qc, metrics, signals, time, validation=None, reference=
     rep_rows = []
     for r in metrics["reps"]:
         cells = "".join(f"<td>{r['values'][k]['at_peak']}</td>" for k in list(metrics["summary"])[:6])
-        flag = " ⚠ imputed frames" if r["contains_imputed_frames"] else ""
+        flag = (" ⚠ imputed frames" if r["contains_imputed_frames"] else "") + (
+            " ⚠ missing markers" if r.get("contains_missing_markers") else "")
         rep_rows.append(f"<tr><td>{r['rep']}</td><td>{r['start_s']}–{r['stop_s']}</td><td>{r['duration_s']}</td>{cells}<td>{flag}</td></tr>")
     rep_head = "".join(f"<th>{e(k)} @peak</th>" for k in list(metrics["summary"])[:6])
     charts = []
@@ -804,6 +805,10 @@ def write(path, session, qc, metrics, signals, time, validation=None, reference=
         f"{qc.get('filter', {}).get('max_gap_s', '?')} s, longer gaps left without an IK target): "
         + "; ".join(f"{e(n)} {g['imputed_s']} s bridged, {g['missing_s']} s missing" for n, g in gaps[:5])
         + (f"; {len(gaps) - 5} more in qc.json" if len(gaps) > 5 else "") + ".</p>")
+    un = qc.get("unsolved", {})
+    if un.get("frames"):
+        gap_html += (f"<p class='muted'>{un['frames']} frames not solved: fewer than {un['min_target_weight']:.0%} of "
+                     f"the IK marker weight had a target there ({len(un['spans'])} spans, see qc.json).</p>")
     val_html = ""
     if validation:
         gate_rows = "".join(f"<tr><td>{e(g)}</td><td><span class='b {v}'>{v}</span></td></tr>"

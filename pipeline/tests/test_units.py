@@ -808,3 +808,62 @@ def test_report_lists_marker_gaps(tmp_path):
     assert "Marker gaps in 1 of 2 markers" in page and "LKnee 0.0 s bridged, 1.367 s missing" in page
     qc["imputed_by_marker"]["LKnee"] = clean
     assert "Marker gaps" not in report.write(tmp_path / "r.html", sess, qc, met, {}, np.arange(3.0)).read_text()
+
+
+def test_trc_missing_last_marker_and_whole_rows_are_read_by_opensim(tmp_path):
+    osim = pytest.importorskip("opensim")
+    T, M = 20, 4
+    pts = np.random.default_rng(0).normal(size=(T, M, 3))
+    pts[5:9, M - 1] = np.nan   # the last marker: an empty trailing field used to cost the row a column
+    pts[12:14] = np.nan        # rows between segments
+    path = write_trc(tmp_path / "gaps.trc", [f"m{i}" for i in range(M)], pts, np.arange(T) / 60)
+    assert all(len(r.split("\t")) == 2 + 3 * M for r in path.read_text().splitlines()[6:] if r)
+    tab = osim.TimeSeriesTableVec3(str(path))
+    back = np.array([[[tab.getRowAtIndex(i)[j].get(k) for k in range(3)] for j in range(M)] for i in range(T)])
+    assert np.array_equal(np.isnan(back), np.isnan(pts)) and np.allclose(back[np.isfinite(back)], pts[np.isfinite(pts)], atol=1e-6)
+    assert np.array_equal(np.isnan(read_trc(path)[1]), np.isnan(pts))
+
+
+def test_condition_markers_splits_where_too_little_ik_weight_has_a_target():
+    fps, T = 30.0, 150
+    t = np.arange(T) / fps
+    pts = np.stack([np.stack([np.sin(t + k), np.cos(t + k), np.full(T, k)], axis=1) for k in range(4)], axis=1)
+    pts[40:50, :2] = np.nan    # both heavy markers lost (augmenter lower body masked): IK would fail or freeze
+    pts[60:75, 0] = np.nan     # long gaps that overlap for only 5 frames (<= max_gap):
+    pts[70:85, 1] = np.nan     # the overlap must split the trial, not be bridged
+    pts[100:120, 3] = np.nan   # an unweighted marker: neither coverage nor rep flags care
+    segs, clean, qc = opensim_stage.condition_markers(
+        list("ABCD"), pts, np.ones(T, bool), np.arange(T) + 1000, fps, {"max_gap_s": 0.2, "min_segment_s": 1.0},
+        weights=[10.0, 10.0, 1.0, 0.0], min_target_weight=0.5)
+    assert segs == [(0, 40), (75, T)]           # [50, 70) is covered but shorter than min_segment_s
+    assert np.isnan(clean[40:75]).all() and np.isfinite(clean[:40]).all()
+    assert qc["unsolved"] == {"min_target_weight": 0.5, "frames": 15, "spans": [
+        {"start_frame": 1040, "stop_frame": 1050, "duration_s": 0.333},
+        {"start_frame": 1070, "stop_frame": 1075, "duration_s": 0.167}]}
+    assert qc["missing_target_frames"] == list(range(1075, 1085))   # B lost in a solved frame; D has no weight
+    assert qc["imputed_by_marker"]["D"]["missing_spans"] == [{"start_frame": 1100, "stop_frame": 1120, "duration_s": 0.667}]
+    w = np.isfinite(clean).all(axis=2)[[s for a, b in segs for s in range(a, b)]] @ [10.0, 10.0, 1.0, 0.0]
+    assert (w >= 0.5 * 21).all()                 # every solved frame keeps most of the weight
+
+
+def test_metrics_flag_reps_with_missing_markers():
+    from rehabtwin import metrics
+    fps = 30.0
+    t = np.arange(300) / fps
+    knee = 45.0 * (1 - np.cos(2 * np.pi * t / 2.5))    # 4 reps of 2.5 s
+    tab = Table(["knee_angle_r", "knee_angle_l"], np.stack([knee, knee], axis=1), t)
+    met, _ = metrics.compute(tab, None, "squat", derived={}, imputed_times=[0.5], missing_times=np.arange(160, 170) / fps)
+    assert [r["contains_imputed_frames"] for r in met["reps"]] == [True, False, False, False]
+    assert [r["contains_missing_markers"] for r in met["reps"]] == [False, False, True, False]
+
+
+def test_report_flags_missing_markers_and_unsolved_frames(tmp_path):
+    from rehabtwin import report
+    sess = {"session_id": "s1", "pipeline": {"front_end": "f", "back_end": "b", "config": "c", "software": {}}}
+    rep = {"rep": 1, "start_s": 0.0, "stop_s": 1.0, "duration_s": 1.0, "values": {}, "contains_imputed_frames": False,
+           "contains_missing_markers": True}
+    met = {"tier": "C", "claims": "", "exercise": "squat", "n_reps": 1, "rep_driver": None, "summary": {}, "reps": [rep]}
+    qc = {"imputed_frames": [], "imputed_by_marker": {}, "unsolved": {
+        "min_target_weight": 0.5, "frames": 15, "spans": [{"start_frame": 40, "stop_frame": 55, "duration_s": 0.5}]}}
+    page = report.write(tmp_path / "r.html", sess, qc, met, {}, np.arange(3.0)).read_text()
+    assert "⚠ missing markers" in page and "15 frames not solved: fewer than 50% of the IK marker weight" in page

@@ -334,3 +334,45 @@ def test_augmenter_adds_plausible_anatomical_markers(tmp_path):
     assert (pts["r.ASIS_study"][:, 0] - pts["r.PSIS_study"][:, 0] > 0.05).all()
     assert np.linalg.norm(pts["RHJC_study"] - pts["RHip"], axis=1).max() < 0.10
     assert np.linalg.norm(pts["r_calc_study"] - pts["RHeel"], axis=1).max() < 0.08
+
+
+def test_lstm_path_splits_at_a_lost_knee_instead_of_freezing_it(tmp_path):
+    """A keypoint lost > 0.2 s masks the augmenter's lower-body markers; the stage must not solve (or freeze) there."""
+    pytest.importorskip("onnxruntime")
+    from rehabtwin.augmenter import augment
+    from rehabtwin.io_formats import read_trc
+    from rehabtwin.sequence import MarkerSequence
+    cfg = load_config("mediapipe33_pose2sim")
+    model = opensim.Model(str(resolve(cfg["model"])))
+    ms = opensim.MarkerSet(str(resolve(cfg["marker_set"])))
+    for i in range(ms.getSize()):
+        model.addMarker(ms.get(i).clone())
+    model.finalizeConnections()
+    state = model.initSystem()
+    names = [ms.get(i).getName() for i in range(ms.getSize())]
+    k = np.arange(420)                       # 1 s still, six 2 s squats, 1 s still at 30 fps
+    depth = np.where((k >= 30) & (k < 390), 0.5 * (1 - np.cos(2 * np.pi * (k - 30) / 60)), 0.0)
+    frames = []
+    for d in depth:
+        q = np.radians(50.0 * d)
+        for c, v in (("hip_flexion_r", q), ("hip_flexion_l", q), ("knee_angle_r", 2 * q), ("knee_angle_l", 2 * q),
+                     ("ankle_angle_r", q), ("ankle_angle_l", q), ("pelvis_ty", 0.93 - 0.25 * d)):
+            model.getCoordinateSet().get(c).setValue(state, v, False)
+        model.realizePosition(state)
+        frames.append([[model.getMarkerSet().get(n).getLocationInGround(state).get(j) for j in range(3)] for n in names])
+    X = np.array(frames)
+    X[120:135, names.index("LKnee")] = np.nan    # 0.5 s: no lower-body augmented markers there
+    X[340:360, names.index("LElbow")] = np.nan   # 0.67 s: arm markers missing; LElbow is the TRC's last column
+    augment(MarkerSequence(fps=30.0, marker_names=names, markers=X, frame="yup_world"), 1.75, 70.0).save(tmp_path / "a.npz")
+    res = cli.process(tmp_path / "a.npz", tmp_path / "s", exercise="squat", mass_kg=70.0, height_m=1.75)
+    qc = res["qc"]
+    assert [(s["start_frame"], s["stop_frame"]) for s in qc["segments"]] == [(0, 120), (135, 420)]
+    assert [(s["start_frame"], s["stop_frame"]) for s in qc["unsolved"]["spans"]] == [(120, 135)]
+    assert qc["missing_target_frames"] == list(range(340, 360)) and qc["ik"]["pass"]
+    trc_names, trc, _, _ = read_trc(tmp_path / "s" / "opensim" / "markers_dynamic.trc")
+    assert trc_names[-1] == "LElbow" and np.isnan(trc[340:360, -1]).all() and np.isnan(trc[120:135]).all()
+    assert read_table(res["motion"]).time[0] == pytest.approx(135 / 30.0)
+    reps = res["metrics"]["reps"]
+    hit = [r["start_s"] <= 359 / 30.0 and r["stop_s"] >= 340 / 30.0 for r in reps]
+    assert any(hit) and [r["contains_missing_markers"] for r in reps] == hit
+    assert "frames not solved" in (tmp_path / "s" / "report.html").read_text()

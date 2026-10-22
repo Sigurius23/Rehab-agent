@@ -15,8 +15,9 @@ import numpy as np
 def write_trc(path, marker_names, markers, times, units="m"):
     """Write markers (T, M, 3) to an OpenSim .trc file.
 
-    Missing samples (NaN) are written as empty fields, which OpenSim's IK
-    treats as "marker not observed in this frame" instead of a position.
+    Missing samples are written as ``NaN``, which OpenSim reads as "marker not
+    observed in this frame" (IK skips it). Not empty fields: OpenSim's reader
+    drops a trailing empty field and rejects the row when the last marker is missing.
     """
     path = Path(path)
     markers = np.asarray(markers, dtype=float)
@@ -36,7 +37,7 @@ def write_trc(path, marker_names, markers, times, units="m"):
     for f in range(n_frames):
         vals = []
         for v in markers[f].reshape(-1):
-            vals.append("" if not np.isfinite(v) else f"{v:.6f}")
+            vals.append(f"{v:.6f}" if np.isfinite(v) else "NaN")
         lines.append(f"{f + 1}\t{times[f]:.6f}\t" + "\t".join(vals))
     path.write_text("\n".join(lines) + "\n")
     return path

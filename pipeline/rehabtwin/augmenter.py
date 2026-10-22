@@ -83,7 +83,8 @@ def augment(seq: MarkerSequence, height_m, mass_kg, version="v0.3", config="medi
 
     The LSTM needs dense input, so every gap is interpolated before it runs, but a part's
     outputs are NaN wherever one of its inputs was missing for longer than ``max_gap_s``
-    (the stage's bridging limit): a marker predicted from a frozen keypoint is not data.
+    (the stage's bridging limit): a marker predicted from a frozen keypoint is not data. The
+    stage does not solve frames left without most of the IK marker weight (lower part masked).
     Frames predicted from bridged (short-gap) inputs are listed in meta for the stage's QC.
     """
     X = np.asarray(seq.markers, float)
