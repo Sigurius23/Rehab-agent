@@ -707,3 +707,104 @@ def test_live_loop_refuses_foreign_or_ambiguous_posture_streams():
     log = res["eng"].log
     assert any(e.get("event") == "source_mismatch" for e in log)
     assert not [e for e in log if e.get("decision") == "cue"] and [e for e in log if e.get("decision") == "would_cue"]
+
+
+# ------------------------------------------------------------- body mass
+
+def test_subject_mass_is_measured_only_when_given():
+    cfg = {"default_mass_kg": 70.0}
+    assert opensim_stage.subject_mass({}, cfg, 81.5) == (81.5, "measured")
+    assert opensim_stage.subject_mass({}, cfg) == (70.0, "assumed default")
+    assert opensim_stage.subject_mass({"synthetic": True, "mass_kg": 72.0}, cfg) == (72.0, "synthetic truth")
+    assert opensim_stage.subject_mass({"synthetic": True}, cfg) == (70.0, "assumed default")
+    assert opensim_stage.subject_mass({"synthetic": True, "mass_kg": 72.0}, cfg, 60.0) == (60.0, "measured")
+    for bad in (0, 0.0, -5.0):                 # '0 or default' used to turn a typo into a silent 70 kg
+        with pytest.raises(ValueError):
+            opensim_stage.subject_mass({}, cfg, bad)
+
+
+def _mass_session(d, source, mass=70.0):
+    import json
+    (d / "session.json").write_text(json.dumps({
+        "session_id": "s", "person_ref": "P1", "started_at": "2026-01-01T00:00:00+00:00", "twin_tier": "C",
+        "pipeline": {"front_end": "x", "outputs": {"model": "model.osim", "motion": "ik.mot"}}}))
+    (d / "metrics.json").write_text(json.dumps({"exercise": "squat", "reps": [{"start_s": 0.0, "stop_s": 1.0}]}))
+    if source:
+        (d / "qc.json").write_text(json.dumps({"subject": {"mass_kg": mass, "mass_source": source, "height_m": None}}))
+    (d / "tests.json").write_text(json.dumps({"tests": [{"action": "knee_extension_r", "torque_Nm": 150.0}]}))
+    return d
+
+
+def _fake_muscles_and_strength(monkeypatch, calls):
+    """muscles.run / strength.calibrate stand-ins: the mass gate and reports without OpenSim."""
+    from rehabtwin import muscles, strength
+
+    def run(**kw):
+        calls.append(kw)
+        Path(kw["out_dir"], kw["label"]).mkdir(parents=True, exist_ok=True)
+        return {"label": kw["label"], "exercise": kw["exercise"], "valid_exercise": True, "time_range_s": [0.0, 1.0],
+                "grf": {"body_mass_kg": 70.0, "min_vertical_bw": 1.0, "peak_vertical_bw": 1.0,
+                        "right_share_range": [0.5, 0.5], "feet_planted": True},
+                "group_activation": {"quadriceps_r": {"peak": 0.4}}, "joint_moments": {}, "pelvis_residual_force_N": {},
+                "reserve_torque_peaks_Nm": {}, "muscles_saturated": [], "assistive_devices": {},
+                "caveats": [muscles.muscle_caveat(kw.get("muscle_model"))]}
+
+    def calibrate(model_path, tests, out_dir):
+        Path(out_dir).mkdir(parents=True, exist_ok=True)
+        Path(out_dir, "model_strength.osim").write_text("<OpenSimDocument/>")
+        return {"body_mass_kg": 70.0, "symmetry": {}, "calibrated_muscles": 9, "total_muscles": 80, "notes": [],
+                "tests": [{"action": "knee_extension_r", "posture_deg": {}, "measured_Nm": 150.0, "generic_model_Nm": 200.0,
+                           "factor": 0.75, "at_bound": False, "prime_movers": ["vaslat_r"],
+                           "synergists_scaled_with_this_test": [], "scaled_share_of_generic": 0.9}]}
+    monkeypatch.setattr(muscles, "run", run)
+    monkeypatch.setattr(strength, "calibrate", calibrate)
+
+
+def test_muscles_and_strength_refuse_an_assumed_body_mass(tmp_path, monkeypatch):
+    from rehabtwin import cli
+    calls = []
+    _fake_muscles_and_strength(monkeypatch, calls)
+    banner = "body mass assumed (70 kg): every force, torque and activation scales with it"
+    for source in ("assumed default", None):     # no recorded source fails closed too
+        d = tmp_path / str(source)
+        d.mkdir()
+        _mass_session(d, source)
+        with pytest.raises(ValueError, match="--mass-kg"):
+            cli.muscle_study(d, plant=False, view_3d=False)
+        with pytest.raises(ValueError, match="--mass-kg"):
+            cli.strength_calibration(d, d / "tests.json")
+        assert cli.main(["muscles", str(d), "--no-plant", "--no-3d"]) == 2
+        assert cli.main(["strength", str(d), "--tests", str(d / "tests.json")]) == 2
+        assert not calls and not (d / "muscles").exists() and not (d / "strength").exists()
+    # explicitly allowed: runs, and every report says what the numbers rest on
+    d = tmp_path / "assumed default"
+    rec, sdir = cli.strength_calibration(d, d / "tests.json", allow_assumed_mass=True)
+    assert rec["body_mass"] == {"kg": 70.0, "source": "assumed default", "assumed": True}
+    assert banner in (sdir / "strength.html").read_text()
+    study, mdir = cli.muscle_study(d, plant=False, view_3d=False, allow_assumed_mass=True)
+    page = (mdir / "muscles.html").read_text()
+    assert study["body_mass"]["assumed"] and banner in page and "body mass 70.0 kg (assumed default)" in page
+    # a measured mass passes silently and is named in the header
+    d = _mass_session(tmp_path, "measured", 81.5)
+    study, mdir = cli.muscle_study(d, plant=False, view_3d=False)
+    page = (mdir / "muscles.html").read_text()
+    assert not study["body_mass"]["assumed"] and "body mass assumed" not in page and "(measured)</span>" in page
+    assert cli.main(["strength", str(d), "--tests", str(d / "tests.json")]) == 0
+    assert "body mass assumed" not in (d / "strength" / "strength.html").read_text()
+
+
+def test_muscle_caveat_follows_the_muscle_model(tmp_path, monkeypatch):
+    from rehabtwin import cli
+    from rehabtwin.muscles import muscle_caveat
+    generic = muscle_caveat(None)
+    assert "Generic" in generic and "no personalised strength" in generic and "no EMG calibration" in generic
+    calls = []
+    _fake_muscles_and_strength(monkeypatch, calls)
+    d = _mass_session(tmp_path, "measured", 81.5)
+    cli.strength_calibration(d, d / "tests.json")
+    study, mdir = cli.muscle_study(d, plant=False, view_3d=False, use_strength=True)
+    cav = study["runs"]["measured"]["caveats"][0]
+    assert calls[-1]["muscle_model"]["source"].startswith("strength")       # reaches muscles.run (and muscles.json)
+    assert "knee_extension_r" in cav and "dynamometry" in cav and "all other muscles keep generic" in cav
+    assert "no personalised strength" not in cav and "no EMG calibration" in cav
+    assert cav in (mdir / "muscles.html").read_text()

@@ -124,6 +124,12 @@ python -m rehabtwin muscles  SESSION --rep 1 --correction squat_knee_valgus_righ
 python -m rehabtwin cues     SESSION --rules squat_posture [--motion SESSION/correction/<spec>/corrected.mot]
 ```
 
+`muscles` and `strength` need the session's body mass: the ground forces are m (a_com + g), so every
+torque, muscle force, activation and N·m/kg scales with it. A session processed without `--mass-kg`
+records `qc.json → subject.mass_source: "assumed default"` (config default, 70 kg) and both commands refuse
+it (exit 2); `--allow-assumed-mass` runs anyway and labels the report "body mass assumed (70 kg)".
+Synthetic sessions record the generator's mass as `"synthetic truth"`.
+
 Strength calibration from hand-held dynamometry (maximal isometric torques; template in
 `configs/strength/example_hhd.json`, test actions and postures in `configs/strength_actions.json`):
 
@@ -255,7 +261,7 @@ let IK jitter 6.6 cm sideways, and static optimisation then "needed" 70 N·m res
 | `opensim/model_scaled.osim` | subject model (Pose2Sim full body, 318 muscles, 5 lumbar levels) |
 | `opensim/ik.mot`, `ik_ik_marker_errors.sto` | joint angles (deg) and per-frame marker residuals |
 | `opensim/*_setup.xml`, `markers_*.trc`, `scale_factors.xml` | every OpenSim input, re-runnable in the OpenSim GUI |
-| `qc.json` | frames/gravity source, floor fit, gaps and imputed frames, scale factors, marker placement, IK residuals |
+| `qc.json` | frames/gravity source, floor fit, gaps and imputed frames, body mass and its source (`measured` only with `--mass-kg`), scale factors, marker placement, IK residuals |
 | `metrics.json` | reps and per-rep values; every signal labelled with joint, plane, validated, feedback_eligible |
 | `validation-report.json` | RMSE per joint × plane, gates, `approved_for` (`schemas/validation-report.schema.json`) |
 | `session.json` | provenance, tier, accuracy layers, upstream commit pins (`schemas/session.schema.json`) |

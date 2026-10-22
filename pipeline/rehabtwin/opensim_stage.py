@@ -348,7 +348,24 @@ def ik_setup_xml(cfg, model, trc, t_range, out_dir, name, marker_names, coord_fi
 
 # ------------------------------------------------------------- the stage
 
+KNOWN_MASS_SOURCES = ("measured", "synthetic truth")
+
+
+def subject_mass(meta, cfg, mass_kg=None):
+    """(kg, source) the model is scaled to. Ground forces, joint torques and muscle activations all
+    scale with it, so only a given mass is 'measured' (a synthetic session's generator mass is its
+    truth); the config default is recorded as 'assumed default', never passed off as this person's."""
+    if mass_kg is not None:
+        if not mass_kg > 0:
+            raise ValueError(f"body mass must be positive, got {mass_kg} kg")
+        return float(mass_kg), "measured"
+    if meta.get("synthetic") and meta.get("mass_kg"):
+        return float(meta["mass_kg"]), "synthetic truth"
+    return float(cfg.get("default_mass_kg", 70.0)), "assumed default"
+
+
 def run(seq: MarkerSequence, cfg: dict, out_dir, mass_kg=None, height_m=None) -> StageResult:
+    mass, mass_source = subject_mass(seq.meta, cfg, mass_kg)     # refuse a bad mass before any work
     osim = _osim()
     out_dir = Path(out_dir)
     od = out_dir / "opensim"
@@ -405,9 +422,7 @@ def run(seq: MarkerSequence, cfg: dict, out_dir, mass_kg=None, height_m=None) ->
     write_trc(od / "markers_static.trc", names, np.repeat(static_g[None], n_static, axis=0), static_times)
 
     # 5. scale (measurements), static IK (soft-pinned known neutral pose), marker placement
-    mass = mass_kg or cfg.get("default_mass_kg", 70.0)
-    qc["subject"] = {"mass_kg": mass, "mass_source": "measured" if mass_kg else "assumed default",
-                     "height_m": height_m}
+    qc["subject"] = {"mass_kg": mass, "mass_source": mass_source, "height_m": height_m}
     scale_xml = od / "scale_setup.xml"
     scale_xml.write_text(scale_setup_xml(cfg, generic.name, "markers_static.trc",
                                          (static_times[0], static_times[-1]), mass, height_m, names))

@@ -319,8 +319,11 @@ def reserves_xml(model_path, path, residual_force=10.0, reserve_force=1.0, ideal
 
 
 def run(model_path, motion_path, out_dir, weaken=None, label="measured", exercise="squat", start=None, stop=None,
-        assist=(), grf_share_bias=0.0, passive=(), max_fps=None):
-    """GRF estimate → ID → SO for one motion. Returns a summary dict (also written to muscles.json)."""
+        assist=(), grf_share_bias=0.0, passive=(), max_fps=None, muscle_model=None):
+    """GRF estimate → ID → SO for one motion. Returns a summary dict (also written to muscles.json).
+
+    ``muscle_model``: the study's record of where muscle capacities came from (generic or dynamometry),
+    so the caveats describe the model actually used."""
     osim = _osim()
     out = Path(out_dir) / label
     out.mkdir(parents=True, exist_ok=True)
@@ -371,7 +374,7 @@ def run(model_path, motion_path, out_dir, weaken=None, label="measured", exercis
             raise RuntimeError(f"inverse dynamics failed ({out})")
         if not osim.AnalyzeTool(str(out / "so_setup.xml")).run():
             raise RuntimeError(f"static optimisation failed ({out})")
-    summary = summarise(out, model_path, grf_qc, exercise, assist)
+    summary = summarise(out, model_path, grf_qc, exercise, assist, muscle_model)
     window = (tab.time >= t0 - 1e-9) & (tab.time <= t1 + 1e-9)
     summary["passive_devices"] = {}
     for dev in model_info["passive"]:
@@ -393,7 +396,17 @@ def run(model_path, motion_path, out_dir, weaken=None, label="measured", exercis
     return summary
 
 
-def summarise(out, model_path, grf_qc, exercise, assist=()):
+def muscle_caveat(muscle_model=None):
+    """Which capacities are measured and which generic: dynamometry fixes only the tested groups."""
+    mm = muscle_model or {}
+    if mm.get("source", "").startswith("strength"):
+        return (f"Muscle capacities of the tested groups ({', '.join(mm.get('tests', [])) or 'none'}; "
+                f"{mm.get('calibrated_muscles', '?')} muscles) come from dynamometry; all other muscles keep generic "
+                "(scaled) parameters. Muscle geometry is generic; no EMG calibration.")
+    return "Generic (scaled) muscle parameters: no personalised strength, no EMG calibration."
+
+
+def summarise(out, model_path, grf_qc, exercise, assist=(), muscle_model=None):
     osim = _osim()
     act = read_table(out / "so_StaticOptimization_activation.sto")
     model = osim.Model(str(out / "model_dynamics.osim"))
@@ -454,7 +467,7 @@ def summarise(out, model_path, grf_qc, exercise, assist=()):
         "muscles_saturated": sorted(c for c in act.columns if c in fmax and act.col(c).max() > 0.98),
         "caveats": [
             "Ground reaction forces are estimated (quasi-static double stance), not measured.",
-            "Generic (scaled) muscle parameters: no personalised strength, no EMG calibration.",
+            muscle_caveat(muscle_model),
             "Static optimisation minimises summed squared activation; real recruitment differs (co-contraction). "
             "It also shifts load from weak muscles to stronger synergists, so a weakness can show up as extra "
             "synergist demand rather than as higher activation of the weak muscle itself.",
