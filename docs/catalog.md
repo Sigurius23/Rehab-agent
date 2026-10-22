@@ -1,4 +1,4 @@
-# Full catalog — all 108 repositories
+# Full catalog — all 110 repositories
 
 Generated from `catalog/repos.json` by `scripts/generate_catalog.py`. Do not hand-edit this file; edit the JSON and regenerate.
 
@@ -31,7 +31,7 @@ Stars/forks/updated are the maintainer's pasted snapshot, **not live data**.
 | 103 | [PatrikMrnka/msk-PIPE](https://github.com/PatrikMrnka/msk-PIPE) | extended | skeleton, biomechanics, muscle-sim | Python | 2 | Automated pipeline generating personalised musculoskeletal models from medical images: CT/MRI -> segmentation -> OpenSim model with muscle attachments and wrapping |
 | 104 | [katya-stanzy/thin-plate-spline_personalised_muscoloskeletal_model](https://github.com/katya-stanzy/thin-plate-spline_personalised_muscoloskeletal_model) | extended | skeleton, biomechanics | Jupyter Notebook | 10 | MRI-based workflow for personalised musculoskeletal models: subject-specific joint centres and muscle paths via thin-plate-spline mapping (3D Slicer + OpenSim) |
 
-## pose-mocap — Pose estimation & motion capture (video, markerless, IMU) (21)
+## pose-mocap — Pose estimation & motion capture (video, markerless, IMU) (23)
 
 | # | Repository | Tier | Stages | Lang | ★ snapshot | Description |
 |---:|---|---|---|---|---:|---|
@@ -56,6 +56,8 @@ Stars/forks/updated are the maintainer's pasted snapshot, **not live data**.
 | 79 | [facebookresearch/sapiens2](https://github.com/facebookresearch/sapiens2) | experimental | capture, pose | Python | 998 | Sapiens2 — 1K-resolution human vision transformers pretrained on 1B human images; pose, segmentation, normals, pointmaps, matting |
 | 83 | [DeepLabCut/DeepLabCut](https://github.com/DeepLabCut/DeepLabCut) | specialized | pose, tooling | Python | 5795 | DeepLabCut — markerless pose estimation of user-defined features with deep learning (animals incl. humans) |
 | 84 | [DeepLabCut/DeepLabCut-live](https://github.com/DeepLabCut/DeepLabCut-live) | specialized | capture, pose | Python | 239 | DeepLabCut-Live — SDK for running DeepLabCut models on a live video stream |
+| 109 | [utahmobl/opencap-monocular](https://github.com/utahmobl/opencap-monocular) | core | pose, body-model, biomechanics | Python | — | OpenCap Monocular — 3D human kinematics and musculoskeletal dynamics from a single smartphone video (WHAM pose, camera/pose optimisation, OpenSim IK and export) |
+| 110 | [davidpagnon/Sports2D](https://github.com/davidpagnon/Sports2D) | extended | pose, biomechanics | Python | — | Sports2D — joint and segment angles from a single video (RTMPose), with optional OpenSim inverse kinematics |
 
 ## biomechanics — Biomechanics engines & OpenSim pipeline (13)
 

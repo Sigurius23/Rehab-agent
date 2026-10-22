@@ -1,0 +1,61 @@
+{
+  "name": "squat_knee_valgus_right",
+  "exercise": "squat",
+  "author": "TEMPLATE - must be authored or approved by the treating clinician before any use",
+  "rationale": "Dynamic knee valgus on the right during squats: let the right hip follow the left hip in the frontal and transverse planes (symmetry), keep both feet where they were, keep the sagittal squat pattern.",
+  "targets": [
+    {
+      "coordinate": "hip_adduction_r",
+      "mode": "mirror",
+      "from": "hip_adduction_l"
+    },
+    {
+      "coordinate": "hip_rotation_r",
+      "mode": "mirror",
+      "from": "hip_rotation_l"
+    }
+  ],
+  "anchors": [
+    {
+      "name": "heel_r",
+      "body": "calcn_r"
+    },
+    {
+      "name": "toes_r",
+      "body": "toes_r"
+    },
+    {
+      "name": "midfoot_r",
+      "body": "calcn_r",
+      "location": [
+        0.1,
+        0.0,
+        0.04
+      ]
+    },
+    {
+      "name": "heel_l",
+      "body": "calcn_l"
+    },
+    {
+      "name": "toes_l",
+      "body": "toes_l"
+    },
+    {
+      "name": "midfoot_l",
+      "body": "calcn_l",
+      "location": [
+        0.1,
+        0.0,
+        -0.04
+      ]
+    }
+  ],
+  "weights": {
+    "anchor": 1000.0,
+    "target": 10.0,
+    "other": 0.1,
+    "translation": 100.0
+  },
+  "check_rules": "squat_posture"
+}

@@ -1,0 +1,1765 @@
+"""Fast unit tests (numpy/scipy only). Run: python -m pytest pipeline/tests -q"""
+import time
+from pathlib import Path
+
+import numpy as np
+import pytest
+
+from rehabtwin import correction, feedback, filtering, frames, hsmr, opensim_stage, validation
+from rehabtwin.io_formats import Table, read_table, read_trc, write_table, write_trc
+from rehabtwin.kinematics import _fppa, classify
+from rehabtwin.metrics import segment_reps
+from rehabtwin.sequence import MarkerSequence
+
+
+def rot_y(deg):
+    a = np.radians(deg)
+    return np.array([[np.cos(a), 0, np.sin(a)], [0, 1, 0], [-np.sin(a), 0, np.cos(a)]])
+
+
+def rot_x(deg):
+    a = np.radians(deg)
+    return np.array([[1, 0, 0], [0, np.cos(a), -np.sin(a)], [0, np.sin(a), np.cos(a)]])
+
+
+# ------------------------------------------------------------- io formats
+
+def test_trc_roundtrip_with_missing(tmp_path):
+    m = np.random.default_rng(0).normal(size=(5, 3, 3))
+    m[2, 1] = np.nan
+    write_trc(tmp_path / "a.trc", ["A", "B", "C"], m, np.arange(5) / 50)
+    names, back, t, units = read_trc(tmp_path / "a.trc")
+    assert names == ["A", "B", "C"] and units == "m"
+    assert np.allclose(t, np.arange(5) / 50)
+    assert np.isnan(back[2, 1]).all()
+    assert np.allclose(back[np.isfinite(back)], m[np.isfinite(m)], atol=1e-6)
+
+
+def test_mot_roundtrip(tmp_path):
+    data = np.arange(12.0).reshape(4, 3)
+    write_table(tmp_path / "a.mot", ["x", "y", "z"], data, np.arange(4) * 0.1)
+    tab = read_table(tmp_path / "a.mot")
+    assert tab.columns == ["x", "y", "z"] and tab.in_degrees
+    assert np.allclose(tab.data, data) and np.allclose(tab.col("y"), data[:, 1])
+
+
+# --------------------------------------------------------------- sequence
+
+def test_sequence_roundtrip_and_checks(tmp_path):
+    seq = MarkerSequence(fps=30, marker_names=["a", "b"], markers=np.zeros((4, 2, 3)), frame="yup_world",
+                         joint_names=["JC_x"], joints=np.ones((4, 1, 3)), meta={"synthetic": True})
+    seq.save(tmp_path / "s.npz")
+    back = MarkerSequence.load(tmp_path / "s.npz")
+    assert back.marker_names == ["a", "b"] and back.meta["synthetic"] and back.joints.shape == (4, 1, 3)
+    assert np.allclose(back.times, np.arange(4) / 30)
+    with pytest.raises(ValueError):
+        MarkerSequence(fps=30, marker_names=["a"], markers=np.zeros((4, 2, 3)), frame="yup_world")
+    with pytest.raises(ValueError):
+        MarkerSequence(fps=30, marker_names=["a", "b"], markers=np.zeros((4, 2, 3)), frame="lab")
+
+
+# ----------------------------------------------------------------- frames
+
+def test_rotation_between_and_kabsch():
+    a, b = np.array([0.2, 1.0, -0.1]), np.array([0.0, 1.0, 0.0])
+    R = frames.rotation_between(a, b)
+    assert np.allclose(R @ (a / np.linalg.norm(a)), b, atol=1e-9)
+    assert np.allclose(frames.rotation_between(b, -b) @ b, -b)
+    pts = np.random.default_rng(1).normal(size=(20, 3))
+    Rt = rot_y(33) @ rot_x(-12)
+    R2, t2, _, rms = frames.kabsch(pts, pts @ Rt.T + [1, 2, 3])
+    assert np.allclose(R2, Rt, atol=1e-9) and np.allclose(t2, [1, 2, 3]) and rms < 1e-9
+
+
+def test_floor_fit_recovers_camera_pitch():
+    rng = np.random.default_rng(2)
+    # feet on a y = 0 floor, spread over a 30 x 40 cm area, then a camera pitched by 8 deg
+    feet = np.stack([rng.uniform(-0.15, 0.15, 200), np.zeros(200), rng.uniform(-0.2, 0.2, 200)], axis=1)
+    pts = (feet @ rot_x(8).T).reshape(50, 4, 3)
+    up, rms, n = frames.estimate_floor_up(pts, ["a", "b", "c", "d"], ["a", "b", "c", "d"], [0, 1, 0], lowest_fraction=1.0)
+    assert abs(frames.angle_deg(up, rot_x(8) @ [0, 1, 0])) < 0.01 and rms < 1e-9 and n == 200
+
+
+def test_floor_fit_ignores_a_raised_foot():
+    rng = np.random.default_rng(4)
+    T = 60
+    names = ["RHEE", "RTOE", "LHEE", "LTOE"]
+    pts = np.zeros((T, 4, 3))
+    pts[:, 0] = [-0.10, 0.0, 0.10]
+    pts[:, 1] = [0.15, 0.0, 0.12]
+    pts[:, 2] = [-0.10, 0.25 + 0.05 * np.sin(np.arange(T) / 5)[0], -0.10]  # left foot never touches down
+    pts[:, 3] = [0.15, 0.30, -0.12]
+    pts[:, 2, 1] = 0.25 + 0.05 * np.sin(np.arange(T) / 5)
+    pts += rng.normal(0, 0.002, pts.shape)
+    pts[:, :2, 0] += np.linspace(0, 0.02, T)[:, None]  # small stance-foot sway, still ~collinear
+    with pytest.raises(ValueError):  # one stance foot cannot define a plane...
+        frames.estimate_floor_up(pts, names, names, [0, 1, 0])
+    both = pts.copy()
+    both[: T // 2, 2:, 1] = [0.0, 0.0]  # ...but once the left foot lands, the plane is found
+    up, rms, n = frames.estimate_floor_up(both @ rot_x(10).T, names, names, [0, 1, 0])
+    assert frames.angle_deg(up, rot_x(10) @ [0, 1, 0]) < 1.5 and rms < 0.01
+
+
+def test_floor_fit_rejects_collinear_feet():
+    pts = np.zeros((10, 3, 3))
+    pts[:, :, 0] = np.linspace(0, 0.3, 3)
+    with pytest.raises(ValueError):
+        frames.estimate_floor_up(pts, ["a", "b", "c"], ["a", "b", "c"], [0, 1, 0])
+
+
+def test_to_opensim_ground_heading():
+    # y up and right hip at -x means the subject faces world +z (right-handed frame);
+    # OpenSim wants x forward, y up, z right
+    names = ["RHIP", "LHIP", "HEEL"]
+    pts = np.array([[[-0.1, 1.0, 0.0], [0.1, 1.0, 0.0], [0.0, 0.05, 0.1]]] * 3)
+    R, t = frames.to_opensim_ground(pts, names, [0, 1, 0], [("RHIP", "LHIP")], floor_names=["HEEL"])
+    g = frames.apply(R, pts, t)
+    assert np.allclose(R @ [0, 0, 1], [1, 0, 0], atol=1e-9)   # facing direction -> +x
+    assert np.allclose(R @ [-1, 0, 0], [0, 0, 1], atol=1e-9)  # subject's right -> +z
+    assert g[0, 0, 2] > g[0, 1, 2]                             # right hip has larger z
+    assert abs(g[:, 2, 1].min()) < 1e-9                         # heel on the floor
+
+
+# -------------------------------------------------------------- filtering
+
+def test_plan_segments_bridges_short_gaps_and_splits_long():
+    valid = np.ones(300, bool)
+    valid[100:103] = False   # 0.1 s at 30 fps -> bridged
+    valid[200:230] = False   # 1 s -> split
+    segs, imputed = filtering.plan_segments(valid, 30, max_gap_s=0.2, min_segment_s=1.0)
+    assert segs == [(0, 200), (230, 300)] and imputed == [100, 101, 102]
+
+
+def test_lowpass_cutoff_is_minus_3db():
+    fps, fc = 100.0, 6.0
+    t = np.arange(2000) / fps
+    for f, expect in ((1.0, 1.0), (fc, 0.707), (20.0, 0.0)):
+        y = filtering.lowpass(np.sin(2 * np.pi * f * t), fps, fc)
+        gain = np.std(y[300:-300]) / np.std(np.sin(2 * np.pi * f * t[300:-300]))
+        assert abs(gain - expect) < 0.03, (f, gain)
+
+
+def test_interpolate_gaps():
+    x = np.array([0.0, np.nan, 2.0, np.nan, np.nan, 5.0])
+    assert np.allclose(filtering.interpolate_gaps(x), [0, 1, 2, 3, 4, 5])
+
+
+# ------------------------------------------------------------- kinematics
+
+@pytest.mark.parametrize("coord,expect", [
+    ("hip_flexion_r", ("hip_r", "sagittal")), ("hip_adduction_l", ("hip_l", "frontal")),
+    ("knee_angle_r", ("knee_r", "sagittal")), ("L5_S1_Lat_Bending", ("lumbar", "frontal")),
+    ("L1_T12_axial_rotation", ("lumbar", "transverse")), ("pelvis_tx", ("pelvis", "translation")),
+    ("pro_sup_l", ("forearm_l", "transverse")), ("knee_angle_r_beta", ("patella_r", "coupled")),
+])
+def test_classify(coord, expect):
+    assert classify(coord) == expect
+
+
+def test_fppa_valgus_positive_both_legs():
+    fwd, up, right = np.array([1.0, 0, 0]), np.array([0, 1.0, 0]), np.array([0, 0, 1.0])
+    # right leg at z = +0.1; knee pushed medially (toward z = 0)
+    r = _fppa(np.array([0, 1.0, 0.1]), np.array([0.1, 0.5, 0.05]), np.array([0, 0.05, 0.1]), fwd, up, right, "r")
+    l = _fppa(np.array([0, 1.0, -0.1]), np.array([0.1, 0.5, -0.05]), np.array([0, 0.05, -0.1]), fwd, up, right, "l")
+    assert r > 5 and l > 5 and abs(r - l) < 1e-9
+    straight = _fppa(np.array([0, 1.0, 0.1]), np.array([0, 0.5, 0.1]), np.array([0, 0.0, 0.1]), fwd, up, right, "r")
+    assert abs(straight) < 1e-9
+
+
+# ---------------------------------------------------------------- metrics
+
+def test_segment_reps_counts_peaks():
+    fps = 30
+    t = np.arange(0, 12, 1 / fps)
+    sig = 45 * (1 - np.cos(2 * np.pi * 0.25 * t))  # 3 full reps in 12 s
+    reps = segment_reps(sig, fps, min_prominence_deg=20, min_rep_s=1.0)
+    assert len(reps) == 3
+    for a, p, b in reps:
+        assert a < p < b and sig[p] > 85
+
+
+# ------------------------------------------------------------- validation
+
+def test_validation_bias_gates_and_synthetic_never_approves():
+    t = np.arange(0, 5, 0.01)
+    ref = Table(["knee_angle_r", "hip_adduction_r", "pelvis_tx"],
+                np.stack([60 * np.sin(t), 10 * np.sin(t), t], axis=1), t)
+    est = Table(ref.columns, ref.data + [2.0, 6.0, 0.5], t)
+    cmp = validation.compare(est, ref)
+    assert set(cmp["coordinates"]) == {"knee_angle_r", "hip_adduction_r"}  # translations excluded
+    k = cmp["coordinates"]["knee_angle_r"]
+    assert abs(k["bias_deg"] - 2) < 1e-9 and k["rmse_offset_removed_deg"] < 1e-9
+    rep = validation.report(cmp, "P", "test", ["squat"], synthetic=False)
+    assert rep["gates"]["knee_r.sagittal_rmse_le_3deg"] == "pass"
+    assert rep["gates"]["hip_r.frontal_rmse_le_5deg"] == "fail"
+    assert rep["feedback_allowed_joint_planes"] == ["knee_r.sagittal"] and rep["approved_for"] == ["screening"]
+    assert validation.report(cmp, "P", "test", ["squat"], synthetic=True)["approved_for"] == []
+    bad = validation.compare(Table(ref.columns, ref.data + [9.0, 9.0, 0.0], t), ref)
+    assert validation.report(bad, "P", "test", ["squat"])["approved_for"] == []  # nothing passed
+
+
+def test_validation_finds_time_lag():
+    t = np.arange(0, 6, 0.01)
+    ref = Table(["knee_angle_r"], (50 * np.sin(2 * t))[:, None], t)
+    est = Table(["knee_angle_r"], (50 * np.sin(2 * (t - 0.12)))[:, None], t)
+    cmp = validation.compare(est, ref, max_lag_s=0.3)
+    assert abs(cmp["lag_s"] - 0.12) < 0.011 and cmp["coordinates"]["knee_angle_r"]["rmse_deg"] < 0.5
+    assert cmp["coverage"]["fraction"] == 1.0
+
+
+def test_validation_of_a_fragment_tests_nothing():
+    """A short solved segment of a long trial: the lag search slides it onto a matching stretch of the
+    reference and it scores well, but a fragment approves nothing (validation.MIN_COVERAGE)."""
+    from rehabtwin import records
+    t = np.arange(0, 10, 1 / 60)
+    ref = Table(["knee_angle_r", "hip_adduction_r"], np.stack([50 * np.sin(2 * t), 8 * np.sin(2 * t)], 1), t)
+    wrong = 8 * np.sin(2 * t) + 9 * np.sin(5 * t)                    # 6.4 deg RMSE over the whole trial
+    est = Table(ref.columns, np.stack([50 * np.sin(2 * (t - 0.05)), wrong], 1), t)
+    full = validation.report(validation.compare(est, ref, max_lag_s=4), "P", "lab", ["squat"])
+    assert full["gates"]["hip_r.frontal_rmse_le_5deg"] == "fail" and full["coverage"]["fraction"] == 1.0
+    k = (t >= 6.0) & (t < 7.2)                                       # 1.2 s survived gap splitting
+    frag = Table(est.columns, est.data[k], t[k])
+    cmp = validation.compare(frag, ref, max_lag_s=4, trial_span=(t[0], t[-1]))
+    assert cmp["coverage"]["fraction"] < 0.15 and cmp["coverage"]["overlap_s"] > 9.9
+    rep = validation.report(cmp, "P", "lab", ["squat"])
+    assert set(rep["gates"].values()) == {"not-tested"}
+    assert rep["approved_for"] == [] and rep["feedback_allowed_joint_planes"] == []
+    assert "not-tested" in rep["notes"]
+    records.validate(rep, "validation-report")
+
+
+# ------------------------------------------------------------------- HSMR
+
+def test_hsmr_input_size_replicates_upstream_resize():
+    assert hsmr.hsmr_input_size(1920, 1080) == (1920, 1080)
+    assert hsmr.hsmr_input_size(3840, 2160) == (1080, 608)   # HSMR's (w, h) argument quirk
+    assert hsmr.hsmr_input_size(1080, 1920) == (1080, 1920)
+
+
+def test_full_image_cam_t_matches_upstream_formula():
+    pc = np.array([[0.1, -0.2, 40.0]])
+    bb = np.array([[700.0, 400.0, 512.0]])
+    t = hsmr.full_image_cam_t(pc, bb, 1920, 1080)
+    z = 40.0 * 256 / 512
+    assert np.allclose(t, [[0.1 + (700 - 960) / 5000 * z, -0.2 + (400 - 540) / 5000 * z, z]])
+
+
+def test_select_track_follows_person_and_rejects_jumps():
+    frames_ = [
+        {"bbx_cs": [[500, 500, 400], [1500, 500, 150]]},  # subject (large) + bystander
+        {"bbx_cs": [[1510, 505, 150], [510, 502, 405]]},  # order swapped
+        {"bbx_cs": [[1500, 500, 150]]},                   # subject missed, only bystander
+        {"bbx_cs": np.zeros((0, 3))},
+        {"bbx_cs": [[520, 505, 410]]},
+    ]
+    assert hsmr.select_track(frames_).tolist() == [0, 1, -1, -1, 0]
+
+
+def test_validation_aliases_lumbar_total_to_single_joint_models():
+    t = np.arange(0, 3, 0.01)
+    ref = Table(["lumbar_extension", "knee_angle_r"], np.stack([-20 * np.sin(t), 40 * np.sin(t)], axis=1), t)
+    est = Table(["lumbar_total.sagittal", "knee_angle_r"], ref.data + [1.0, 0.0], t)
+    per = validation.compare(est, ref)["coordinates"]
+    assert per["lumbar_total.sagittal"]["reference_column"] == "lumbar_extension"
+    assert abs(per["lumbar_total.sagittal"]["bias_deg"] - 1.0) < 1e-9
+
+
+def test_device_gravity_overrides_image_estimates():
+    # a subject standing upright, seen by a camera pitched 20 deg down (OpenCV frame)
+    names = ["RHIP", "LHIP", "RHEE", "LHEE", "RTOE", "LTOE"]
+    body = np.array([[0.1, 0.9, 0], [-0.1, 0.9, 0], [0.1, 0, -0.05], [-0.1, 0, -0.05], [0.1, 0, 0.15], [-0.1, 0, 0.15]])
+    cam_from_world = rot_x(-20) @ np.diag([1.0, -1.0, -1.0])   # y-up world -> pitched OpenCV camera
+    pts = np.repeat((body @ cam_from_world.T + [0, 0.5, 3.0])[None], 40, axis=0)
+    up_cv = cam_from_world @ [0, 1.0, 0]
+    seq = MarkerSequence(fps=30, marker_names=names, markers=pts, frame="opencv_camera",
+                         meta={"gravity_up_cv": up_cv.tolist(), "gravity_source": "test IMU"})
+    cfg = {"frames": {"up": "auto", "foot_markers": [], "right_left_pairs": [["RHIP", "LHIP"]]}}
+    _, g, qc = opensim_stage.to_ground(seq, cfg)
+    assert qc["up_source"] == "device gravity (test IMU)" and abs(qc["device_tilt_vs_camera_level_deg"] - 20) < 1e-6
+    # the feet -> hips direction keeps exactly its true inclination to gravity
+    hips = g[0, :2].mean(axis=0) - g[0, 2:].mean(axis=0)
+    true = body[:2].mean(axis=0) - body[2:].mean(axis=0)
+    assert abs(frames.angle_deg(hips, [0, 1, 0]) - frames.angle_deg(true, [0, 1, 0])) < 1e-6
+
+
+def test_correction_target_modes():
+    t = np.arange(5) * 0.1
+    tab = Table(["a_r", "a_l"], np.array([[0, 1], [2, 1], [4, 1], [6, 1], [8, 1.0]]), t)
+    spec = {"targets": [{"coordinate": "a_r", "mode": "clamp", "max": 5.0}]}
+    assert correction.apply_targets(tab, spec)["a_r"].tolist() == [0, 2, 4, 5, 5]
+    spec = {"targets": [{"coordinate": "a_r", "mode": "scale", "factor": 0.5, "about": 2.0}]}
+    assert correction.apply_targets(tab, spec)["a_r"].tolist() == [1, 2, 3, 4, 5]
+    spec = {"targets": [{"coordinate": "a_r", "mode": "mirror", "from": "a_l"}]}
+    assert correction.apply_targets(tab, spec)["a_r"].tolist() == [1] * 5
+    spec = {"targets": [{"coordinate": "a_r", "mode": "set", "value": 3}, {"coordinate": "a_l", "mode": "offset", "delta": -1}]}
+    out = correction.apply_targets(tab, spec)
+    assert out["a_r"].tolist() == [3] * 5 and out["a_l"].tolist() == [0] * 5
+    with pytest.raises(ValueError):
+        correction.apply_targets(tab, {"targets": [{"coordinate": "missing", "mode": "set", "value": 0}]})
+
+
+def test_correction_specs_load():
+    for name in ("squat_knee_valgus_right", "squat_trunk_upright"):
+        spec = correction.load_spec(name)
+        assert spec["targets"] and spec["anchors"] and "TEMPLATE" in spec["author"]
+
+
+def _rule_spec(**sched):
+    return {"name": "t", "rules": [{"id": "v", "signal": "s", "joint_plane": "knee_r.frontal", "op": ">", "threshold": 10.0,
+                                     "min_duration_s": 0.2, "cue": {"actuator": "a"}}],
+            "schedule": {"bandwidth_deg": 2.0, "refractory_s": 0.0, "start_fraction": 1.0, "end_fraction": 1.0,
+                         "fade_events": 1, **sched}}
+
+
+def test_cue_engine_hysteresis_min_duration_and_gate():
+    t = np.arange(0, 6, 0.01)
+    s = np.zeros_like(t)
+    s[(t > 1) & (t < 1.1)] = 15        # too short: no cue
+    s[(t > 2) & (t < 3)] = 12          # one violation...
+    s[(t >= 2.5) & (t < 2.6)] = 9      # ...dipping below threshold but inside the 2 deg band: still one
+    s[(t > 4) & (t < 5)] = 20          # second violation
+    log, sent = feedback.replay(_rule_spec(), t, {"s": s}, tier="A", allowed_joint_planes=["knee_r.frontal"])
+    decisions = [e for e in log if "decision" in e]
+    assert [d["decision"] for d in decisions] == ["cue", "cue"] and len(sent) == 2
+    assert 2.2 <= decisions[0]["t"] <= 2.23         # after min_duration (violation starts at the first frame > 2 s)
+    log_c, sent_c = feedback.replay(_rule_spec(), t, {"s": s}, tier="C")
+    assert not sent_c and all(e["decision"] == "would_cue" for e in log_c if "decision" in e)
+    log_u, sent_u = feedback.replay(_rule_spec(), t, {"s": s}, tier="A", allowed_joint_planes=[])
+    assert not sent_u and "not validated" in [e for e in log_u if "decision" in e][0]["reason"]
+
+
+def test_cue_engine_faded_schedule_and_refractory():
+    t = np.arange(0, 20, 0.01)
+    s = np.where((t % 2) < 0.5, 15.0, 0.0)          # 10 violations, one every 2 s
+    spec = _rule_spec(start_fraction=1.0, end_fraction=0.25, fade_events=4)
+    log, sent = feedback.replay(spec, t, {"s": s}, tier="A", allowed_joint_planes=["knee_r.frontal"])
+    d = [e["decision"] for e in log if "decision" in e]
+    assert len(d) == 10 and d[0] == "cue" and 3 <= d.count("cue") <= 5    # fades towards 1 in 4
+    spec = _rule_spec(refractory_s=5.0)
+    log, sent = feedback.replay(spec, t, {"s": s}, tier="A", allowed_joint_planes=["knee_r.frontal"])
+    times = [c["timestamp"] for c in sent]
+    assert all(b - a >= 5.0 for a, b in zip(times, times[1:]))
+
+
+def test_feedback_rules_template_loads():
+    spec = feedback.load_rules("squat_posture")
+    assert "TEMPLATE" in spec["author"] and all("joint_plane" in r for r in spec["rules"])
+
+
+def test_lsl_live_loop_matches_offline_replay():
+    pylsl = pytest.importorskip("pylsl")  # noqa: F841
+    import threading
+    from rehabtwin import lsl_bridge
+    t = np.arange(0, 8, 0.02)
+    s = np.where((t % 2) < 0.6, 15.0, 0.0)          # 4 violations
+    spec = _rule_spec(start_fraction=1.0, end_fraction=0.5, fade_events=2)
+    _, offline = feedback.replay(spec, t, {"s": s}, tier="A", allowed_joint_planes=["knee_r.frontal"])
+    res = {}
+    live = threading.Thread(target=lambda: res.update(eng=lsl_bridge.run_live(
+        spec, "A", ["knee_r.frontal"], duration_s=20, source="rt_test_posture", resolve_timeout=10)))
+    live.start()
+    lsl_bridge.stream_posture(t, {"s": s}, speed=4.0, name="rt_test_posture")
+    live.join()
+    online = [e for e in res["eng"].log if e.get("decision") == "cue"]
+    assert len(online) == len(offline) >= 2
+
+
+def _rot_quat(axis, deg):
+    a = np.radians(deg) / 2
+    axis = np.asarray(axis, float) / np.linalg.norm(axis)
+    return np.array([*(axis * np.sin(a)), np.cos(a)])
+
+
+def _vmc_frame(knee_deg=60.0, valgus_deg=8.0, trunk_deg=30.0):
+    """Synthetic SlimeVR-like VMC bundle (Unity left-handed args) for a subject facing +x, right = +z."""
+    from rehabtwin.vmc import rh_to_unity
+    fwd_axis, right_axis = [1, 0, 0], [0, 0, 1]
+    ident = np.array([0.0, 0.0, 0.0, 1.0])
+    rh = {
+        "Hips": ([0, 0.9, 0], ident),
+        "Spine": ([0, 0.1, 0], _rot_quat(right_axis, -trunk_deg)),   # bend forward at the spine (towards +x)
+        "Chest": ([0, 0.2, 0], ident),
+        "Neck": ([0, 0.25, 0], ident),
+        # right thigh: knee pushed medially (towards -z) by valgus/2, shank back out by valgus
+        "RightUpperLeg": ([0, -0.05, 0.1], _rot_quat(fwd_axis, valgus_deg / 2)),
+        "RightLowerLeg": ([0, -0.42, 0], _rot_quat(fwd_axis, -valgus_deg)),
+        "RightFoot": ([0, -0.42, 0], ident),
+        "LeftUpperLeg": ([0, -0.05, -0.1], _rot_quat(right_axis, knee_deg / 2)),
+        "LeftLowerLeg": ([0, -0.42, 0], _rot_quat(right_axis, -knee_deg)),
+        "LeftFoot": ([0, -0.42, 0], ident),
+    }
+    return {name: rh_to_unity(np.array(p, float), q) for name, (p, q) in rh.items()}
+
+
+def test_vmc_forward_kinematics_and_posture_signals():
+    from rehabtwin.vmc import VMCPose
+    pose = VMCPose()
+    for name, (p, q) in _vmc_frame().items():
+        pose.on_bone("/VMC/Ext/Bone/Pos", name, *p, *q)
+    pose.on_root("/VMC/Ext/Root/Pos", "root", 0, 0, 0, 0, 0, 0, 1)
+    s = pose.signals()
+    assert abs(s["knee_angle_l"] - 60.0) < 1e-6 and abs(s["knee_angle_r"] - 8.0) < 1e-6
+    assert abs(s["knee_fppa_r"] - 8.0) < 1e-6          # medial knee = valgus, positive
+    # the fixture bends at the Spine joint: pelvis upright, chest + neck (0.45 m) tilted 30 deg
+    expected_trunk = np.degrees(np.arctan2(0.45 * np.sin(np.radians(30)), 0.1 + 0.45 * np.cos(np.radians(30))))
+    assert abs(s["torso.sagittal"] - expected_trunk) < 1e-6 and abs(s["torso.frontal"]) < 1e-6
+    assert abs(s["lumbar_total.sagittal"] + 30.0) < 1e-6   # spine flexion, negative like OpenSim
+
+
+def test_vmc_over_udp():
+    pytest.importorskip("pythonosc")
+    import threading
+    from pythonosc import osc_bundle_builder, osc_message_builder, udp_client
+    from rehabtwin import vmc
+    got = []
+    port = 39911
+    th = threading.Thread(target=lambda: vmc.serve(port, rate_hz=50, duration_s=1.5, publish_lsl=False,
+                                                    on_signals=lambda t, s: got.append(s), host="127.0.0.1"))
+    th.start()
+    client = udp_client.SimpleUDPClient("127.0.0.1", port)
+    time.sleep(0.3)
+    for _ in range(20):
+        b = osc_bundle_builder.OscBundleBuilder(osc_bundle_builder.IMMEDIATELY)
+        msgs = [("/VMC/Ext/Root/Pos", ["root", 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0])]
+        msgs += [("/VMC/Ext/Bone/Pos", [n, *map(float, p), *map(float, q)]) for n, (p, q) in _vmc_frame(knee_deg=45).items()]
+        for addr, args in msgs:
+            m = osc_message_builder.OscMessageBuilder(address=addr)
+            for a in args:
+                m.add_arg(a)
+            b.add_content(m.build())
+        client.send(b.build())
+        time.sleep(0.05)
+    th.join()
+    assert got and abs(got[-1]["knee_angle_l"] - 45.0) < 1e-3
+
+
+FAKE_BH = """
+#define BH_LAYOUT_TACTSUITX40 {                                              \\
+""" + "".join(f"    {{ Target::{'ChestFront' if i < 10 or i >= 30 else 'ChestBack'}, BH_LAYOUT_TACTSUITX40_MAKE_POINT({(i % 2) + (2 if i >= 20 else 0)}, {(i % 10) // 2}) }}, \\\n" for i in range(40)) + """  }
+#define BH_LAYOUT_TACTOSY2 {                                              \\
+""" + "".join(f"    BH_LAYOUT_TACTOSY2_MAKE_POINT({i % 3}, {i // 3}), \\\n" for i in range(6)) + """  }
+"""
+
+
+def test_suit_payload_encoding_and_patterns(tmp_path):
+    from rehabtwin import suit
+    levels = np.zeros(40)
+    levels[[0, 3, 39]] = [1.0, 0.5, 1.0]
+    p = suit.encode_vest(levels)
+    assert len(p) == 20 and p[0] == 0xF0 and p[1] == 0x08 and p[19] == 0x0F
+    assert suit.encode_plain([0.6, 0, 1.2]) == bytes([60, 0, 100])
+    assert [suit.envelope("double", t, 1.0) for t in (0.1, 0.5, 0.7, 1.1)] == [1.0, 0.0, 1.0, 0.0]
+    hdr = tmp_path / "devices.hpp"
+    hdr.write_text(FAKE_BH)
+    assert len(suit.parse_layout("TACTSUITX40", hdr)) == 40 and len(suit.parse_layout("TACTOSY2", hdr)) == 6
+    d = suit.SuitDriver("suit_bhaptics", header=hdr)
+    assert d.add({"actuator": "thigh_r_lateral", "intensity": 0.6, "duration_ms": 200}, 0.0)
+    assert not d.add({"actuator": "nonexistent"}, 0.0) and d.unknown == {"nonexistent"}
+    assert d.frame(0.1)["thigh_r"] == bytes([60] * 6) and d.frame(0.3)["thigh_r"] == bytes(6)
+    d.add({"actuator": "upper_back_center", "intensity": 1.0, "duration_ms": 300}, 1.0)
+    vest = d.frame(1.1)["vest"]
+    assert sorted({b >> 4 for b in vest} | {b & 15 for b in vest}) == [0, 12]   # 4 motors capped at 0.8 -> 12/15
+
+
+def test_live_chain_posture_to_suit_payloads(tmp_path):
+    """IMU-like posture stream -> CueEngine -> cue markers -> suit payloads, all over LSL."""
+    pytest.importorskip("pylsl")
+    import threading
+    from rehabtwin import lsl_bridge, suit
+    hdr = tmp_path / "devices.hpp"
+    hdr.write_text(FAKE_BH)
+    spec = feedback.load_rules("squat_posture")
+    t = np.arange(0, 4, 0.02)
+    sig = {"knee_fppa_r": np.where((t > 1) & (t < 2), 18.0, 2.0), "torso.sagittal": np.full_like(t, 10.0)}
+    res = {}
+    transport = suit.DryRunTransport()
+    threads = [
+        threading.Thread(target=lambda: res.update(eng=lsl_bridge.run_live(
+            spec, "A", ["knee_r.frontal"], duration_s=15, source="rt_chain_posture"))),
+        threading.Thread(target=lambda: suit.run_bridge(suit.SuitDriver("suit_bhaptics", header=hdr), transport,
+                                                        duration_s=4.0, rate_hz=50)),
+    ]
+    for th in threads:
+        th.start()
+    time.sleep(0.5)
+    lsl_bridge.stream_posture(t, sig, speed=2.0, name="rt_chain_posture")
+    for th in threads:
+        th.join()
+    sent = [e for e in res["eng"].log if e.get("decision") == "cue"]
+    assert len(sent) == 1 and sent[0]["actuator"] == "thigh_r_lateral"
+    on = [e for e in transport.log if e["device"] == "thigh_r" and e["payload_hex"] != "00" * 6]
+    assert on and on[0]["payload_hex"] == f"{60:02x}" * 6     # 0.6 intensity on all 6 sleeve motors
+
+
+def test_parse_assist():
+    from rehabtwin.muscles import parse_assist
+    assert parse_assist("knee_angle_r=40") == ("knee_angle_r", 40.0, -1.0, 1.0)
+    assert parse_assist("hip_flexion_l=25.5:neg") == ("hip_flexion_l", 25.5, -1.0, 0.0)
+    assert parse_assist("L5_S1_Flex_Ext=30:pos")[2:] == (0.0, 1.0)
+
+
+def test_grf_sensitivity_bands_and_robustness():
+    from rehabtwin.muscles import grf_bands, robust_to_grf
+    runs = {k: {"group_activation": {"quadriceps_r": {"peak": p}, "gluteus_medius_r": {"peak": q}}}
+            for k, p, q in (("measured", 0.50, 0.12), ("+", 0.58, 0.13), ("-", 0.44, 0.11))}
+    b = grf_bands(runs)
+    assert b["quadriceps_r"] == {"lo": 0.44, "hi": 0.58}
+    assert robust_to_grf([-0.20, -0.15, -0.25])                 # same sign, large under every split
+    assert not robust_to_grf([0.05, -0.01, 0.08])              # flips sign under one split
+    assert not robust_to_grf([0.05, 0.01, 0.08])               # too small under one split
+
+
+def test_strength_symmetry_index():
+    from rehabtwin.strength import symmetry
+    s = symmetry([{"action": "hip_abduction_r", "measured_Nm": 60.0}, {"action": "hip_abduction_l", "measured_Nm": 100.0},
+                  {"action": "knee_extension_r", "measured_Nm": 190.0}, {"action": "knee_extension_l", "measured_Nm": 200.0},
+                  {"action": "trunk_extension", "measured_Nm": 200.0}])
+    assert s["hip_abduction"] == {"right_Nm": 60.0, "left_Nm": 100.0, "lsi_pct": 60.0, "weaker_side": "r", "flag": True}
+    assert s["knee_extension"]["lsi_pct"] == 95.0 and not s["knee_extension"]["flag"]
+    assert "trunk_extension" not in s
+
+
+def test_passive_spring_spec_and_torque():
+    from rehabtwin.muscles import parse_passive, passive_torque
+    assert parse_passive("knee_angle_r=40@10:pos") == ("knee_angle_r", 40.0, 10.0, "pos")
+    assert parse_passive("hip_flexion_l=25") == ("hip_flexion_l", 25.0, 0.0, "pos")
+    with pytest.raises(ValueError):
+        parse_passive("knee_angle_r=40:up")
+    tq = passive_torque(40.0, 10.0, "pos", [0.0, 10.0, 10.0 + np.degrees(1.0)])
+    assert tq[0] == 0.0 and tq[1] == 0.0 and tq[2] == pytest.approx(-40.0)   # resists flexion past the slack angle
+    assert passive_torque(30.0, 0.0, "neg", [-np.degrees(0.5), 5.0]).tolist() == pytest.approx([15.0, 0.0])
+
+
+def _session(sid, when, mean, sd, n=3, rmse=None, synthetic=False, grade="marker-mocap"):
+    val = None if rmse is None else {"synthetic": synthetic, "reference_grade": grade,
+                                     "kinematics_rmse_deg": {"knee_r": {"frontal": rmse}},
+                                     "gates": {"knee_r.frontal_rmse_le_5deg": "pass" if rmse <= 5 else "fail"}}
+    return {"session_id": sid, "started_at": when, "person_ref": "P1", "tier": "B", "front_end": "x",
+            "exercise": "squat", "n_reps": n, "dir": sid, "validation": val,
+            "summary": {"knee_fppa_r": {"joint": "knee_r", "plane": "frontal", "unit": "deg",
+                                        "rep_peak_mean": mean, "rep_peak_sd": sd}}}
+
+
+def test_progress_verdicts():
+    from rehabtwin.progress import judge
+    # 10° less valgus, tight reps, validated 2° error: MDC95 = 5.5° -> real
+    j = judge(_session("a", "1", 22.0, 1.0, rmse=2.0), _session("b", "2", 12.0, 1.0, rmse=2.0), "knee_fppa_r")
+    assert j["change"] == -10.0 and j["mdc95"] == pytest.approx(5.54, abs=0.01) and j["verdict"].startswith("real")
+    # same change but 4° validated error: MDC95 = 11.1° -> within measurement error
+    j = judge(_session("a", "1", 22.0, 1.0, rmse=4.0), _session("b", "2", 12.0, 1.0, rmse=2.0), "knee_fppa_r")
+    assert j["verdict"] == "within measurement error"
+    # noisy reps swamp a 3° change
+    j = judge(_session("a", "1", 15.0, 4.0), _session("b", "2", 12.0, 4.0), "knee_fppa_r")
+    assert j["verdict"] == "within rep-to-rep scatter" and "mdc95" not in j
+    # synthetic validation never sizes a change
+    j = judge(_session("a", "1", 22.0, 0.5, rmse=1.0, synthetic=True), _session("b", "2", 12.0, 0.5, rmse=1.0, synthetic=True),
+              "knee_fppa_r")
+    assert j["verdict"] == "consistent across reps; size not validated"
+
+
+def test_markerless_reference_approves_nothing():
+    per = {"knee_angle_r": {"joint": "knee_r", "plane": "sagittal", "rmse_deg": 1.0, "reference_rom_deg": 90.0}}
+    cmp = {"coordinates": per, "lag_s": 0.0}
+    mocap = validation.report(cmp, "P1", "Vicon", ["squat"])
+    assert mocap["approved_for"] and mocap["feedback_allowed_joint_planes"] == ["knee_r.sagittal"]
+    other = validation.report(cmp, "P1", "OpenCap", ["squat"], reference_grade="markerless")
+    assert other["approved_for"] == [] and other["feedback_allowed_joint_planes"] == []
+    assert other["reference_grade"] == "markerless" and other["gates"] == mocap["gates"]
+    with pytest.raises(ValueError):
+        validation.report(cmp, "P1", "x", ["squat"], reference_grade="imu")
+
+
+def test_camera_sync_recovers_frame_offsets():
+    from rehabtwin.mediapipe_front import apply_lags, sync_lags
+    rng = np.random.default_rng(0)
+    fps, n = 60.0, 900
+    t = np.arange(n) / fps
+    hip_y = 400 + 120 * np.sin(2 * np.pi * 0.35 * t) * (1 + 0.3 * np.sin(2 * np.pi * 0.05 * t))
+
+    def dump(shift, length):
+        xy = np.zeros((length, 33, 2))
+        y = np.interp(np.arange(length) + shift, np.arange(n), hip_y) + rng.normal(0, 1.0, length)
+        xy[:, 23, 1] = xy[:, 24, 1] = y
+        return {"image_xy": xy, "visibility": np.ones((length, 33)), "fps": np.array(fps)}
+    raws = [dump(0, 700), dump(25, 650), dump(-13, 700)]     # camera 1 started 25 frames later, camera 2 13 earlier
+    lags, peaks = sync_lags(raws)
+    assert lags == [0, -25, 13] and min(peaks) > 0.8
+    aligned, start = apply_lags(raws, lags)
+    y = [a["image_xy"][:, 23, 1] for a in aligned]
+    assert len({len(v) for v in y}) == 1 and np.abs(y[0] - y[1]).max() < 6 and np.abs(y[0] - y[2]).max() < 6
+
+
+def test_opencap_calibration_reader_is_numpy_only(tmp_path):
+    import pickle
+    from rehabtwin.mediapipe_front import read_opencap_calibration
+    d = {"intrinsicMat": np.array([[900.0, 0, 360], [0, 900, 640], [0, 0, 1]]), "distortion": np.array([[0.1, -0.2, 0, 0, 0.2]]),
+         "imageSize": np.array([[1280.0], [720.0]]), "rotation": np.eye(3), "translation": np.array([[100.0], [0.0], [3000.0]])}
+    (tmp_path / "Cam0").mkdir()
+    (tmp_path / "Cam0" / "cal.pickle").write_bytes(pickle.dumps(d))
+    cam = read_opencap_calibration([tmp_path / "Cam0" / "cal.pickle"])[0]
+    assert cam.name == "Cam0" and cam.size == (720, 1280) and np.allclose(cam.t, [0.1, 0.0, 3.0]) and len(cam.dist) == 5
+    assert np.allclose(cam.project(np.array([0.0, 0.0, 0.0])), [360 + 900 * 0.1 / 3.0, 640])
+
+    class Evil:
+        def __reduce__(self):
+            return (print, ("pwned",))
+    (tmp_path / "Cam0" / "evil.pickle").write_bytes(pickle.dumps({"intrinsicMat": Evil()}))
+    with pytest.raises(pickle.UnpicklingError):
+        read_opencap_calibration([tmp_path / "Cam0" / "evil.pickle"])
+
+
+
+def test_suit_caps_and_all_off_on_any_exit(tmp_path, monkeypatch):
+    from rehabtwin import suit
+    hdr = tmp_path / "devices.hpp"
+    hdr.write_text(FAKE_BH)
+    d = suit.SuitDriver("suit_bhaptics", header=hdr)
+    assert d.add({"actuator": "thigh_r_lateral", "intensity": 5.0, "duration_ms": 60000}, 0.0)
+    a = d.active[-1]
+    assert a.intensity == suit.LIMITS["max_intensity"] and a.duration == suit.LIMITS["max_cue_ms"] / 1000
+    # on-time share: 1 s cues every second exhaust the 30 % budget of the 10 s window
+    accepted = [d.add({"actuator": "thigh_r_lateral", "intensity": 0.5, "duration_ms": 1000}, float(t)) for t in range(1, 6)]
+    assert accepted.count(True) == 2 and d.rejected
+    # the bridge ends with an all-off frame even when the cue source dies mid-cue
+    transport = suit.DryRunTransport()
+
+    class Inlet:
+        def __init__(self, *_):
+            self.n = 0
+
+        def pull_sample(self, timeout=0.0):
+            self.n += 1
+            if self.n == 1:
+                return ['{"actuator": "thigh_r_lateral", "intensity": 0.6, "duration_ms": 900}'], 0.0
+            if self.n > 3:
+                raise KeyboardInterrupt
+            return None, None
+
+    class FakeLsl:
+        StreamInlet = Inlet
+
+        @staticmethod
+        def resolve_byprop(*_, **__):
+            class Info:
+                def source_id(self):
+                    return "x"
+            return [Info()]
+    monkeypatch.setitem(__import__("sys").modules, "pylsl", FakeLsl)
+    with pytest.raises(KeyboardInterrupt):
+        suit.run_bridge(suit.SuitDriver("suit_bhaptics", header=hdr), transport, rate_hz=200)
+    last = {}
+    for e in transport.log:
+        last[e["device"]] = e["payload_hex"]
+    assert last and all(set(h) == {"0"} for h in last.values())
+
+
+def test_rules_report_unevaluated_signals():
+    spec = _rule_spec()
+    t = np.arange(0, 2, 0.02)
+    log, _ = feedback.replay(spec, t, {"other": np.zeros_like(t)}, tier="A", allowed_joint_planes=["knee_r.frontal"])
+    pr = feedback.summarise(spec, log, [], "A", ["knee_r.frontal"])["per_rule"]
+    assert all(v["unevaluated"] and v["violations"] == 0 for v in pr.values())
+
+
+def test_tier_needs_provenance_bound_to_model(tmp_path):
+    import hashlib
+    import json
+    from rehabtwin.tiers import TierRefused, resolve
+    model = tmp_path / "p42.osim"
+    model.write_text("<OpenSimDocument/>")
+    rec = {"tier": "A", "person_ref": "P42", "model": "p42.osim", "model_sha256": hashlib.sha256(model.read_bytes()).hexdigest(),
+           "evidence": "MRI segmentation", "approved_by": "clinician"}
+    prov = tmp_path / "prov.json"
+    prov.write_text(json.dumps(rec))
+    assert resolve(None, "P42")[0] == "C"
+    for kwargs in ({}, {"synthetic": True, "provenance": prov, "model_path": model},
+                   {"provenance": prov, "model_path": tmp_path / "other.osim"}):
+        if "model_path" in kwargs and not Path(kwargs["model_path"]).exists():
+            Path(kwargs["model_path"]).write_text("<different/>")
+        with pytest.raises(TierRefused):
+            resolve("A", "P42", **kwargs)
+    with pytest.raises(TierRefused):
+        resolve("A", "P43", provenance=prov, model_path=model)          # someone else's record
+    tier, src = resolve("A", "P42", provenance=prov, model_path=model)
+    assert tier == "A" and src["basis"] == "model-provenance record" and src["model_sha256"] == rec["model_sha256"]
+    assert resolve("B", "P42", provenance=prov, model_path=model)[0] == "B"   # lower than granted is fine
+
+
+def test_session_gate_fails_closed(tmp_path):
+    import json
+    from rehabtwin import cli
+    spec = {"exercise": "squat"}
+    (tmp_path / "session.json").write_text(json.dumps({"twin_tier": "A", "person_ref": "P1", "session_id": "s", "pipeline": {
+        "processing_id": "p1", "outputs": {"validation_report": "validation-report.json"}}}))
+    good = {"synthetic": False, "reference_grade": "marker-mocap", "person_ref": "P1", "movements": ["squat"],
+            "feedback_allowed_joint_planes": ["knee_r.frontal"], "processing_id": "p1"}
+    cases = [({}, ["knee_r.frontal"]), ({"reference_grade": "markerless"}, []), ({"reference_grade": None}, []),
+             ({"person_ref": "P2"}, []), ({"movements": ["walk"]}, []), ({"synthetic": True}, [])]
+    for change, allowed in cases:
+        (tmp_path / "validation-report.json").write_text(json.dumps({**good, **change}))
+        _, tier, got, why = cli._session_gate(tmp_path, spec)
+        assert got == allowed and (why is None) == bool(allowed), change
+
+
+def test_live_loop_refuses_foreign_or_ambiguous_posture_streams():
+    pytest.importorskip("pylsl")
+    import threading
+    from rehabtwin import lsl_bridge
+
+    class Info:
+        def __init__(self, sid):
+            self.sid = sid
+
+        def source_id(self):
+            return self.sid
+
+    class Two:
+        @staticmethod
+        def resolve_byprop(*_, **__):
+            return [Info("a"), Info("b")]
+    with pytest.raises(RuntimeError, match="refusing to guess"):
+        lsl_bridge.resolve_one(Two, "rehabtwin_posture", 1.0)
+    # an IMU stream must not inherit the video session's approval: tags differ -> Tier C, nothing sent
+    t = np.arange(0, 4, 0.02)
+    s = np.where((t % 2) < 0.6, 15.0, 0.0)
+    res = {}
+    live = threading.Thread(target=lambda: res.update(eng=lsl_bridge.run_live(
+        _rule_spec(), "A", ["knee_r.frontal"], duration_s=15, source="rt_tag_posture",
+        expect_session="video-session", expect_front_end="MediaPipe")))
+    live.start()
+    lsl_bridge.stream_posture(t, {"s": s}, speed=4.0, name="rt_tag_posture", session_id="other", front_end="SlimeVR")
+    live.join()
+    log = res["eng"].log
+    assert any(e.get("event") == "source_mismatch" for e in log)
+    assert not [e for e in log if e.get("decision") == "cue"] and [e for e in log if e.get("decision") == "would_cue"]
+
+
+# ------------------------------------------------- radian tables (inDegrees=no)
+
+_NOT_ANGLES = ("pelvis_tx", "pelvis_ty", "knee_angle_r_beta", "Abs_t1")   # metres, or radians even in degree files
+
+
+def _squat_deg(n=150, fps=50.0):
+    """One 3 s squat-like rep in degree-file units: (time, columns, data)."""
+    t = np.arange(n) / fps
+    s = 0.5 * (1 - np.cos(2 * np.pi * t / 3.0))
+    cols = {"pelvis_tilt": -10 * s, "pelvis_tx": 0.05 * s, "pelvis_ty": 0.9 - 0.3 * s, "hip_flexion_r": 90 * s,
+            "knee_angle_r": 100 * s, "knee_angle_r_beta": np.radians(100 * s), "ankle_angle_r": 25 * s,
+            "L5_S1_Flex_Ext": -8 * s, "L4_L5_Flex_Ext": -8 * s, "Abs_t1": 0.01 * s}
+    return t, list(cols), np.column_stack(list(cols.values()))
+
+
+def _radian_file(path, t, cols, deg, angles=None):
+    """The same motion as an OpenSim SI-unit file (inDegrees=no)."""
+    rad = deg.copy()
+    for j, c in enumerate(cols):
+        if (c not in _NOT_ANGLES) if angles is None else angles[j]:
+            rad[:, j] = np.radians(rad[:, j])
+    write_table(path, cols, rad, t, in_degrees=False)
+    return read_table(path)
+
+
+def _pose2sim_model():
+    pytest.importorskip("opensim")
+    from rehabtwin.config import load_config, resolve
+    try:
+        return resolve(load_config("skel105_pose2sim")["model"])
+    except FileNotFoundError:
+        pytest.skip("Pose2Sim model not cloned (scripts/clone.py)")
+
+
+def test_to_degrees_converts_angles_only(tmp_path):
+    from rehabtwin.io_formats import to_degrees
+    t, cols, deg = _squat_deg()
+    rad = _radian_file(tmp_path / "rad.mot", t, cols, deg)
+    assert not rad.in_degrees
+    back = to_degrees(rad)
+    assert back.in_degrees and back.header["inDegrees"] == "yes" and back.columns == cols
+    assert np.allclose(back.data, deg, atol=1e-5)      # translations and coupled *_beta untouched
+    tab = Table(cols, deg, t)
+    assert to_degrees(tab) is tab                      # degree tables pass through, no model needed
+
+
+def test_validation_radian_reference_matches_identical_degree_motion(tmp_path):
+    t, cols, deg = _squat_deg()
+    est, ref = Table(cols, deg, t), _radian_file(tmp_path / "ref.mot", t, cols, deg)
+    for a, b in ((est, ref), (ref, est)):              # radian reference, then radian estimate
+        per = validation.compare(a, b)["coordinates"]
+        assert {"knee_angle_r", "hip_flexion_r", "L5_S1_Flex_Ext"} <= set(per)
+        assert max(s["rmse_deg"] for s in per.values()) < 1e-4
+        assert per["knee_angle_r"]["reference_rom_deg"] == pytest.approx(100.0, abs=0.1)
+
+
+def test_derived_signals_and_with_signals_independent_of_file_units(tmp_path, monkeypatch):
+    from rehabtwin import metrics
+    t, cols, deg = _squat_deg()
+    # the OpenSim part (segment_orientations) converts per coordinate itself; the lumbar totals did not
+    monkeypatch.setattr(metrics, "segment_orientations",
+                        lambda model, tab: ({}, {"r": np.zeros(len(tab.time)), "l": np.zeros(len(tab.time))}))
+    rad = _radian_file(tmp_path / "rad.mot", t, cols, deg)
+    a, b = metrics.derived_signals(Table(cols, deg, t), None), metrics.derived_signals(rad, None)
+    assert np.allclose(a["lumbar_total.sagittal"], deg[:, cols.index("L5_S1_Flex_Ext")] * 2)
+    assert set(a) == set(b) and all(np.allclose(a[k], b[k], atol=1e-5) for k in a)
+    w = metrics.with_signals(rad, b)                   # degree signals must not sit under a radian flag
+    assert w.in_degrees and np.allclose(w.col("knee_angle_r"), deg[:, cols.index("knee_angle_r")], atol=1e-5)
+
+
+def test_rotational_mask_follows_model_motion_types():
+    import opensim as osim
+
+    from rehabtwin.io_formats import rotational
+    model = _pose2sim_model()
+    m = osim.Model(str(model))          # keep the model alive while its coordinate set is used
+    cs = m.getCoordinateSet()
+    names = [cs.get(i).getName() for i in range(cs.getSize())]
+    by_model = rotational(names, model)
+    assert by_model.tolist() == [cs.get(i).getMotionType() == osim.Coordinate.Rotational for i in range(cs.getSize())]
+    assert by_model.tolist() == rotational(names).tolist()       # the by-name rule agrees on the pipeline's model
+    assert not by_model[names.index("Abs_t1")] and not by_model[names.index("knee_angle_r_beta")]
+    assert rotational(["extra_tx", "extra_angle"], model).tolist() == [False, True]   # unknown columns: by name
+
+
+def test_cue_replay_fires_identically_for_radian_motion(tmp_path):
+    import json
+
+    import opensim as osim
+
+    from rehabtwin import cli
+    model = _pose2sim_model()
+    m = osim.Model(str(model))          # keep the model alive while its coordinate set is used
+    cs = m.getCoordinateSet()
+    names = [cs.get(i).getName() for i in range(cs.getSize())]
+    t = np.arange(150) / 50.0
+    s = 0.5 * (1 - np.cos(2 * np.pi * t / 3.0))
+    deg = np.zeros((len(t), len(names)))
+    deg[:, names.index("pelvis_ty")] = 0.95
+    for c in names:
+        if c.endswith("Flex_Ext"):                     # 6 levels x -10 deg: lumbar_total < -25 for ~1 s
+            deg[:, names.index(c)] = -10 * s
+    (tmp_path / "deg").mkdir()
+    (tmp_path / "rad").mkdir()
+    write_table(tmp_path / "deg" / "m.mot", names, deg, t)
+    _radian_file(tmp_path / "rad" / "m.mot", t, names, deg,
+                 angles=[cs.get(i).getMotionType() == osim.Coordinate.Rotational for i in range(cs.getSize())])
+    (tmp_path / "session.json").write_text(json.dumps({
+        "twin_tier": "C", "person_ref": "P1", "session_id": "s", "started_at": "2026-01-01T00:00:00",
+        "pipeline": {"front_end": "test", "outputs": {"model": str(model), "motion": "deg/m.mot"}}}))
+    res = {u: cli.cue_replay(tmp_path, "squat_posture", motion=tmp_path / u / "m.mot")[0] for u in ("deg", "rad")}
+    per = {u: r["summary"]["per_rule"] for u, r in res.items()}
+    assert per["deg"]["lumbar_rounding"]["violations"] == 1
+    for rid in per["deg"]:
+        assert per["rad"][rid]["violations"] == per["deg"][rid]["violations"], rid
+        assert per["rad"][rid]["peaks"] == pytest.approx(per["deg"][rid]["peaks"], abs=0.02), rid
+    dec = {u: [(e["t"], e["rule"], e["decision"]) for e in r["log"] if "decision" in e] for u, r in res.items()}
+    assert dec["rad"] == dec["deg"]
+
+
+# ------------------------------------------------------------- camera sync guard
+
+def _hip_dumps(hip_y, shifts, lengths, fps=60.0, seed=0):
+    """Raw dumps whose hips see ``hip_y`` (px) from frame ``shift`` on, with 1 px detector noise."""
+    rng = np.random.default_rng(seed)
+    out = []
+    for s, length in zip(shifts, np.broadcast_to(lengths, len(shifts))):
+        xy = np.zeros((length, 33, 2))
+        xy[:, 23, 1] = xy[:, 24, 1] = np.interp(np.arange(length) + s, np.arange(len(hip_y)), hip_y) + rng.normal(0, 1, length)
+        out.append({"image_xy": xy, "visibility": np.ones((length, 33)), "fps": np.array(fps)})
+    return out
+
+
+def _sit_to_stands():
+    """Irregularly spaced sit-to-stands: one clear correlation peak."""
+    t = np.arange(1300) / 60.0
+    rng = np.random.default_rng(3)
+    return 400 + sum(150 * np.exp(-0.5 * ((t - c) / 0.4) ** 2) for c in np.cumsum(rng.uniform(1.0, 2.5, 12)))
+
+
+def test_camera_sync_refuses_offsets_beyond_the_window():
+    from rehabtwin.mediapipe_front import sync_lags
+    hip = _sit_to_stands()
+    raws = _hip_dumps(hip, [0, 132], 900)            # camera 1 started 2.2 s late: just beyond the 2 s default
+    with pytest.raises(ValueError, match=r"beyond the searched \+-2 s.*--max-lag-s >= 3"):
+        sync_lags(raws)
+    assert abs(sync_lags(raws, max_lag_s=3.0)[0][1] + 132) <= 3
+    with pytest.raises(ValueError, match=r"lag -200 frames.*--max-lag-s >= 4"):
+        sync_lags(_hip_dumps(hip, [0, 200], 900))
+    with pytest.raises(ValueError, match=r"r=0\.\d+ < 0.5") as e:      # beyond 2x the window: only spurious peaks
+        sync_lags(_hip_dumps(hip, [0, 300], 900))
+    assert "--max-lag-s" not in str(e.value)
+    lags, _, d = sync_lags(_hip_dumps(hip, [0, 117], 900), return_diagnostics=True)
+    assert lags[1] == -117 and d[1]["at_window_edge"] and d[1]["beyond_window_r"] < d[1]["peak_r"]  # a verified top
+
+
+def test_camera_sync_refuses_periodic_motion_offset_beyond_the_window():
+    """Squats every ~1.55 s: with the true offset outside the window, an alias one squat inside it
+    peaks at r ~0.7, far from the window edge (the audit's OpenCap case: true 146, got 53)."""
+    import re
+    from rehabtwin.mediapipe_front import sync_lags
+    t = np.arange(1400) / 60.0
+    rng = np.random.default_rng(0)
+    hip = 400 + sum(a * np.exp(-0.5 * ((t - c) / 0.35) ** 2)
+                    for a, c in zip(rng.uniform(120, 160, 14), 1 + np.cumsum(rng.uniform(1.4, 1.7, 14))))
+    for shift, enough in [(146, 3.0), (196, 4.0)]:
+        raws = _hip_dumps(hip, [0, shift], 700)
+        with pytest.raises(ValueError, match=rf"beyond the searched \+-2 s.*--max-lag-s >= {enough:g}") as e:
+            sync_lags(raws)
+        alias, r_alias = re.search(r"best lag inside it \((-?\d+), r=([\d.]+)\)", str(e.value)).groups()
+        assert abs(int(alias)) < 110 and float(r_alias) > 0.5 and abs(int(alias) + shift) > 30   # passed the old checks
+        assert abs(sync_lags(raws, max_lag_s=enough)[0][1] + shift) <= 2
+
+
+def test_camera_sync_flags_periodic_motion_as_ambiguous():
+    from rehabtwin.mediapipe_front import sync_lags
+    hip = 400 + 120 * np.sin(2 * np.pi * 0.5 * np.arange(1200) / 60.0)        # a squat every 2 s
+    d = sync_lags(_hip_dumps(hip, [0, 25], 900), max_lag_s=3.0, return_diagnostics=True)[2][1]
+    # true lag -25 and its aliases whole reps (120 frames) away correlate equally: flagged, not trusted
+    assert abs((d["lag_frames"] + 25 + 60) % 120 - 60) <= 2 and not d["at_window_edge"]
+    assert d["ambiguous"] and d["margin"] < 0.15
+    assert abs((d["runner_up_lag_frames"] - d["lag_frames"] + 60) % 120 - 60) <= 3
+    assert "jump" in d["warning"]
+
+
+def test_camera_sync_reports_diagnostics():
+    from rehabtwin.mediapipe_front import sync_lags
+    lags, peaks, diag = sync_lags(_hip_dumps(_sit_to_stands(), [0, 25, -13], [700, 650, 700]), return_diagnostics=True)
+    assert abs(lags[1] + 25) <= 2 and abs(lags[2] - 13) <= 2 and diag[0] is None
+    for lag, peak, d in zip(lags[1:], peaks[1:], diag[1:]):
+        assert d["lag_frames"] == lag and d["peak_r"] == peak > 0.7 and d["searched_lags_frames"] == [-120, 120]
+        assert d["checked_lags_frames"][0] < -120 and d["beyond_window_r"] < peak - 0.15
+        assert d["margin"] >= 0.15 and abs(d["margin"] - (d["peak_r"] - d["runner_up_r"])) < 2e-3
+        assert abs(d["runner_up_lag_frames"] - lag) >= 18              # >= 0.3 s away, not the main peak's flank
+        assert not d["at_window_edge"] and not d["ambiguous"] and d["warning"] is None
+
+
+def test_camera_sync_refusal_names_the_actual_cause():
+    from rehabtwin.mediapipe_front import sync_lags
+    hip = _sit_to_stands()
+    raws = _hip_dumps(hip, [0, 25], 900)
+    raws[1]["image_xy"][:] = np.nan                    # no hip track: widening the window cannot help
+    with pytest.raises(ValueError, match=r"r=0.0 < 0.5") as e:
+        sync_lags(raws)
+    assert "--max-lag-s" not in str(e.value)
+    with pytest.raises(ValueError, match="last lag where it overlaps.*record longer") as e:   # 1.7 s clips
+        sync_lags(_hip_dumps(hip, [0, 38], 100))
+    assert "--max-lag-s" not in str(e.value)
+    for bad in (0.0, -1.0, float("nan"), float("inf")):
+        with pytest.raises(ValueError, match="max_lag_s.*finite.*> 0"):
+            sync_lags(_hip_dumps(hip, [0, 25], 900), max_lag_s=bad)
+
+
+def test_mp_multiview_sync_refuses_or_warns(tmp_path, capsys):
+    import pickle
+    from rehabtwin import cli
+    rng = np.random.default_rng(0)
+    T, fps = 900, 60.0
+    body = rng.uniform([-0.3, -1.0, -0.2], [0.3, 0.0, 0.2], (33, 3))
+    X = body + np.outer(0.15 * np.sin(2 * np.pi * 0.5 * np.arange(T) / fps), [0, 1, 0])[:, None]   # squats, board y-down
+    K = np.array([[900.0, 0, 360], [0, 900, 640], [0, 0, 1]])
+    cal, dumps = [], []
+    for c, (deg, shift) in enumerate([(0, 0), (60, 25)]):        # camera 1 started 25 frames late
+        a = np.radians(deg)
+        R = np.array([[np.cos(a), 0, np.sin(a)], [0, 1, 0], [-np.sin(a), 0, np.cos(a)]])
+        (tmp_path / f"Cam{c}").mkdir()
+        cal.append(tmp_path / f"Cam{c}" / "cal.pickle")
+        cal[-1].write_bytes(pickle.dumps({"intrinsicMat": K, "distortion": np.zeros((1, 5)), "rotation": R,
+                                          "imageSize": np.array([[1280.0], [720.0]]), "translation": np.array([[0.0], [0], [3000]])}))
+        Xc = X[shift:shift + 600] @ R.T + [0, 0, 3.0]
+        uv = Xc[..., :2] / Xc[..., 2:] * 900 + [360, 640] + rng.normal(0, 0.3, (600, 33, 2))
+        dumps.append(tmp_path / f"cam{c}.npz")
+        np.savez(dumps[-1], image_xy=uv, visibility=np.ones((600, 33)), fps=np.array(fps))
+    args = ["mp-multiview", *map(str, dumps), "--opencap-calib", *map(str, cal), "--sync", "--out", str(tmp_path / "s.npz")]
+    assert cli.main(args + ["--max-lag-s", "0.3"]) == 2
+    err = capsys.readouterr().err
+    assert "refused" in err and "--max-lag-s >=" in err and not (tmp_path / "s.npz").exists()
+    assert cli.main(args + ["--max-lag-s", "inf"]) == 2                  # was an uncaught OverflowError
+    assert "refused: max_lag_s (--max-lag-s) must be a finite" in capsys.readouterr().err
+    assert cli.main(args + ["--max-lag-s", "3"]) == 0
+    assert "warning: camera 1: ambiguous sync" in capsys.readouterr().err
+    sync = MarkerSequence.load(tmp_path / "s.npz").meta["sync"]
+    assert abs((sync["lags_frames"][1] + 25 + 60) % 120 - 60) <= 2 and sync["max_lag_s"] == 3.0     # -25 or an alias
+    assert sync["diagnostics"][0] is None and sync["diagnostics"][1]["ambiguous"]
+    assert sync["warnings"] and sync["warnings"][0] == sync["diagnostics"][1]["warning"]
+
+
+# ------------------------------------------------------------- mirrored (selfie) clips
+
+def _mp_dump(raised="R", tx=0.1, w=640, h=480, f=500.0, T=5):
+    """Raw MediaPipe dump of a subject facing the camera with one wrist raised (camera frame, y down).
+
+    Facing the camera, the subject's right side is on the image's left (x < 0). The raised side is also
+    the near, more visible one, so every per-landmark array differs between sides. Frame 2 is undetected.
+    """
+    left = [1, 2, 3, 7, 9] + list(range(11, 33, 2))
+    right = [4, 5, 6, 8, 10] + list(range(12, 33, 2))
+    y = [-0.62, -0.62, -0.62, -0.6, -0.55, -0.45, -0.2, 0.0, 0.05, 0.05, 0.03, 0.0, 0.45, 0.85, 0.88, 0.9]
+    up = right if raised == "R" else left
+    X, vis = np.zeros((33, 3)), np.full(33, 0.6)
+    X[0] = [0.0, -0.65, -0.1]
+    for k, (l, r) in enumerate(zip(left, right)):
+        X[l], X[r] = [0.04 + 0.01 * k, y[k], 0.02 * k], [-0.04 - 0.01 * k, y[k], 0.02 * k]
+    for i in up:
+        vis[i], X[i, 2] = 0.95, X[i, 2] - 0.05
+    X[up[7:11], 1] = -0.9                       # wrist, pinky, index, thumb above the head
+    world = np.stack([X + [0.0, 0.01 * t, 0.0] for t in range(T)])
+    cam = world + [tx, 0.0, 3.0]
+    xy = f * cam[..., :2] / cam[..., 2:] + [w / 2, h / 2]
+    raw = dict(image_xy=xy, image_z=0.5 * world[..., 2], visibility=np.tile(vis, (T, 1)),
+               presence=np.tile(vis - 0.05, (T, 1)), world=world, detected=np.ones(T, bool),
+               fps=np.array(30.0), size=np.array([w, h]))
+    for k in ("image_xy", "image_z", "world"):
+        raw[k][2] = np.nan
+    raw["visibility"][2] = raw["presence"][2] = 0.0
+    raw["detected"][2] = False
+    return raw
+
+
+def _raised(seq, side):
+    """Frames (of the valid ones) where ``side``'s wrist is above its shoulder (y down)."""
+    n, m = seq.marker_names, seq.markers[seq.valid]
+    return m[:, n.index(side + "Wrist"), 1] < m[:, n.index(side + "Shoulder"), 1]
+
+
+def test_unmirror_is_self_inverse_pure_and_swaps_named_pairs():
+    from rehabtwin.mediapipe_front import BLAZEPOSE_LR_SWAP, POSE2SIM_MEDIAPIPE, unmirror_raw
+    sw = BLAZEPOSE_LR_SWAP
+    assert sorted(sw) == list(range(33)) and (sw[sw] == np.arange(33)).all() and sw[0] == 0
+    assert all(sw[i] == POSE2SIM_MEDIAPIPE["R" + n[1:]] for n, i in POSE2SIM_MEDIAPIPE.items() if n[0] == "L")
+    raw = _mp_dump()
+    before = {k: np.array(v, copy=True) for k, v in raw.items()}
+    once, twice = unmirror_raw(raw), unmirror_raw(unmirror_raw(raw))
+    for k in raw:
+        np.testing.assert_array_equal(twice[k], raw[k])
+        np.testing.assert_array_equal(raw[k], before[k])          # input untouched
+    assert not np.allclose(once["image_xy"][0], raw["image_xy"][0])
+
+
+def test_unmirror_recovers_the_raised_right_wrist_of_a_selfie_clip():
+    from rehabtwin.mediapipe_front import PER_LANDMARK, monocular_sequence, unmirror_raw
+    truth = _mp_dump("R", tx=0.1)
+    selfie = _mp_dump("L", tx=-0.1)       # the same scene mirrored: MediaPipe calls the raised wrist "left"
+    un = unmirror_raw(selfie)
+    for k in PER_LANDMARK:
+        np.testing.assert_allclose(un[k], truth[k], atol=1e-9)
+    bug = monocular_sequence(selfie)
+    assert _raised(bug, "L").all() and not _raised(bug, "R").any()          # the silent swap
+    seq = monocular_sequence(selfie, mirrored=True)
+    assert _raised(seq, "R").all() and not _raised(seq, "L").any()
+    np.testing.assert_allclose(seq.markers, monocular_sequence(truth).markers, atol=1e-6)
+    assert seq.meta["mirrored"] and seq.meta["camera_facing"] == "front"
+    assert seq.meta["unmirrored_by"] == "rehabtwin mp-mono --mirrored" and not bug.meta["mirrored"]
+
+
+def test_unmirror_negates_world_x():
+    from rehabtwin.mediapipe_front import unmirror_raw
+    selfie = _mp_dump("L", tx=-0.1)
+    un = unmirror_raw(selfie)
+    ok = selfie["detected"]
+    assert (selfie["world"][ok, 15, 0] > 0).all() and (un["world"][ok, 16, 0] < 0).all()   # RWrist on camera's left
+    np.testing.assert_array_equal(un["world"][:, 16], selfie["world"][:, 15] * [-1, 1, 1])
+    np.testing.assert_array_equal(un["world"][:, 0], selfie["world"][:, 0] * [-1, 1, 1])  # nose: sign only
+
+
+def test_mirrored_flag_in_adapter_and_mp_mono(tmp_path, monkeypatch):
+    import importlib.util
+    import json
+    import sys
+    from rehabtwin import cli
+    from rehabtwin.mediapipe_front import monocular_sequence, unmirror_raw
+    path = Path(__file__).resolve().parents[1] / "adapters" / "mediapipe_pose.py"
+    spec = importlib.util.spec_from_file_location("mediapipe_pose_adapter", path)
+    adapter = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(adapter)                       # cv2/mediapipe are only needed inside run()
+    selfie = _mp_dump("L", tx=-0.1)
+    monkeypatch.setattr(adapter, "run", lambda video, model: dict(selfie))
+    monkeypatch.setattr(sys, "argv", ["mp", "clip.mp4", "--model", "m.task", "--out", str(tmp_path / "a.npz"),
+                                      "--mirrored"])
+    adapter.main()
+    dump = dict(np.load(tmp_path / "a.npz"))
+    meta = json.loads(str(dump["meta_json"]))
+    assert meta["mirrored"] is True and meta["camera_facing"] == "front"
+    np.testing.assert_array_equal(dump["image_xy"], unmirror_raw(selfie)["image_xy"])
+    seq = monocular_sequence(dump)                         # already fixed: no flag needed, provenance kept
+    assert _raised(seq, "R").all() and seq.meta["unmirrored_by"] == "mediapipe_pose.py --mirrored"
+    with pytest.raises(ValueError, match="already un-mirrored"):
+        monocular_sequence(dump, mirrored=True)            # a second flip would swap the sides back
+    # a dump made without the flag is fixed by mp-mono --mirrored
+    np.savez(tmp_path / "b.npz", **selfie, meta_json=np.array(json.dumps({"video": "clip.mp4"})))
+    cli.main(["mp-mono", str(tmp_path / "b.npz"), str(tmp_path / "b_seq.npz"), "--mirrored"])
+    seq = MarkerSequence.load(tmp_path / "b_seq.npz")
+    assert _raised(seq, "R").all() and not _raised(seq, "L").any() and seq.meta["mirrored"] is True
+    assert cli.main(["mp-mono", str(tmp_path / "a.npz"), str(tmp_path / "a_seq.npz"), "--mirrored"]) == 2
+    assert not (tmp_path / "a_seq.npz").exists()           # refused, not a traceback
+
+
+# ------------------------------------------------------------- progress statistics
+
+def test_rep_peak_sd_is_sample_sd():
+    from rehabtwin import metrics
+    t = np.arange(0, 9, 0.02)
+    knee = sum(p * np.exp(-((t - c) / 0.4) ** 2) for p, c in ((70, 1.5), (80, 4.5), (90, 7.5)))
+    tab = Table(["knee_angle_r", "knee_angle_l"], np.column_stack([knee, knee]), t)
+    met, _ = metrics.compute(tab, None, "squat", derived={})
+    s = met["summary"]["knee_angle_r"]
+    assert met["n_reps"] == 3 and s["rep_peak_mean"] == 80.0
+    assert s["rep_peak_sd"] == 10.0                     # sample SD; the population SD would be 8.16
+    assert metrics.rep_peak_stats([]) == (None, None) and metrics.rep_peak_stats([5.0]) == (5.0, None)
+
+
+def test_progress_rep_scatter_false_positive_rate():
+    """No true change, 3 reps per session: "beyond rep scatter" must fire at about the nominal 5 %.
+    The old 1.96 · population-SD threshold fired ~18 %; Welch is ~3.5 % at 3 reps (slightly
+    conservative), so 20000 trials keep the 0.03-0.07 band > 3 standard errors away."""
+    from scipy.stats import t as student_t
+    from rehabtwin.metrics import rep_peak_stats
+    from rehabtwin.progress import judge, rep_threshold
+    assert rep_threshold(1.0, 3, 1.0, 3) == pytest.approx(student_t.ppf(0.975, 4) * np.sqrt(2 / 3))
+    rng = np.random.default_rng(11)
+    hits, trials = 0, 20000
+    for _ in range(trials):
+        (ma, sa), (mb, sb) = rep_peak_stats(rng.normal(20, 2, 3)), rep_peak_stats(rng.normal(20, 2, 3))
+        hits += judge(_session("a", "1", ma, sa), _session("b", "2", mb, sb), "knee_fppa_r")["beyond_rep_scatter"]
+    assert 0.03 < hits / trials < 0.07, hits / trials
+
+
+def test_progress_one_rep_is_never_a_real_change():
+    from rehabtwin.progress import judge
+    # 10° change and a validated 2° error (MDC95 5.5°) used to be "real" with a single rep
+    j = judge(_session("a", "1", 22.0, None, n=1, rmse=2.0), _session("b", "2", 12.0, 1.0, rmse=2.0), "knee_fppa_r")
+    assert j["verdict"].startswith("not enough reps") and "beyond_rep_scatter" not in j and j["mdc95"] > 0
+    j = judge(_session("a", "1", 22.0, 1.0, n=2, rmse=2.0), _session("b", "2", 12.0, 1.0, n=2, rmse=2.0), "knee_fppa_r")
+    assert j["beyond_rep_scatter"] is True and j["verdict"].startswith("real")
+
+
+def test_progress_mdc_only_from_marker_mocap():
+    from rehabtwin.progress import judge
+    # a 10° change with tight reps and a 2° RMSE would be "real" if agreement with OpenCap etc. sized it
+    for grade_a, grade_b in (("markerless", "markerless"), ("marker-mocap", "markerless"), (None, None)):
+        j = judge(_session("a", "1", 22.0, 1.0, rmse=2.0, grade=grade_a),
+                  _session("b", "2", 12.0, 1.0, rmse=2.0, grade=grade_b), "knee_fppa_r")
+        assert "mdc95" not in j and j["verdict"] == "consistent across reps; size not validated", (grade_a, grade_b)
+
+
+def _write_session(d, sid, started_at, source, mean, sd, n):
+    from rehabtwin.records import write_json
+    d.mkdir(parents=True)
+    write_json(d / "session.json", {"session_id": sid, "started_at": started_at, "started_at_source": source,
+                                    "person_ref": "P1", "twin_tier": "C", "pipeline": {"front_end": "x"}})
+    write_json(d / "metrics.json", {"exercise": "squat", "n_reps": n, "summary": {"knee_fppa_r": {
+        "joint": "knee_r", "plane": "frontal", "unit": "deg", "rep_peak_mean": mean, "rep_peak_sd": sd}}})
+    return d
+
+
+def test_progress_zero_rep_session_and_recording_order(tmp_path, capsys):
+    from rehabtwin import cli, progress, report
+    # 07:00Z, 08:00Z, 09:00Z: a string sort would put "08:00:00Z" before "09:00:00+02:00"
+    s2 = _write_session(tmp_path / "s2", "s2", "2026-10-21T08:00:00Z", "argument", None, None, 0)
+    s3 = _write_session(tmp_path / "s3", "s3", "2026-10-21T09:00:00Z", "argument", 15.0, 1.0, 3)
+    s1 = _write_session(tmp_path / "s1", "s1", "2026-10-21T09:00:00+02:00", "argument", 20.0, 1.0, 3)
+    prog = progress.compare([s3, s2, s1])
+    assert [s["session_id"] for s in prog["sessions"]] == ["s1", "s2", "s3"] and not prog["warnings"]
+    steps = [st["changes"]["knee_fppa_r"]["verdict"] for st in prog["steps"]]
+    assert steps == ["no reps", "no reps"] and prog["first_to_last"]["knee_fppa_r"]["beyond_rep_scatter"]
+    assert "no reps" in report._svg_trend(prog["series"]["knee_fppa_r"], "t", "deg")
+    # a zero-rep first session: verdict "no reps", and neither the HTML nor the CLI printout crashes
+    prog = progress.compare([s2, s3])
+    assert prog["first_to_last"]["knee_fppa_r"]["verdict"] == "no reps"
+    assert "no reps" in Path(report.write_progress(tmp_path / "p.html", prog)).read_text()
+    assert report._svg_trend(prog["series"]["knee_fppa_r"][:1], "t", "deg") == ""
+    assert cli.main(["progress", str(s2), str(s3), "--out", str(tmp_path / "out")]) in (None, 0)
+    assert "no reps" in capsys.readouterr().out
+    # processing time (or an old record without a source) is not recording time: warn
+    s4 = _write_session(tmp_path / "s4", "s4", "2026-10-22T10:00:00+00:00", "processing time", 18.0, 1.0, 3)
+    s5 = _write_session(tmp_path / "s5", "s5", "2026-10-22T11:00:00+00:00", None, 18.0, 1.0, 3)
+    warn = [w for w in progress.compare([s1, s4, s5])["warnings"] if "processing time" in w]
+    assert len(warn) == 1 and "s4, s5" in warn[0]
+    s6 = _write_session(tmp_path / "s6", "s6", "last Tuesday", "argument", 18.0, 1.0, 3)
+    assert cli.main(["progress", str(s1), str(s6), "--out", str(tmp_path / "out6")]) == 2
+    assert "not an ISO timestamp" in capsys.readouterr().err
+
+
+def test_session_record_started_at(tmp_path):
+    from types import SimpleNamespace
+    from rehabtwin import cli, records
+    seq = SimpleNamespace(meta={}, fps=30.0, skel_poses=None)
+    qc = {"frames": {"up_source": "test"}, "ik": {}}
+    rec = records.session_record(seq, qc, tmp_path, "C", "P1")
+    assert rec["started_at_source"] == "processing time"
+    when = records.parse_started_at("2026-10-21T09:30:00Z")
+    rec = records.session_record(seq, qc, tmp_path, "C", "P1", started_at=when)
+    assert rec["started_at"] == "2026-10-21T09:30:00+00:00" and rec["started_at_source"] == "argument"
+    records.validate(rec, "session")
+    for bad in ("2026-10-21T09:30", "21.10.2026"):          # no UTC offset / not ISO
+        with pytest.raises(ValueError):
+            records.parse_started_at(bad)
+    # refused before any work
+    argv = ["process", str(tmp_path / "missing.npz"), str(tmp_path / "out"), "--started-at", "2026-10-21"]
+    assert cli.main(argv) == 2
+    assert not (tmp_path / "out").exists()
+
+
+# ------------------------------------------------- per-marker gap policy
+
+def test_interpolate_gaps_bridges_only_up_to_max_gap():
+    x = np.arange(20.0)
+    x[3:5] = np.nan            # 2 samples: bridged
+    x[8:15] = np.nan           # 7 samples: stays NaN instead of becoming a straight line
+    y = filtering.interpolate_gaps(x, max_gap=3)
+    assert np.allclose(y[:8], np.arange(8)) and np.isnan(y[8:15]).all() and np.allclose(y[15:], np.arange(15, 20))
+    assert np.allclose(filtering.interpolate_gaps(x), np.arange(20))   # unlimited fill (augmenter input) unchanged
+
+
+def test_interpolate_gaps_holds_edges_only_up_to_max_gap():
+    x = np.r_[[np.nan] * 2, np.arange(5.0), [np.nan] * 6]
+    y = filtering.interpolate_gaps(x, max_gap=3)
+    assert np.allclose(y[:2], 0.0)       # short leading run held
+    assert np.isnan(y[7:]).all()         # a long trailing run is not frozen at the last value
+
+
+def test_lowpass_filters_each_finite_stretch_and_keeps_nan():
+    fps = 100.0
+    t = np.arange(600) / fps
+    truth = np.sin(2 * np.pi * t)
+    x = truth + np.random.default_rng(0).normal(0, 0.05, t.shape)
+    x[250:300] = np.nan
+    x[400:405] = 7.0           # 5-sample stretch between gaps: too short to filter, kept as-is
+    x[395:400] = x[405:410] = np.nan
+    y = filtering.lowpass(np.stack([x, truth], axis=1), fps, 6.0)
+    assert np.array_equal(np.isnan(y[:, 0]), np.isnan(x))           # NaN stays exactly where it was
+    assert np.allclose(y[:250, 0], filtering.lowpass(x[:250], fps, 6.0))
+    assert np.allclose(y[300:395, 0], filtering.lowpass(x[300:395], fps, 6.0))
+    assert np.allclose(y[400:405, 0], 7.0)
+    ok = np.isfinite(x) & (np.abs(x) < 5)
+    assert np.std(y[ok, 0] - truth[ok]) < 0.5 * np.std(x[ok] - truth[ok])
+    assert np.allclose(y[:, 1], filtering.lowpass(truth, fps, 6.0))  # complete columns: unchanged
+
+
+def test_condition_markers_bridges_short_marker_gaps_and_reports_long_ones():
+    fps, T = 30.0, 120
+    t = np.arange(T) / fps
+    pts = np.stack([np.stack([np.sin(t + k), np.cos(t + k), np.full(T, k)], axis=1) for k in range(3)], axis=1)
+    pts[20:23, 0] = np.nan     # 0.1 s -> bridged, imputed
+    pts[40:81, 1] = np.nan     # 1.37 s (the audit's frozen LKnee) -> no IK target, not imputed
+    pts[:10, 2] = np.nan       # 0.33 s at the start -> not held
+    valid = np.ones(T, bool)
+    valid[100:102] = False     # front-end rejected the frame: a (bridged) gap for every marker
+    upstream = np.zeros(T, bool)
+    upstream[5] = True         # an augmented marker predicted from a bridged keypoint
+    segs, clean, qc = opensim_stage.condition_markers(["A", "B", "C"], pts, valid, np.arange(T) + 100, fps,
+                                                      {"max_gap_s": 0.2, "min_segment_s": 1.0}, upstream)
+    assert segs == [(0, T)]
+    assert np.isfinite(clean[20:23, 0]).all() and np.isnan(clean[40:81, 1]).all() and np.isnan(clean[:10, 2]).all()
+    assert np.isfinite(clean[10:, 2]).all() and np.isfinite(np.delete(clean[:, 1], range(40, 81), axis=0)).all()
+    assert qc["imputed_frames"] == [105, 120, 121, 122, 200, 201]
+    a, b, c = (qc["imputed_by_marker"][n] for n in "ABC")
+    assert a["imputed_spans"][0] == {"start_frame": 120, "stop_frame": 123, "duration_s": 0.1} and a["missing_s"] == 0
+    assert b["missing_spans"] == [{"start_frame": 140, "stop_frame": 181, "duration_s": 1.367}]
+    assert b["imputed_s"] == round(2 / fps, 3) and b["coverage"] == round((T - 43) / T, 4)
+    assert c["missing_spans"] == [{"start_frame": 100, "stop_frame": 110, "duration_s": 0.333}]
+
+
+def test_augmenter_masks_outputs_where_inputs_had_long_gaps(monkeypatch):
+    from rehabtwin import augmenter
+    base = {"RShoulder": (0.2, 1.4, 0), "LShoulder": (-0.2, 1.4, 0), "RHip": (0.1, 0.9, 0), "LHip": (-0.1, 0.9, 0),
+            "RKnee": (0.1, 0.5, 0), "LKnee": (-0.1, 0.5, 0), "RAnkle": (0.1, 0.1, 0), "LAnkle": (-0.1, 0.1, 0),
+            "RHeel": (0.1, 0.05, -0.05), "LHeel": (-0.1, 0.05, -0.05), "RBigToe": (0.1, 0.02, 0.15),
+            "LBigToe": (-0.1, 0.02, 0.15), "RElbow": (0.25, 1.1, 0), "LElbow": (-0.25, 1.1, 0),
+            "RWrist": (0.25, 0.85, 0), "LWrist": (-0.25, 0.85, 0)}
+    names, T = list(base), 90
+    X = np.array([base[n] for n in names])[None] + np.random.default_rng(1).normal(0, 0.005, (T, len(names), 3))
+    X[10:13, names.index("RWrist")] = np.nan    # 0.1 s: bridged, outputs kept
+    X[40:81, names.index("LKnee")] = np.nan     # 1.37 s: lower-body outputs masked there
+    dense = []
+
+    def fake_predict(pts, height_m, mass_kg, part, version="v0.3"):
+        dense.append(all(np.isfinite(pts[f]).all() for f in augmenter.FEATURES[part] + ["midHip"]))
+        return {n: pts["midHip"] + 0.01 * k for k, n in enumerate(augmenter.RESPONSES[part])}
+    monkeypatch.setattr(augmenter, "predict", fake_predict)
+    out = augmenter.augment(MarkerSequence(fps=30.0, marker_names=names, markers=X, frame="yup_world"), 1.75, 70.0)
+    m = {n: out.markers[:, out.marker_names.index(n)] for n in out.marker_names}
+    assert dense == [True, True]                # the LSTM still gets gap-free input
+    for n in augmenter.RESPONSES["lower"]:
+        assert np.isnan(m[n][40:81]).all() and np.isfinite(np.delete(m[n], range(40, 81), axis=0)).all(), n
+    assert all(np.isfinite(m[n]).all() for n in augmenter.RESPONSES["upper"])   # LKnee does not feed the upper model
+    assert np.isnan(m["LKnee"][40:81]).all() and np.isnan(m["RWrist"][10:13]).all()  # raw inputs never filled
+    assert out.meta["augmenter"]["frames_masked_input_gap"] == {"lower": 41, "upper": 0}
+    assert out.meta["augmenter"]["imputed_input_frames"] == [10, 11, 12]   # bridged inputs, listed for the stage QC
+
+
+def test_report_lists_marker_gaps(tmp_path):
+    from rehabtwin import report
+    sess = {"session_id": "s1", "pipeline": {"front_end": "f", "back_end": "b", "config": "c", "software": {}}}
+    met = {"tier": "C", "claims": "", "exercise": "squat", "n_reps": 0, "rep_driver": None, "summary": {}, "reps": []}
+    clean = {"coverage": 1.0, "imputed_s": 0.0, "imputed_spans": [], "missing_s": 0.0, "missing_spans": []}
+    gap = {**clean, "coverage": 0.7, "missing_s": 1.367, "missing_spans": [{"start_frame": 40, "stop_frame": 81}]}
+    qc = {"imputed_frames": [], "filter": {"max_gap_s": 0.2}, "imputed_by_marker": {"RKnee": clean, "LKnee": gap}}
+    page = report.write(tmp_path / "r.html", sess, qc, met, {}, np.arange(3.0)).read_text()
+    assert "Marker gaps in 1 of 2 markers" in page and "LKnee 0.0 s bridged, 1.367 s missing" in page
+    qc["imputed_by_marker"]["LKnee"] = clean
+    assert "Marker gaps" not in report.write(tmp_path / "r.html", sess, qc, met, {}, np.arange(3.0)).read_text()
+
+
+def test_trc_missing_last_marker_and_whole_rows_are_read_by_opensim(tmp_path):
+    osim = pytest.importorskip("opensim")
+    T, M = 20, 4
+    pts = np.random.default_rng(0).normal(size=(T, M, 3))
+    pts[5:9, M - 1] = np.nan   # the last marker: an empty trailing field used to cost the row a column
+    pts[12:14] = np.nan        # rows between segments
+    path = write_trc(tmp_path / "gaps.trc", [f"m{i}" for i in range(M)], pts, np.arange(T) / 60)
+    assert all(len(r.split("\t")) == 2 + 3 * M for r in path.read_text().splitlines()[6:] if r)
+    tab = osim.TimeSeriesTableVec3(str(path))
+    back = np.array([[[tab.getRowAtIndex(i)[j].get(k) for k in range(3)] for j in range(M)] for i in range(T)])
+    assert np.array_equal(np.isnan(back), np.isnan(pts)) and np.allclose(back[np.isfinite(back)], pts[np.isfinite(pts)], atol=1e-6)
+    assert np.array_equal(np.isnan(read_trc(path)[1]), np.isnan(pts))
+
+
+def test_condition_markers_splits_where_too_little_ik_weight_has_a_target():
+    fps, T = 30.0, 150
+    t = np.arange(T) / fps
+    pts = np.stack([np.stack([np.sin(t + k), np.cos(t + k), np.full(T, k)], axis=1) for k in range(4)], axis=1)
+    pts[40:50, :2] = np.nan    # both heavy markers lost (augmenter lower body masked): IK would fail or freeze
+    pts[60:75, 0] = np.nan     # long gaps that overlap for only 5 frames (<= max_gap):
+    pts[70:85, 1] = np.nan     # the overlap must split the trial, not be bridged
+    pts[100:120, 3] = np.nan   # an unweighted marker: neither coverage nor rep flags care
+    segs, clean, qc = opensim_stage.condition_markers(
+        list("ABCD"), pts, np.ones(T, bool), np.arange(T) + 1000, fps, {"max_gap_s": 0.2, "min_segment_s": 1.0},
+        weights=[10.0, 10.0, 1.0, 0.0], min_target_weight=0.5)
+    assert segs == [(0, 40), (75, T)]           # [50, 70) is covered but shorter than min_segment_s
+    assert np.isnan(clean[40:75]).all() and np.isfinite(clean[:40]).all()
+    assert qc["unsolved"] == {"min_target_weight": 0.5, "frames": 15, "spans": [
+        {"start_frame": 1040, "stop_frame": 1050, "duration_s": 0.333},
+        {"start_frame": 1070, "stop_frame": 1075, "duration_s": 0.167}]}
+    assert qc["missing_target_frames"] == list(range(1075, 1085))   # B lost in a solved frame; D has no weight
+    assert qc["imputed_by_marker"]["D"]["missing_spans"] == [{"start_frame": 1100, "stop_frame": 1120, "duration_s": 0.667}]
+    w = np.isfinite(clean).all(axis=2)[[s for a, b in segs for s in range(a, b)]] @ [10.0, 10.0, 1.0, 0.0]
+    assert (w >= 0.5 * 21).all()                 # every solved frame keeps most of the weight
+
+
+def test_metrics_flag_reps_with_missing_markers():
+    from rehabtwin import metrics
+    fps = 30.0
+    t = np.arange(300) / fps
+    knee = 45.0 * (1 - np.cos(2 * np.pi * t / 2.5))    # 4 reps of 2.5 s
+    tab = Table(["knee_angle_r", "knee_angle_l"], np.stack([knee, knee], axis=1), t)
+    met, _ = metrics.compute(tab, None, "squat", derived={}, imputed_times=[0.5], missing_times=np.arange(160, 170) / fps)
+    assert [r["contains_imputed_frames"] for r in met["reps"]] == [True, False, False, False]
+    assert [r["contains_missing_markers"] for r in met["reps"]] == [False, False, True, False]
+
+
+def test_report_flags_missing_markers_and_unsolved_frames(tmp_path):
+    from rehabtwin import report
+    sess = {"session_id": "s1", "pipeline": {"front_end": "f", "back_end": "b", "config": "c", "software": {}}}
+    rep = {"rep": 1, "start_s": 0.0, "stop_s": 1.0, "duration_s": 1.0, "values": {}, "contains_imputed_frames": False,
+           "contains_missing_markers": True}
+    met = {"tier": "C", "claims": "", "exercise": "squat", "n_reps": 1, "rep_driver": None, "summary": {}, "reps": [rep]}
+    qc = {"imputed_frames": [], "imputed_by_marker": {}, "unsolved": {
+        "min_target_weight": 0.5, "frames": 15, "spans": [{"start_frame": 40, "stop_frame": 55, "duration_s": 0.5}]}}
+    page = report.write(tmp_path / "r.html", sess, qc, met, {}, np.arange(3.0)).read_text()
+    assert "⚠ missing markers" in page and "15 frames not solved: fewer than 50% of the IK marker weight" in page
+    assert "Metrics cover" not in page
+    seg = {"segment": 1, "start_s": 8.733, "stop_s": 9.833, "trial_s": 9.833}
+    for of, fraction, shown in ((1, 1.0, None), (1, 0.112, "one solved segment"), (3, 0.6, "segment 1 of 3")):
+        qc["analysed_segment"] = {**seg, "of": of, "fraction": fraction}
+        page = report.write(tmp_path / "r.html", sess, qc, met, {}, np.arange(3.0)).read_text()
+        assert (f"Metrics cover {shown} only" in page) if shown else "Metrics cover" not in page
+
+
+# ------------------------------------------------------------- body mass
+
+def test_subject_mass_is_measured_only_when_given():
+    cfg = {"default_mass_kg": 70.0}
+    assert opensim_stage.subject_mass({}, cfg, 81.5) == (81.5, "measured")
+    assert opensim_stage.subject_mass({}, cfg) == (70.0, "assumed default")
+    assert opensim_stage.subject_mass({"synthetic": True, "mass_kg": 72.0}, cfg) == (72.0, "synthetic truth")
+    assert opensim_stage.subject_mass({"synthetic": True}, cfg) == (70.0, "assumed default")
+    assert opensim_stage.subject_mass({"synthetic": True, "mass_kg": 72.0}, cfg, 60.0) == (60.0, "measured")
+    for bad in (0, 0.0, -5.0):                 # '0 or default' used to turn a typo into a silent 70 kg
+        with pytest.raises(ValueError):
+            opensim_stage.subject_mass({}, cfg, bad)
+    aug = {"augmenter": {"mass_kg": 75.0, "mass_source": "measured"}}    # augment's mass carries over with its source
+    assert opensim_stage.subject_mass(aug, cfg) == (75.0, "measured")
+    assert opensim_stage.subject_mass(aug, cfg, 75.2) == (75.2, "measured")
+    with pytest.raises(ValueError, match="disagrees"):                      # two measured masses must agree
+        opensim_stage.subject_mass(aug, cfg, 70.0)
+    for guess in ({"mass_kg": 75.0, "mass_source": "assumed"}, {"mass_kg": 75.0}):   # a typed guess, or no record
+        kg, source = opensim_stage.subject_mass({"augmenter": guess}, cfg)
+        assert kg == 75.0 and source not in opensim_stage.KNOWN_MASS_SOURCES
+        assert opensim_stage.subject_mass({"augmenter": guess}, cfg, 80.0) == (80.0, "measured")   # weighed later
+
+
+def _mass_session(d, source, mass=70.0):
+    import json
+    (d / "session.json").write_text(json.dumps({
+        "session_id": "s", "person_ref": "P1", "started_at": "2026-01-01T00:00:00+00:00", "twin_tier": "C",
+        "pipeline": {"front_end": "x", "processing_id": "p0",       # as stamped by process
+                     "outputs": {"model": "model.osim", "motion": "ik.mot"}}}))
+    (d / "metrics.json").write_text(json.dumps({"exercise": "squat", "reps": [{"start_s": 0.0, "stop_s": 1.0}]}))
+    if source:
+        (d / "qc.json").write_text(json.dumps({"subject": {"mass_kg": mass, "mass_source": source, "height_m": None}}))
+    (d / "tests.json").write_text(json.dumps({"tests": [{"action": "knee_extension_r", "torque_Nm": 150.0}]}))
+    return d
+
+
+def _fake_muscles_and_strength(monkeypatch, calls):
+    """muscles.run / strength.calibrate stand-ins: the mass gate and reports without OpenSim."""
+    from rehabtwin import muscles, strength
+
+    def run(**kw):
+        calls.append(kw)
+        Path(kw["out_dir"], kw["label"]).mkdir(parents=True, exist_ok=True)
+        return {"label": kw["label"], "exercise": kw["exercise"], "valid_exercise": True, "time_range_s": [0.0, 1.0],
+                "grf": {"body_mass_kg": 70.0, "min_vertical_bw": 1.0, "peak_vertical_bw": 1.0,
+                        "right_share_range": [0.5, 0.5], "feet_planted": True},
+                "group_activation": {"quadriceps_r": {"peak": 0.4}}, "joint_moments": {}, "pelvis_residual_force_N": {},
+                "reserve_torque_peaks_Nm": {}, "muscles_saturated": [], "assistive_devices": {},
+                "caveats": [muscles.muscle_caveat(kw.get("muscle_model"))]}
+
+    def calibrate(model_path, tests, out_dir):
+        Path(out_dir).mkdir(parents=True, exist_ok=True)
+        Path(out_dir, "model_strength.osim").write_text("<OpenSimDocument/>")
+        return {"body_mass_kg": 70.0, "symmetry": {}, "calibrated_muscles": 9, "total_muscles": 80, "notes": [],
+                "tests": [{"action": "knee_extension_r", "posture_deg": {}, "measured_Nm": 150.0, "generic_model_Nm": 200.0,
+                           "factor": 0.75, "at_bound": False, "prime_movers": ["vaslat_r"],
+                           "synergists_scaled_with_this_test": [], "scaled_share_of_generic": 0.9}]}
+    monkeypatch.setattr(muscles, "run", run)
+    monkeypatch.setattr(strength, "calibrate", calibrate)
+
+
+def test_muscles_and_strength_refuse_an_assumed_body_mass(tmp_path, monkeypatch):
+    from rehabtwin import cli
+    calls = []
+    _fake_muscles_and_strength(monkeypatch, calls)
+    banner = "body mass assumed (70 kg): every force, torque and activation scales with it"
+    for source in ("assumed default", None):     # no recorded source fails closed too
+        d = tmp_path / str(source)
+        d.mkdir()
+        _mass_session(d, source)
+        with pytest.raises(ValueError, match="--mass-kg"):
+            cli.muscle_study(d, plant=False, view_3d=False)
+        with pytest.raises(ValueError, match="--mass-kg"):
+            cli.strength_calibration(d, d / "tests.json")
+        assert cli.main(["muscles", str(d), "--no-plant", "--no-3d"]) == 2
+        assert cli.main(["strength", str(d), "--tests", str(d / "tests.json")]) == 2
+        assert not calls and not (d / "muscles").exists() and not (d / "strength").exists()
+    # explicitly allowed: runs, and every report says what the numbers rest on
+    d = tmp_path / "assumed default"
+    rec, sdir = cli.strength_calibration(d, d / "tests.json", allow_assumed_mass=True)
+    assert rec["body_mass"] == {"kg": 70.0, "source": "assumed default", "assumed": True}
+    assert banner in (sdir / "strength.html").read_text()
+    study, mdir = cli.muscle_study(d, plant=False, view_3d=False, allow_assumed_mass=True)
+    page = (mdir / "muscles.html").read_text()
+    assert study["body_mass"]["assumed"] and banner in page and "body mass 70.0 kg (assumed default)" in page
+    # a measured mass passes silently and is named in the header
+    d = _mass_session(tmp_path, "measured", 81.5)
+    study, mdir = cli.muscle_study(d, plant=False, view_3d=False)
+    page = (mdir / "muscles.html").read_text()
+    assert not study["body_mass"]["assumed"] and "body mass assumed" not in page and "(measured)</span>" in page
+    assert cli.main(["strength", str(d), "--tests", str(d / "tests.json")]) == 0
+    assert "body mass assumed" not in (d / "strength" / "strength.html").read_text()
+
+
+def test_muscle_caveat_follows_the_muscle_model(tmp_path, monkeypatch):
+    from rehabtwin import cli
+    from rehabtwin.muscles import muscle_caveat
+    generic = muscle_caveat(None)
+    assert "Generic" in generic and "no personalised strength" in generic and "no EMG calibration" in generic
+    calls = []
+    _fake_muscles_and_strength(monkeypatch, calls)
+    d = _mass_session(tmp_path, "measured", 81.5)
+    cli.strength_calibration(d, d / "tests.json")
+    study, mdir = cli.muscle_study(d, plant=False, view_3d=False, use_strength=True)
+    cav = study["runs"]["measured"]["caveats"][0]
+    assert calls[-1]["muscle_model"]["source"].startswith("strength")       # reaches muscles.run (and muscles.json)
+    assert "knee_extension_r" in cav and "dynamometry" in cav and "all other muscles keep generic" in cav
+    assert "no personalised strength" not in cav and "no EMG calibration" in cav
+    assert cav in (mdir / "muscles.html").read_text()
+
+
+# ------------------------------------------------------------- re-processing: stale derived results
+
+def _stamped_session(d, pid="new000", tier="C"):
+    """Session folder as left by re-processing: current stamp in session.json, derived files from before."""
+    import json
+    d.mkdir(parents=True, exist_ok=True)
+    pipeline = {"front_end": "test", "outputs": {"model": "opensim/model_scaled.osim", "motion": "opensim/ik.mot"}}
+    if pid:
+        pipeline["processing_id"] = pid
+    (d / "session.json").write_text(json.dumps({"session_id": "s1", "person_ref": "P1", "twin_tier": tier,
+                                                "started_at": "2026-01-01T00:00:00+00:00", "pipeline": pipeline}))
+    (d / "metrics.json").write_text(json.dumps({"exercise": "squat", "reps": [{"start_s": 0.0, "stop_s": 1.0}]}))
+    (d / "qc.json").write_text(json.dumps({"subject": {"mass_kg": 70.0, "mass_source": "measured", "height_m": None}}))
+    (d / "report.html").write_text("<html></html>")
+    return d
+
+
+def test_processing_stamp_tracks_model_motion_tier_and_exercise(tmp_path):
+    from rehabtwin import records
+    (tmp_path / "m.osim").write_text("<Model mass='70'/>")
+    (tmp_path / "ik.mot").write_text("time\tknee\n0\t1\n")
+    pid = lambda tier="A", exercise="squat": records.processing_stamp(tmp_path / "m.osim", tmp_path / "ik.mot", tier,
+                                                                     exercise)["processing_id"]
+    a = records.processing_stamp(tmp_path / "m.osim", tmp_path / "ik.mot", "A", "squat")
+    assert a["processing_id"] == pid() and a["processed_at"].endswith("+00:00") and len(a["processing_id"]) == 16
+    assert pid("C") != pid() and pid(exercise="sit_to_stand") != pid()        # reps, foot planting follow the exercise
+    (tmp_path / "m.osim").write_text("<Model mass='95'/>")                     # re-scaled to another mass
+    assert pid() != a["processing_id"]
+    sess = {"pipeline": {"processing_id": "abc"}}
+    assert records.stale_reason(sess, {"processing_id": "abc"}) is None
+    assert "processing old" in records.stale_reason(sess, {"processing_id": "old"})
+    assert records.stale_reason(sess, {}) and records.stale_reason({"pipeline": {}}, {})     # unstamped: fail closed
+
+
+def test_index_marks_derived_results_from_an_earlier_processing_stale(tmp_path):
+    import json
+    from rehabtwin import report
+    d = _stamped_session(tmp_path / "s")
+    for sub, name, doc in [
+            ("correction/valgus", "correction", {"spec": "valgus", "status": "target", "admissible": True,
+                                                 "processing_id": "old000"}),
+            ("strength", "strength", {"tests": [{}], "symmetry": {}, "body_mass_kg": 70.0, "processing_id": "old000"}),
+            ("muscles", "study", {"runs": {"measured": {}}, "muscle_model": {"source": "generic"}}),   # pre-stamp
+            ("feedback/fresh", "cues", {"summary": {"commands_sent": 0, "per_rule": {}}, "processing_id": "new000"}),
+            ("feedback/on_old_corr", "cues", {"summary": {"commands_sent": 0, "per_rule": {}}, "processing_id": "new000",
+                                              "stale_inputs": ["correction/valgus"]})]:
+        (d / sub).mkdir(parents=True)
+        (d / sub / f"{name}.json").write_text(json.dumps(doc))
+        html_name = {"study": "muscles"}.get(name, name)
+        (d / sub / f"{html_name}.html").write_text("<html></html>")
+    page = report.write_index(d).read_text()
+    rows = {r.split("</a>")[0].split(">")[-1]: r for r in page.split("<tr>")[2:]}
+    assert set(rows) == {"Session report", "Correction view: valgus", "Strength calibration", "Muscle effects",
+                         "Haptic cue replay: fresh", "Haptic cue replay: on_old_corr"}   # stale ones listed, not hidden
+    for title in ("Correction view: valgus", "Strength calibration", "Muscle effects", "Haptic cue replay: on_old_corr"):
+        assert "STALE" in rows[title], title
+    assert "processing old000" in rows["Strength calibration"] and "stale correction/valgus" in rows["Haptic cue replay: on_old_corr"]
+    assert "STALE" not in rows["Session report"] and "STALE" not in rows["Haptic cue replay: fresh"]
+
+
+def test_muscles_refuses_a_strength_calibration_of_an_earlier_processing(tmp_path, capsys):
+    import json
+    from rehabtwin import cli, records
+    d = _stamped_session(tmp_path / "s")
+    (d / "strength").mkdir()
+    (d / "strength" / "model_strength.osim").write_text("<Model mass='70'/>")
+    (d / "strength" / "strength.json").write_text(json.dumps(
+        {"tests": [{"action": "knee_extension_r"}], "calibrated_muscles": 1, "symmetry": {}, "processing_id": "old000"}))
+    with pytest.raises(records.StaleResult, match="re-run 'rehabtwin strength"):
+        cli.muscle_study(d, start=0.0, stop=1.0, use_strength=True)
+    assert cli.main(["muscles", str(d), "--strength", "--start", "0", "--stop", "1"]) == 2
+    assert "refused: strength/strength.json is stale" in capsys.readouterr().err
+    # a correction from an earlier processing may still be replayed, but never silently
+    why = records.warn_if_stale(json.loads((d / "session.json").read_text()), {"processing_id": "old000"},
+                                "correction/valgus")
+    assert why and "warning: correction/valgus is stale" in capsys.readouterr().err
+
+
+def test_feedback_gate_ignores_a_validation_report_of_another_processing(tmp_path):
+    import json
+    from rehabtwin import cli
+    d = _stamped_session(tmp_path / "s")
+    sess = json.loads((d / "session.json").read_text())
+    good = {"synthetic": False, "reference_grade": "marker-mocap", "person_ref": "P1", "movements": ["squat"],
+            "feedback_allowed_joint_planes": ["knee_r.frontal"], "processing_id": "new000"}
+
+    def gate(val, outputs=True, pid="new000"):
+        s = json.loads(json.dumps(sess))
+        s["pipeline"]["processing_id"] = pid
+        if outputs:
+            s["pipeline"]["outputs"]["validation_report"] = "validation-report.json"
+        (d / "session.json").write_text(json.dumps(s))
+        (d / "validation-report.json").write_text(json.dumps(val))
+        return cli._session_gate(d, {"exercise": "squat"})[2:]
+    assert gate(good) == (["knee_r.frontal"], None)
+    allowed, why = gate({**good, "processing_id": "old000"})              # earlier processing's validation
+    assert allowed == [] and "stale" in why and "old000" in why
+    allowed, why = gate(good, outputs=False)          # re-processed without --reference: old file left behind
+    assert allowed == [] and "no validation report" in why
+    assert gate({k: v for k, v in good.items() if k != "processing_id"})[0] == []          # pre-stamp report
+    assert gate(good, pid=None)[0] == []                                                   # pre-stamp session
+
+
+def test_failed_reprocessing_leaves_earlier_derived_results_stale(tmp_path, monkeypatch, capsys):
+    """process() unstamps session.json before rewriting model/motion: a crash half-way must not vouch for them."""
+    import json
+    import types
+    from rehabtwin import cli, records, report
+    d = _stamped_session(tmp_path / "s")
+    (d / "strength").mkdir()
+    (d / "strength" / "model_strength.osim").write_text("<Model mass='70'/>")
+    (d / "strength" / "strength.html").write_text("<html></html>")
+    (d / "strength" / "strength.json").write_text(json.dumps(
+        {"tests": [{"action": "knee_extension_r"}], "calibrated_muscles": 1, "symmetry": {}, "processing_id": "new000"}))
+    assert "STALE" not in report.write_index(d).read_text()
+
+    def scaling_then_crash(*a, on_commit=None, **k):
+        on_commit()                                           # the stage starts rewriting the folder
+        raise FileNotFoundError("no_such_reference.mot")      # e.g. a mistyped --reference, after scaling
+    monkeypatch.setattr(cli.MarkerSequence, "load", staticmethod(lambda p: types.SimpleNamespace(meta={"person_ref": "P1"})))
+    monkeypatch.setattr(cli, "load_config", lambda name: {"model": "model.osim", "_path": "test.json"})
+    monkeypatch.setattr(cli.opensim_stage, "run", scaling_then_crash)
+    (tmp_path / "seq.npz").write_bytes(b"")
+    with pytest.raises(FileNotFoundError):
+        cli.process(tmp_path / "seq.npz", d, mass_kg=50)
+    sess = json.loads((d / "session.json").read_text())
+    assert "processing_id" not in sess["pipeline"] and sess["pipeline"]["reprocessing_started_at"]
+    assert "did not finish" in records.stale_reason(sess, {"processing_id": "new000"})
+    assert "STALE" in (d / "index.html").read_text()
+    with pytest.raises(records.StaleResult, match="re-run 'rehabtwin process' into this folder first"):
+        cli.muscle_study(d, start=0.0, stop=1.0, use_strength=True)
+
+
+def test_strength_refusal_on_a_prestamp_session_points_at_process(tmp_path):
+    """Re-running strength alone cannot fix a session.json without a stamp; the hint must say re-process."""
+    import json
+    from rehabtwin import cli, records
+    d = _stamped_session(tmp_path / "s", pid=None)
+    (d / "strength").mkdir()
+    (d / "strength" / "model_strength.osim").write_text("<Model mass='70'/>")
+    (d / "strength" / "strength.json").write_text(json.dumps(
+        {"tests": [{"action": "knee_extension_r"}], "calibrated_muscles": 1, "symmetry": {}, "processing_id": None}))
+    with pytest.raises(records.StaleResult, match="predates processing stamps.*re-run 'rehabtwin process'.*"
+                                                  "then re-run 'rehabtwin strength"):
+        cli.muscle_study(d, start=0.0, stop=1.0, use_strength=True)
+
+
+# ------------------------------------------------------------- integration of the correctness fixes
+
+def _validated_session(d, sid, when, mean, val_pid="p1", outputs_val=True, person="P1", movements=("squat",),
+                       gate="pass", flagged=()):
+    """A processed session folder with a marker-mocap validation report (knee_r frontal RMSE 1 deg)."""
+    from rehabtwin.records import write_json
+    d.mkdir(parents=True)
+    outputs = {"model": "m.osim", "motion": "ik.mot", **({"validation_report": "validation-report.json"} if outputs_val else {})}
+    write_json(d / "session.json", {"session_id": sid, "started_at": when, "started_at_source": "argument",
+                                    "person_ref": "P1", "twin_tier": "B",
+                                    "pipeline": {"front_end": "x", "processing_id": "p1", "outputs": outputs}})
+    write_json(d / "metrics.json", {"exercise": "squat", "n_reps": 3,
+                                    "reps": [{"contains_missing_markers": i + 1 in flagged} for i in range(3)],
+                                    "summary": {"knee_fppa_r": {"joint": "knee_r", "plane": "frontal", "unit": "deg",
+                                                                "rep_peak_mean": mean, "rep_peak_sd": 0.5}}})
+    write_json(d / "validation-report.json", {
+        "person_ref": person, "reference_grade": "marker-mocap", "synthetic": False, "movements": list(movements),
+        "processing_id": val_pid, "kinematics_rmse_deg": {"knee_r": {"frontal": 1.0}},
+        "gates": {"knee_r.frontal_rmse_le_5deg": gate}})
+    return d
+
+
+def test_progress_sizes_changes_only_with_validations_the_feedback_gate_trusts(tmp_path):
+    from rehabtwin import cli, progress
+    a = _validated_session(tmp_path / "ok" / "a", "a", "2026-10-01T09:00:00+00:00", 20.0)
+    b = _validated_session(tmp_path / "ok" / "b", "b", "2026-10-08T09:00:00+00:00", 15.0)
+    prog = progress.compare([a, b])
+    assert prog["first_to_last"]["knee_fppa_r"]["verdict"].startswith("real change") and not prog["warnings"]
+    bad = {"leftover of an earlier processing": {"val_pid": "old"}, "not in outputs": {"outputs_val": False},
+           "another person": {"person": "P2"}, "another movement": {"movements": ("lunge",)},
+           "gate not-tested (too little reference motion or coverage)": {"gate": "not-tested"}}
+    for i, (why, kw) in enumerate(bad.items()):
+        b2 = _validated_session(tmp_path / str(i) / "b", "b", "2026-10-08T09:00:00+00:00", 15.0, **kw)
+        j = progress.compare([a, b2])
+        assert j["first_to_last"]["knee_fppa_r"]["verdict"] == "consistent across reps; size not validated", why
+        if "not-tested" not in why:
+            assert any(w.startswith("b: validation report not used") for w in j["warnings"]), why
+        gate_closed = cli._session_gate(b2, {"exercise": "squat"})[3] or "not-tested" in why
+        assert gate_closed, why                        # the same reports close the feedback gate
+    # reps that rest on bridged or missing markers are named
+    b3 = _validated_session(tmp_path / "f" / "b", "b", "2026-10-08T09:00:00+00:00", 15.0, flagged=(2,))
+    assert any("reps 2 of 3 include frames with bridged or missing markers" in w
+               for w in progress.compare([a, b3])["warnings"])
+
+
+def test_unfinished_reprocessing_refuses_derived_work(tmp_path, monkeypatch):
+    import json
+    from rehabtwin import cli, progress, records
+    calls = []
+    _fake_muscles_and_strength(monkeypatch, calls)
+    d = _mass_session(tmp_path, "measured", 81.5)
+    records.mark_reprocessing(d / "session.json")      # a re-processing that crashed after scaling
+    for call in (lambda: cli.muscle_study(d, plant=False, view_3d=False),
+                 lambda: cli.strength_calibration(d, d / "tests.json"),
+                 lambda: cli.run_correction(d, "squat_knee_valgus_right"),
+                 lambda: progress.load(d)):
+        with pytest.raises(records.StaleResult, match="did not finish"):
+            call()
+    assert cli.main(["strength", str(d), "--tests", str(d / "tests.json")]) == 2
+    assert cli.main(["correct", str(d), "--spec", "squat_knee_valgus_right"]) == 2
+    assert not calls and "processing_id" not in json.loads((d / "session.json").read_text())["pipeline"]
+
+
+def test_refused_reprocessing_leaves_the_session_intact(tmp_path, monkeypatch):
+    """Refusals before the stage rewrites anything (mass, nothing solvable) keep stamp and skel_seq.npz."""
+    import json
+    import types
+    from rehabtwin import cli
+    d = _stamped_session(tmp_path / "s")
+    (d / "skel_seq.npz").write_bytes(b"original")
+    monkeypatch.setattr(cli.MarkerSequence, "load", staticmethod(lambda p: types.SimpleNamespace(meta={"person_ref": "P1"})))
+    monkeypatch.setattr(cli, "load_config", lambda name: {"model": "model.osim", "_path": "test.json"})
+
+    def nothing_solvable(*a, on_commit=None, **k):
+        raise ValueError("no segment long enough to solve")
+    monkeypatch.setattr(cli.opensim_stage, "run", nothing_solvable)
+    (tmp_path / "seq.npz").write_bytes(b"new")
+    assert cli.main(["process", str(tmp_path / "seq.npz"), str(d)]) == 2
+    assert json.loads((d / "session.json").read_text())["pipeline"]["processing_id"] == "new000"
+    assert (d / "skel_seq.npz").read_bytes() == b"original"
+
+
+def test_reprocessing_keeps_a_given_recording_time():
+    from rehabtwin.records import kept_started_at
+    prev = {"started_at": "2026-01-10T09:00:00+01:00", "started_at_source": "argument"}
+    assert kept_started_at(prev, {}, None) == "2026-01-10T09:00:00+01:00"
+    assert kept_started_at(prev, {}, "2026-02-01T09:00:00+00:00") is None          # a new --started-at wins
+    assert kept_started_at(prev, {"started_at": "2026-02-01T09:00:00Z"}, None) is None   # so does the sequence's
+    assert kept_started_at({**prev, "started_at_source": "processing time"}, {}, None) is None
+    assert kept_started_at(None, {}, None) is None
+
+
+def test_device_what_if_on_an_assumed_mass_is_illustrative_even_at_tier_a(tmp_path, monkeypatch):
+    import json
+    from rehabtwin import cli
+    calls = []
+    _fake_muscles_and_strength(monkeypatch, calls)
+    for source, illustrative in (("assumed default", True), ("measured", False)):
+        d = tmp_path / source
+        d.mkdir()
+        _mass_session(d, source)
+        sess = json.loads((d / "session.json").read_text())
+        sess["twin_tier"] = "A"
+        (d / "session.json").write_text(json.dumps(sess))
+        study, _ = cli.muscle_study(d, plant=False, view_3d=False, assist=("knee_angle_r=40:neg",),
+                                       allow_assumed_mass=True, workers=1)
+        status = study["devices_status"]
+        assert (status.startswith("ILLUSTRATION ONLY") and "assumed body mass" in status) == illustrative, source
+        assert (status == "target") == (not illustrative)      # report.py shows the banner unless "target"
+
+
+def test_stage_refuses_augmenter_gap_limit_other_than_the_config(tmp_path):
+    from rehabtwin import augmenter
+    seq = MarkerSequence(fps=30.0, marker_names=["a"], markers=np.zeros((3, 1, 3)), frame="yup_world",
+                         meta={"augmenter": {"mass_kg": 70.0, "mass_source": "measured", "max_gap_s": 0.2}})
+    with pytest.raises(ValueError, match="re-run augment with --max-gap-s 0.3"):
+        opensim_stage.run(seq, {"filter": {"max_gap_s": 0.3}, "_path": "x.json"}, tmp_path)
+    with pytest.raises(ValueError, match="mass_source"):
+        augmenter.augment(seq, 1.75, 70.0, mass_source="guessed")
+
+
+def test_multiview_records_each_cameras_mirroring():
+    import json
+    from rehabtwin.mediapipe_front import Camera, multiview_sequence
+    rng = np.random.default_rng(1)
+    X = rng.uniform(-0.3, 0.3, (4, 33, 3))
+    K = np.array([[900.0, 0, 360], [0, 900, 640], [0, 0, 1]])
+    cams, raws = [], []
+    for c, deg in enumerate((0, 50)):
+        a = np.radians(deg)
+        R = np.array([[np.cos(a), 0, np.sin(a)], [0, 1, 0], [-np.sin(a), 0, np.cos(a)]])
+        cams.append(Camera(f"cam{c}", K, np.zeros(5), R, np.array([0, 0, 3.0]), (720, 1280)))   # 3 m away
+        Xc = X @ R.T + [0, 0, 3.0]
+        meta = {"camera_facing": "front", "mirrored": True} if c == 1 else {}
+        raws.append({"image_xy": Xc[..., :2] / Xc[..., 2:] * 900 + [360, 640], "visibility": np.ones((4, 33)),
+                     "fps": np.array(30.0), **({"meta_json": np.array(json.dumps(meta))} if meta else {})})
+    seq, err = multiview_sequence(raws, cams, up_axis="-y")
+    assert np.nanmax(err) < 1e-6
+    assert seq.meta["camera_mirroring"] == [
+        {"camera": "cam0", "camera_facing": "unspecified", "mirrored": False},
+        {"camera": "cam1", "camera_facing": "front", "mirrored": True}]
+

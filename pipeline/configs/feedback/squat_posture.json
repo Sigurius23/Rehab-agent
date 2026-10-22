@@ -1,0 +1,23 @@
+{
+  "name": "squat_posture",
+  "exercise": "squat",
+  "author": "TEMPLATE - thresholds and cue locations must be set by the treating clinician",
+  "rules": [
+    {"id": "knee_valgus_r", "signal": "knee_fppa_r", "joint_plane": "knee_r.frontal", "op": ">", "threshold": 10.0,
+     "min_duration_s": 0.2, "cue": {"actuator": "thigh_r_lateral", "pattern": "pulse", "intensity": 0.6, "duration_ms": 250},
+     "message": "Right knee drifting inwards - push the knee out over the toes"},
+    {"id": "knee_valgus_l", "signal": "knee_fppa_l", "joint_plane": "knee_l.frontal", "op": ">", "threshold": 10.0,
+     "min_duration_s": 0.2, "cue": {"actuator": "thigh_l_lateral", "pattern": "pulse", "intensity": 0.6, "duration_ms": 250},
+     "message": "Left knee drifting inwards - push the knee out over the toes"},
+    {"id": "trunk_forward", "signal": "torso.sagittal", "joint_plane": "torso_segment.sagittal", "op": ">", "threshold": 45.0,
+     "min_duration_s": 0.3, "cue": {"actuator": "upper_back_center", "pattern": "double", "intensity": 0.5, "duration_ms": 300},
+     "message": "Chest up"},
+    {"id": "lumbar_rounding", "signal": "lumbar_total.sagittal", "joint_plane": "lumbar.sagittal", "op": "<", "threshold": -25.0,
+     "min_duration_s": 0.3, "cue": {"actuator": "lower_back_center", "pattern": "long", "intensity": 0.5, "duration_ms": 400},
+     "message": "Keep the lower back neutral"},
+    {"id": "trunk_side_lean", "signal": "torso.frontal", "joint_plane": "torso_segment.frontal", "op": ">", "threshold": 8.0,
+     "min_duration_s": 0.3, "cue": {"actuator": "side_l", "pattern": "pulse", "intensity": 0.4, "duration_ms": 250},
+     "message": "Trunk leaning right - shift weight back to the middle"}
+  ],
+  "schedule": {"bandwidth_deg": 2.0, "refractory_s": 1.0, "start_fraction": 1.0, "end_fraction": 0.33, "fade_events": 6}
+}

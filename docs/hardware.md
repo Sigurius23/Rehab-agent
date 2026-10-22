@@ -58,7 +58,12 @@ for rooms/objects rather than moving people, and may only be used here for a
    Floor: marked capture volume, calibration board position logged
 ```
 - Subject distance to D455: keep inside 0.6–6 m ideal range, practically 2–3 m.
-- Cameras separated by 45–90° around the subject; avoid collinear views.
+- Three cameras about 40° apart (−40°, 0°, +40°), all seeing the front of the body; avoid collinear views.
+  Measured on a public 5-phone squat (`docs/validation-results.md` §4): three phones kept every MediaPipe
+  keypoint and matched five. Two phones 80° apart lost a knee for up to 1.4 s at the bottom of the squat,
+  which the pipeline refuses to bridge, so use two only if both keep the knees in view at full depth.
+  Two near-side views 130° apart lost trunk and lumbar (8.7°/14° vs 2.8°/7.6° against OpenCap). One phone
+  cannot resolve pelvis tilt, hip flexion or lumbar flexion (10–26°) — use it for knee FPPA and frontal signals only.
 - iPhone body scan is a separate, static station step (person rotates slowly
   in A-pose, tight clothing) — it is not recorded during dynamic exercise.
 
@@ -84,6 +89,18 @@ for rooms/objects rather than moving people, and may only be used here for a
    > 2 cm on a long segment triggers investigation, not silent acceptance.
 7. **Session record** (one folder per session): raw streams, calibration files,
    sync offsets, QC results, twin tier (A/B/C), software + upstream commit pins.
+8. **Gravity per camera:** phones record the device gravity vector (ARKit/CoreMotion)
+   with every capture; fixed cameras get it from the calibration board or a spirit
+   level. Without it, every trunk/pelvis inclination from that camera is off by the
+   camera's tilt (measured: 26° on a real setup, `docs/validation-results.md`).
+9. **Mirroring check per camera:** front ("selfie") cameras often record the mirrored
+   preview, and MediaPipe then swaps every left/right landmark without any error
+   (a right-knee valgus cue would go to the left knee). Before recording, have the
+   subject face the camera and raise their right hand: it must appear on the
+   **left** of the image. If it appears on the right, use the rear camera, turn off
+   mirroring, or pass `--mirrored` (`adapters/mediapipe_pose.py`, or `rehabtwin mp-mono`
+   for a dump already made); the setting is recorded in the dump/sequence meta. For
+   several cameras, un-mirror at the adapter: `mp-multiview` cannot do it afterwards.
 
 ## Software map (all already in the catalog)
 

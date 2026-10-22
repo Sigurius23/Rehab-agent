@@ -8,9 +8,10 @@ being coupled that should not be.
 
 | Env (suggested name) | Contents | Why separate |
 |---|---|---|
-| `twin-live` | mediapipe / mmpose / pose front-ends, LSL (pylsl), record3d client, librealsense (pyrealsense2) | Real-time capture; camera SDKs pin their own deps |
+| `twin-live` | mediapipe / mmpose / pose front-ends, LSL (pylsl), record3d client, librealsense (pyrealsense2) | Real-time capture; camera SDKs pin their own deps. Headless Linux: MediaPipe needs `libegl1 libgles2` |
 | `twin-pose3d` | GVHMR, EasyMocap, Pose2Sim, smplx, SHAPY | Heavy PyTorch research code, conflicting CUDA/versions |
-| `biomech` | OpenSim (conda-forge `opensim`), opencap-processing, CEINMS, STGCN-rehab | OpenSim's Python is conda-first and version-sensitive |
+| `biomech` | OpenSim, `pipeline/` (rehabtwin), opencap-processing, CEINMS, STGCN-rehab | OpenSim 4.6 now ships pip wheels (`pip install opensim`, py3.11–3.13); conda remains an option |
+| `hsmr` | HSMR + SKEL (PyTorch, CUDA), `pipeline/adapters/hsmr_to_skelseq.py` | GPU research code with gated model files; talks to `biomech` only through `skel_seq.npz` |
 | `imaging` | TotalSegmentator, nnU-Net (GPU PyTorch) | GPU segmentation stack; 3D Slicer is a standalone app, not a pip env |
 | `muscle-sim` | MyoSuite/myosim (MuJoCo), SCONE (native app), musclemimic | Simulation; SCONE/SCONE Studio are applications |
 | `blender` | Blender + MPFB2, MuSkeMo, Z-Anatomy/BodyParts3D assets | Blender ships its own Python — never pip into it |

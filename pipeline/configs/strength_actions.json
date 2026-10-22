@@ -1,0 +1,21 @@
+{
+  "_comment": "Dynamometer test actions for rehabtwin strength. {s} = r/l. sign: direction of the tested torque in the coordinate's convention (Pose2Sim/Rajagopal model: hip_adduction + = adduction, knee_angle + = flexion, ankle_angle + = dorsiflexion, L5_S1_Flex_Ext + = extension). muscles: prime movers that receive the fitted factor. default_posture_deg: a common hand-held-dynamometry position; override per test with posture_deg.",
+  "hip_abduction":        {"coordinate": "hip_adduction_{s}", "sign": -1, "muscles": "^(glmed\\d|glmin\\d|tfl)_{s}$",
+                           "default_posture": {}},
+  "hip_adduction":        {"coordinate": "hip_adduction_{s}", "sign": 1, "muscles": "^(addbrev|addlong|addmag\\w+|grac)_{s}$",
+                           "default_posture": {}},
+  "hip_extension":        {"coordinate": "hip_flexion_{s}", "sign": -1, "muscles": "^glmax\\d_{s}$",
+                           "default_posture": {"knee_angle_{s}": 90}},
+  "hip_flexion":          {"coordinate": "hip_flexion_{s}", "sign": 1, "muscles": "^(iliacus|psoas)_{s}$",
+                           "default_posture": {"hip_flexion_{s}": 90, "knee_angle_{s}": 90}},
+  "knee_extension":       {"coordinate": "knee_angle_{s}", "sign": -1, "muscles": "^(recfem|vasint|vaslat|vasmed)_{s}$",
+                           "default_posture": {"hip_flexion_{s}": 90, "knee_angle_{s}": 60}},
+  "knee_flexion":         {"coordinate": "knee_angle_{s}", "sign": 1, "muscles": "^(bflh|bfsh|semimem|semiten)_{s}$",
+                           "default_posture": {"hip_flexion_{s}": 90, "knee_angle_{s}": 60}},
+  "ankle_plantarflexion": {"coordinate": "ankle_angle_{s}", "sign": -1, "muscles": "^(gaslat|gasmed|soleus)_{s}$",
+                           "default_posture": {}},
+  "ankle_dorsiflexion":   {"coordinate": "ankle_angle_{s}", "sign": 1, "muscles": "^tibant_{s}$",
+                           "default_posture": {}},
+  "trunk_extension":      {"coordinate": "L5_S1_Flex_Ext", "sign": 1, "muscles": "^(IL_|LTp|MF_)",
+                           "default_posture": {}, "decouple": "^(L\\d_L\\d|L1_T12|Abs)"}
+}

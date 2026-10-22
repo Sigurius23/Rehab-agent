@@ -26,3 +26,6 @@ venv/
 .DS_Store
 .idea/
 .vscode/
+.pytest_cache/
+*.egg-info/
+opensim.log

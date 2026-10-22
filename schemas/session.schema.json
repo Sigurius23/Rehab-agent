@@ -8,8 +8,11 @@
     "session_id": {"type": "string"},
     "person_ref": {"type": "string", "description": "Pseudonymous reference only. Never a name or medical record number."},
     "started_at": {"type": "string", "format": "date-time"},
+    "started_at_source": {"enum": ["argument", "sequence metadata", "processing time"], "description": "Where started_at comes from. 'processing time' is not the recording time: progress flags the session order as unreliable."},
     "synthetic": {"type": "boolean", "description": "True for example/test data. Must be false for real sessions."},
     "twin_tier": {"enum": ["A", "B", "C"], "description": "docs/accuracy.md tiers. Tier travels with the data."},
+    "tier_source": {"type": "object", "required": ["tier", "basis"], "description": "Why the session has its tier: default Tier C, or a model-provenance record (file hash, evidence, approver) bound to the model by sha256.",
+      "properties": {"tier": {"enum": ["A", "B", "C"]}, "basis": {"type": "string"}, "file": {"type": "string"}, "sha256": {"type": "string"}, "model_sha256": {"type": "string"}}},
     "hardware": {
       "type": "array",
       "items": {
@@ -30,7 +33,7 @@
         "required": ["device_id", "modality", "file"],
         "properties": {
           "device_id": {"type": "string"},
-          "modality": {"enum": ["rgb", "depth", "pointcloud", "imu", "emg", "pose2d", "pose3d"]},
+          "modality": {"enum": ["rgb", "depth", "pointcloud", "imu", "emg", "pose2d", "pose3d", "skel-sequence"]},
           "file": {"type": "string"},
           "fps": {"type": "number"},
           "resolution": {"type": "string"}
@@ -43,16 +46,31 @@
       "properties": {
         "intrinsics_source": {"type": "string"},
         "extrinsics_file": {"type": "string"},
-        "reprojection_error_px": {"type": "number"}
+        "reprojection_error_px": {"type": ["number", "null"], "description": "null when no multi-view calibration was performed (monocular screening session)"}
       }
     },
     "sync": {
       "type": "object",
       "required": ["method", "max_offset_ms_after_correction"],
       "properties": {
-        "method": {"const": "labstreaminglayer"},
+        "method": {"enum": ["labstreaminglayer", "single-stream"], "description": "single-stream: one video, nothing to synchronise"},
         "proof_event": {"type": "string", "description": "e.g. LED flash / hand clap at session start"},
-        "max_offset_ms_after_correction": {"type": "number", "description": "Must be < 5 for kinematics use (docs/hardware.md)"}
+        "max_offset_ms_after_correction": {"type": ["number", "null"], "description": "Must be < 5 for kinematics use (docs/hardware.md); null for single-stream sessions"}
+      }
+    },
+    "pipeline": {
+      "type": "object",
+      "description": "Software provenance: front-end/back-end, config, versions, upstream pins and output files.",
+      "properties": {
+        "front_end": {"type": "string"},
+        "back_end": {"type": "string"},
+        "config": {"type": "string"},
+        "software": {"type": "object", "additionalProperties": {"type": "string"}},
+        "upstream_pins": {"type": "object", "additionalProperties": {"type": "string"}},
+        "outputs": {"type": "object", "additionalProperties": {"type": "string"}},
+        "processing_id": {"type": "string", "description": "sha256 (truncated) of scaled model + motion + tier + exercise. Derived results (validation, correction, strength, muscles, cues) store the id they were computed from; a mismatch marks them STALE."},
+        "processed_at": {"type": "string", "format": "date-time"},
+        "reprocessing_started_at": {"type": "string", "format": "date-time", "description": "Set (and processing_id removed) while process rewrites the folder; left behind only by a run that did not finish."}
       }
     },
     "accuracy_layers": {

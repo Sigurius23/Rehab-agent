@@ -1,0 +1,17 @@
+{
+  "name": "suit_bhaptics",
+  "note": "Maps rule actuators (configs/feedback/*.json 'cue.actuator') to motors of SenseShift/bHaptics-protocol devices. Layout x/y follow SenseShift's BH_LAYOUT tables; confirm on the hardware which side x = 0 is before use. Thigh cues use a Tactosy2-class 6-motor sleeve worn on the lateral thigh.",
+  "devices": {
+    "vest": {"type": "tactsuit_x40", "ble_name": "TactSuitX40"},
+    "thigh_r": {"type": "tactosy2", "ble_name": "Tactosy2_R"},
+    "thigh_l": {"type": "tactosy2", "ble_name": "Tactosy2_L"}
+  },
+  "actuators": {
+    "upper_back_center": {"device": "vest", "select": {"target": "ChestBack", "x": [1, 2], "y": [0, 1]}},
+    "lower_back_center": {"device": "vest", "select": {"target": "ChestBack", "x": [1, 2], "y": [3, 4]}},
+    "side_l": {"device": "vest", "select": {"target": "ChestFront", "x": [0], "y": [1, 2, 3]}},
+    "side_r": {"device": "vest", "select": {"target": "ChestFront", "x": [3], "y": [1, 2, 3]}},
+    "thigh_r_lateral": {"device": "thigh_r", "select": {}},
+    "thigh_l_lateral": {"device": "thigh_l", "select": {}}
+  }
+}

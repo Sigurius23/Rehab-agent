@@ -26,6 +26,13 @@
       "description": "Each docs/accuracy.md acceptance target: pass/fail as measured on this setup.",
       "additionalProperties": {"enum": ["pass", "fail", "not-tested"]}
     },
+    "synthetic": {"type": "boolean", "description": "True for software round-trip tests against synthetic truth. A synthetic report never approves any use."},
+    "reference_grade": {"enum": ["marker-mocap", "markerless", "synthetic"], "description": "What the reference is. Only marker-mocap references can approve a use; markerless references give agreement, not accuracy."},
+    "feedback_allowed_joint_planes": {"type": "array", "items": {"type": "string"}, "description": "joint.plane pairs that passed their gate; only these may be used by feedback rules"},
+    "processing_id": {"type": ["string", "null"], "description": "session.json pipeline.processing_id this report was computed for; the feedback gate ignores a report of another processing."},
+    "coverage": {"type": ["object", "null"], "description": "Share of the time both systems recorded (trial intersected with the lag-shifted reference) that the compared motion spans. Below min_fraction every gate is not-tested.",
+      "properties": {"compared_s": {"type": "number"}, "overlap_s": {"type": "number"},
+                     "fraction": {"type": "number", "minimum": 0, "maximum": 1}, "min_fraction": {"type": "number"}}},
     "approved_for": {"type": "array", "items": {"enum": ["screening", "posture-feedback", "muscle-claims", "exo-assistance"]},
       "description": "What this validation licenses the system to do. exo-assistance requires all gates pass."}
   }

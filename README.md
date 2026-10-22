@@ -1,14 +1,15 @@
 # Rehab Agent — Meta-Repository
 
-> A curated meta-repo that organises **108 upstream GitHub repositories** into one
+> A curated meta-repo that organises **110 upstream GitHub repositories** into one
 > rehabilitation-technology pipeline: capture → pose → body/skeleton model →
 > biomechanics → muscle simulation → feedback & visualisation.
 >
 > **This repo contains no upstream code.** It contains a machine-readable catalog,
-> clone/status tooling, architecture docs, and recommended stacks. Each upstream
+> clone/status tooling, architecture docs, recommended stacks, and the first
+> working pipeline slice (`pipeline/`: video → SKEL → OpenSim). Each upstream
 > project stays in its own repo, under its own license.
 
-[![Catalog](https://img.shields.io/badge/catalog-108_repos-blue)](#catalog)
+[![Catalog](https://img.shields.io/badge/catalog-110_repos-blue)](#catalog)
 ![Status](https://img.shields.io/badge/status-research__prototype-orange)
 
 ## ⚠️ Not a medical device
@@ -37,12 +38,31 @@ LiDAR/D455 surfaces are centimetre-class (Tier B) — they register shape and
 support live tracking, but bone/joint/muscle accuracy still comes from MRI/CT
 (Tier A, `docs/accuracy.md`).
 
+## 🧪 Working slice: video → SKEL → OpenSim
+
+`pipeline/` (Python package `rehabtwin`) takes a front-end's 3D output (HSMR/SKEL, or
+non-gated MediaPipe) and produces a scaled OpenSim model, joint angles, trunk/pelvis posture
+against gravity, rep metrics, QC, a validation report and an HTML report. Every output is
+labelled with its accuracy tier.
+
+```bash
+pip install -e "pipeline[test]" && python3 scripts/clone.py --only perfanalytics/pose2sim
+cd pipeline && python -m rehabtwin selftest /tmp/rt     # synthetic squat with known truth: ~1° joint-angle RMSE
+```
+
+Measured so far ([`docs/validation-results.md`](docs/validation-results.md)): the back-end
+recovers known kinematics to about 1° (trunk lean vs gravity 0.35°). On real video,
+single-camera MediaPipe fails every gate against a 4-camera reference, so it is not the
+answer. The next step is HSMR/SKEL on the public OpenCap LabValidation dataset against
+marker mocap. Details: [`pipeline/README.md`](pipeline/README.md) ·
+[`stacks/video-skel-opensim.md`](stacks/video-skel-opensim.md).
+
 ## Quick start
 
 ```bash
 git clone <this-repo> rehab-agent && cd rehab-agent
 
-python3 scripts/validate_catalog.py     # check the catalog (108 repos)
+python3 scripts/validate_catalog.py     # check the catalog (110 repos)
 python3 scripts/list.py --tier core     # see the recommended first wave
 python3 scripts/clone.py --tier core --dry-run
 python3 scripts/clone.py --tier core    # shallow-clone core repos into upstream/
@@ -79,7 +99,7 @@ Human views: [`docs/catalog.md`](docs/catalog.md) · [`catalog/repos.csv`](catal
 |---|---|---:|
 | `body-models` | Parametric body & skeleton models (SMPL/SMPL-X, SKEL, OSSO, tissues) | 10 |
 | `anatomy-models` | Anatomy & personalised model generation | 7 |
-| `pose-mocap` | Pose estimation & motion capture (video, markerless, IMU) | 21 |
+| `pose-mocap` | Pose estimation & motion capture (video, markerless, IMU) | 23 |
 | `biomechanics` | Biomechanics engines & OpenSim pipeline | 13 |
 | `musculoskeletal-sim` | Musculoskeletal simulation, humanoid control & RL | 12 |
 | `visualization-tools` | Visualization, viewers & editing tools | 8 |
@@ -95,14 +115,14 @@ Human views: [`docs/catalog.md`](docs/catalog.md) · [`catalog/repos.csv`](catal
 
 | Tier | Meaning | Repos |
 |---|---|---:|
-| `core` | Core — evaluate first for Rehab Agent v1 | 34 |
-| `extended` | Extended — useful second wave / alternatives | 32 |
+| `core` | Core — evaluate first for Rehab Agent v1 | 35 |
+| `extended` | Extended — useful second wave / alternatives | 33 |
 | `specialized` | Specialized — niche modality, task, or platform | 30 |
 | `experimental` | Experimental — recent/paper code; validate before depending on it | 11 |
 | `needs-review` | Needs review — source list gave no usable description | 0 (all resolved 2026-10-21) |
 | `private` | Private — listed but not publicly cloneable | 1 |
 
-### Core stack — evaluate first (34 repos)
+### Core stack — evaluate first (35 repos)
 
 | Repository | Category | Why it is core |
 |---|---|---|
@@ -140,6 +160,7 @@ Human views: [`docs/catalog.md`](docs/catalog.md) · [`catalog/repos.csv`](catal
 | [wasserth/TotalSegmentator](https://github.com/wasserth/TotalSegmentator) | medical-imaging | >100 anatomical structures segmented from the patient's own CT/MRI |
 | [Slicer/Slicer](https://github.com/Slicer/Slicer) | medical-imaging | 3D Slicer: clinician DICOM/segmentation review — the accuracy gate |
 | [realsenseai/librealsense](https://github.com/realsenseai/librealsense) | data-capture | RealSense SDK for the optional D455 depth camera (selected hardware) |
+| [utahmobl/opencap-monocular](https://github.com/utahmobl/opencap-monocular) | pose-mocap | Single-phone video → OpenSim; 4.8° MAE vs marker mocap (preprint) — the monocular bar to beat |
 
 ## Recommended stacks
 
@@ -152,6 +173,7 @@ Human views: [`docs/catalog.md`](docs/catalog.md) · [`catalog/repos.csv`](catal
 | Blender anatomy visualisation | Clinician/patient-facing 3D anatomy | [`stacks/blender-anatomy.md`](stacks/blender-anatomy.md) |
 | Accuracy-first digital twin | Tier-A: patient MRI/CT → own bones/joints/muscles → live 1:1 tracking → wrong-vs-corrected view | [`stacks/digital-twin.md`](stacks/digital-twin.md) |
 | Haptic suit + exoskeleton | Vibrotactile posture cueing now; powered joint support as research track | [`stacks/haptic-exo-suit.md`](stacks/haptic-exo-suit.md) |
+| **Video → SKEL → OpenSim (implemented)** | One video (or several) → scaled OpenSim model, joint angles, posture vs gravity, validation | [`stacks/video-skel-opensim.md`](stacks/video-skel-opensim.md) |
 
 ## Repo map
 
@@ -162,12 +184,18 @@ rehab-agent/
 │   ├── repos.json             ← SOURCE OF TRUTH (edit this)
 │   ├── repos.csv / repos.yaml ← generated
 ├── docs/
-│   ├── catalog.md             ← generated full tables (all 108)
+│   ├── catalog.md             ← generated full tables (all 110)
 │   ├── architecture.md        ← pipeline, data formats, contracts
 │   ├── roadmap.md             ← phased build plan
 │   ├── evaluation.md          ← scoring rubric for picking repos
+│   ├── validation-results.md  ← what has actually been measured
 │   └── safety-and-licensing.md
-├── stacks/                    ← 7 opinionated, runnable-path recipes
+├── stacks/                    ← 8 opinionated recipes (video-skel-opensim is implemented)
+├── pipeline/                  ← rehabtwin: video → SKEL → OpenSim slice (code, configs, tests)
+│   ├── rehabtwin/             ← frames, filtering, OpenSim stage, metrics, validation, records, report
+│   ├── adapters/              ← HSMR → SKEL sequence, MediaPipe extraction
+│   ├── configs/               ← model/marker-set configs, exercise profiles
+│   └── tests/                 ← unit + end-to-end (synthetic truth) tests
 ├── scripts/
 │   ├── clone.py  list.py  status.py
 │   ├── validate_catalog.py  generate_catalog.py
