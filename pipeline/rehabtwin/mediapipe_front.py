@@ -176,13 +176,22 @@ def read_opencap_calibration(paths):
     return cams
 
 
-def sync_lags(raws, ref=0, max_lag_s=2.0, landmarks=(23, 24)):
+def sync_lags(raws, ref=0, max_lag_s=2.0, landmarks=(23, 24), min_peak_r=0.5, min_margin=0.15, exclusion_s=0.3,
+              return_diagnostics=False):
     """Integer frame offsets that align each camera's dump with ``raws[ref]``.
 
     Unsynchronised phones start recording at slightly different times. The vertical image motion
     of the hips (mean of ``landmarks``) is the same event seen from every camera; the offset is the
     peak of the normalised cross-correlation of its frame-to-frame velocity. Returns (lags, peak
     correlations); ``raws[c]`` frame ``k + lags[c]`` matches reference frame ``k``.
+
+    A wrong lag silently corrupts every triangulated frame, so the peak must stand out. Raises
+    ValueError when a best lag lies within 0.1 s of the searched window's edge (the true offset may
+    lie beyond ``max_lag_s``: the flat top of a peak just outside often tops out a frame or two
+    inside) or its r < ``min_peak_r``. A runner-up peak (>= ``exclusion_s`` away) within
+    ``min_margin`` is flagged, not refused: periodic motion (squats) correlates almost as well one
+    repetition away. ``return_diagnostics=True`` also returns, per camera (None for ``ref``), peak
+    and runner-up r/lag, margin, window edge, ambiguity and a warning text.
     """
     def velocity(raw):
         y = np.asarray(raw["image_xy"], float)[:, list(landmarks), 1].mean(axis=1)
@@ -192,25 +201,54 @@ def sync_lags(raws, ref=0, max_lag_s=2.0, landmarks=(23, 24)):
         return (v - v.mean()) / (v.std() or 1.0)
     fps = float(raws[ref]["fps"])
     vr = velocity(raws[ref])
-    lags, peaks = [], []
+    L, w, tol = int(max_lag_s * fps), max(1, int(round(exclusion_s * fps))), max(1, int(round(0.1 * fps)))
+    grid = np.arange(-L, L + 1)
+    lags, peaks, diags, problems = [], [], [], []
     for c, raw in enumerate(raws):
         if c == ref:
             lags.append(0)
             peaks.append(1.0)
+            diags.append(None)
             continue
         vc = velocity(raw)
-        best, best_lag = -np.inf, 0
-        for lag in range(-int(max_lag_s * fps), int(max_lag_s * fps) + 1):
-            a, b = (vr[:len(vr)], vc[lag:]) if lag >= 0 else (vr[-lag:], vc)
+        r = np.full(len(grid), -np.inf)
+        for i, lag in enumerate(grid):
+            a, b = (vr, vc[lag:]) if lag >= 0 else (vr[-lag:], vc)
             n = min(len(a), len(b))
-            if n < fps:          # need at least a second of overlap
-                continue
-            r = float(np.dot(a[:n], b[:n]) / n)
-            if r > best:
-                best, best_lag = r, lag
-        lags.append(best_lag)
-        peaks.append(round(best, 3))
-    return lags, peaks
+            if n >= fps:         # need at least a second of overlap
+                r[i] = float(np.dot(a[:n], b[:n]) / n)
+        ok = np.flatnonzero(np.isfinite(r))
+        if not len(ok):
+            raise ValueError(f"unreliable camera sync: camera {c} overlaps camera {ref} by < 1 s at every lag")
+        i = int(np.argmax(r))
+        # runner-up = best local maximum over +-exclusion_s outside the main lobe: a point on the lobe's
+        # flank always has a higher neighbour nearer the peak, so it never qualifies
+        cand = [j for j in ok if abs(j - i) >= w and r[j] >= r[max(0, j - w):j + w + 1].max()]
+        j = max(cand, key=lambda j: r[j]) if cand else None
+        d = {"lag_frames": int(grid[i]), "peak_r": round(float(r[i]), 3),
+             "runner_up_lag_frames": None if j is None else int(grid[j]),
+             "runner_up_r": None if j is None else round(float(r[j]), 3),
+             "margin": None if j is None else round(float(r[i] - r[j]), 3),
+             "searched_lags_frames": [int(grid[ok[0]]), int(grid[ok[-1]])],
+             "at_window_edge": bool(min(i - ok[0], ok[-1] - i) <= tol)}
+        d["ambiguous"] = d["margin"] is not None and d["margin"] < min_margin
+        d["warning"] = (f"camera {c}: ambiguous sync, lag {d['lag_frames']} frames (r={d['peak_r']}) vs runner-up "
+                        f"{d['runner_up_lag_frames']} (r={d['runner_up_r']}), margin {d['margin']} < {min_margin}; "
+                        f"periodic motion correlates almost as well one repetition away - start recordings with "
+                        f"a jump (the hips must move) or check the lags against a clap") if d["ambiguous"] else None
+        if d["at_window_edge"]:
+            problems.append(f"camera {c}: best lag {d['lag_frames']} frames ({d['lag_frames'] / fps:+.2f} s) lies at the edge "
+                            f"of the searched lags {d['searched_lags_frames']}, the true offset may be larger; "
+                            f"rerun with a larger --max-lag-s (now {max_lag_s:g})")
+        elif r[i] < min_peak_r:
+            problems.append(f"camera {c}: peak hip-motion correlation r={d['peak_r']} < {min_peak_r}, no reliable "
+                            f"common motion; start recordings with a jump (the hips must move)")
+        lags.append(d["lag_frames"])
+        peaks.append(d["peak_r"])
+        diags.append(d)
+    if problems:
+        raise ValueError("unreliable camera sync: " + "; ".join(problems))
+    return (lags, peaks, diags) if return_diagnostics else (lags, peaks)
 
 
 def apply_lags(raws, lags):

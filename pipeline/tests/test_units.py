@@ -707,3 +707,84 @@ def test_live_loop_refuses_foreign_or_ambiguous_posture_streams():
     log = res["eng"].log
     assert any(e.get("event") == "source_mismatch" for e in log)
     assert not [e for e in log if e.get("decision") == "cue"] and [e for e in log if e.get("decision") == "would_cue"]
+
+
+# ------------------------------------------------------------- camera sync guard
+
+def _hip_dumps(hip_y, shifts, lengths, fps=60.0, seed=0):
+    """Raw dumps whose hips see ``hip_y`` (px) from frame ``shift`` on, with 1 px detector noise."""
+    rng = np.random.default_rng(seed)
+    out = []
+    for s, length in zip(shifts, np.broadcast_to(lengths, len(shifts))):
+        xy = np.zeros((length, 33, 2))
+        xy[:, 23, 1] = xy[:, 24, 1] = np.interp(np.arange(length) + s, np.arange(len(hip_y)), hip_y) + rng.normal(0, 1, length)
+        out.append({"image_xy": xy, "visibility": np.ones((length, 33)), "fps": np.array(fps)})
+    return out
+
+
+def test_camera_sync_refuses_offsets_beyond_the_window():
+    from rehabtwin.mediapipe_front import sync_lags
+    t = np.arange(1300) / 60.0
+    rng = np.random.default_rng(3)
+    hip = 400 + sum(150 * np.exp(-0.5 * ((t - c) / 0.4) ** 2) for c in np.cumsum(rng.uniform(1.0, 2.5, 12)))  # irregular sit-to-stands
+    raws = _hip_dumps(hip, [0, 132], 900)            # camera 1 started 2.2 s late: just beyond the 2 s default
+    with pytest.raises(ValueError, match="edge.*--max-lag-s"):
+        sync_lags(raws)
+    assert abs(sync_lags(raws, max_lag_s=3.0)[0][1] + 132) <= 3
+    with pytest.raises(ValueError, match=r"r=0\.\d+ < 0.5"):      # far beyond: only spurious peaks inside the window
+        sync_lags(_hip_dumps(hip, [0, 200], 900))
+
+
+def test_camera_sync_flags_periodic_motion_as_ambiguous():
+    from rehabtwin.mediapipe_front import sync_lags
+    hip = 400 + 120 * np.sin(2 * np.pi * 0.5 * np.arange(1200) / 60.0)        # a squat every 2 s
+    d = sync_lags(_hip_dumps(hip, [0, 25], 900), max_lag_s=3.0, return_diagnostics=True)[2][1]
+    # true lag -25 and its aliases one rep (120 frames) away correlate equally: flagged, not trusted
+    assert abs((d["lag_frames"] + 25 + 60) % 120 - 60) <= 2 and not d["at_window_edge"]
+    assert d["ambiguous"] and d["margin"] < 0.15 and abs(abs(d["runner_up_lag_frames"] - d["lag_frames"]) - 120) <= 3
+    assert "jump" in d["warning"]
+
+
+def test_camera_sync_reports_diagnostics():
+    from rehabtwin.mediapipe_front import sync_lags
+    t = np.arange(900) / 60.0       # same signal as test_camera_sync_recovers_frame_offsets
+    hip = 400 + 120 * np.sin(2 * np.pi * 0.35 * t) * (1 + 0.3 * np.sin(2 * np.pi * 0.05 * t))
+    lags, peaks, diag = sync_lags(_hip_dumps(hip, [0, 25, -13], [700, 650, 700]), return_diagnostics=True)
+    assert lags == [0, -25, 13] and diag[0] is None
+    for lag, peak, d in zip(lags[1:], peaks[1:], diag[1:]):
+        assert d["lag_frames"] == lag and d["peak_r"] == peak > 0.8 and d["searched_lags_frames"] == [-120, 120]
+        assert d["margin"] >= 0.15 and abs(d["margin"] - (d["peak_r"] - d["runner_up_r"])) < 2e-3
+        assert abs(d["runner_up_lag_frames"] - lag) >= 18              # >= 0.3 s away, not the main peak's flank
+        assert not d["at_window_edge"] and not d["ambiguous"] and d["warning"] is None
+
+
+def test_mp_multiview_sync_refuses_or_warns(tmp_path, capsys):
+    import pickle
+    from rehabtwin import cli
+    rng = np.random.default_rng(0)
+    T, fps = 900, 60.0
+    body = rng.uniform([-0.3, -1.0, -0.2], [0.3, 0.0, 0.2], (33, 3))
+    X = body + np.outer(0.15 * np.sin(2 * np.pi * 0.5 * np.arange(T) / fps), [0, 1, 0])[:, None]   # squats, board y-down
+    K = np.array([[900.0, 0, 360], [0, 900, 640], [0, 0, 1]])
+    cal, dumps = [], []
+    for c, (deg, shift) in enumerate([(0, 0), (60, 25)]):        # camera 1 started 25 frames late
+        a = np.radians(deg)
+        R = np.array([[np.cos(a), 0, np.sin(a)], [0, 1, 0], [-np.sin(a), 0, np.cos(a)]])
+        (tmp_path / f"Cam{c}").mkdir()
+        cal.append(tmp_path / f"Cam{c}" / "cal.pickle")
+        cal[-1].write_bytes(pickle.dumps({"intrinsicMat": K, "distortion": np.zeros((1, 5)), "rotation": R,
+                                          "imageSize": np.array([[1280.0], [720.0]]), "translation": np.array([[0.0], [0], [3000]])}))
+        Xc = X[shift:shift + 600] @ R.T + [0, 0, 3.0]
+        uv = Xc[..., :2] / Xc[..., 2:] * 900 + [360, 640] + rng.normal(0, 0.3, (600, 33, 2))
+        dumps.append(tmp_path / f"cam{c}.npz")
+        np.savez(dumps[-1], image_xy=uv, visibility=np.ones((600, 33)), fps=np.array(fps))
+    args = ["mp-multiview", *map(str, dumps), "--opencap-calib", *map(str, cal), "--sync", "--out", str(tmp_path / "s.npz")]
+    assert cli.main(args + ["--max-lag-s", "0.3"]) == 2
+    err = capsys.readouterr().err
+    assert "refused" in err and "--max-lag-s" in err and not (tmp_path / "s.npz").exists()
+    assert cli.main(args + ["--max-lag-s", "3"]) == 0
+    assert "warning: camera 1: ambiguous sync" in capsys.readouterr().err
+    sync = MarkerSequence.load(tmp_path / "s.npz").meta["sync"]
+    assert abs((sync["lags_frames"][1] + 25 + 60) % 120 - 60) <= 2 and sync["max_lag_s"] == 3.0     # -25 or an alias
+    assert sync["diagnostics"][0] is None and sync["diagnostics"][1]["ambiguous"]
+    assert sync["warnings"] and sync["warnings"][0] == sync["diagnostics"][1]["warning"]
