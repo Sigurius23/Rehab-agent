@@ -10,6 +10,28 @@
   - `suit-bridge` always ends all-off, with duration, intensity and on-time caps.
   - Unevaluated rules are reported.
   - Device what-ifs below Tier A need `--illustrative`.
+- **Correctness fixes:**
+  - `progress`:
+    - Rep SDs are sample SDs, and rep scatter is judged with a Welch t-test.
+    - A "real change" needs at least 2 reps per session, and MDC95 comes only from marker-mocap validations.
+    - Sessions are ordered by the time-zone-aware recording time (`process --started-at`, `started_at_source`).
+  - Motion tables written in radians (`inDegrees=no`) are converted to degrees on read.
+  - `mp-multiview --sync`:
+    - `--max-lag-s` sets the search window, and lags up to twice that are also checked.
+    - It refuses window-edge lags, weak lags (r < 0.5) and lags beyond the window that correlate better.
+    - Ambiguous lags are flagged, with per-camera diagnostics in the sequence meta.
+  - Mirrored front-camera clips are un-mirrored (`mediapipe_pose.py --mirrored`, `mp-mono --mirrored`).
+  - Gap filling:
+    - Per-marker gaps are bridged only up to `max_gap_s`; longer ones stay NaN in the TRC.
+    - Frames missing most IK targets are not solved (`qc.unsolved`).
+    - The augmenter masks markers whose keypoints were missing for longer than that.
+  - Derived results (corrections, muscles, strength, cues, validation report) carry the `processing_id`.
+    `index.html` marks the ones from an earlier processing as STALE, and `muscles --strength` refuses a stale calibration.
+  - Body mass:
+    - `qc.json` records the mass and its source.
+    - `muscles` and `strength` refuse an assumed mass unless `--allow-assumed-mass` is given.
+    - `augment --mass-kg` carries over to `process`.
+    - Synthetic sessions use the generator's 72 kg.
 - `rehabtwin correct`: correction view (clinician specs, planted-feet IK, compensations, ROM check, Tier gating)
 - `rehabtwin muscles`: estimated double-stance GRF → inverse dynamics → static optimisation; corrected and
   weakened what-ifs; muscles.html

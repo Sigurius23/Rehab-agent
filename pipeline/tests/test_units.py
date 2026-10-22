@@ -1064,6 +1064,8 @@ def test_mirrored_flag_in_adapter_and_mp_mono(tmp_path, monkeypatch):
     cli.main(["mp-mono", str(tmp_path / "b.npz"), str(tmp_path / "b_seq.npz"), "--mirrored"])
     seq = MarkerSequence.load(tmp_path / "b_seq.npz")
     assert _raised(seq, "R").all() and not _raised(seq, "L").any() and seq.meta["mirrored"] is True
+    assert cli.main(["mp-mono", str(tmp_path / "a.npz"), str(tmp_path / "a_seq.npz"), "--mirrored"]) == 2
+    assert not (tmp_path / "a_seq.npz").exists()           # refused, not a traceback
 
 
 # ------------------------------------------------------------- progress statistics
@@ -1147,6 +1149,9 @@ def test_progress_zero_rep_session_and_recording_order(tmp_path, capsys):
     s5 = _write_session(tmp_path / "s5", "s5", "2026-10-22T11:00:00+00:00", None, 18.0, 1.0, 3)
     warn = [w for w in progress.compare([s1, s4, s5])["warnings"] if "processing time" in w]
     assert len(warn) == 1 and "s4, s5" in warn[0]
+    s6 = _write_session(tmp_path / "s6", "s6", "last Tuesday", "argument", 18.0, 1.0, 3)
+    assert cli.main(["progress", str(s1), str(s6), "--out", str(tmp_path / "out6")]) == 2
+    assert "not an ISO timestamp" in capsys.readouterr().err
 
 
 def test_session_record_started_at(tmp_path):
@@ -1341,13 +1346,19 @@ def test_subject_mass_is_measured_only_when_given():
     for bad in (0, 0.0, -5.0):                 # '0 or default' used to turn a typo into a silent 70 kg
         with pytest.raises(ValueError):
             opensim_stage.subject_mass({}, cfg, bad)
+    aug = {"augmenter": {"mass_kg": 75.0}}          # augment --mass-kg carries over, and must agree
+    assert opensim_stage.subject_mass(aug, cfg) == (75.0, "measured")
+    assert opensim_stage.subject_mass(aug, cfg, 75.2) == (75.2, "measured")
+    with pytest.raises(ValueError, match="disagrees"):
+        opensim_stage.subject_mass(aug, cfg, 70.0)
 
 
 def _mass_session(d, source, mass=70.0):
     import json
     (d / "session.json").write_text(json.dumps({
         "session_id": "s", "person_ref": "P1", "started_at": "2026-01-01T00:00:00+00:00", "twin_tier": "C",
-        "pipeline": {"front_end": "x", "outputs": {"model": "model.osim", "motion": "ik.mot"}}}))
+        "pipeline": {"front_end": "x", "processing_id": "p0",       # as stamped by process
+                     "outputs": {"model": "model.osim", "motion": "ik.mot"}}}))
     (d / "metrics.json").write_text(json.dumps({"exercise": "squat", "reps": [{"start_s": 0.0, "stop_s": 1.0}]}))
     if source:
         (d / "qc.json").write_text(json.dumps({"subject": {"mass_kg": mass, "mass_source": source, "height_m": None}}))
@@ -1442,6 +1453,7 @@ def _stamped_session(d, pid="new000", tier="C"):
     (d / "session.json").write_text(json.dumps({"session_id": "s1", "person_ref": "P1", "twin_tier": tier,
                                                 "started_at": "2026-01-01T00:00:00+00:00", "pipeline": pipeline}))
     (d / "metrics.json").write_text(json.dumps({"exercise": "squat", "reps": [{"start_s": 0.0, "stop_s": 1.0}]}))
+    (d / "qc.json").write_text(json.dumps({"subject": {"mass_kg": 70.0, "mass_source": "measured", "height_m": None}}))
     (d / "report.html").write_text("<html></html>")
     return d
 

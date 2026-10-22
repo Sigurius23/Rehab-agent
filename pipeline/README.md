@@ -156,7 +156,8 @@ python -m rehabtwin cues     SESSION --rules squat_posture [--motion SESSION/cor
 torque, muscle force, activation and N·m/kg scales with it. A session processed without `--mass-kg`
 records `qc.json → subject.mass_source: "assumed default"` (config default, 70 kg) and both commands refuse
 it (exit 2); `--allow-assumed-mass` runs anyway and labels the report "body mass assumed (70 kg)".
-Synthetic sessions record the generator's mass as `"synthetic truth"`.
+Synthetic sessions record the generator's mass as `"synthetic truth"`. The mass given to `augment --mass-kg`
+counts as measured and carries over to `process`, which refuses a `--mass-kg` that differs by more than 0.5 kg.
 
 Strength calibration from hand-held dynamometry (maximal isometric torques; template in
 `configs/strength/example_hhd.json`, test actions and postures in `configs/strength_actions.json`):
@@ -262,7 +263,9 @@ untested step is a physical BLE write.
 | `muscles --assist` | **Ideal assistive device** (exoskeleton what-if, after Dembia et al. 2017): a torque actuator at a joint, capped at the device's max torque (optionally one direction only), that the optimiser uses as it sees fit. Reports the device torque profile (peak, mean, time at cap) and which muscles it offloads. | An upper bound on the benefit (massless, instantaneous, optimal control). Offloading a muscle also removes the training stimulus, so the caveat recommends assist-as-needed. |
 | `cues` | Streaming `CueEngine` (same code for offline replay and a live suit): threshold with hysteresis, minimum duration, per-actuator refractory period, **faded feedback** (cue share falls from 100 % to ~33 % over the first violations). Writes `cues.json`, LSL-ready `commands.csv`, `cues.html`. | A cue is *sent* only on a Tier-A twin and only for joint/planes listed in a non-synthetic validation report; otherwise it is logged as `would_cue` with the reason. |
 
-Synthetic check (right-knee valgus squat):
+Synthetic check (right-knee valgus squat). These numbers come from a run scaled to the former 70 kg
+default; synthetic sessions now record the generator's 72 kg, so forces and moments in N·m come out
+about 3 % higher and activations shift slightly:
 - **Correction:** the valgus correction takes the right-knee frontal-plane projection angle from 23.8° to
   0.7°. The body compensates with pelvis list 3.3° and left hip adduction 2.6°.
 - **Feet:** the right foot has to turn by up to 3 cm at the toes (per-frame drift 2.1 cm, just over the
@@ -276,8 +279,8 @@ Synthetic check (right-knee valgus squat):
   abductor work. A what-if with the right quadriceps at 60 % raises their demand from 52 % to 77 %,
   with gluteus maximus +23 % and less hamstring co-activation.
 - **Ideal exo:** a 40 N·m knee-extension device sits at its cap for 51 % of the rep and lowers
-  right quadriceps demand from 52 % to 32 %. The knee moment peaks near 83 N·m for this 70 kg
-  subject, so 40 N·m cannot carry it alone. A 40 N·m hip-extension device lowers gluteus maximus
+  right quadriceps demand from 52 % to 32 %. The knee moment peaks near 83 N·m for the 70 kg
+  run, so 40 N·m cannot carry it alone. A 40 N·m hip-extension device lowers gluteus maximus
   from 46 % to 25 % and halves hamstring demand.
 
 Implementation notes learned the hard way: corrected motions are low-pass filtered like

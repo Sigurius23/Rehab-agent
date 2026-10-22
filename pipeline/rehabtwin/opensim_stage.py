@@ -432,7 +432,13 @@ KNOWN_MASS_SOURCES = ("measured", "synthetic truth")
 def subject_mass(meta, cfg, mass_kg=None):
     """(kg, source) the model is scaled to. Ground forces, joint torques and muscle activations all
     scale with it, so only a given mass is 'measured' (a synthetic session's generator mass is its
-    truth); the config default is recorded as 'assumed default', never passed off as this person's."""
+    truth); the config default is recorded as 'assumed default', never passed off as this person's.
+    The mass given to ``augment --mass-kg`` (an LSTM input) carries over and must agree with this one."""
+    aug_kg = (meta.get("augmenter") or {}).get("mass_kg")
+    if mass_kg is not None and aug_kg is not None and abs(float(mass_kg) - float(aug_kg)) > 0.5:
+        raise ValueError(f"--mass-kg {mass_kg} disagrees with the {aug_kg} kg the marker augmenter was run with")
+    if mass_kg is None:
+        mass_kg = aug_kg
     if mass_kg is not None:
         if not mass_kg > 0:
             raise ValueError(f"body mass must be positive, got {mass_kg} kg")

@@ -540,7 +540,11 @@ def main(argv=None):
             meta = {"person_ref": a.person_ref, "raw": str(a.raw)}
             if a.gravity_up_cv:
                 meta.update(gravity_up_cv=[float(v) for v in a.gravity_up_cv.split(",")], gravity_source=a.gravity_source)
-            seq = mf.monocular_sequence(dict(np.load(a.raw)), focal_px=a.focal_px, meta=meta, mirrored=a.mirrored)
+            try:
+                seq = mf.monocular_sequence(dict(np.load(a.raw)), focal_px=a.focal_px, meta=meta, mirrored=a.mirrored)
+            except ValueError as e:      # e.g. --mirrored on a dump the adapter already un-mirrored
+                print(f"refused: {e}", file=sys.stderr)
+                return 2
         else:
             if a.qca:
                 cams, up, source = mf.read_qca(a.qca), "z", "Qualisys calibration file"
@@ -610,7 +614,11 @@ def main(argv=None):
         print(f"report: {out / 'strength.html'}")
     elif a.cmd == "progress":
         from . import progress
-        prog = progress.compare(a.sessions, a.signals)
+        try:
+            prog = progress.compare(a.sessions, a.signals)
+        except ValueError as e:      # e.g. a started_at that is not an ISO timestamp
+            print(f"refused: {e}", file=sys.stderr)
+            return 2
         out = Path(a.out)
         out.mkdir(parents=True, exist_ok=True)
         records.write_json(out / "progress.json", prog)
