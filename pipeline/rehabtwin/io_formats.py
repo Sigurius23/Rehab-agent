@@ -4,6 +4,7 @@ Pure numpy so they can be used and tested without OpenSim installed.
 """
 from __future__ import annotations
 
+import re
 from dataclasses import dataclass, field
 from pathlib import Path
 
@@ -102,6 +103,45 @@ def read_table(path) -> Table:
     data = np.delete(arr, t_idx, axis=1)
     in_deg = header.get("inDegrees", "yes").lower() == "yes"
     return Table(columns=data_cols, data=data, time=arr[:, t_idx], in_degrees=in_deg, header=header)
+
+
+# Not angles, by name (for tables read without their model): translations (pelvis_tx, Abs_t1 of the
+# Pose2Sim lumbar model) and coupled patella coordinates (knee_angle_r_beta), which OpenSim itself
+# leaves unscaled when it writes a degree file.
+_NOT_ROTATIONAL = re.compile(r"(_t[xyz]|_beta)$|^Abs_t\d+$")
+
+
+def rotational(columns, model=None):
+    """Boolean mask of the columns that hold angles.
+
+    OpenSim's rule (what it scales when writing ``inDegrees=yes``): rotational coordinates only.
+    With a model (path or ``opensim.Model``) its coordinate motion types decide; columns it does
+    not know, or all columns without a model, go by name.
+    """
+    types = {}
+    if model is not None:
+        import opensim as osim
+        if not isinstance(model, osim.Model):
+            osim.Logger.setLevelString("error")
+            model = osim.Model(str(model))
+            model.finalizeFromProperties()
+        cs = model.getCoordinateSet()
+        types = {cs.get(i).getName(): cs.get(i).getMotionType() == osim.Coordinate.Rotational for i in range(cs.getSize())}
+    return np.array([types.get(c, not _NOT_ROTATIONAL.search(c)) for c in columns], bool)
+
+
+def to_degrees(table: Table, model=None) -> Table:
+    """``table`` with its angles in degrees, which every consumer here assumes; no-op if it already is.
+
+    ``inDegrees=no`` tables (OpenSim SI output, other labs' references) hold radians: read as degrees
+    a motion looks almost frozen (72 deg RMSE against itself) and nothing complains. Convert once, on read.
+    """
+    if table.in_degrees:
+        return table
+    data = np.array(table.data, dtype=float)
+    rot = rotational(table.columns, model)
+    data[:, rot] = np.degrees(data[:, rot])
+    return Table(list(table.columns), data, table.time, True, {**table.header, "inDegrees": "yes"})
 
 
 def write_table(path, columns, data, time, in_degrees=True, name=None):

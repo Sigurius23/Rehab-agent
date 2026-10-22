@@ -102,6 +102,9 @@ The recommended first reference is the public **OpenCap LabValidation** dataset
 marker mocap and its OpenSim IK, see `docs/validation-results.md`). Pose2Sim's
 5-level lumbar spine is compared with single-lumbar-joint models through
 `lumbar_total.* → lumbar_extension/bending/rotation` aliases.
+Motion files may be in radians (`inDegrees=no`): every command converts them to degrees on read
+(`io_formats.to_degrees`), using the model's coordinate types where a model is at hand and otherwise
+names (`*_tx/_ty/_tz`, `Abs_t*` are metres; coupled `*_beta` stay as OpenSim writes them).
 
 ## Beyond measurement: correction view, muscle effects, haptic cues
 

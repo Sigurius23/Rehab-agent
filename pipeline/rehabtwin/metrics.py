@@ -14,7 +14,7 @@ import numpy as np
 from scipy.signal import find_peaks
 
 from .config import CONFIG_DIR
-from .io_formats import Table
+from .io_formats import Table, to_degrees
 from .kinematics import classify_signal, segment_orientations
 
 
@@ -25,6 +25,7 @@ def load_exercises():
 
 def derived_signals(table: Table, model_path):
     """Body inclinations vs gravity, knee FPPA and total lumbar angles, keyed like 'torso.sagittal'."""
+    table = to_degrees(table, model_path)      # lumbar totals sum raw columns
     orient, fppa = segment_orientations(model_path, table)
     sig = {}
     for body, d in orient.items():
@@ -55,6 +56,7 @@ def describe_signal(name):
 
 def with_signals(table: Table, signals: dict) -> Table:
     """``table`` plus derived signals as extra columns (for validation of posture signals)."""
+    table = to_degrees(table)      # the signals are degrees: a radian flag would be applied to them too
     names = [n for n in signals if n not in table.columns]
     data = np.column_stack([table.data] + [np.asarray(signals[n], float) for n in names]) if names else table.data
     return Table(table.columns + names, data, table.time, table.in_degrees, table.header)
@@ -78,6 +80,7 @@ def compute(table: Table, model_path, exercise="squat", tier="C", allowed_joint_
             imputed_times=(), validation_ref=None, derived=None):
     """Per-rep metrics + session summary (dict ready for metrics.json)."""
     prof = load_exercises()[exercise]
+    table = to_degrees(table, model_path)
     fps = 1.0 / float(np.median(np.diff(table.time)))
     signals = {c: table.col(c) for c in table.columns}
     signals.update(derived if derived is not None else derived_signals(table, model_path))
