@@ -78,8 +78,13 @@ def predict(pts, height_m, mass_kg, part, version="v0.3"):
     return {n: y[:, k] for k, n in enumerate(RESPONSES[part])}
 
 
-def augment(seq: MarkerSequence, height_m, mass_kg, version="v0.3", config="mediapipe_lstm_pose2sim", max_gap_s=0.2):
+def augment(seq: MarkerSequence, height_m, mass_kg, version="v0.3", config="mediapipe_lstm_pose2sim", max_gap_s=0.2,
+            mass_source="assumed"):
     """Sequence with the 43 augmented markers appended (frame ``yup_world``).
+
+    ``mass_kg`` is an LSTM input, so it is needed even when nobody weighed the person; ``mass_source``
+    ('measured' or 'assumed') records which, and ``process`` carries both over (only a measured one
+    lets muscle and strength work run without --allow-assumed-mass).
 
     The LSTM needs dense input, so every gap is interpolated before it runs, but a part's
     outputs are NaN wherever one of its inputs was missing for longer than ``max_gap_s``
@@ -87,6 +92,8 @@ def augment(seq: MarkerSequence, height_m, mass_kg, version="v0.3", config="medi
     stage does not solve frames left without most of the IK marker weight (lower part masked).
     Frames predicted from bridged (short-gap) inputs are listed in meta for the stage's QC.
     """
+    if mass_source not in ("measured", "assumed"):
+        raise ValueError(f"mass_source must be 'measured' or 'assumed', got {mass_source!r}")
     X = np.asarray(seq.markers, float)
     meta = dict(seq.meta)
     if seq.frame == "opencv_camera":
@@ -120,7 +127,7 @@ def augment(seq: MarkerSequence, height_m, mass_kg, version="v0.3", config="medi
     out[~valid] = np.nan
     meta.update(default_config=config, augmenter={
         "model": f"OpenCap LSTM marker augmenter {version} (Uhlrich et al. 2023, Apache-2.0) via Pose2Sim ONNX",
-        "height_m": height_m, "mass_kg": mass_kg, "synthesised_inputs": ["Neck", "midHip", "RSmallToe", "LSmallToe"],
+        "height_m": height_m, "mass_kg": mass_kg, "mass_source": mass_source, "synthesised_inputs": ["Neck", "midHip", "RSmallToe", "LSmallToe"],
         "max_gap_s": max_gap_s, "frames_masked_input_gap": masked,
         "imputed_input_frames": seq.frame_index[bridged & valid].tolist()})  # the stage lists these as imputed
     return MarkerSequence(fps=seq.fps, marker_names=names, markers=out, frame="yup_world", valid=valid,

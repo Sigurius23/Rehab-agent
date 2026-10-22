@@ -29,7 +29,7 @@ SUBJ=(--exercise squat --mass-kg 78.2 --height-m 1.96 --person-ref opencap-subje
 # 5 cameras: triangulated keypoints, then + LSTM anatomical markers (the recommended path)
 "$PY" -m rehabtwin mp-multiview "${DUMPS[@]}" --sync --out "$OUT/multi_seq.npz" --person-ref opencap-subject2 --opencap-calib "${CAL[@]}"
 "$PY" -m rehabtwin process "$OUT/multi_seq.npz" "$OUT/multi" --config mediapipe33_pose2sim "${SUBJ[@]}" "${REF[@]}"
-"$PY" -m rehabtwin augment "$OUT/multi_seq.npz" "$OUT/multi_aug_seq.npz" --height-m 1.96 --mass-kg 78.2
+"$PY" -m rehabtwin augment "$OUT/multi_seq.npz" "$OUT/multi_aug_seq.npz" --height-m 1.96 --mass-kg 78.2 --mass-source measured
 "$PY" -m rehabtwin process "$OUT/multi_aug_seq.npz" "$OUT/multi_aug" "${SUBJ[@]}" "${REF[@]}"
 # 1 camera (Cam2, facing the subject): calibrated focal length and the board's gravity direction
 UP=$("$PY" -c "
@@ -40,6 +40,6 @@ print(','.join(f'{v:.5f}' for v in c.R @ np.array([0.0, -1.0, 0.0])))")
 "$PY" -m rehabtwin mp-mono "$OUT/cam2.npz" "$OUT/mono_seq.npz" --focal-px 913.3 --gravity-up-cv="$UP" \
     --gravity-source "checkerboard calibration" --person-ref opencap-subject2
 "$PY" -m rehabtwin process "$OUT/mono_seq.npz" "$OUT/mono" --config mediapipe33_pose2sim "${SUBJ[@]}" "${REF[@]}"
-"$PY" -m rehabtwin augment "$OUT/mono_seq.npz" "$OUT/mono_aug_seq.npz" --height-m 1.96 --mass-kg 78.2
+"$PY" -m rehabtwin augment "$OUT/mono_seq.npz" "$OUT/mono_aug_seq.npz" --height-m 1.96 --mass-kg 78.2 --mass-source measured
 "$PY" -m rehabtwin process "$OUT/mono_aug_seq.npz" "$OUT/mono_aug" "${SUBJ[@]}" "${REF[@]}"
 echo "validation reports: $OUT/{multi,multi_aug,mono,mono_aug}/validation-report.json"

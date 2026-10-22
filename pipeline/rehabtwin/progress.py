@@ -28,6 +28,8 @@ from pathlib import Path
 import numpy as np
 from scipy.stats import t as student_t
 
+from . import records
+
 Z95 = 1.96
 RECORDED = ("argument", "sequence metadata")     # started_at sources that are recording time
 METHOD = ("Session value = mean of rep peaks. A change counts only if it exceeds the rep-to-rep scatter "
@@ -40,24 +42,38 @@ METHOD = ("Session value = mean of rep peaks. A change counts only if it exceeds
 def load(session_dir):
     d = Path(session_dir)
     sess = json.loads((d / "session.json").read_text())
+    records.require_current(sess, f"progress over {d}")
     met = json.loads((d / "metrics.json").read_text())
-    val = None
+    val, ignored = None, None
     if (d / "validation-report.json").exists():
         val = json.loads((d / "validation-report.json").read_text())
+        ignored = records.validation_problem(sess, val)       # the feedback gate's test: same trust, same report
+        if not ignored and met["exercise"] not in val.get("movements", []):
+            ignored = f"validated movements {val.get('movements')} do not include {met['exercise']!r}"
+        if ignored:
+            val = None
+    flagged = [i + 1 for i, r in enumerate(met.get("reps", []))
+               if r.get("contains_missing_markers") or r.get("contains_imputed_frames")]
     return {"dir": str(d), "session_id": sess["session_id"], "started_at": sess["started_at"],
             "started_at_source": sess.get("started_at_source"), "person_ref": sess.get("person_ref"),
             "tier": sess["twin_tier"], "front_end": sess["pipeline"]["front_end"], "exercise": met["exercise"],
-            "n_reps": met["n_reps"], "summary": met["summary"], "validation": val}
+            "n_reps": met["n_reps"], "summary": met["summary"], "validation": val, "validation_ignored": ignored,
+            "flagged_reps": flagged}
 
 
 def measurement_error(session, joint, plane):
-    """Validated RMSE (deg) for joint × plane, or None (no validation, not marker-mocap, or not covered).
+    """Validated RMSE (deg) for joint × plane, or None (no trusted validation, or that joint × plane untested).
 
-    Only a marker-mocap reference measures error; agreement with a markerless system shares its
-    failure modes and a synthetic round trip tests the software, so neither may size a change.
+    Only a marker-mocap reference of the session's current processing measures error (load); agreement
+    with a markerless system shares its failure modes and a synthetic round trip tests the software,
+    so neither may size a change. A gate that is not-tested (too little reference motion, or too little
+    of the trial compared) gives no RMSE to size a change with either.
     """
     val = session["validation"]
     if not val or val.get("synthetic") or val.get("reference_grade") != "marker-mocap":
+        return None
+    gates = [v for g, v in val.get("gates", {}).items() if g.startswith(f"{joint}.{plane}_")]
+    if not gates or "not-tested" in gates:
         return None
     return val.get("kinematics_rmse_deg", {}).get(joint, {}).get(plane)
 
@@ -133,6 +149,12 @@ def compare(session_dirs, signals=None):
     if unrecorded:
         warnings.append(f"started_at of {', '.join(unrecorded)} is processing time, not recording time: the session "
                         "order may be wrong (pass --started-at to 'rehabtwin process')")
+    for s in sessions:
+        if s["validation_ignored"]:
+            warnings.append(f"{s['session_id']}: validation report not used to size changes ({s['validation_ignored']})")
+        if s["flagged_reps"]:
+            warnings.append(f"{s['session_id']}: reps {', '.join(map(str, s['flagged_reps']))} of {s['n_reps']} include "
+                            "frames with bridged or missing markers (metrics.json reps): their peaks are less certain")
     first, last = sessions[0], sessions[-1]
     series = {sig: [{"session_id": s["session_id"], "started_at": s["started_at"], "mean": s["summary"][sig]["rep_peak_mean"],
                      "sd": s["summary"][sig]["rep_peak_sd"], "n_reps": s["n_reps"]} for s in sessions] for sig in signals}

@@ -174,6 +174,24 @@ def processing_stamp(model, motion, tier, exercise):
             "processed_at": datetime.now(timezone.utc).replace(microsecond=0).isoformat()}
 
 
+def read_session(session_json):
+    """An existing session.json, or None (missing or unreadable)."""
+    p = Path(session_json)
+    try:
+        return json.loads(p.read_text()) if p.exists() else None
+    except ValueError:
+        return None
+
+
+def kept_started_at(prev, meta, started_at):
+    """The recording time a re-processing keeps from the folder's earlier session.json (``prev``) when
+    neither ``--started-at`` nor the sequence gives one; None otherwise. Re-processing is what the stale
+    and mass refusals ask for, and processing time in its place would reorder ``progress``."""
+    if started_at or meta.get("started_at") or not prev or prev.get("started_at_source") != "argument":
+        return None
+    return prev.get("started_at")
+
+
 def mark_reprocessing(session_json):
     """Drop the stamp of an existing session.json before ``process`` rewrites the folder's model and motion.
 
@@ -218,6 +236,37 @@ def stale_reason(sess, doc):
     if not got:
         return "computed before processing stamps"
     return f"computed from processing {got}, the session is now {cur}"
+
+
+def validation_problem(sess, val):
+    """Why validation report ``val`` cannot vouch for session ``sess`` (None if it can).
+
+    Shared by the feedback gate and ``progress``: only a report of the session's current processing
+    (listed in its outputs, same processing_id), graded against marker-mocap, for the same person.
+    Fails closed: a report without a grade or a stamp predates them and counts as unknown.
+    """
+    if "validation_report" not in (sess.get("pipeline") or {}).get("outputs", {}):   # re-processed without one
+        return "the current processing has no validation report"
+    why = stale_reason(sess, val)
+    if why:
+        return f"validation report is stale ({why})"
+    if val.get("synthetic"):
+        return "validation is synthetic"
+    if val.get("reference_grade") != "marker-mocap":
+        return f"validation reference grade is {val.get('reference_grade', 'unknown')!r}, not marker-mocap"
+    if val.get("person_ref") != sess.get("person_ref"):
+        return f"validation is for {val.get('person_ref')!r}, session is {sess.get('person_ref')!r}"
+    return None
+
+
+def require_current(sess, what):
+    """Refuse ``what`` on a folder whose re-processing did not finish: its model and motion (and qc.json)
+    may already be the new ones while metrics.json and the records still describe the old processing."""
+    pl = sess.get("pipeline") or {}
+    if not pl.get("processing_id") and pl.get("reprocessing_started_at"):
+        raise StaleResult(f"{what}: the re-processing started {pl['reprocessing_started_at']} did not finish, so "
+                          "the folder's model, motion and records do not belong together; re-run 'rehabtwin process' "
+                          "into this folder first")
 
 
 def rerun_hint(sess, rerun):

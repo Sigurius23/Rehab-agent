@@ -99,7 +99,8 @@ for rooms/objects rather than moving people, and may only be used here for a
    subject face the camera and raise their right hand: it must appear on the
    **left** of the image. If it appears on the right, use the rear camera, turn off
    mirroring, or pass `--mirrored` (`adapters/mediapipe_pose.py`, or `rehabtwin mp-mono`
-   for a dump already made); the setting is recorded in the dump/sequence meta.
+   for a dump already made); the setting is recorded in the dump/sequence meta. For
+   several cameras, un-mirror at the adapter: `mp-multiview` cannot do it afterwards.
 
 ## Software map (all already in the catalog)
 

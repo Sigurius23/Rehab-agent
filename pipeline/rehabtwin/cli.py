@@ -50,12 +50,20 @@ def process(seq_path, out_dir, exercise="squat", config=None, mass_kg=None, heig
     tier, tier_source = tiers.resolve(tier or seq.meta.get("tier", "C"), person_ref, synthetic, model_provenance,
                                       resolve(cfg["model"]))
     out_dir.mkdir(parents=True, exist_ok=True)
-    # unstamp first: a run failing after scaling must leave what was derived from the old files stale
-    if records.mark_reprocessing(out_dir / "session.json") and (out_dir / "index.html").exists():
-        report.write_index(out_dir)
-    if seq_path.resolve() != (out_dir / "skel_seq.npz").resolve():
-        shutil.copy(seq_path, out_dir / "skel_seq.npz")
-    stage = opensim_stage.run(seq, cfg, out_dir, mass_kg=mass_kg, height_m=height_m)
+    kept = records.kept_started_at(records.read_session(out_dir / "session.json"), seq.meta, started_at)
+    if kept:
+        started_at = kept
+        print(f"note: started_at {started_at} kept from the earlier processing", file=sys.stderr)
+
+    def commit():
+        # Unstamp before the first changed file: a run failing after scaling must leave what was derived
+        # from the old files stale. A run refused before that (mass, nothing solvable) leaves the folder intact.
+        if records.mark_reprocessing(out_dir / "session.json") and (out_dir / "index.html").exists():
+            report.write_index(out_dir)
+        if seq_path.resolve() != (out_dir / "skel_seq.npz").resolve():
+            shutil.copy(seq_path, out_dir / "skel_seq.npz")
+
+    stage = opensim_stage.run(seq, cfg, out_dir, mass_kg=mass_kg, height_m=height_m, on_commit=commit)
     motion = max(stage.motions, key=lambda p: len(read_table(p).time))
     est = read_table(motion)
     trial = seq.times[seq.valid]
@@ -120,6 +128,7 @@ def run_correction(session_dir, spec_name, illustrative=False):
     from . import correction
     spec = correction.load_spec(spec_name)
     sess = json.loads((Path(session_dir) / "session.json").read_text())
+    records.require_current(sess, "correct")
     summary, measured, corrected, out = correction.correct(session_dir, spec, illustrative=illustrative)
     model = Path(session_dir) / sess["pipeline"]["outputs"]["model"]
     sig_m = {c: measured.col(c) for c in measured.columns}
@@ -168,6 +177,7 @@ def strength_calibration(session_dir, tests_file, allow_assumed_mass=False):
     from . import strength
     session_dir = Path(session_dir)
     sess = json.loads((session_dir / "session.json").read_text())
+    records.require_current(sess, "strength")      # qc.json's mass may already be the new processing's
     body_mass = _session_mass(session_dir, allow_assumed_mass)
     spec = json.loads(Path(tests_file).read_text())
     out = session_dir / "strength"
@@ -187,6 +197,7 @@ def muscle_study(session_dir, rep=1, start=None, stop=None, correction=None, wea
     from . import muscles
     session_dir = Path(session_dir)
     sess = json.loads((session_dir / "session.json").read_text())
+    records.require_current(sess, "muscles")       # qc.json's mass may already be the new processing's
     if (assist or passive) and sess["twin_tier"] != "A" and not illustrative:
         from .correction import CorrectionRefused
         raise CorrectionRefused(
@@ -271,8 +282,11 @@ def muscle_study(session_dir, rep=1, start=None, stop=None, correction=None, wea
     runs = by_bias[0.0]
     study = {"twin_tier": sess["twin_tier"], "muscle_model": muscle_model, "body_mass": body_mass,
              "kinematics_prior": prior, "runs": runs,
-             "devices_status": (None if not (assist or passive) else "target" if sess["twin_tier"] == "A"
-                                else "ILLUSTRATION ONLY - design-space bound on a generic body, not an assistance profile"),
+             "devices_status": (None if not (assist or passive)
+                                else "ILLUSTRATION ONLY - design-space bound on a generic body, not an assistance profile"
+                                if sess["twin_tier"] != "A" else
+                                f"ILLUSTRATION ONLY - device torques rest on an assumed body mass ({body_mass['kg']} kg, "
+                                f"{body_mass['source']}), not an assistance profile" if body_mass["assumed"] else "target"),
              "comparisons": {lab: muscles.compare(runs["measured"], r) for lab, r in runs.items() if lab != "measured"}}
     if grf_sensitivity:
         # The left/right load split is the least certain input. Re-run every variant with the right
@@ -341,19 +355,9 @@ def _session_gate(session_dir, spec=None):
     val_path = session_dir / "validation-report.json"
     if not val_path.exists():
         return sess, sess["twin_tier"], [], "no validation report"
-    if "validation_report" not in (sess.get("pipeline") or {}).get("outputs", {}):   # re-processed without one
-        return sess, sess["twin_tier"], [], "the current processing has no validation report"
     val = json.loads(val_path.read_text())
-    why = records.stale_reason(sess, val)
-    if why:
-        why = f"validation report is stale ({why})"
-    elif val.get("synthetic"):
-        why = "validation is synthetic"
-    elif val.get("reference_grade") != "marker-mocap":
-        why = f"validation reference grade is {val.get('reference_grade', 'unknown')!r}, not marker-mocap"
-    elif val.get("person_ref") != sess.get("person_ref"):
-        why = f"validation is for {val.get('person_ref')!r}, session is {sess.get('person_ref')!r}"
-    elif spec is not None and spec.get("exercise") not in val.get("movements", []):
+    why = records.validation_problem(sess, val)
+    if not why and spec is not None and spec.get("exercise") not in val.get("movements", []):
         why = f"rule set exercise {spec.get('exercise')!r} not among validated movements {val.get('movements')}"
     allowed = [] if why else val.get("feedback_allowed_joint_planes", [])
     return sess, sess["twin_tier"], allowed, why
@@ -451,7 +455,13 @@ def main(argv=None):
     au.add_argument("sequence")
     au.add_argument("out")
     au.add_argument("--height-m", type=float, required=True)
-    au.add_argument("--mass-kg", type=float, required=True)
+    au.add_argument("--mass-kg", type=float, required=True, help="body mass (an LSTM input); see --mass-source")
+    au.add_argument("--mass-source", choices=("measured", "assumed"), default="assumed",
+                    help="'measured' if the person was weighed; an assumed mass carries over to process as assumed, "
+                         "so muscles/strength refuse it without --allow-assumed-mass (default: assumed)")
+    au.add_argument("--max-gap-s", type=float, default=0.2,
+                    help="mask outputs over input gaps longer than this; must equal the process config's "
+                         "filter.max_gap_s (0.2 s in the shipped configs)")
     co = sub.add_parser("correct", help="correction view for a processed session")
     co.add_argument("session")
     co.add_argument("--spec", required=True, help="name in pipeline/configs/corrections or a path")
@@ -480,7 +490,7 @@ def main(argv=None):
                     help="passive one-sided spring/elastic, e.g. knee_angle_r=40@10:pos (N·m/rad, slack until 10° "
                          "flexion); back elastic resisting trunk flexion: lumbar_total_extension=60@0:neg; repeatable")
     mu.add_argument("--allow-assumed-mass", action="store_true",
-                    help="run although the session was processed without --mass-kg (report labelled as assumed mass)")
+                    help="run although the session's body mass is assumed, not measured (report labelled as assumed mass)")
     mu.add_argument("--grf-sensitivity", type=float, default=0.0, metavar="SHARE",
                     help="also re-run with the right foot's load share shifted by +/-SHARE (e.g. 0.15) and flag "
                          "which changes are larger than the band that GRF split alone causes")
@@ -488,7 +498,7 @@ def main(argv=None):
     stp.add_argument("session")
     stp.add_argument("--tests", required=True, help="JSON with measured isometric torques (see configs/strength/)")
     stp.add_argument("--allow-assumed-mass", action="store_true",
-                     help="run although the session was processed without --mass-kg (report labelled as assumed mass)")
+                     help="run although the session's body mass is assumed, not measured (report labelled as assumed mass)")
     pg = sub.add_parser("progress", help="compare sessions: which changes beat rep scatter and measurement error")
     pg.add_argument("sessions", nargs="+")
     pg.add_argument("--out", required=True, help="folder for progress.json / progress.html")
@@ -585,7 +595,8 @@ def main(argv=None):
                           **{k: seq.meta[k] for k in ("intrinsics_source", "reprojection_px_median") if k in seq.meta}}))
     elif a.cmd == "augment":
         from .augmenter import augment
-        seq = augment(MarkerSequence.load(a.sequence), a.height_m, a.mass_kg)
+        seq = augment(MarkerSequence.load(a.sequence), a.height_m, a.mass_kg, max_gap_s=a.max_gap_s,
+                      mass_source=a.mass_source)
         seq.save(a.out)
         print(json.dumps({"out": a.out, "markers": len(seq.marker_names), "frames": seq.n_frames,
                           "default_config": seq.meta["default_config"]}))
@@ -593,7 +604,7 @@ def main(argv=None):
         from .correction import CorrectionRefused
         try:
             summary, out = run_correction(a.session, a.spec, a.illustrative)
-        except CorrectionRefused as e:
+        except (CorrectionRefused, records.StaleResult) as e:
             print(f"refused: {e}", file=sys.stderr)
             return 2
         print(json.dumps({"status": summary["status"], "admissible": summary["admissible"],
@@ -614,7 +625,7 @@ def main(argv=None):
     elif a.cmd == "strength":
         try:
             rec, out = strength_calibration(a.session, a.tests, a.allow_assumed_mass)
-        except AssumedMassRefused as e:
+        except (AssumedMassRefused, records.StaleResult) as e:
             print(f"refused: {e}", file=sys.stderr)
             return 2
         for t in rec["tests"]:

@@ -368,7 +368,11 @@ def triangulate(cams, uv, weights, min_weight=0.5, min_views=2):
 
 def multiview_sequence(raws, cams, up_axis="z", min_visibility=0.5, max_reproj_px=25.0, meta=None,
                        intrinsics_source="Qualisys calibration file"):
-    """MarkerSequence (frame='yup_world') from synchronised raw dumps + calibration."""
+    """MarkerSequence (frame='yup_world') from synchronised raw dumps + calibration.
+
+    A mirrored front-camera clip must be un-mirrored by the adapter (``mediapipe_pose.py --mirrored``)
+    before it gets here; each camera's record of that is kept in meta['camera_mirroring'].
+    """
     names = list(POSE2SIM_MEDIAPIPE)
     idx = [POSE2SIM_MEDIAPIPE[n] for n in names]
     T = min(len(r["image_xy"]) for r in raws)
@@ -384,7 +388,9 @@ def multiview_sequence(raws, cams, up_axis="z", min_visibility=0.5, max_reproj_p
     m = {"source": f"MediaPipe Pose, {len(cams)}-camera DLT triangulation", "tier": "C",
          "default_config": "mediapipe33_pose2sim", "reprojection_px_median": float(np.nanmedian(err)),
          "reprojection_px_p95": float(np.nanpercentile(err, 95)), "intrinsics_source": intrinsics_source,
-         "cameras": [c.name for c in cams]}
+         "cameras": [c.name for c in cams],
+         "camera_mirroring": [{"camera": c.name, "camera_facing": dump_meta(r).get("camera_facing", "unspecified"),
+                               "mirrored": bool(dump_meta(r).get("mirrored"))} for c, r in zip(cams, raws)]}
     m.update(meta or {})
     return MarkerSequence(fps=float(raws[0]["fps"]), frame="yup_world", marker_names=names, markers=X,
                           valid=valid, meta=m), err

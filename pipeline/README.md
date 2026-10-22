@@ -80,7 +80,8 @@ python -m rehabtwin process clip_seq.npz out/ --config mediapipe33_pose2sim --ex
 
 A mirrored front-camera ("selfie") clip swaps every left/right landmark silently. Pass
 `--mirrored` to the adapter (or to `mp-mono` for a dump made without it); see the mirroring
-check in `docs/hardware.md`.
+check in `docs/hardware.md`. `mp-multiview` has no `--mirrored`: un-mirror each front-camera clip
+at the adapter. Each camera's setting is kept in the sequence meta (`camera_mirroring`).
 
 Several phones (OpenCap-style checkerboard calibration, unsynchronised starts) and OpenCap's LSTM
 anatomical-marker augmenter, which the pelvis needs (validation-results §4):
@@ -88,7 +89,7 @@ anatomical-marker augmenter, which the pelvis needs (validation-results §4):
 ```bash
 python -m rehabtwin mp-multiview cam0.npz cam1.npz cam2.npz --sync --out multi_seq.npz \
     --opencap-calib Cam0/cameraIntrinsicsExtrinsics.pickle Cam1/... Cam2/...   # numpy-only unpickler
-python -m rehabtwin augment multi_seq.npz multi_aug_seq.npz --height-m 1.80 --mass-kg 75   # pip install onnxruntime
+python -m rehabtwin augment multi_seq.npz multi_aug_seq.npz --height-m 1.80 --mass-kg 75 --mass-source measured   # pip install onnxruntime
 python -m rehabtwin process multi_aug_seq.npz out/ --exercise squat --mass-kg 75 --height-m 1.80
 ```
 
@@ -153,11 +154,13 @@ python -m rehabtwin cues     SESSION --rules squat_posture [--motion SESSION/cor
 ```
 
 `muscles` and `strength` need the session's body mass: the ground forces are m (a_com + g), so every
-torque, muscle force, activation and N·m/kg scales with it. A session processed without `--mass-kg`
+torque, muscle force, activation and N·m/kg scales with it. A session processed without a measured mass
 records `qc.json → subject.mass_source: "assumed default"` (config default, 70 kg) and both commands refuse
-it (exit 2); `--allow-assumed-mass` runs anyway and labels the report "body mass assumed (70 kg)".
-Synthetic sessions record the generator's mass as `"synthetic truth"`. The mass given to `augment --mass-kg`
-counts as measured and carries over to `process`, which refuses a `--mass-kg` that differs by more than 0.5 kg.
+it (exit 2); `--allow-assumed-mass` runs anyway and labels the report "body mass assumed (70 kg)". Device
+what-ifs (`--assist`, `--passive`) on an assumed mass are labelled ILLUSTRATION ONLY even at Tier A.
+Synthetic sessions record the generator's mass as `"synthetic truth"`. `augment` needs a mass (an LSTM input)
+and carries it over to `process` with `--mass-source` (default `assumed`; pass `measured` if the person was
+weighed). `process` refuses a `--mass-kg` that differs from a measured augmenter mass by more than 0.5 kg.
 
 Strength calibration from hand-held dynamometry (maximal isometric torques; template in
 `configs/strength/example_hhd.json`, test actions and postures in `configs/strength_actions.json`):
@@ -196,12 +199,16 @@ python -m rehabtwin progress SESSION_WEEK1 SESSION_WEEK4 SESSION_WEEK8 --out pro
 Per signal the session value is the mean of the rep peaks. A change is called **real** only if it
 exceeds both the rep-to-rep scatter (Welch t-test on the sample SDs, ≥ 2 reps in each session) and
 the minimal detectable change from that joint × plane's validation (MDC95 = 1.96·√2·RMSE vs
-marker-based motion capture). Without a marker-mocap validation (a markerless or synthetic reference
-does not count) the verdict is "consistent across reps; size not validated": a lighting, clothing or
-camera change can produce a consistent shift too. Sessions of different people are refused; a
-front-end or tier change between sessions is flagged. Sessions are ordered by `started_at`: pass
-the recording time to `process --started-at 2026-10-21T09:30:00+02:00`, otherwise the processing
-time stands in and progress warns that the order may be wrong.
+marker-based motion capture). Only a validation the feedback gate would also trust counts: marker
+mocap, of the session's current processing, same person and exercise, with that joint × plane's gate
+tested. Without one (a markerless or synthetic reference does not count) the verdict is "consistent
+across reps; size not validated", and progress says why a report on disk was not used: a lighting,
+clothing or camera change can produce a consistent shift too. Reps that include bridged or missing
+markers are named. Sessions of different people, and folders whose re-processing did not finish,
+are refused; a front-end or tier change between sessions is flagged. Sessions are ordered by
+`started_at`: pass the recording time to `process --started-at 2026-10-21T09:30:00+02:00` (a
+re-processing keeps it), otherwise the processing time stands in and progress warns that the order
+may be wrong.
 
 Live loop over Lab Streaming Layer (`pip install -e "pipeline[live]"`), the same engine in real time:
 
@@ -295,7 +302,7 @@ let IK jitter 6.6 cm sideways, and static optimisation then "needed" 70 N·m res
 | `opensim/model_scaled.osim` | subject model (Pose2Sim full body, 318 muscles, 5 lumbar levels) |
 | `opensim/ik.mot`, `ik_ik_marker_errors.sto` | joint angles (deg) and per-frame marker residuals |
 | `opensim/*_setup.xml`, `markers_*.trc`, `scale_factors.xml` | every OpenSim input, re-runnable in the OpenSim GUI |
-| `qc.json` | frames/gravity source, floor fit, gaps and imputed frames (any marker bridged), per-marker bridged/missing spans and coverage (`imputed_by_marker`), frames a weighted marker had no target (`missing_target_frames`), frames not solved (`unsolved`), body mass and its source (`measured` only with `--mass-kg`), scale factors, marker placement, IK residuals |
+| `qc.json` | frames/gravity source, floor fit, gaps and imputed frames (any marker bridged), per-marker bridged/missing spans and coverage (`imputed_by_marker`), frames a weighted marker had no target (`missing_target_frames`), frames not solved (`unsolved`), body mass and its source (`measured` from `--mass-kg` or `augment --mass-source measured`, `synthetic truth`, else assumed), scale factors, marker placement, IK residuals |
 | `metrics.json` | reps and per-rep values; every signal labelled with joint, plane, validated, feedback_eligible |
 | `validation-report.json` | RMSE per joint × plane, gates, `approved_for` (`schemas/validation-report.schema.json`) |
 | `session.json` | provenance, tier, accuracy layers, upstream commit pins (`schemas/session.schema.json`) |

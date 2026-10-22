@@ -433,12 +433,16 @@ def subject_mass(meta, cfg, mass_kg=None):
     """(kg, source) the model is scaled to. Ground forces, joint torques and muscle activations all
     scale with it, so only a given mass is 'measured' (a synthetic session's generator mass is its
     truth); the config default is recorded as 'assumed default', never passed off as this person's.
-    The mass given to ``augment --mass-kg`` (an LSTM input) carries over and must agree with this one."""
-    aug_kg = (meta.get("augmenter") or {}).get("mass_kg")
-    if mass_kg is not None and aug_kg is not None and abs(float(mass_kg) - float(aug_kg)) > 0.5:
-        raise ValueError(f"--mass-kg {mass_kg} disagrees with the {aug_kg} kg the marker augmenter was run with")
-    if mass_kg is None:
-        mass_kg = aug_kg
+    The mass given to ``augment --mass-kg`` (an LSTM input) carries over with its ``--mass-source``; two
+    measured masses must agree."""
+    aug = meta.get("augmenter") or {}
+    aug_kg, aug_measured = aug.get("mass_kg"), aug.get("mass_source") == "measured"
+    if mass_kg is not None and aug_kg is not None and aug_measured and abs(float(mass_kg) - float(aug_kg)) > 0.5:
+        raise ValueError(f"--mass-kg {mass_kg} disagrees with the measured {aug_kg} kg the marker augmenter was run with")
+    if mass_kg is None and aug_kg is not None:
+        if not aug_kg > 0:
+            raise ValueError(f"body mass must be positive, got {aug_kg} kg")
+        return float(aug_kg), "measured" if aug_measured else "assumed (augment --mass-kg, not measured)"
     if mass_kg is not None:
         if not mass_kg > 0:
             raise ValueError(f"body mass must be positive, got {mass_kg} kg")
@@ -448,8 +452,13 @@ def subject_mass(meta, cfg, mass_kg=None):
     return float(cfg.get("default_mass_kg", 70.0)), "assumed default"
 
 
-def run(seq: MarkerSequence, cfg: dict, out_dir, mass_kg=None, height_m=None) -> StageResult:
+def run(seq: MarkerSequence, cfg: dict, out_dir, mass_kg=None, height_m=None, on_commit=None) -> StageResult:
     mass, mass_source = subject_mass(seq.meta, cfg, mass_kg)     # refuse a bad mass before any work
+    aug_gap, gap = (seq.meta.get("augmenter") or {}).get("max_gap_s"), cfg.get("filter", {}).get("max_gap_s", 0.2)
+    if aug_gap is not None and abs(aug_gap - gap) > 1e-9:
+        # augmenter outputs are masked over input gaps > aug_gap; this stage bridges marker gaps <= gap
+        raise ValueError(f"the augmenter masked input gaps longer than {aug_gap} s but config filter.max_gap_s is "
+                         f"{gap} s: re-run augment with --max-gap-s {gap}")
     osim = _osim()
     out_dir = Path(out_dir)
     od = out_dir / "opensim"
@@ -496,6 +505,8 @@ def run(seq: MarkerSequence, cfg: dict, out_dir, mass_kg=None, height_m=None) ->
     qc["filter"] = {"type": "butterworth zero-lag", "cutoff_hz": fcfg.get("cutoff_hz", 6.0), "order": fcfg.get("order", 4),
                     "max_gap_s": fcfg.get("max_gap_s", 0.2)}
     times = seq.times
+    if on_commit:      # every refusal is behind us: the folder's model, motion and markers change from here
+        on_commit()
     write_trc(od / "markers_dynamic.trc", names, clean, times)
 
     # 4. static trial, registered onto the model default pose

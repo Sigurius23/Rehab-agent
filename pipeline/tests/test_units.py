@@ -532,7 +532,8 @@ def test_passive_spring_spec_and_torque():
 
 def _session(sid, when, mean, sd, n=3, rmse=None, synthetic=False, grade="marker-mocap"):
     val = None if rmse is None else {"synthetic": synthetic, "reference_grade": grade,
-                                     "kinematics_rmse_deg": {"knee_r": {"frontal": rmse}}}
+                                     "kinematics_rmse_deg": {"knee_r": {"frontal": rmse}},
+                                     "gates": {"knee_r.frontal_rmse_le_5deg": "pass" if rmse <= 5 else "fail"}}
     return {"session_id": sid, "started_at": when, "person_ref": "P1", "tier": "B", "front_end": "x",
             "exercise": "squat", "n_reps": n, "dir": sid, "validation": val,
             "summary": {"knee_fppa_r": {"joint": "knee_r", "plane": "frontal", "unit": "deg",
@@ -1368,11 +1369,15 @@ def test_subject_mass_is_measured_only_when_given():
     for bad in (0, 0.0, -5.0):                 # '0 or default' used to turn a typo into a silent 70 kg
         with pytest.raises(ValueError):
             opensim_stage.subject_mass({}, cfg, bad)
-    aug = {"augmenter": {"mass_kg": 75.0}}          # augment --mass-kg carries over, and must agree
+    aug = {"augmenter": {"mass_kg": 75.0, "mass_source": "measured"}}    # augment's mass carries over with its source
     assert opensim_stage.subject_mass(aug, cfg) == (75.0, "measured")
     assert opensim_stage.subject_mass(aug, cfg, 75.2) == (75.2, "measured")
-    with pytest.raises(ValueError, match="disagrees"):
+    with pytest.raises(ValueError, match="disagrees"):                      # two measured masses must agree
         opensim_stage.subject_mass(aug, cfg, 70.0)
+    for guess in ({"mass_kg": 75.0, "mass_source": "assumed"}, {"mass_kg": 75.0}):   # a typed guess, or no record
+        kg, source = opensim_stage.subject_mass({"augmenter": guess}, cfg)
+        assert kg == 75.0 and source not in opensim_stage.KNOWN_MASS_SOURCES
+        assert opensim_stage.subject_mass({"augmenter": guess}, cfg, 80.0) == (80.0, "measured")   # weighed later
 
 
 def _mass_session(d, source, mass=70.0):
@@ -1579,7 +1584,8 @@ def test_failed_reprocessing_leaves_earlier_derived_results_stale(tmp_path, monk
         {"tests": [{"action": "knee_extension_r"}], "calibrated_muscles": 1, "symmetry": {}, "processing_id": "new000"}))
     assert "STALE" not in report.write_index(d).read_text()
 
-    def scaling_then_crash(*a, **k):
+    def scaling_then_crash(*a, on_commit=None, **k):
+        on_commit()                                           # the stage starts rewriting the folder
         raise FileNotFoundError("no_such_reference.mot")      # e.g. a mistyped --reference, after scaling
     monkeypatch.setattr(cli.MarkerSequence, "load", staticmethod(lambda p: types.SimpleNamespace(meta={"person_ref": "P1"})))
     monkeypatch.setattr(cli, "load_config", lambda name: {"model": "model.osim", "_path": "test.json"})
@@ -1607,3 +1613,147 @@ def test_strength_refusal_on_a_prestamp_session_points_at_process(tmp_path):
     with pytest.raises(records.StaleResult, match="predates processing stamps.*re-run 'rehabtwin process'.*"
                                                   "then re-run 'rehabtwin strength"):
         cli.muscle_study(d, start=0.0, stop=1.0, use_strength=True)
+
+
+# ------------------------------------------------------------- integration of the correctness fixes
+
+def _validated_session(d, sid, when, mean, val_pid="p1", outputs_val=True, person="P1", movements=("squat",),
+                       gate="pass", flagged=()):
+    """A processed session folder with a marker-mocap validation report (knee_r frontal RMSE 1 deg)."""
+    from rehabtwin.records import write_json
+    d.mkdir(parents=True)
+    outputs = {"model": "m.osim", "motion": "ik.mot", **({"validation_report": "validation-report.json"} if outputs_val else {})}
+    write_json(d / "session.json", {"session_id": sid, "started_at": when, "started_at_source": "argument",
+                                    "person_ref": "P1", "twin_tier": "B",
+                                    "pipeline": {"front_end": "x", "processing_id": "p1", "outputs": outputs}})
+    write_json(d / "metrics.json", {"exercise": "squat", "n_reps": 3,
+                                    "reps": [{"contains_missing_markers": i + 1 in flagged} for i in range(3)],
+                                    "summary": {"knee_fppa_r": {"joint": "knee_r", "plane": "frontal", "unit": "deg",
+                                                                "rep_peak_mean": mean, "rep_peak_sd": 0.5}}})
+    write_json(d / "validation-report.json", {
+        "person_ref": person, "reference_grade": "marker-mocap", "synthetic": False, "movements": list(movements),
+        "processing_id": val_pid, "kinematics_rmse_deg": {"knee_r": {"frontal": 1.0}},
+        "gates": {"knee_r.frontal_rmse_le_5deg": gate}})
+    return d
+
+
+def test_progress_sizes_changes_only_with_validations_the_feedback_gate_trusts(tmp_path):
+    from rehabtwin import cli, progress
+    a = _validated_session(tmp_path / "ok" / "a", "a", "2026-10-01T09:00:00+00:00", 20.0)
+    b = _validated_session(tmp_path / "ok" / "b", "b", "2026-10-08T09:00:00+00:00", 15.0)
+    prog = progress.compare([a, b])
+    assert prog["first_to_last"]["knee_fppa_r"]["verdict"].startswith("real change") and not prog["warnings"]
+    bad = {"leftover of an earlier processing": {"val_pid": "old"}, "not in outputs": {"outputs_val": False},
+           "another person": {"person": "P2"}, "another movement": {"movements": ("lunge",)},
+           "gate not-tested (too little reference motion or coverage)": {"gate": "not-tested"}}
+    for i, (why, kw) in enumerate(bad.items()):
+        b2 = _validated_session(tmp_path / str(i) / "b", "b", "2026-10-08T09:00:00+00:00", 15.0, **kw)
+        j = progress.compare([a, b2])
+        assert j["first_to_last"]["knee_fppa_r"]["verdict"] == "consistent across reps; size not validated", why
+        if "not-tested" not in why:
+            assert any(w.startswith("b: validation report not used") for w in j["warnings"]), why
+        gate_closed = cli._session_gate(b2, {"exercise": "squat"})[3] or "not-tested" in why
+        assert gate_closed, why                        # the same reports close the feedback gate
+    # reps that rest on bridged or missing markers are named
+    b3 = _validated_session(tmp_path / "f" / "b", "b", "2026-10-08T09:00:00+00:00", 15.0, flagged=(2,))
+    assert any("reps 2 of 3 include frames with bridged or missing markers" in w
+               for w in progress.compare([a, b3])["warnings"])
+
+
+def test_unfinished_reprocessing_refuses_derived_work(tmp_path, monkeypatch):
+    import json
+    from rehabtwin import cli, progress, records
+    calls = []
+    _fake_muscles_and_strength(monkeypatch, calls)
+    d = _mass_session(tmp_path, "measured", 81.5)
+    records.mark_reprocessing(d / "session.json")      # a re-processing that crashed after scaling
+    for call in (lambda: cli.muscle_study(d, plant=False, view_3d=False),
+                 lambda: cli.strength_calibration(d, d / "tests.json"),
+                 lambda: cli.run_correction(d, "squat_knee_valgus_right"),
+                 lambda: progress.load(d)):
+        with pytest.raises(records.StaleResult, match="did not finish"):
+            call()
+    assert cli.main(["strength", str(d), "--tests", str(d / "tests.json")]) == 2
+    assert cli.main(["correct", str(d), "--spec", "squat_knee_valgus_right"]) == 2
+    assert not calls and "processing_id" not in json.loads((d / "session.json").read_text())["pipeline"]
+
+
+def test_refused_reprocessing_leaves_the_session_intact(tmp_path, monkeypatch):
+    """Refusals before the stage rewrites anything (mass, nothing solvable) keep stamp and skel_seq.npz."""
+    import json
+    import types
+    from rehabtwin import cli
+    d = _stamped_session(tmp_path / "s")
+    (d / "skel_seq.npz").write_bytes(b"original")
+    monkeypatch.setattr(cli.MarkerSequence, "load", staticmethod(lambda p: types.SimpleNamespace(meta={"person_ref": "P1"})))
+    monkeypatch.setattr(cli, "load_config", lambda name: {"model": "model.osim", "_path": "test.json"})
+
+    def nothing_solvable(*a, on_commit=None, **k):
+        raise ValueError("no segment long enough to solve")
+    monkeypatch.setattr(cli.opensim_stage, "run", nothing_solvable)
+    (tmp_path / "seq.npz").write_bytes(b"new")
+    assert cli.main(["process", str(tmp_path / "seq.npz"), str(d)]) == 2
+    assert json.loads((d / "session.json").read_text())["pipeline"]["processing_id"] == "new000"
+    assert (d / "skel_seq.npz").read_bytes() == b"original"
+
+
+def test_reprocessing_keeps_a_given_recording_time():
+    from rehabtwin.records import kept_started_at
+    prev = {"started_at": "2026-01-10T09:00:00+01:00", "started_at_source": "argument"}
+    assert kept_started_at(prev, {}, None) == "2026-01-10T09:00:00+01:00"
+    assert kept_started_at(prev, {}, "2026-02-01T09:00:00+00:00") is None          # a new --started-at wins
+    assert kept_started_at(prev, {"started_at": "2026-02-01T09:00:00Z"}, None) is None   # so does the sequence's
+    assert kept_started_at({**prev, "started_at_source": "processing time"}, {}, None) is None
+    assert kept_started_at(None, {}, None) is None
+
+
+def test_device_what_if_on_an_assumed_mass_is_illustrative_even_at_tier_a(tmp_path, monkeypatch):
+    import json
+    from rehabtwin import cli
+    calls = []
+    _fake_muscles_and_strength(monkeypatch, calls)
+    for source, illustrative in (("assumed default", True), ("measured", False)):
+        d = tmp_path / source
+        d.mkdir()
+        _mass_session(d, source)
+        sess = json.loads((d / "session.json").read_text())
+        sess["twin_tier"] = "A"
+        (d / "session.json").write_text(json.dumps(sess))
+        study, _ = cli.muscle_study(d, plant=False, view_3d=False, assist=("knee_angle_r=40:neg",),
+                                       allow_assumed_mass=True, workers=1)
+        status = study["devices_status"]
+        assert (status.startswith("ILLUSTRATION ONLY") and "assumed body mass" in status) == illustrative, source
+        assert (status == "target") == (not illustrative)      # report.py shows the banner unless "target"
+
+
+def test_stage_refuses_augmenter_gap_limit_other_than_the_config(tmp_path):
+    from rehabtwin import augmenter
+    seq = MarkerSequence(fps=30.0, marker_names=["a"], markers=np.zeros((3, 1, 3)), frame="yup_world",
+                         meta={"augmenter": {"mass_kg": 70.0, "mass_source": "measured", "max_gap_s": 0.2}})
+    with pytest.raises(ValueError, match="re-run augment with --max-gap-s 0.3"):
+        opensim_stage.run(seq, {"filter": {"max_gap_s": 0.3}, "_path": "x.json"}, tmp_path)
+    with pytest.raises(ValueError, match="mass_source"):
+        augmenter.augment(seq, 1.75, 70.0, mass_source="guessed")
+
+
+def test_multiview_records_each_cameras_mirroring():
+    import json
+    from rehabtwin.mediapipe_front import Camera, multiview_sequence
+    rng = np.random.default_rng(1)
+    X = rng.uniform(-0.3, 0.3, (4, 33, 3))
+    K = np.array([[900.0, 0, 360], [0, 900, 640], [0, 0, 1]])
+    cams, raws = [], []
+    for c, deg in enumerate((0, 50)):
+        a = np.radians(deg)
+        R = np.array([[np.cos(a), 0, np.sin(a)], [0, 1, 0], [-np.sin(a), 0, np.cos(a)]])
+        cams.append(Camera(f"cam{c}", K, np.zeros(5), R, np.array([0, 0, 3.0]), (720, 1280)))   # 3 m away
+        Xc = X @ R.T + [0, 0, 3.0]
+        meta = {"camera_facing": "front", "mirrored": True} if c == 1 else {}
+        raws.append({"image_xy": Xc[..., :2] / Xc[..., 2:] * 900 + [360, 640], "visibility": np.ones((4, 33)),
+                     "fps": np.array(30.0), **({"meta_json": np.array(json.dumps(meta))} if meta else {})})
+    seq, err = multiview_sequence(raws, cams, up_axis="-y")
+    assert np.nanmax(err) < 1e-6
+    assert seq.meta["camera_mirroring"] == [
+        {"camera": "cam0", "camera_facing": "unspecified", "mirrored": False},
+        {"camera": "cam1", "camera_facing": "front", "mirrored": True}]
+

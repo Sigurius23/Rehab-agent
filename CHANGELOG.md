@@ -30,8 +30,22 @@
   - Body mass:
     - `qc.json` records the mass and its source.
     - `muscles` and `strength` refuse an assumed mass unless `--allow-assumed-mass` is given.
-    - `augment --mass-kg` carries over to `process`.
+    - `augment --mass-kg` carries over to `process` with its `--mass-source` (default `assumed`).
+    - Device what-ifs on an assumed mass are labelled ILLUSTRATION ONLY even at Tier A.
     - Synthetic sessions use the generator's 72 kg.
+  - Where the fixes meet:
+    - Validation needs coverage. When gap splitting leaves only a fragment of the trial (< 80 % of the
+      time both systems recorded), every gate is not-tested; `qc.analysed_segment` and the report say
+      which segment the metrics cover.
+    - `progress` sizes changes only with a validation the feedback gate would trust (current processing,
+      marker mocap, same person and exercise, gate tested), says why it ignored one, and names reps
+      with bridged or missing markers.
+    - `process` refusals before the folder changes (mass, nothing solvable) leave the session stamped and
+      `skel_seq.npz` intact; a re-processing keeps a recording time given with `--started-at`.
+    - `muscles`, `strength`, `correct` and `progress` refuse a folder whose re-processing did not finish.
+    - `process` refuses an augmented sequence masked with another gap limit than the config's
+      (`augment --max-gap-s`).
+    - `mp-multiview` records each camera's mirroring.
 - `rehabtwin correct`: correction view (clinician specs, planted-feet IK, compensations, ROM check, Tier gating)
 - `rehabtwin muscles`: estimated double-stance GRF → inverse dynamics → static optimisation; corrected and
   weakened what-ifs; muscles.html
