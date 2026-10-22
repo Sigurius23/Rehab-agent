@@ -14,7 +14,8 @@ video ──► MediaPipe Pose (non-gated, Tier C)       [twin-live env]
                                                     │
 skel_seq.npz ──► rehabtwin process ─────────────────┘   [biomech env, CPU]
    1. camera → gravity → OpenSim ground   (device gravity > floor-plane fit > camera-level, all logged)
-   2. gaps ≤ 0.2 s bridged and listed, longer gaps split segments, 6 Hz zero-lag low-pass
+   2. gaps ≤ 0.2 s bridged and listed, longer gaps split segments (one marker's longer gap stays
+      empty: IK has no target for it there), 6 Hz zero-lag low-pass per finite stretch
    3. ScaleTool (SKEL joint-centre pairs) → static IK (soft-pinned q = 0) → explicit marker placement
    4. InverseKinematicsTool → ik.mot (+ marker errors)
    5. metrics: reps, per-rep peaks/ROM, trunk & pelvis inclination vs gravity, knee FPPA, L/R asymmetry
@@ -85,6 +86,9 @@ python -m rehabtwin mp-multiview cam0.npz cam1.npz cam2.npz --sync --out multi_s
 python -m rehabtwin augment multi_seq.npz multi_aug_seq.npz --height-m 1.80 --mass-kg 75   # pip install onnxruntime
 python -m rehabtwin process multi_aug_seq.npz out/ --exercise squat --mass-kg 75 --height-m 1.80
 ```
+
+The LSTM gets gap-free input, but augmented markers are left empty in frames where one of their
+keypoints was missing for more than 0.2 s (`meta.augmenter.frames_masked_input_gap`).
 
 `examples/pose2sim_demo.sh` reproduces the real-data validation in
 `docs/validation-results.md` (single camera vs 4-camera triangulation).
@@ -255,7 +259,7 @@ let IK jitter 6.6 cm sideways, and static optimisation then "needed" 70 N·m res
 | `opensim/model_scaled.osim` | subject model (Pose2Sim full body, 318 muscles, 5 lumbar levels) |
 | `opensim/ik.mot`, `ik_ik_marker_errors.sto` | joint angles (deg) and per-frame marker residuals |
 | `opensim/*_setup.xml`, `markers_*.trc`, `scale_factors.xml` | every OpenSim input, re-runnable in the OpenSim GUI |
-| `qc.json` | frames/gravity source, floor fit, gaps and imputed frames, scale factors, marker placement, IK residuals |
+| `qc.json` | frames/gravity source, floor fit, gaps and imputed frames (any marker bridged), per-marker bridged/missing spans and coverage (`imputed_by_marker`), scale factors, marker placement, IK residuals |
 | `metrics.json` | reps and per-rep values; every signal labelled with joint, plane, validated, feedback_eligible |
 | `validation-report.json` | RMSE per joint × plane, gates, `approved_for` (`schemas/validation-report.schema.json`) |
 | `session.json` | provenance, tier, accuracy layers, upstream commit pins (`schemas/session.schema.json`) |

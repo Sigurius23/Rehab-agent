@@ -2,7 +2,9 @@
 
 Policy (recorded in QC, never silent):
 * gaps up to ``max_gap_s`` are linearly bridged and listed as imputed frames;
-* longer gaps split the trial into separate segments, each solved on its own.
+* longer whole-frame gaps split the trial into separate segments, each solved on its own;
+* a longer gap of a single marker stays NaN (no IK target there), never frozen or bridged;
+* the low-pass runs over each finite stretch separately, so it never smears across a gap.
 """
 from __future__ import annotations
 
@@ -42,8 +44,14 @@ def plan_segments(valid, fps, max_gap_s=0.2, min_segment_s=1.0):
     return keep, kept_imputed
 
 
-def interpolate_gaps(x):
-    """Linearly interpolate NaNs along axis 0 of (T, ...) data; edges are held."""
+def interpolate_gaps(x, max_gap=None):
+    """Linearly interpolate NaN runs along axis 0 of (T, ...) data; runs at the edges are held.
+
+    ``max_gap`` (samples) limits what is filled: a longer run, inside or at an edge, stays NaN
+    as a whole, so a marker lost for a second is not frozen or drawn as a straight line.
+    ``None`` fills every run; only for consumers that need dense input and mask the result
+    themselves (the augmenter's LSTM).
+    """
     x = np.array(x, dtype=float, copy=True)
     flat = x.reshape(x.shape[0], -1)
     t = np.arange(x.shape[0])
@@ -52,14 +60,20 @@ def interpolate_gaps(x):
         ok = np.isfinite(col)
         if ok.all() or not ok.any():
             continue
-        col[~ok] = np.interp(t[~ok], t[ok], col[ok])
+        fill = ~ok
+        if max_gap is not None:
+            fill = np.zeros_like(ok)
+            for a, b in runs(~ok):
+                fill[a:b] = b - a <= max_gap
+        col[fill] = np.interp(t[fill], t[ok], col[ok])
     return flat.reshape(x.shape)
 
 
 def lowpass(x, fps, cutoff_hz=6.0, order=4):
     """Zero-lag Butterworth low-pass along axis 0 (Winter-style, 6 Hz default).
 
-    Columns that are entirely NaN are left NaN; short series are returned as-is.
+    Each finite stretch of a column is filtered on its own: NaN stays NaN and a gap never
+    pulls its neighbours. Stretches too short for filtfilt's padding are returned as-is.
     """
     x = np.asarray(x, dtype=float)
     if cutoff_hz is None or cutoff_hz <= 0 or cutoff_hz >= fps / 2:
@@ -71,12 +85,10 @@ def lowpass(x, fps, cutoff_hz=6.0, order=4):
     wn = min(cutoff_hz / correction / (fps / 2), 0.99)
     b, a = butter(single, wn)
     padlen = 3 * max(len(a), len(b))
-    if x.shape[0] <= padlen:
-        return x.copy()
     flat = x.reshape(x.shape[0], -1)
-    out = np.full_like(flat, np.nan)
+    out = flat.copy()
     for j in range(flat.shape[1]):
-        col = flat[:, j]
-        if np.isfinite(col).all():
-            out[:, j] = filtfilt(b, a, col)
+        for s, e in runs(np.isfinite(flat[:, j])):
+            if e - s > padlen:
+                out[s:e, j] = filtfilt(b, a, flat[s:e, j])
     return out.reshape(x.shape)

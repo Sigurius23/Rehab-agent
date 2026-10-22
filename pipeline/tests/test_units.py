@@ -707,3 +707,104 @@ def test_live_loop_refuses_foreign_or_ambiguous_posture_streams():
     log = res["eng"].log
     assert any(e.get("event") == "source_mismatch" for e in log)
     assert not [e for e in log if e.get("decision") == "cue"] and [e for e in log if e.get("decision") == "would_cue"]
+
+
+# ------------------------------------------------- per-marker gap policy
+
+def test_interpolate_gaps_bridges_only_up_to_max_gap():
+    x = np.arange(20.0)
+    x[3:5] = np.nan            # 2 samples: bridged
+    x[8:15] = np.nan           # 7 samples: stays NaN instead of becoming a straight line
+    y = filtering.interpolate_gaps(x, max_gap=3)
+    assert np.allclose(y[:8], np.arange(8)) and np.isnan(y[8:15]).all() and np.allclose(y[15:], np.arange(15, 20))
+    assert np.allclose(filtering.interpolate_gaps(x), np.arange(20))   # unlimited fill (augmenter input) unchanged
+
+
+def test_interpolate_gaps_holds_edges_only_up_to_max_gap():
+    x = np.r_[[np.nan] * 2, np.arange(5.0), [np.nan] * 6]
+    y = filtering.interpolate_gaps(x, max_gap=3)
+    assert np.allclose(y[:2], 0.0)       # short leading run held
+    assert np.isnan(y[7:]).all()         # a long trailing run is not frozen at the last value
+
+
+def test_lowpass_filters_each_finite_stretch_and_keeps_nan():
+    fps = 100.0
+    t = np.arange(600) / fps
+    truth = np.sin(2 * np.pi * t)
+    x = truth + np.random.default_rng(0).normal(0, 0.05, t.shape)
+    x[250:300] = np.nan
+    x[400:405] = 7.0           # 5-sample stretch between gaps: too short to filter, kept as-is
+    x[395:400] = x[405:410] = np.nan
+    y = filtering.lowpass(np.stack([x, truth], axis=1), fps, 6.0)
+    assert np.array_equal(np.isnan(y[:, 0]), np.isnan(x))           # NaN stays exactly where it was
+    assert np.allclose(y[:250, 0], filtering.lowpass(x[:250], fps, 6.0))
+    assert np.allclose(y[300:395, 0], filtering.lowpass(x[300:395], fps, 6.0))
+    assert np.allclose(y[400:405, 0], 7.0)
+    ok = np.isfinite(x) & (np.abs(x) < 5)
+    assert np.std(y[ok, 0] - truth[ok]) < 0.5 * np.std(x[ok] - truth[ok])
+    assert np.allclose(y[:, 1], filtering.lowpass(truth, fps, 6.0))  # complete columns: unchanged
+
+
+def test_condition_markers_bridges_short_marker_gaps_and_reports_long_ones():
+    fps, T = 30.0, 120
+    t = np.arange(T) / fps
+    pts = np.stack([np.stack([np.sin(t + k), np.cos(t + k), np.full(T, k)], axis=1) for k in range(3)], axis=1)
+    pts[20:23, 0] = np.nan     # 0.1 s -> bridged, imputed
+    pts[40:81, 1] = np.nan     # 1.37 s (the audit's frozen LKnee) -> no IK target, not imputed
+    pts[:10, 2] = np.nan       # 0.33 s at the start -> not held
+    valid = np.ones(T, bool)
+    valid[100:102] = False     # front-end rejected the frame: a (bridged) gap for every marker
+    upstream = np.zeros(T, bool)
+    upstream[5] = True         # an augmented marker predicted from a bridged keypoint
+    segs, clean, qc = opensim_stage.condition_markers(["A", "B", "C"], pts, valid, np.arange(T) + 100, fps,
+                                                      {"max_gap_s": 0.2, "min_segment_s": 1.0}, upstream)
+    assert segs == [(0, T)]
+    assert np.isfinite(clean[20:23, 0]).all() and np.isnan(clean[40:81, 1]).all() and np.isnan(clean[:10, 2]).all()
+    assert np.isfinite(clean[10:, 2]).all() and np.isfinite(np.delete(clean[:, 1], range(40, 81), axis=0)).all()
+    assert qc["imputed_frames"] == [105, 120, 121, 122, 200, 201]
+    a, b, c = (qc["imputed_by_marker"][n] for n in "ABC")
+    assert a["imputed_spans"][0] == {"start_frame": 120, "stop_frame": 123, "duration_s": 0.1} and a["missing_s"] == 0
+    assert b["missing_spans"] == [{"start_frame": 140, "stop_frame": 181, "duration_s": 1.367}]
+    assert b["imputed_s"] == round(2 / fps, 3) and b["coverage"] == round((T - 43) / T, 4)
+    assert c["missing_spans"] == [{"start_frame": 100, "stop_frame": 110, "duration_s": 0.333}]
+
+
+def test_augmenter_masks_outputs_where_inputs_had_long_gaps(monkeypatch):
+    from rehabtwin import augmenter
+    base = {"RShoulder": (0.2, 1.4, 0), "LShoulder": (-0.2, 1.4, 0), "RHip": (0.1, 0.9, 0), "LHip": (-0.1, 0.9, 0),
+            "RKnee": (0.1, 0.5, 0), "LKnee": (-0.1, 0.5, 0), "RAnkle": (0.1, 0.1, 0), "LAnkle": (-0.1, 0.1, 0),
+            "RHeel": (0.1, 0.05, -0.05), "LHeel": (-0.1, 0.05, -0.05), "RBigToe": (0.1, 0.02, 0.15),
+            "LBigToe": (-0.1, 0.02, 0.15), "RElbow": (0.25, 1.1, 0), "LElbow": (-0.25, 1.1, 0),
+            "RWrist": (0.25, 0.85, 0), "LWrist": (-0.25, 0.85, 0)}
+    names, T = list(base), 90
+    X = np.array([base[n] for n in names])[None] + np.random.default_rng(1).normal(0, 0.005, (T, len(names), 3))
+    X[10:13, names.index("RWrist")] = np.nan    # 0.1 s: bridged, outputs kept
+    X[40:81, names.index("LKnee")] = np.nan     # 1.37 s: lower-body outputs masked there
+    dense = []
+
+    def fake_predict(pts, height_m, mass_kg, part, version="v0.3"):
+        dense.append(all(np.isfinite(pts[f]).all() for f in augmenter.FEATURES[part] + ["midHip"]))
+        return {n: pts["midHip"] + 0.01 * k for k, n in enumerate(augmenter.RESPONSES[part])}
+    monkeypatch.setattr(augmenter, "predict", fake_predict)
+    out = augmenter.augment(MarkerSequence(fps=30.0, marker_names=names, markers=X, frame="yup_world"), 1.75, 70.0)
+    m = {n: out.markers[:, out.marker_names.index(n)] for n in out.marker_names}
+    assert dense == [True, True]                # the LSTM still gets gap-free input
+    for n in augmenter.RESPONSES["lower"]:
+        assert np.isnan(m[n][40:81]).all() and np.isfinite(np.delete(m[n], range(40, 81), axis=0)).all(), n
+    assert all(np.isfinite(m[n]).all() for n in augmenter.RESPONSES["upper"])   # LKnee does not feed the upper model
+    assert np.isnan(m["LKnee"][40:81]).all() and np.isnan(m["RWrist"][10:13]).all()  # raw inputs never filled
+    assert out.meta["augmenter"]["frames_masked_input_gap"] == {"lower": 41, "upper": 0}
+    assert out.meta["augmenter"]["imputed_input_frames"] == [10, 11, 12]   # bridged inputs, listed for the stage QC
+
+
+def test_report_lists_marker_gaps(tmp_path):
+    from rehabtwin import report
+    sess = {"session_id": "s1", "pipeline": {"front_end": "f", "back_end": "b", "config": "c", "software": {}}}
+    met = {"tier": "C", "claims": "", "exercise": "squat", "n_reps": 0, "rep_driver": None, "summary": {}, "reps": []}
+    clean = {"coverage": 1.0, "imputed_s": 0.0, "imputed_spans": [], "missing_s": 0.0, "missing_spans": []}
+    gap = {**clean, "coverage": 0.7, "missing_s": 1.367, "missing_spans": [{"start_frame": 40, "stop_frame": 81}]}
+    qc = {"imputed_frames": [], "filter": {"max_gap_s": 0.2}, "imputed_by_marker": {"RKnee": clean, "LKnee": gap}}
+    page = report.write(tmp_path / "r.html", sess, qc, met, {}, np.arange(3.0)).read_text()
+    assert "Marker gaps in 1 of 2 markers" in page and "LKnee 0.0 s bridged, 1.367 s missing" in page
+    qc["imputed_by_marker"]["LKnee"] = clean
+    assert "Marker gaps" not in report.write(tmp_path / "r.html", sess, qc, met, {}, np.arange(3.0)).read_text()

@@ -5,12 +5,13 @@ Steps (all intermediate files are written to ``out_dir/opensim``):
 1. prepare the generic model: attach the configured marker set, apply
    recorded marker-location fixes, add virtual joint-centre markers;
 2. transform the sequence into OpenSim ground (gravity up, x = heading);
-3. bridge short gaps, split at long ones, low-pass filter (logged);
+3. bridge short gaps, split at long ones, leave long per-marker gaps
+   empty, low-pass each finite stretch (all logged per marker);
 4. build a static trial (SKEL q = 0 neutral pose, or the stillest window)
    and rigidly register it onto the model's default pose;
 5. ScaleTool (measurement scaling + marker placement) -> subject .osim;
 6. InverseKinematicsTool per segment -> .mot (+ marker errors .sto);
-7. QC summary (marker RMS, imputed frames, up-vector estimates).
+7. QC summary (marker RMS, imputed frames + per-marker gaps, up-vector estimates).
 """
 from __future__ import annotations
 
@@ -346,6 +347,53 @@ def ik_setup_xml(cfg, model, trc, t_range, out_dir, name, marker_names, coord_fi
 """
 
 
+# ------------------------------------------------------------ gaps
+
+def condition_markers(names, pts, valid, frame_index, fps, fcfg, upstream_imputed=None):
+    """Gap policy + low-pass for (T, N, 3) points -> (segments, clean points, gap QC).
+
+    Whole-frame gaps <= max_gap_s are bridged, longer ones split segments. Inside a segment
+    each marker is bridged only over its own gaps <= max_gap_s; a longer one stays NaN, which
+    write_trc leaves as empty fields so IK simply has no target for that marker there.
+    ``upstream_imputed`` (T,) marks frames already built on bridged data (augmenter inputs).
+    """
+    max_gap_s = fcfg.get("max_gap_s", 0.2)
+    segs, _ = filtering.plan_segments(valid, fps, max_gap_s, fcfg.get("min_segment_s", 1.0))
+    raw = np.where(np.asarray(valid, bool)[:, None, None], pts, np.nan)  # a rejected frame is a gap for every marker
+    clean = np.full_like(raw, np.nan)
+    for a, b in segs:
+        seg = filtering.interpolate_gaps(raw[a:b], int(round(max_gap_s * fps)))
+        clean[a:b] = filtering.lowpass(seg, fps, fcfg.get("cutoff_hz", 6.0), fcfg.get("order", 4))
+    return segs, clean, gap_qc(names, raw, clean, segs, frame_index, fps, upstream_imputed)
+
+
+def gap_qc(names, raw, clean, segs, frame_index, fps, upstream_imputed=None):
+    """Per-marker imputed (bridged) and missing (no IK target) spans and coverage over solved frames.
+
+    ``imputed_frames`` lists every frame in which any marker was bridged (here or upstream),
+    so metrics flag reps built on imputed data even when only one marker was lost.
+    """
+    solved = np.zeros(len(raw), bool)
+    for a, b in segs:
+        solved[a:b] = True
+    seen = np.isfinite(raw).all(axis=2) & solved[:, None]
+    target = np.isfinite(clean).all(axis=2)
+    imputed, missing = target & ~seen, solved[:, None] & ~target
+
+    def spans(mask):
+        return [{"start_frame": int(frame_index[a]), "stop_frame": int(frame_index[b - 1]) + 1,
+                 "duration_s": round((b - a) / fps, 3)} for a, b in filtering.runs(mask)]
+    by_marker = {n: {"coverage": round(float(seen[:, j].sum() / max(solved.sum(), 1)), 4),
+                     "imputed_s": round(float(imputed[:, j].sum() / fps), 3), "imputed_spans": spans(imputed[:, j]),
+                     "missing_s": round(float(missing[:, j].sum() / fps), 3), "missing_spans": spans(missing[:, j])}
+                 for j, n in enumerate(names)}
+    any_imputed = imputed.any(axis=1)
+    if upstream_imputed is not None:
+        any_imputed |= solved & upstream_imputed
+    return {"imputed_frames": [int(frame_index[f]) for f in np.flatnonzero(any_imputed)],
+            "imputed_by_marker": by_marker}
+
+
 # ------------------------------------------------------------- the stage
 
 def run(seq: MarkerSequence, cfg: dict, out_dir, mass_kg=None, height_m=None) -> StageResult:
@@ -377,23 +425,24 @@ def run(seq: MarkerSequence, cfg: dict, out_dir, mass_kg=None, height_m=None) ->
     # 3. segments, gaps, filtering
     fcfg = cfg.get("filter", {})
     valid = seq.valid & np.isfinite(pts).any(axis=(1, 2))
-    segs, imputed = filtering.plan_segments(valid, seq.fps, fcfg.get("max_gap_s", 0.2), fcfg.get("min_segment_s", 1.0))
+    upstream = np.isin(seq.frame_index, seq.meta.get("augmenter", {}).get("imputed_input_frames", []))
+    segs, clean, gap_qc = condition_markers(names, pts, valid, seq.frame_index, seq.fps, fcfg, upstream)
     if not segs:
         raise ValueError("no segment long enough to solve (check detection rate / min_segment_s)")
-    clean = np.full_like(pts, np.nan)
-    for a, b in segs:
-        seg = filtering.interpolate_gaps(pts[a:b])
-        clean[a:b] = filtering.lowpass(seg, seq.fps, fcfg.get("cutoff_hz", 6.0), fcfg.get("order", 4))
     qc["segments"] = [{"start_frame": int(seq.frame_index[a]), "stop_frame": int(seq.frame_index[b - 1]) + 1,
                        "duration_s": round((b - a) / seq.fps, 3)} for a, b in segs]
-    qc["imputed_frames"] = [int(seq.frame_index[f]) for f in imputed]
+    qc.update(gap_qc)
     qc["detection_rate"] = round(float(seq.valid.mean()), 4)
-    qc["filter"] = {"type": "butterworth zero-lag", "cutoff_hz": fcfg.get("cutoff_hz", 6.0), "order": fcfg.get("order", 4)}
+    qc["filter"] = {"type": "butterworth zero-lag", "cutoff_hz": fcfg.get("cutoff_hz", 6.0), "order": fcfg.get("order", 4),
+                    "max_gap_s": fcfg.get("max_gap_s", 0.2)}
     times = seq.times
     write_trc(od / "markers_dynamic.trc", names, clean, times)
 
     # 4. static trial, registered onto the model default pose
-    static, static_desc = static_points(seq, names, clean, valid, cfg)
+    try:  # prefer a window where every marker has a target (long per-marker gaps stay NaN)
+        static, static_desc = static_points(seq, names, clean, valid & np.isfinite(clean).all(axis=(1, 2)), cfg)
+    except ValueError:
+        static, static_desc = static_points(seq, names, clean, valid, cfg)
     model_static = model_marker_positions(generic, names)
     reg_names = [n for n in cfg.get("static", {}).get("registration_markers", names) if n in names]
     reg = [names.index(n) for n in reg_names]
