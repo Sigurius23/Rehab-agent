@@ -508,8 +508,9 @@ def test_passive_spring_spec_and_torque():
     assert passive_torque(30.0, 0.0, "neg", [-np.degrees(0.5), 5.0]).tolist() == pytest.approx([15.0, 0.0])
 
 
-def _session(sid, when, mean, sd, n=3, rmse=None, synthetic=False):
-    val = None if rmse is None else {"synthetic": synthetic, "kinematics_rmse_deg": {"knee_r": {"frontal": rmse}}}
+def _session(sid, when, mean, sd, n=3, rmse=None, synthetic=False, grade="marker-mocap"):
+    val = None if rmse is None else {"synthetic": synthetic, "reference_grade": grade,
+                                     "kinematics_rmse_deg": {"knee_r": {"frontal": rmse}}}
     return {"session_id": sid, "started_at": when, "person_ref": "P1", "tier": "B", "front_end": "x",
             "exercise": "squat", "n_reps": n, "dir": sid, "validation": val,
             "summary": {"knee_fppa_r": {"joint": "knee_r", "plane": "frontal", "unit": "deg",
@@ -707,3 +708,106 @@ def test_live_loop_refuses_foreign_or_ambiguous_posture_streams():
     log = res["eng"].log
     assert any(e.get("event") == "source_mismatch" for e in log)
     assert not [e for e in log if e.get("decision") == "cue"] and [e for e in log if e.get("decision") == "would_cue"]
+
+
+# ------------------------------------------------------------- progress statistics
+
+def test_rep_peak_sd_is_sample_sd():
+    from rehabtwin import metrics
+    t = np.arange(0, 9, 0.02)
+    knee = sum(p * np.exp(-((t - c) / 0.4) ** 2) for p, c in ((70, 1.5), (80, 4.5), (90, 7.5)))
+    tab = Table(["knee_angle_r", "knee_angle_l"], np.column_stack([knee, knee]), t)
+    met, _ = metrics.compute(tab, None, "squat", derived={})
+    s = met["summary"]["knee_angle_r"]
+    assert met["n_reps"] == 3 and s["rep_peak_mean"] == 80.0
+    assert s["rep_peak_sd"] == 10.0                     # sample SD; the population SD would be 8.16
+    assert metrics.rep_peak_stats([]) == (None, None) and metrics.rep_peak_stats([5.0]) == (5.0, None)
+
+
+def test_progress_rep_scatter_false_positive_rate():
+    """No true change, 3 reps per session: "beyond rep scatter" must fire at about the nominal 5 %.
+    The old 1.96 · population-SD threshold fired ~18 %; Welch is ~3.5 % at 3 reps (slightly
+    conservative), so 20000 trials keep the 0.03-0.07 band > 3 standard errors away."""
+    from scipy.stats import t as student_t
+    from rehabtwin.metrics import rep_peak_stats
+    from rehabtwin.progress import judge, rep_threshold
+    assert rep_threshold(1.0, 3, 1.0, 3) == pytest.approx(student_t.ppf(0.975, 4) * np.sqrt(2 / 3))
+    rng = np.random.default_rng(11)
+    hits, trials = 0, 20000
+    for _ in range(trials):
+        (ma, sa), (mb, sb) = rep_peak_stats(rng.normal(20, 2, 3)), rep_peak_stats(rng.normal(20, 2, 3))
+        hits += judge(_session("a", "1", ma, sa), _session("b", "2", mb, sb), "knee_fppa_r")["beyond_rep_scatter"]
+    assert 0.03 < hits / trials < 0.07, hits / trials
+
+
+def test_progress_one_rep_is_never_a_real_change():
+    from rehabtwin.progress import judge
+    # 10° change and a validated 2° error (MDC95 5.5°) used to be "real" with a single rep
+    j = judge(_session("a", "1", 22.0, None, n=1, rmse=2.0), _session("b", "2", 12.0, 1.0, rmse=2.0), "knee_fppa_r")
+    assert j["verdict"].startswith("not enough reps") and "beyond_rep_scatter" not in j and j["mdc95"] > 0
+    j = judge(_session("a", "1", 22.0, 1.0, n=2, rmse=2.0), _session("b", "2", 12.0, 1.0, n=2, rmse=2.0), "knee_fppa_r")
+    assert j["beyond_rep_scatter"] is True and j["verdict"].startswith("real")
+
+
+def test_progress_mdc_only_from_marker_mocap():
+    from rehabtwin.progress import judge
+    # a 10° change with tight reps and a 2° RMSE would be "real" if agreement with OpenCap etc. sized it
+    for grade_a, grade_b in (("markerless", "markerless"), ("marker-mocap", "markerless"), (None, None)):
+        j = judge(_session("a", "1", 22.0, 1.0, rmse=2.0, grade=grade_a),
+                  _session("b", "2", 12.0, 1.0, rmse=2.0, grade=grade_b), "knee_fppa_r")
+        assert "mdc95" not in j and j["verdict"] == "consistent across reps; size not validated", (grade_a, grade_b)
+
+
+def _write_session(d, sid, started_at, source, mean, sd, n):
+    from rehabtwin.records import write_json
+    d.mkdir(parents=True)
+    write_json(d / "session.json", {"session_id": sid, "started_at": started_at, "started_at_source": source,
+                                    "person_ref": "P1", "twin_tier": "C", "pipeline": {"front_end": "x"}})
+    write_json(d / "metrics.json", {"exercise": "squat", "n_reps": n, "summary": {"knee_fppa_r": {
+        "joint": "knee_r", "plane": "frontal", "unit": "deg", "rep_peak_mean": mean, "rep_peak_sd": sd}}})
+    return d
+
+
+def test_progress_zero_rep_session_and_recording_order(tmp_path, capsys):
+    from rehabtwin import cli, progress, report
+    # 07:00Z, 08:00Z, 09:00Z: a string sort would put "08:00:00Z" before "09:00:00+02:00"
+    s2 = _write_session(tmp_path / "s2", "s2", "2026-10-21T08:00:00Z", "argument", None, None, 0)
+    s3 = _write_session(tmp_path / "s3", "s3", "2026-10-21T09:00:00Z", "argument", 15.0, 1.0, 3)
+    s1 = _write_session(tmp_path / "s1", "s1", "2026-10-21T09:00:00+02:00", "argument", 20.0, 1.0, 3)
+    prog = progress.compare([s3, s2, s1])
+    assert [s["session_id"] for s in prog["sessions"]] == ["s1", "s2", "s3"] and not prog["warnings"]
+    steps = [st["changes"]["knee_fppa_r"]["verdict"] for st in prog["steps"]]
+    assert steps == ["no reps", "no reps"] and prog["first_to_last"]["knee_fppa_r"]["beyond_rep_scatter"]
+    assert "no reps" in report._svg_trend(prog["series"]["knee_fppa_r"], "t", "deg")
+    # a zero-rep first session: verdict "no reps", and neither the HTML nor the CLI printout crashes
+    prog = progress.compare([s2, s3])
+    assert prog["first_to_last"]["knee_fppa_r"]["verdict"] == "no reps"
+    assert "no reps" in Path(report.write_progress(tmp_path / "p.html", prog)).read_text()
+    assert report._svg_trend(prog["series"]["knee_fppa_r"][:1], "t", "deg") == ""
+    assert cli.main(["progress", str(s2), str(s3), "--out", str(tmp_path / "out")]) in (None, 0)
+    assert "no reps" in capsys.readouterr().out
+    # processing time (or an old record without a source) is not recording time: warn
+    s4 = _write_session(tmp_path / "s4", "s4", "2026-10-22T10:00:00+00:00", "processing time", 18.0, 1.0, 3)
+    s5 = _write_session(tmp_path / "s5", "s5", "2026-10-22T11:00:00+00:00", None, 18.0, 1.0, 3)
+    warn = [w for w in progress.compare([s1, s4, s5])["warnings"] if "processing time" in w]
+    assert len(warn) == 1 and "s4, s5" in warn[0]
+
+
+def test_session_record_started_at(tmp_path):
+    from types import SimpleNamespace
+    from rehabtwin import cli, records
+    seq = SimpleNamespace(meta={}, fps=30.0, skel_poses=None)
+    qc = {"frames": {"up_source": "test"}, "ik": {}}
+    rec = records.session_record(seq, qc, tmp_path, "C", "P1")
+    assert rec["started_at_source"] == "processing time"
+    when = records.parse_started_at("2026-10-21T09:30:00Z")
+    rec = records.session_record(seq, qc, tmp_path, "C", "P1", started_at=when)
+    assert rec["started_at"] == "2026-10-21T09:30:00+00:00" and rec["started_at_source"] == "argument"
+    records.validate(rec, "session")
+    for bad in ("2026-10-21T09:30", "21.10.2026"):          # no UTC offset / not ISO
+        with pytest.raises(ValueError):
+            records.parse_started_at(bad)
+    # refused before any work
+    argv = ["process", str(tmp_path / "missing.npz"), str(tmp_path / "out"), "--started-at", "2026-10-21"]
+    assert cli.main(argv) == 2
+    assert not (tmp_path / "out").exists()

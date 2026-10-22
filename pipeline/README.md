@@ -159,11 +159,14 @@ Progress over time, for one person's sessions of the same exercise:
 python -m rehabtwin progress SESSION_WEEK1 SESSION_WEEK4 SESSION_WEEK8 --out progress/
 ```
 Per signal the session value is the mean of the rep peaks. A change is called **real** only if it
-exceeds both the rep-to-rep scatter and the minimal detectable change from that joint × plane's
-validation (MDC95 = 1.96·√2·RMSE vs a reference system). Without a (non-synthetic) validation the
-verdict is "consistent across reps; size not validated": a lighting, clothing or camera change can
-produce a consistent shift too. Sessions of different people are refused; a front-end or tier
-change between sessions is flagged.
+exceeds both the rep-to-rep scatter (Welch t-test on the sample SDs, ≥ 2 reps in each session) and
+the minimal detectable change from that joint × plane's validation (MDC95 = 1.96·√2·RMSE vs
+marker-based motion capture). Without a marker-mocap validation (a markerless or synthetic reference
+does not count) the verdict is "consistent across reps; size not validated": a lighting, clothing or
+camera change can produce a consistent shift too. Sessions of different people are refused; a
+front-end or tier change between sessions is flagged. Sessions are ordered by `started_at`: pass
+the recording time to `process --started-at 2026-10-21T09:30:00+02:00`, otherwise the processing
+time stands in and progress warns that the order may be wrong.
 
 Live loop over Lab Streaming Layer (`pip install -e "pipeline[live]"`), the same engine in real time:
 

@@ -35,8 +35,9 @@ from .sequence import MarkerSequence
 
 def process(seq_path, out_dir, exercise="squat", config=None, mass_kg=None, height_m=None,
             reference=None, reference_system=None, person_ref=None, tier=None, video=None, max_lag_s=0.0,
-            reference_model=None, reference_grade=None, model_provenance=None):
+            reference_model=None, reference_grade=None, model_provenance=None, started_at=None):
     from . import tiers
+    started_at = records.parse_started_at(started_at) if started_at else None
     seq_path, out_dir = Path(seq_path), Path(out_dir)
     seq = MarkerSequence.load(seq_path)
     synthetic = bool(seq.meta.get("synthetic"))
@@ -86,7 +87,7 @@ def process(seq_path, out_dir, exercise="squat", config=None, mass_kg=None, heig
         outputs["validation_report"] = "validation-report.json"
     sess = records.session_record(seq, stage.qc, out_dir, tier, person_ref, video=video,
                                   config_name=Path(cfg["_path"]).name, outputs=outputs, validation_report=val,
-                                  tier_source=tier_source)
+                                  tier_source=tier_source, started_at=started_at)
     records.validate(sess, "session")
     records.write_json(out_dir / "session.json", sess)
     report.write(out_dir / "report.html", sess, stage.qc, met, signals, est.time, val, ref_plot, skeleton, ref_skeleton)
@@ -342,6 +343,8 @@ def main(argv=None):
     p.add_argument("--tier", choices=["A", "B", "C"], help="B/A need --model-provenance (default C)")
     p.add_argument("--model-provenance", help="JSON record that grants Tier B/A for this person and model (rehabtwin/tiers.py)")
     p.add_argument("--video")
+    p.add_argument("--started-at", help="recording time, ISO 8601 with UTC offset (e.g. 2026-10-21T09:30:00+02:00); "
+                                        "orders sessions in 'progress' (default: processing time, flagged there)")
     v = sub.add_parser("validate", help="compare two .mot files")
     v.add_argument("estimate")
     v.add_argument("reference")
@@ -451,7 +454,7 @@ def main(argv=None):
         try:
             res = process(a.sequence, a.out, a.exercise, a.config, a.mass_kg, a.height_m, a.reference,
                           a.reference_system, a.person_ref, a.tier, a.video, a.max_lag_s, a.reference_model,
-                          a.reference_grade, a.model_provenance)
+                          a.reference_grade, a.model_provenance, started_at=a.started_at)
         except ValueError as e:      # includes tiers.TierRefused
             print(f"refused: {e}", file=sys.stderr)
             return 2
@@ -541,7 +544,9 @@ def main(argv=None):
         for w in prog["warnings"]:
             print("WARNING:", w)
         for sig, j in prog["first_to_last"].items():
-            if j:
+            if j and j["change"] is None:
+                print(f"{sig:24s} {j['verdict']}")
+            elif j:
                 print(f"{sig:24s} {j['from']:7.1f} -> {j['to']:7.1f}  ({j['change']:+.1f})  {j['verdict']}")
         print(f"report: {out / 'progress.html'}")
     elif a.cmd == "cues":

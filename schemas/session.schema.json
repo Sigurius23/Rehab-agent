@@ -8,6 +8,7 @@
     "session_id": {"type": "string"},
     "person_ref": {"type": "string", "description": "Pseudonymous reference only. Never a name or medical record number."},
     "started_at": {"type": "string", "format": "date-time"},
+    "started_at_source": {"enum": ["argument", "sequence metadata", "processing time"], "description": "Where started_at comes from. 'processing time' is not the recording time: progress flags the session order as unreliable."},
     "synthetic": {"type": "boolean", "description": "True for example/test data. Must be false for real sessions."},
     "twin_tier": {"enum": ["A", "B", "C"], "description": "docs/accuracy.md tiers. Tier travels with the data."},
     "tier_source": {"type": "object", "required": ["tier", "basis"], "description": "Why the session has its tier: default Tier C, or a model-provenance record (file hash, evidence, approver) bound to the model by sha256.",
