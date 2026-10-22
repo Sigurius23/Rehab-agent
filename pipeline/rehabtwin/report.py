@@ -849,12 +849,21 @@ def write(path, session, qc, metrics, signals, time, validation=None, reference=
     if un.get("frames"):
         gap_html += (f"<p class='muted'>{un['frames']} frames not solved: fewer than {un['min_target_weight']:.0%} of "
                      f"the IK marker weight had a target there ({len(un['spans'])} spans, see qc.json).</p>")
+    seg = qc.get("analysed_segment")
+    if seg and seg["of"] > 1:
+        gap_html += (f"<p class='muted'><b>Metrics cover segment {seg['segment']} of {seg['of']} only</b>, "
+                     f"{seg['start_s']}–{seg['stop_s']} s ({seg['fraction']:.0%} of the {seg['trial_s']} s trial): "
+                     "reps outside it are not counted.</p>")
     val_html = ""
     if validation:
         gate_rows = "".join(f"<tr><td>{e(g)}</td><td><span class='b {v}'>{v}</span></td></tr>"
                             for g, v in validation["gates"].items() if v != "not-tested")
+        cov = validation.get("coverage")
+        cov_html = "" if not cov else (
+            f" Compared {cov['compared_s']} s of the {cov['overlap_s']} s both systems recorded ({cov['fraction']:.0%}).")
         val_html = (f"<h2>Validation against reference</h2><p>Reference: {e(validation['reference_system'])}. "
-                    f"Approved for: <b>{e(', '.join(validation['approved_for']) or 'nothing')}</b>. {e(validation.get('notes', ''))}</p>"
+                    f"Approved for: <b>{e(', '.join(validation['approved_for']) or 'nothing')}</b>.{cov_html} "
+                    f"{e(validation.get('notes', ''))}</p>"
                     f"<table><tr><th>gate</th><th>result</th></tr>{gate_rows}</table>")
     doc = f"""<!doctype html><html lang="en"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">

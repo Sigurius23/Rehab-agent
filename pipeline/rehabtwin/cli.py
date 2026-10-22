@@ -56,10 +56,20 @@ def process(seq_path, out_dir, exercise="squat", config=None, mass_kg=None, heig
     if seq_path.resolve() != (out_dir / "skel_seq.npz").resolve():
         shutil.copy(seq_path, out_dir / "skel_seq.npz")
     stage = opensim_stage.run(seq, cfg, out_dir, mass_kg=mass_kg, height_m=height_m)
-    if len(stage.motions) > 1:
-        print(f"note: {len(stage.motions)} segments; metrics use the longest", file=sys.stderr)
     motion = max(stage.motions, key=lambda p: len(read_table(p).time))
     est = read_table(motion)
+    trial = seq.times[seq.valid]
+    trial_span = (float(trial[0]), float(trial[-1]))
+    analysed = {"segment": stage.motions.index(motion) + 1, "of": len(stage.motions),
+                "start_s": round(float(est.time[0]), 3), "stop_s": round(float(est.time[-1]), 3),
+                "trial_s": round(trial_span[1] - trial_span[0], 3)}
+    analysed["fraction"] = round((analysed["stop_s"] - analysed["start_s"]) / analysed["trial_s"], 3) \
+        if analysed["trial_s"] > 0 else 1.0
+    stage.qc["analysed_segment"] = analysed
+    (out_dir / "qc.json").write_text(json.dumps(stage.qc, indent=2))
+    if len(stage.motions) > 1:
+        print(f"note: {len(stage.motions)} segments; metrics and validation use the longest, "
+              f"{analysed['start_s']}-{analysed['stop_s']} s ({analysed['fraction']:.0%} of the trial)", file=sys.stderr)
     pstamp = records.processing_stamp(stage.scaled_model, motion, tier, exercise)
 
     derived = metrics_mod.derived_signals(est, stage.scaled_model)
@@ -72,7 +82,8 @@ def process(seq_path, out_dir, exercise="squat", config=None, mass_kg=None, heig
         if ref_model.exists():  # posture signals (inclination vs gravity, FPPA) can be validated too
             ref_skeleton = skeleton_positions(ref_model, ref_tab)
             ref_tab = metrics_mod.with_signals(ref_tab, metrics_mod.derived_signals(ref_tab, ref_model))
-        cmp = validation.compare(metrics_mod.with_signals(est, derived), ref_tab, max_lag_s=max_lag_s)
+        cmp = validation.compare(metrics_mod.with_signals(est, derived), ref_tab, max_lag_s=max_lag_s,
+                                 trial_span=trial_span)
         ref_plot = (ref_tab.time + cmp["lag_s"], {c: ref_tab.col(c) for c in ref_tab.columns})
         val = validation.report(cmp, person_ref, reference_system or str(reference), [exercise],
                                 synthetic=synthetic, reference_grade=reference_grade or "synthetic")

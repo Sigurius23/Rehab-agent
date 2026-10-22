@@ -16,6 +16,10 @@ from .io_formats import Table, to_degrees
 
 # docs/accuracy.md "Project acceptance targets" (engineering targets, clinician to confirm)
 TARGETS_DEG = {"sagittal": 3.0, "frontal": 5.0, "transverse": 5.0}
+# Share of the time both systems recorded that the compared motion must span for any gate to count.
+# A short solved segment (gap splitting) is a few frames the lag search can slide anywhere within
+# max_lag_s to a matching stretch of the reference: 11 frames scored 0.3 deg against an OpenCap squat.
+MIN_COVERAGE = 0.8
 
 
 def _resample(ref: Table, times):
@@ -65,12 +69,27 @@ def _apply_aliases(est: Table, ref: Table, aliases):
     return Table(ref.columns + [e for e, _ in extra], data, ref.time, ref.in_degrees, ref.header), extra
 
 
-def compare(est: Table, ref: Table, max_lag_s=0.0, coords=None, aliases=None):
+def coverage(est_time, ref_time, lag_s, trial_span=None):
+    """How much of the time both systems recorded (trial ∩ lag-shifted reference) the compared motion spans.
+
+    ``trial_span``: (start_s, stop_s) of the whole recording in the estimate's timebase. Without it the
+    estimate is taken to be the whole trial (a single solved segment, or ``rehabtwin validate``).
+    """
+    t0, t1 = trial_span if trial_span is not None else (est_time[0], est_time[-1])
+    lo, hi = max(t0, ref_time[0] + lag_s), min(t1, ref_time[-1] + lag_s)
+    inside = est_time[(est_time >= lo - 1e-9) & (est_time <= hi + 1e-9)]
+    compared = float(inside[-1] - inside[0]) if len(inside) > 1 else 0.0
+    overlap = max(0.0, float(hi - lo))
+    return {"compared_s": round(compared, 3), "overlap_s": round(overlap, 3),
+            "fraction": round(min(1.0, compared / overlap), 3) if overlap > 0 else 0.0, "min_fraction": MIN_COVERAGE}
+
+
+def compare(est: Table, ref: Table, max_lag_s=0.0, coords=None, aliases=None, trial_span=None):
     """Per-coordinate error statistics of ``est`` against ``ref`` in degrees.
 
     Radian tables (``inDegrees=no``, e.g. a lab's SI-unit IK) are converted first: compared raw, an
     identical motion scored 72 deg RMSE. Only angular planes are compared, so the by-name split
-    of ``to_degrees`` without a model is enough here.
+    of ``to_degrees`` without a model is enough here. ``trial_span`` (s): see ``coverage``.
     """
     est, ref = to_degrees(est), to_degrees(ref)
     ref, aliased = _apply_aliases(est, ref, DEFAULT_ALIASES if aliases is None else aliases)
@@ -100,7 +119,7 @@ def compare(est: Table, ref: Table, max_lag_s=0.0, coords=None, aliases=None):
     for e, r in aliased:
         if e in per:
             per[e]["reference_column"] = r
-    return {"lag_s": lag, "coordinates": per}
+    return {"lag_s": lag, "coordinates": per, "coverage": coverage(est.time, ref.time, lag, trial_span)}
 
 
 def by_joint_plane(per_coord):
@@ -146,6 +165,10 @@ def report(cmp, person_ref, reference_system, movements, synthetic=False, extra=
     grade = "synthetic" if synthetic else reference_grade
     kin = by_joint_plane(cmp["coordinates"])
     gates, allowed = gate(kin, per_coord=cmp["coordinates"])
+    cov = cmp.get("coverage")
+    short = cov is not None and cov["fraction"] < MIN_COVERAGE
+    if short:      # too little of the trial to judge (and the lag fitted to a fragment): nothing is tested
+        gates, allowed = {g: "not-tested" for g in gates}, []
     if grade == "markerless":
         allowed = []
     if grade != "marker-mocap" or not allowed:
@@ -169,6 +192,7 @@ def report(cmp, person_ref, reference_system, movements, synthetic=False, extra=
         "synthetic": bool(synthetic),
         "reference_grade": grade,
         "time_lag_applied_s": cmp["lag_s"],
+        "coverage": cov,
         "per_coordinate": {c: {k: (round(v, 3) if isinstance(v, float) else v) for k, v in s.items()}
                            for c, s in cmp["coordinates"].items()},
         "targets_deg": TARGETS_DEG,
@@ -178,6 +202,9 @@ def report(cmp, person_ref, reference_system, movements, synthetic=False, extra=
                   "marker-mocap": "Targets are project engineering targets (docs/accuracy.md); clinician sign-off "
                                   "pending."}[grade],
     }
+    if short:
+        rep["notes"] += (f" Only {cov['compared_s']} s of the {cov['overlap_s']} s both systems recorded were compared "
+                         f"({cov['fraction']:.0%} < {MIN_COVERAGE:.0%}): every gate is not-tested.")
     if extra:
         rep.update(extra)
     return rep

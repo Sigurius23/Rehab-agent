@@ -116,18 +116,26 @@ videos (OpenPose → triangulation → LSTM marker augmenter → LaiUhlrich2022 
 
 Values are RMSE in degrees; brackets give (bias / SD after removing the bias).
 
-| Signal | 5 cams, keypoints only | **5 cams + augmenter** | 1 cam (frontal) | 1 cam + augmenter |
+| Signal | 5 cams, keypoints only | **5 cams + augmenter** | 1 cam (frontal) | 1 cam + augmenter† |
 |---|---|---|---|---|
 | Trunk inclination, sagittal | 47.4 (−23.4 / 41.3) | **2.7 (−0.8 / 2.6)** | 9.7 (+7.4 / 6.3) | 9.4 (+6.0 / 7.3) |
-| Trunk inclination, frontal | 8.7 (+2.0 / 8.4) | **2.6 (+1.2 / 2.3)** | 10.3 (+8.9 / 5.2) | 7.2 (+6.8 / 2.5) |
+| Trunk inclination, frontal | 8.7 (+2.0 / 8.4) | **2.6 (+1.2 / 2.3)** | 10.3 (+8.8 / 5.2) | 7.2 (+6.8 / 2.5) |
 | Pelvis tilt | 37.3 (−29.1 / 23.4) | **6.0 (−5.5 / 2.4)** | 18.9 (+15.5 / 10.9) | 20.1 (+18.8 / 7.2) |
 | Pelvis list | 2.6 | **2.6** | 7.8 | 4.3 |
-| Lumbar flexion (total) | 50.9 (+37.5 / 34.4) | **7.1 (+6.3 / 3.2)** | 25.3 (−23.7 / 8.8) | 25.8 (−25.0 / 6.3) |
-| Hip flexion R | 36.0 (+25.7 / 25.3) | **13.9 (+13.1 / 4.6)** | 17.6 (−14.7 / 9.6) | 10.4 (−8.3 / 6.3) |
-| Hip adduction R | 2.4 | **3.2** | 3.3 | 4.6 |
-| Knee flexion R / L | 8.1 / 5.9 | **9.3 / 9.2 (+8.7 / 3.2)** | 9.7 / 13.6 | 14.9 / 21.5 |
-| Ankle dorsiflexion R / L | 8.5 / 6.5 | **4.9 / 4.6** | 14.5 / 13.8 | 13.3 / 18.4 |
-| Knee FPPA R / L | 20.7 / 21.4 | **4.7 / 9.5** | 6.6 / 10.2 | 5.9 / 7.1 |
+| Lumbar flexion (total) | 50.9 (+37.5 / 34.4) | **7.1 (+6.3 / 3.2)** | 25.3 (−23.8 / 8.8) | 25.8 (−25.0 / 6.3) |
+| Hip flexion R | 36.0 (+25.7 / 25.3) | **13.9 (+13.1 / 4.6)** | 17.5 (−14.5 / 9.8) | 10.4 (−8.3 / 6.3) |
+| Hip adduction R | 2.4 | **3.2** | 3.2 | 4.6 |
+| Knee flexion R / L | 8.1 / 5.9 | **9.3 / 9.2 (+8.7 / 3.2)** | 10.2 / 13.7 | 14.9 / 21.5 |
+| Ankle dorsiflexion R / L | 8.5 / 6.5 | **4.9 / 4.6** | 13.5 / 12.0 | 13.3 / 18.4 |
+| Knee FPPA R / L | 20.7 / 21.4 | **4.7 / 9.5** | 6.7 / 10.4 | 5.9 / 7.1 |
+
+† Measured when keypoint gaps of any length were bridged with straight lines before the augmenter. In this
+view the heels and the left ankle drop out for 0.3–0.8 s at the bottom of each squat. The augmenter's
+lower-body markers are now left empty there (164 frames), so `process` solves only fragments. The
+longest is 1.2 s with no complete rep, and its validation report marks every gate not-tested
+(`coverage`). Re-run with the current gap handling, the two 5-camera columns agree with the earlier run
+to 0.3°. The 1-cam column is the re-run: heel gaps longer than 0.2 s are no longer bridged, which moved
+the ankles by 1–2° and every other signal by ≤ 0.5°.
 
 What this shows:
 
@@ -144,13 +152,14 @@ What this shows:
 4. **Remaining constant offsets are mostly definitional.** Knee is +8.7° and hip flexion +13°. The
    Pose2Sim model and LaiUhlrich2022 define the pelvis and knee frames differently, and MediaPipe's hip
    landmarks are not OpenPose's. The bias-removed agreement is 2.4–4.6° for these joints.
-5. **One camera is not enough for the trunk–pelvis–hip chain**, even with the augmenter: 9–26° on
-   those signals, and the knee and ankle get worse (13–22°). Knee FPPA, hip adduction and frontal pelvis
-   stay within 4–8°.
+5. **One camera is not enough for the trunk–pelvis–hip chain**: 10–25° on those signals from keypoints.
+   With the augmenter it was 9–26°, with knee and ankle worse (13–22°), and only while the heel
+   dropouts were bridged; the current pipeline solves only fragments of this view. Knee FPPA, hip
+   adduction and frontal pelvis stay within 3–11° from keypoints.
 
 **How many phones?** The same trial with camera subsets, all with the augmenter (RMSE vs OpenCap, °):
 
-| Signal | 2 phones at ±40° (80° apart) | 2 phones at ±65° (130° apart) | 3 phones (−40°, 0°, +40°) | 5 phones |
+| Signal | 2 phones at ±40° (80° apart)† | 2 phones at ±65° (130° apart)† | 3 phones (−40°, 0°, +40°) | 5 phones |
 |---|---:|---:|---:|---:|
 | Trunk inclination, sagittal / frontal | 2.8 / 3.0 | 8.7 / 6.1 | 3.2 / 1.7 | 2.7 / 2.6 |
 | Pelvis tilt / list | 6.0 / 3.0 | 5.4 / 3.2 | 6.7 / 2.8 | 6.0 / 2.6 |
@@ -160,11 +169,21 @@ What this shows:
 | Knee FPPA R / L | 4.1 / 13.0 | 6.0 / 9.3 | 8.9 / 8.6 | 4.7 / 9.5 |
 | IK marker RMS (cm) | 3.2 | 6.1 | 2.4 | 2.4 |
 
-Two phones about 80° apart, both seeing the front of the body, match the five-phone result on almost
-every signal. This is OpenCap's default layout too. Two near-side views 130° apart lose the trunk and
-lumbar. These are differences against a reference built from all five phones, so they favour subsets
-of the same cameras. Still, they support `docs/hardware.md`: two to three phones 45–90° apart,
-facing the subject.
+† Bridged with straight lines through keypoint dropouts. With two phones MediaPipe loses the knees at the
+bottom of the squat: at ±40° the left knee for up to 1.4 s (4.0 s of the 9.7 s trial) and the right for up
+to 0.4 s; at ±65° the left knee for up to 1.1 s and the right elbow for 7 s. A straight line through the
+knee hides the bottom of the squat. The current pipeline leaves those frames without leg markers: the
+±40° pair stops with "no segment long enough to solve", and the ±65° pair solves fragments whose
+validation is not-tested. Three and five phones lose no keypoint for more than 0.2 s, and re-run, their
+columns agree with the earlier run to 0.1°.
+
+Two phones about 80° apart, both seeing the front of the body, matched the five-phone result only while
+the knee dropouts were bridged. That hides the bottom of every squat, and the pipeline now refuses it.
+Three phones (−40°, 0°, +40°) kept every keypoint and match five phones on most signals. Two near-side
+views 130° apart lose the trunk and lumbar even when bridged. These are differences against a reference
+built from all five phones, so they favour subsets of the same cameras. For MediaPipe this supports
+`docs/hardware.md`: three phones 40° apart facing the subject. Two phones are enough only when both
+keep the knees in view at full depth.
 
 One trial and one subject, against a markerless reference: nothing here approves a use. It does say
 which front end to measure against marker mocap first: 5 cameras plus augmenter. It also says which

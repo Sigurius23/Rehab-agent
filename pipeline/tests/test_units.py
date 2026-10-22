@@ -204,6 +204,28 @@ def test_validation_finds_time_lag():
     est = Table(["knee_angle_r"], (50 * np.sin(2 * (t - 0.12)))[:, None], t)
     cmp = validation.compare(est, ref, max_lag_s=0.3)
     assert abs(cmp["lag_s"] - 0.12) < 0.011 and cmp["coordinates"]["knee_angle_r"]["rmse_deg"] < 0.5
+    assert cmp["coverage"]["fraction"] == 1.0
+
+
+def test_validation_of_a_fragment_tests_nothing():
+    """A short solved segment of a long trial: the lag search slides it onto a matching stretch of the
+    reference and it scores well, but a fragment approves nothing (validation.MIN_COVERAGE)."""
+    from rehabtwin import records
+    t = np.arange(0, 10, 1 / 60)
+    ref = Table(["knee_angle_r", "hip_adduction_r"], np.stack([50 * np.sin(2 * t), 8 * np.sin(2 * t)], 1), t)
+    wrong = 8 * np.sin(2 * t) + 9 * np.sin(5 * t)                    # 6.4 deg RMSE over the whole trial
+    est = Table(ref.columns, np.stack([50 * np.sin(2 * (t - 0.05)), wrong], 1), t)
+    full = validation.report(validation.compare(est, ref, max_lag_s=4), "P", "lab", ["squat"])
+    assert full["gates"]["hip_r.frontal_rmse_le_5deg"] == "fail" and full["coverage"]["fraction"] == 1.0
+    k = (t >= 6.0) & (t < 7.2)                                       # 1.2 s survived gap splitting
+    frag = Table(est.columns, est.data[k], t[k])
+    cmp = validation.compare(frag, ref, max_lag_s=4, trial_span=(t[0], t[-1]))
+    assert cmp["coverage"]["fraction"] < 0.15 and cmp["coverage"]["overlap_s"] > 9.9
+    rep = validation.report(cmp, "P", "lab", ["squat"])
+    assert set(rep["gates"].values()) == {"not-tested"}
+    assert rep["approved_for"] == [] and rep["feedback_allowed_joint_planes"] == []
+    assert "not-tested" in rep["notes"]
+    records.validate(rep, "validation-report")
 
 
 # ------------------------------------------------------------------- HSMR
