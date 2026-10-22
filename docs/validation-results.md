@@ -110,7 +110,7 @@ videos (OpenPose → triangulation → LSTM marker augmenter → LaiUhlrich2022 
 
 **Pipeline.**
 - MediaPipe Pose (heavy) per camera.
-- Camera sync: the phones started up to 46 frames (0.77 s) apart. Hip-motion cross-correlation recovered the offsets (peak r 0.79–0.85), and the remaining lag to OpenCap's timeline was 0.07 s.
+- Camera sync: the phones started up to 46 frames (0.77 s) apart. Hip-motion cross-correlation recovered the offsets (peak r 0.75–0.81), and the remaining lag to OpenCap's timeline was 0.07 s. The squats are repetitive: for every camera the runner-up peak lies one repetition (1.55 s) away and is 0.16–0.19 lower. With camera 1 padded to start 2.4 s or 3.3 s early, beyond the 2 s window, `--sync` refuses: an alias one squat inside the window still reaches r = 0.56.
 - Weighted DLT triangulation with OpenCap's calibration, median reprojection 7.4 px.
 - `rehabtwin process`, optionally after `rehabtwin augment` (OpenCap's LSTM via Pose2Sim's ONNX).
 

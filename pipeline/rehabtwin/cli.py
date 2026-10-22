@@ -374,6 +374,9 @@ def main(argv=None):
                      help="OpenCap cameraIntrinsicsExtrinsics.pickle per camera, same order as the dumps (board y-down)")
     mv.add_argument("--sync", action="store_true",
                     help="estimate per-camera frame offsets from hip motion (unsynchronised phones)")
+    mv.add_argument("--max-lag-s", type=float, default=2.0,
+                    help="--sync search window, s: largest plausible start offset between phones (lags up to twice it "
+                         "are checked; refused if one of those beats the window's best)")
     mv.add_argument("--out", required=True)
     mv.add_argument("--person-ref", default="UNSPECIFIED")
     au = sub.add_parser("augment", help="add OpenCap's LSTM anatomical markers to a keypoint sequence (pip install onnxruntime)")
@@ -487,10 +490,18 @@ def main(argv=None):
             raws = [dict(np.load(r)) for r in a.raws]
             meta = {"person_ref": a.person_ref, "raws": [str(r) for r in a.raws]}
             if a.sync:
-                lags, peaks = mf.sync_lags(raws)
+                try:
+                    lags, peaks, diag = mf.sync_lags(raws, max_lag_s=a.max_lag_s, return_diagnostics=True)
+                except ValueError as e:
+                    print(f"refused: {e}", file=sys.stderr)
+                    return 2
+                warnings = [d["warning"] for d in diag if d and d["warning"]]
+                for w in warnings:
+                    print(f"warning: {w}", file=sys.stderr)
                 raws, start = mf.apply_lags(raws, lags)
-                meta.update(sync={"method": "hip vertical velocity cross-correlation", "lags_frames": lags,
-                                  "peak_correlation": peaks, "reference_start_frame": start})
+                meta.update(sync={"method": "hip vertical velocity cross-correlation (Pearson r per lag)", "lags_frames": lags,
+                                  "peak_correlation": peaks, "reference_start_frame": start, "max_lag_s": a.max_lag_s,
+                                  "diagnostics": diag, "warnings": warnings})
                 print(json.dumps({"sync_lags_frames": lags, "peak_correlation": peaks}))
             seq, err = mf.multiview_sequence(raws, cams, up_axis=up, meta=meta, intrinsics_source=source)
         seq.save(a.out)

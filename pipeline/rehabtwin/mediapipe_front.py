@@ -176,41 +176,107 @@ def read_opencap_calibration(paths):
     return cams
 
 
-def sync_lags(raws, ref=0, max_lag_s=2.0, landmarks=(23, 24)):
+def sync_lags(raws, ref=0, max_lag_s=2.0, landmarks=(23, 24), min_peak_r=0.5, min_margin=0.15, exclusion_s=0.3,
+              tie_r=0.01, return_diagnostics=False):
     """Integer frame offsets that align each camera's dump with ``raws[ref]``.
 
     Unsynchronised phones start recording at slightly different times. The vertical image motion
     of the hips (mean of ``landmarks``) is the same event seen from every camera; the offset is the
-    peak of the normalised cross-correlation of its frame-to-frame velocity. Returns (lags, peak
-    correlations); ``raws[c]`` frame ``k + lags[c]`` matches reference frame ``k``.
+    peak of the cross-correlation of its frame-to-frame velocity (Pearson r over each lag's overlap,
+    so lags with less overlap are not favoured). Returns (lags, peak correlations); ``raws[c]``
+    frame ``k + lags[c]`` matches reference frame ``k``.
+
+    A wrong lag silently corrupts every triangulated frame, so the peak must stand out. Lags up to
+    ``2 * max_lag_s`` are checked as well: with periodic motion (squats) a true offset beyond the
+    window leaves an alias one repetition inside it that peaks well above ``min_peak_r``. Raises
+    ValueError when a lag beyond the window beats the best inside it by > ``tie_r``, or the best
+    one's peak continues past the window edge (the true offset may be larger), when the best
+    r < ``min_peak_r``, or when the best lag lies within 0.1 s of the last lag with >= 1 s of
+    overlap. A runner-up peak (>= ``exclusion_s`` away, at any checked lag) within ``min_margin`` is
+    flagged, not refused: periodic motion correlates almost as well one repetition away, and a
+    near-tie beyond the window is decided by ``max_lag_s`` alone. ``return_diagnostics=True`` also
+    returns, per camera (None for ``ref``), peak, runner-up and best beyond-window r/lag, margin,
+    window edge, ambiguity and a warning text.
     """
+    if not (np.isfinite(max_lag_s) and max_lag_s > 0):
+        raise ValueError(f"max_lag_s (--max-lag-s) must be a finite number of seconds > 0, got {max_lag_s}")
     def velocity(raw):
         y = np.asarray(raw["image_xy"], float)[:, list(landmarks), 1].mean(axis=1)
         ok = np.isfinite(y)
         y = np.interp(np.arange(len(y)), np.flatnonzero(ok), y[ok]) if ok.any() else np.zeros_like(y)
-        v = np.diff(y)
-        return (v - v.mean()) / (v.std() or 1.0)
+        return np.diff(y)
     fps = float(raws[ref]["fps"])
     vr = velocity(raws[ref])
-    lags, peaks = [], []
+    L, w = max(1, int(max_lag_s * fps)), max(1, int(round(exclusion_s * fps)))
+    tol = max(1, min(int(round(0.1 * fps)), L // 2))
+    grid = np.arange(-2 * L, 2 * L + 1)
+    inside = np.abs(grid) <= L
+    lags, peaks, diags, problems = [], [], [], []
     for c, raw in enumerate(raws):
         if c == ref:
             lags.append(0)
             peaks.append(1.0)
+            diags.append(None)
             continue
         vc = velocity(raw)
-        best, best_lag = -np.inf, 0
-        for lag in range(-int(max_lag_s * fps), int(max_lag_s * fps) + 1):
-            a, b = (vr[:len(vr)], vc[lag:]) if lag >= 0 else (vr[-lag:], vc)
+        r = np.full(len(grid), -np.inf)
+        for k, lag in enumerate(grid):
+            a, b = (vr, vc[lag:]) if lag >= 0 else (vr[-lag:], vc)
             n = min(len(a), len(b))
-            if n < fps:          # need at least a second of overlap
-                continue
-            r = float(np.dot(a[:n], b[:n]) / n)
-            if r > best:
-                best, best_lag = r, lag
-        lags.append(best_lag)
-        peaks.append(round(best, 3))
-    return lags, peaks
+            if n >= fps:         # need at least a second of overlap
+                a, b = a[:n] - a[:n].mean(), b[:n] - b[:n].mean()
+                r[k] = float(a @ b / (np.sqrt((a @ a) * (b @ b)) or 1.0))
+        okx = np.flatnonzero(np.isfinite(r))     # overlap shrinks with |lag|: one contiguous range
+        ok, out = okx[inside[okx]], okx[~inside[okx]]
+        if not len(ok):
+            raise ValueError(f"unreliable camera sync: camera {c} overlaps camera {ref} by < 1 s at every lag")
+        i = int(ok[np.argmax(r[ok])])
+        o = int(out[np.argmax(r[out])]) if len(out) else None
+        lobe = [k for k in out if abs(k - i) < w]     # the best peak's own lobe past the window edge
+        lobe = max(lobe, key=lambda k: r[k]) if lobe else None
+        # runner-up = best local maximum over +-exclusion_s outside the main lobe: a point on the lobe's
+        # flank always has a higher neighbour nearer the peak, so it never qualifies
+        cand = [j for j in okx if abs(j - i) >= w and r[j] >= r[max(0, j - w):j + w + 1].max()]
+        j = max(cand, key=lambda j: r[j]) if cand else None
+        d = {"lag_frames": int(grid[i]), "peak_r": round(float(r[i]), 3),
+             "runner_up_lag_frames": None if j is None else int(grid[j]),
+             "runner_up_r": None if j is None else round(float(r[j]), 3),
+             "margin": None if j is None else round(float(r[i] - r[j]), 3),
+             "beyond_window_lag_frames": None if o is None else int(grid[o]),
+             "beyond_window_r": None if o is None else round(float(r[o]), 3),
+             "searched_lags_frames": [int(grid[ok[0]]), int(grid[ok[-1]])],
+             "checked_lags_frames": [int(grid[okx[0]]), int(grid[okx[-1]])],
+             "at_window_edge": bool(min(i - ok[0], ok[-1] - i) <= tol)}
+        d["ambiguous"] = d["margin"] is not None and d["margin"] < min_margin
+        d["warning"] = (f"camera {c}: ambiguous sync, lag {d['lag_frames']} frames (r={d['peak_r']}) vs runner-up "
+                        f"{d['runner_up_lag_frames']} (r={d['runner_up_r']}), margin {d['margin']} < {min_margin}; "
+                        f"periodic motion correlates almost as well one repetition away - start recordings with "
+                        f"a jump (the hips must move) or check the lags against a clap"
+                        + (f"; the runner-up, beyond the searched +-{max_lag_s:g} s, correlates better: only that limit "
+                           f"picks this lag, rerun with a larger --max-lag-s if the phones may have started further "
+                           f"apart" if j is not None and r[j] > r[i] else "")) if d["ambiguous"] else None
+        # aliases of periodic motion tie within noise (< tie_r); a true offset outside the window wins clearly
+        # (by >= 0.19 on the OpenCap squats); a peak just outside shows as the best lag's lobe rising past the edge
+        far = o if o is not None and r[o] > r[i] + tie_r else lobe if lobe is not None and r[lobe] > r[i] else None
+        if far is not None and r[far] >= min_peak_r:
+            lo = int(grid[far])
+            problems.append(f"camera {c}: lag {lo} frames ({lo / fps:+.2f} s), beyond the searched +-{max_lag_s:g} s, "
+                            f"correlates better (r={r[far]:.3f}) than the best lag inside it ({d['lag_frames']}, "
+                            f"r={d['peak_r']}); the true offset may be larger: rerun with --max-lag-s >= "
+                            f"{np.ceil(2 * abs(lo) / fps + 1) / 2:g}")
+        elif r[i] < min_peak_r:
+            problems.append(f"camera {c}: peak hip-motion correlation r={d['peak_r']} < {min_peak_r}, no reliable "
+                            f"common motion; start recordings with a jump (the hips must move)")
+        elif min(i - okx[0], okx[-1] - i) <= tol:   # ends at +-2L lie >= L > tol away: limited by the overlap
+            problems.append(f"camera {c}: best lag {d['lag_frames']} frames ({d['lag_frames'] / fps:+.2f} s) lies at the "
+                            f"last lag where it overlaps camera {ref} by >= 1 s, a better lag further out cannot be "
+                            f"ruled out; record longer clips")
+        lags.append(d["lag_frames"])
+        peaks.append(d["peak_r"])
+        diags.append(d)
+    if problems:
+        raise ValueError("unreliable camera sync: " + "; ".join(problems))
+    return (lags, peaks, diags) if return_diagnostics else (lags, peaks)
 
 
 def apply_lags(raws, lags):
