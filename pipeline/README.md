@@ -86,11 +86,17 @@ python -m rehabtwin augment multi_seq.npz multi_aug_seq.npz --height-m 1.80 --ma
 python -m rehabtwin process multi_aug_seq.npz out/ --exercise squat --mass-kg 75 --height-m 1.80
 ```
 
-`--sync` searches start offsets up to `--max-lag-s` (default 2 s). It refuses (exit 2) when a camera's best
-lag sits at the edge of that window, where the true offset may be larger, or when the hip-motion correlation
-peaks below r = 0.5. Repetitive movement correlates almost as well one repetition away. When the runner-up
-peak is within 0.15 of the best, it warns and records the per-camera diagnostics under `sync` in the
-sequence meta. Start each recording with a jump. A clap does not move the hips, but it lets you check the lags.
+`--sync` searches start offsets up to `--max-lag-s` (default 2 s) and also checks lags up to twice that.
+It refuses (exit 2) when:
+- a lag beyond the window correlates better than the best inside it. With repetitive movement, an alias one
+  repetition inside the window can still exceed r = 0.5. Rerun with the suggested larger `--max-lag-s`.
+- the hip-motion correlation (Pearson r) peaks below 0.5.
+- the best lag sits at the end of the lags where the clips overlap by 1 s.
+
+Offsets beyond twice `--max-lag-s` are not checked, so set it to the largest plausible offset. When the
+runner-up peak, typically one repetition away, is within 0.15 of the best, `--sync` warns and records the
+per-camera diagnostics under `sync` in the sequence meta. Start each recording with a jump. A clap does not
+move the hips, but it lets you check the lags.
 
 `examples/pose2sim_demo.sh` reproduces the real-data validation in
 `docs/validation-results.md` (single camera vs 4-camera triangulation).

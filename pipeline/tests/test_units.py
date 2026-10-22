@@ -722,40 +722,84 @@ def _hip_dumps(hip_y, shifts, lengths, fps=60.0, seed=0):
     return out
 
 
-def test_camera_sync_refuses_offsets_beyond_the_window():
-    from rehabtwin.mediapipe_front import sync_lags
+def _sit_to_stands():
+    """Irregularly spaced sit-to-stands: one clear correlation peak."""
     t = np.arange(1300) / 60.0
     rng = np.random.default_rng(3)
-    hip = 400 + sum(150 * np.exp(-0.5 * ((t - c) / 0.4) ** 2) for c in np.cumsum(rng.uniform(1.0, 2.5, 12)))  # irregular sit-to-stands
+    return 400 + sum(150 * np.exp(-0.5 * ((t - c) / 0.4) ** 2) for c in np.cumsum(rng.uniform(1.0, 2.5, 12)))
+
+
+def test_camera_sync_refuses_offsets_beyond_the_window():
+    from rehabtwin.mediapipe_front import sync_lags
+    hip = _sit_to_stands()
     raws = _hip_dumps(hip, [0, 132], 900)            # camera 1 started 2.2 s late: just beyond the 2 s default
-    with pytest.raises(ValueError, match="edge.*--max-lag-s"):
+    with pytest.raises(ValueError, match=r"beyond the searched \+-2 s.*--max-lag-s >= 3"):
         sync_lags(raws)
     assert abs(sync_lags(raws, max_lag_s=3.0)[0][1] + 132) <= 3
-    with pytest.raises(ValueError, match=r"r=0\.\d+ < 0.5"):      # far beyond: only spurious peaks inside the window
+    with pytest.raises(ValueError, match=r"lag -200 frames.*--max-lag-s >= 4"):
         sync_lags(_hip_dumps(hip, [0, 200], 900))
+    with pytest.raises(ValueError, match=r"r=0\.\d+ < 0.5") as e:      # beyond 2x the window: only spurious peaks
+        sync_lags(_hip_dumps(hip, [0, 300], 900))
+    assert "--max-lag-s" not in str(e.value)
+    lags, _, d = sync_lags(_hip_dumps(hip, [0, 117], 900), return_diagnostics=True)
+    assert lags[1] == -117 and d[1]["at_window_edge"] and d[1]["beyond_window_r"] < d[1]["peak_r"]  # a verified top
+
+
+def test_camera_sync_refuses_periodic_motion_offset_beyond_the_window():
+    """Squats every ~1.55 s: with the true offset outside the window, an alias one squat inside it
+    peaks at r ~0.7, far from the window edge (the audit's OpenCap case: true 146, got 53)."""
+    import re
+    from rehabtwin.mediapipe_front import sync_lags
+    t = np.arange(1400) / 60.0
+    rng = np.random.default_rng(0)
+    hip = 400 + sum(a * np.exp(-0.5 * ((t - c) / 0.35) ** 2)
+                    for a, c in zip(rng.uniform(120, 160, 14), 1 + np.cumsum(rng.uniform(1.4, 1.7, 14))))
+    for shift, enough in [(146, 3.0), (196, 4.0)]:
+        raws = _hip_dumps(hip, [0, shift], 700)
+        with pytest.raises(ValueError, match=rf"beyond the searched \+-2 s.*--max-lag-s >= {enough:g}") as e:
+            sync_lags(raws)
+        alias, r_alias = re.search(r"best lag inside it \((-?\d+), r=([\d.]+)\)", str(e.value)).groups()
+        assert abs(int(alias)) < 110 and float(r_alias) > 0.5 and abs(int(alias) + shift) > 30   # passed the old checks
+        assert abs(sync_lags(raws, max_lag_s=enough)[0][1] + shift) <= 2
 
 
 def test_camera_sync_flags_periodic_motion_as_ambiguous():
     from rehabtwin.mediapipe_front import sync_lags
     hip = 400 + 120 * np.sin(2 * np.pi * 0.5 * np.arange(1200) / 60.0)        # a squat every 2 s
     d = sync_lags(_hip_dumps(hip, [0, 25], 900), max_lag_s=3.0, return_diagnostics=True)[2][1]
-    # true lag -25 and its aliases one rep (120 frames) away correlate equally: flagged, not trusted
+    # true lag -25 and its aliases whole reps (120 frames) away correlate equally: flagged, not trusted
     assert abs((d["lag_frames"] + 25 + 60) % 120 - 60) <= 2 and not d["at_window_edge"]
-    assert d["ambiguous"] and d["margin"] < 0.15 and abs(abs(d["runner_up_lag_frames"] - d["lag_frames"]) - 120) <= 3
+    assert d["ambiguous"] and d["margin"] < 0.15
+    assert abs((d["runner_up_lag_frames"] - d["lag_frames"] + 60) % 120 - 60) <= 3
     assert "jump" in d["warning"]
 
 
 def test_camera_sync_reports_diagnostics():
     from rehabtwin.mediapipe_front import sync_lags
-    t = np.arange(900) / 60.0       # same signal as test_camera_sync_recovers_frame_offsets
-    hip = 400 + 120 * np.sin(2 * np.pi * 0.35 * t) * (1 + 0.3 * np.sin(2 * np.pi * 0.05 * t))
-    lags, peaks, diag = sync_lags(_hip_dumps(hip, [0, 25, -13], [700, 650, 700]), return_diagnostics=True)
-    assert lags == [0, -25, 13] and diag[0] is None
+    lags, peaks, diag = sync_lags(_hip_dumps(_sit_to_stands(), [0, 25, -13], [700, 650, 700]), return_diagnostics=True)
+    assert abs(lags[1] + 25) <= 2 and abs(lags[2] - 13) <= 2 and diag[0] is None
     for lag, peak, d in zip(lags[1:], peaks[1:], diag[1:]):
-        assert d["lag_frames"] == lag and d["peak_r"] == peak > 0.8 and d["searched_lags_frames"] == [-120, 120]
+        assert d["lag_frames"] == lag and d["peak_r"] == peak > 0.7 and d["searched_lags_frames"] == [-120, 120]
+        assert d["checked_lags_frames"][0] < -120 and d["beyond_window_r"] < peak - 0.15
         assert d["margin"] >= 0.15 and abs(d["margin"] - (d["peak_r"] - d["runner_up_r"])) < 2e-3
         assert abs(d["runner_up_lag_frames"] - lag) >= 18              # >= 0.3 s away, not the main peak's flank
         assert not d["at_window_edge"] and not d["ambiguous"] and d["warning"] is None
+
+
+def test_camera_sync_refusal_names_the_actual_cause():
+    from rehabtwin.mediapipe_front import sync_lags
+    hip = _sit_to_stands()
+    raws = _hip_dumps(hip, [0, 25], 900)
+    raws[1]["image_xy"][:] = np.nan                    # no hip track: widening the window cannot help
+    with pytest.raises(ValueError, match=r"r=0.0 < 0.5") as e:
+        sync_lags(raws)
+    assert "--max-lag-s" not in str(e.value)
+    with pytest.raises(ValueError, match="last lag where it overlaps.*record longer") as e:   # 1.7 s clips
+        sync_lags(_hip_dumps(hip, [0, 38], 100))
+    assert "--max-lag-s" not in str(e.value)
+    for bad in (0.0, -1.0, float("nan"), float("inf")):
+        with pytest.raises(ValueError, match="max_lag_s.*finite.*> 0"):
+            sync_lags(_hip_dumps(hip, [0, 25], 900), max_lag_s=bad)
 
 
 def test_mp_multiview_sync_refuses_or_warns(tmp_path, capsys):
@@ -781,7 +825,9 @@ def test_mp_multiview_sync_refuses_or_warns(tmp_path, capsys):
     args = ["mp-multiview", *map(str, dumps), "--opencap-calib", *map(str, cal), "--sync", "--out", str(tmp_path / "s.npz")]
     assert cli.main(args + ["--max-lag-s", "0.3"]) == 2
     err = capsys.readouterr().err
-    assert "refused" in err and "--max-lag-s" in err and not (tmp_path / "s.npz").exists()
+    assert "refused" in err and "--max-lag-s >=" in err and not (tmp_path / "s.npz").exists()
+    assert cli.main(args + ["--max-lag-s", "inf"]) == 2                  # was an uncaught OverflowError
+    assert "refused: max_lag_s (--max-lag-s) must be a finite" in capsys.readouterr().err
     assert cli.main(args + ["--max-lag-s", "3"]) == 0
     assert "warning: camera 1: ambiguous sync" in capsys.readouterr().err
     sync = MarkerSequence.load(tmp_path / "s.npz").meta["sync"]

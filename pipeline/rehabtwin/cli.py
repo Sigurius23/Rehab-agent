@@ -374,7 +374,8 @@ def main(argv=None):
     mv.add_argument("--sync", action="store_true",
                     help="estimate per-camera frame offsets from hip motion (unsynchronised phones)")
     mv.add_argument("--max-lag-s", type=float, default=2.0,
-                    help="--sync search window: largest start offset between phones (refused if the best lag hits it)")
+                    help="--sync search window, s: largest plausible start offset between phones (lags up to twice it "
+                         "are checked; refused if one of those beats the window's best)")
     mv.add_argument("--out", required=True)
     mv.add_argument("--person-ref", default="UNSPECIFIED")
     au = sub.add_parser("augment", help="add OpenCap's LSTM anatomical markers to a keypoint sequence (pip install onnxruntime)")
@@ -497,7 +498,7 @@ def main(argv=None):
                 for w in warnings:
                     print(f"warning: {w}", file=sys.stderr)
                 raws, start = mf.apply_lags(raws, lags)
-                meta.update(sync={"method": "hip vertical velocity cross-correlation", "lags_frames": lags,
+                meta.update(sync={"method": "hip vertical velocity cross-correlation (Pearson r per lag)", "lags_frames": lags,
                                   "peak_correlation": peaks, "reference_start_frame": start, "max_lag_s": a.max_lag_s,
                                   "diagnostics": diag, "warnings": warnings})
                 print(json.dumps({"sync_lags_frames": lags, "peak_correlation": peaks}))
