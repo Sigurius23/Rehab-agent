@@ -666,9 +666,10 @@ def test_session_gate_fails_closed(tmp_path):
     import json
     from rehabtwin import cli
     spec = {"exercise": "squat"}
-    (tmp_path / "session.json").write_text(json.dumps({"twin_tier": "A", "person_ref": "P1", "session_id": "s"}))
+    (tmp_path / "session.json").write_text(json.dumps({"twin_tier": "A", "person_ref": "P1", "session_id": "s", "pipeline": {
+        "processing_id": "p1", "outputs": {"validation_report": "validation-report.json"}}}))
     good = {"synthetic": False, "reference_grade": "marker-mocap", "person_ref": "P1", "movements": ["squat"],
-            "feedback_allowed_joint_planes": ["knee_r.frontal"]}
+            "feedback_allowed_joint_planes": ["knee_r.frontal"], "processing_id": "p1"}
     cases = [({}, ["knee_r.frontal"]), ({"reference_grade": "markerless"}, []), ({"reference_grade": None}, []),
              ({"person_ref": "P2"}, []), ({"movements": ["walk"]}, []), ({"synthetic": True}, [])]
     for change, allowed in cases:
@@ -1427,3 +1428,148 @@ def test_muscle_caveat_follows_the_muscle_model(tmp_path, monkeypatch):
     assert "knee_extension_r" in cav and "dynamometry" in cav and "all other muscles keep generic" in cav
     assert "no personalised strength" not in cav and "no EMG calibration" in cav
     assert cav in (mdir / "muscles.html").read_text()
+
+
+# ------------------------------------------------------------- re-processing: stale derived results
+
+def _stamped_session(d, pid="new000", tier="C"):
+    """Session folder as left by re-processing: current stamp in session.json, derived files from before."""
+    import json
+    d.mkdir(parents=True, exist_ok=True)
+    pipeline = {"front_end": "test", "outputs": {"model": "opensim/model_scaled.osim", "motion": "opensim/ik.mot"}}
+    if pid:
+        pipeline["processing_id"] = pid
+    (d / "session.json").write_text(json.dumps({"session_id": "s1", "person_ref": "P1", "twin_tier": tier,
+                                                "started_at": "2026-01-01T00:00:00+00:00", "pipeline": pipeline}))
+    (d / "metrics.json").write_text(json.dumps({"exercise": "squat", "reps": [{"start_s": 0.0, "stop_s": 1.0}]}))
+    (d / "report.html").write_text("<html></html>")
+    return d
+
+
+def test_processing_stamp_tracks_model_motion_tier_and_exercise(tmp_path):
+    from rehabtwin import records
+    (tmp_path / "m.osim").write_text("<Model mass='70'/>")
+    (tmp_path / "ik.mot").write_text("time\tknee\n0\t1\n")
+    pid = lambda tier="A", exercise="squat": records.processing_stamp(tmp_path / "m.osim", tmp_path / "ik.mot", tier,
+                                                                     exercise)["processing_id"]
+    a = records.processing_stamp(tmp_path / "m.osim", tmp_path / "ik.mot", "A", "squat")
+    assert a["processing_id"] == pid() and a["processed_at"].endswith("+00:00") and len(a["processing_id"]) == 16
+    assert pid("C") != pid() and pid(exercise="sit_to_stand") != pid()        # reps, foot planting follow the exercise
+    (tmp_path / "m.osim").write_text("<Model mass='95'/>")                     # re-scaled to another mass
+    assert pid() != a["processing_id"]
+    sess = {"pipeline": {"processing_id": "abc"}}
+    assert records.stale_reason(sess, {"processing_id": "abc"}) is None
+    assert "processing old" in records.stale_reason(sess, {"processing_id": "old"})
+    assert records.stale_reason(sess, {}) and records.stale_reason({"pipeline": {}}, {})     # unstamped: fail closed
+
+
+def test_index_marks_derived_results_from_an_earlier_processing_stale(tmp_path):
+    import json
+    from rehabtwin import report
+    d = _stamped_session(tmp_path / "s")
+    for sub, name, doc in [
+            ("correction/valgus", "correction", {"spec": "valgus", "status": "target", "admissible": True,
+                                                 "processing_id": "old000"}),
+            ("strength", "strength", {"tests": [{}], "symmetry": {}, "body_mass_kg": 70.0, "processing_id": "old000"}),
+            ("muscles", "study", {"runs": {"measured": {}}, "muscle_model": {"source": "generic"}}),   # pre-stamp
+            ("feedback/fresh", "cues", {"summary": {"commands_sent": 0, "per_rule": {}}, "processing_id": "new000"}),
+            ("feedback/on_old_corr", "cues", {"summary": {"commands_sent": 0, "per_rule": {}}, "processing_id": "new000",
+                                              "stale_inputs": ["correction/valgus"]})]:
+        (d / sub).mkdir(parents=True)
+        (d / sub / f"{name}.json").write_text(json.dumps(doc))
+        html_name = {"study": "muscles"}.get(name, name)
+        (d / sub / f"{html_name}.html").write_text("<html></html>")
+    page = report.write_index(d).read_text()
+    rows = {r.split("</a>")[0].split(">")[-1]: r for r in page.split("<tr>")[2:]}
+    assert set(rows) == {"Session report", "Correction view: valgus", "Strength calibration", "Muscle effects",
+                         "Haptic cue replay: fresh", "Haptic cue replay: on_old_corr"}   # stale ones listed, not hidden
+    for title in ("Correction view: valgus", "Strength calibration", "Muscle effects", "Haptic cue replay: on_old_corr"):
+        assert "STALE" in rows[title], title
+    assert "processing old000" in rows["Strength calibration"] and "stale correction/valgus" in rows["Haptic cue replay: on_old_corr"]
+    assert "STALE" not in rows["Session report"] and "STALE" not in rows["Haptic cue replay: fresh"]
+
+
+def test_muscles_refuses_a_strength_calibration_of_an_earlier_processing(tmp_path, capsys):
+    import json
+    from rehabtwin import cli, records
+    d = _stamped_session(tmp_path / "s")
+    (d / "strength").mkdir()
+    (d / "strength" / "model_strength.osim").write_text("<Model mass='70'/>")
+    (d / "strength" / "strength.json").write_text(json.dumps(
+        {"tests": [{"action": "knee_extension_r"}], "calibrated_muscles": 1, "symmetry": {}, "processing_id": "old000"}))
+    with pytest.raises(records.StaleResult, match="re-run 'rehabtwin strength"):
+        cli.muscle_study(d, start=0.0, stop=1.0, use_strength=True)
+    assert cli.main(["muscles", str(d), "--strength", "--start", "0", "--stop", "1"]) == 2
+    assert "refused: strength/strength.json is stale" in capsys.readouterr().err
+    # a correction from an earlier processing may still be replayed, but never silently
+    why = records.warn_if_stale(json.loads((d / "session.json").read_text()), {"processing_id": "old000"},
+                                "correction/valgus")
+    assert why and "warning: correction/valgus is stale" in capsys.readouterr().err
+
+
+def test_feedback_gate_ignores_a_validation_report_of_another_processing(tmp_path):
+    import json
+    from rehabtwin import cli
+    d = _stamped_session(tmp_path / "s")
+    sess = json.loads((d / "session.json").read_text())
+    good = {"synthetic": False, "reference_grade": "marker-mocap", "person_ref": "P1", "movements": ["squat"],
+            "feedback_allowed_joint_planes": ["knee_r.frontal"], "processing_id": "new000"}
+
+    def gate(val, outputs=True, pid="new000"):
+        s = json.loads(json.dumps(sess))
+        s["pipeline"]["processing_id"] = pid
+        if outputs:
+            s["pipeline"]["outputs"]["validation_report"] = "validation-report.json"
+        (d / "session.json").write_text(json.dumps(s))
+        (d / "validation-report.json").write_text(json.dumps(val))
+        return cli._session_gate(d, {"exercise": "squat"})[2:]
+    assert gate(good) == (["knee_r.frontal"], None)
+    allowed, why = gate({**good, "processing_id": "old000"})              # earlier processing's validation
+    assert allowed == [] and "stale" in why and "old000" in why
+    allowed, why = gate(good, outputs=False)          # re-processed without --reference: old file left behind
+    assert allowed == [] and "no validation report" in why
+    assert gate({k: v for k, v in good.items() if k != "processing_id"})[0] == []          # pre-stamp report
+    assert gate(good, pid=None)[0] == []                                                   # pre-stamp session
+
+
+def test_failed_reprocessing_leaves_earlier_derived_results_stale(tmp_path, monkeypatch, capsys):
+    """process() unstamps session.json before rewriting model/motion: a crash half-way must not vouch for them."""
+    import json
+    import types
+    from rehabtwin import cli, records, report
+    d = _stamped_session(tmp_path / "s")
+    (d / "strength").mkdir()
+    (d / "strength" / "model_strength.osim").write_text("<Model mass='70'/>")
+    (d / "strength" / "strength.html").write_text("<html></html>")
+    (d / "strength" / "strength.json").write_text(json.dumps(
+        {"tests": [{"action": "knee_extension_r"}], "calibrated_muscles": 1, "symmetry": {}, "processing_id": "new000"}))
+    assert "STALE" not in report.write_index(d).read_text()
+
+    def scaling_then_crash(*a, **k):
+        raise FileNotFoundError("no_such_reference.mot")      # e.g. a mistyped --reference, after scaling
+    monkeypatch.setattr(cli.MarkerSequence, "load", staticmethod(lambda p: types.SimpleNamespace(meta={"person_ref": "P1"})))
+    monkeypatch.setattr(cli, "load_config", lambda name: {"model": "model.osim", "_path": "test.json"})
+    monkeypatch.setattr(cli.opensim_stage, "run", scaling_then_crash)
+    (tmp_path / "seq.npz").write_bytes(b"")
+    with pytest.raises(FileNotFoundError):
+        cli.process(tmp_path / "seq.npz", d, mass_kg=50)
+    sess = json.loads((d / "session.json").read_text())
+    assert "processing_id" not in sess["pipeline"] and sess["pipeline"]["reprocessing_started_at"]
+    assert "did not finish" in records.stale_reason(sess, {"processing_id": "new000"})
+    assert "STALE" in (d / "index.html").read_text()
+    with pytest.raises(records.StaleResult, match="re-run 'rehabtwin process' into this folder first"):
+        cli.muscle_study(d, start=0.0, stop=1.0, use_strength=True)
+
+
+def test_strength_refusal_on_a_prestamp_session_points_at_process(tmp_path):
+    """Re-running strength alone cannot fix a session.json without a stamp; the hint must say re-process."""
+    import json
+    from rehabtwin import cli, records
+    d = _stamped_session(tmp_path / "s", pid=None)
+    (d / "strength").mkdir()
+    (d / "strength" / "model_strength.osim").write_text("<Model mass='70'/>")
+    (d / "strength" / "strength.json").write_text(json.dumps(
+        {"tests": [{"action": "knee_extension_r"}], "calibrated_muscles": 1, "symmetry": {}, "processing_id": None}))
+    with pytest.raises(records.StaleResult, match="predates processing stamps.*re-run 'rehabtwin process'.*"
+                                                  "then re-run 'rehabtwin strength"):
+        cli.muscle_study(d, start=0.0, stop=1.0, use_strength=True)

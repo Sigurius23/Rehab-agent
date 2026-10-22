@@ -49,6 +49,7 @@ def test_selftest_records_are_schema_valid_and_honest(selftest_run):
     sess = json.loads((out / "session.json").read_text())
     val = json.loads((out / "validation-report.json").read_text())
     assert records.validate(sess, "session") and records.validate(val, "validation-report")
+    assert val["processing_id"] == sess["pipeline"]["processing_id"]        # the feedback gate checks this
     assert sess["synthetic"] is True and sess["twin_tier"] == "C"
     assert val["approved_for"] == []  # synthetic validation licenses nothing
     met = json.loads((out / "metrics.json").read_text())
