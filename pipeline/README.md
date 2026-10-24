@@ -103,7 +103,8 @@ python -m rehabtwin process phone_aug.npz out/s02 --exercise squat --person peop
 recording is scaled to the person, and a calibrated one more than 10 % off is refused. `session.json`
 records the person model's version (`person_model`). `person muscles` adds MRI/CT muscle volumes and fat
 fractions, which `muscles` and `strength` use instead of the height-and-mass regression. `person bone`
-adds a DXA or QCT result, which device and correction what-ifs show.
+adds a DXA or QCT result, which device and correction what-ifs show. `person shape` fits an SMPL-X body
+surface to standing frames of a Kinect recording (the SMPL-X model file is licensed separately).
 
 Several phones (OpenCap-style checkerboard calibration, unsynchronised starts) and OpenCap's LSTM
 anatomical-marker augmenter, which the pelvis needs (validation-results §4):

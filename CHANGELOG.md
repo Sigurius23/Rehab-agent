@@ -36,6 +36,13 @@
   length. Previously every body had the generic subject's leg strength. Trunk muscles stay generic. It needs a
   measured mass and a height; `--generic-capacity` turns it off; BMI > 30 is flagged as likely overestimated.
   `strength` calibrates on top of it.
+- **Body surface from the Kinect** (`rehabtwin person shape`, `rehabtwin/shape.py`, `docs/bedlam2.md` result 4):
+  an SMPL-X body fitted to the person's depth pixels in standing frames. On 45 synthetic BEDLAM2 bodies,
+  one frame gives height within ±1.4 cm and mass within ±5.2 %, and segment lengths about 3× closer than
+  height and BMI predict.
+  - The recorder now saves the SDK player index (`player_registered.u8`) to tell the person from the room.
+  - Fits are checked against measured height and mass before the person model takes them. The layer stays
+    Tier C until a scan of a real person checks it.
 - **Muscle size, muscle quality and bone density from imaging** (`rehabtwin person muscles` / `person bone`):
   - MRI/CT muscle volumes and MRI fat fractions per muscle or group replace the height-and-mass regression
     where they measure: Fmax = σ·V·q/lopt, with the model's own reference volumes (7,089 cm³ per leg, 97 %

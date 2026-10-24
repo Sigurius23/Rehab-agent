@@ -193,8 +193,9 @@ namespace Microsoft.Kinect
             for (int y = 0; y < 480; y++)
                 for (int x = 0; x < 640; x++)
                 {
-                    short d = (short)(x < 4 ? 0 : (x >= 280 && x < 360 && y >= 100) ? 2500 : 3000);   // left edge unknown
-                    px[y * 640 + x] = new DepthImagePixel { Depth = d };
+                    bool person = x >= 280 && x < 360 && y >= 100;
+                    short d = (short)(x < 4 ? 0 : person ? 2500 : 3000);   // left edge unknown
+                    px[y * 640 + x] = new DepthImagePixel { Depth = d, PlayerIndex = (short)(person ? 1 : 0) };
                 }
             Skeleton body = new Skeleton { TrackingState = SkeletonTrackingState.Tracked, TrackingId = 7,
                                            Position = new SkeletonPoint { X = 0f, Y = 0f, Z = 2.5f } };

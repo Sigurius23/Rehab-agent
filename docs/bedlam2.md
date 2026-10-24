@@ -229,13 +229,14 @@ Problems found while developing the fit, on the 10 development bodies:
   body came out 23 cm too tall. Such keypoints are now dropped from the start.
 - **Split:** a first test split overlapped the development bodies. The test set above leaves them out.
 
-Limits (Tier B, labelled with these errors):
+Limits (Tier B method; the person model's surface layer stays Tier C until a real person is checked):
 - **Synthetic, unclothed and noise-modelled.** The data come from the same SMPL-X shape space as the fit,
   so these errors are a lower bound. Real people are not exactly in that space, and clothing and hair add
   to the surface.
 - **Not modelled:**
   - the sensor: flying pixels at edges, the projector's shadow and depth registered onto the colour image;
-  - segmentation: the recorder does not yet save the SDK's player index;
+  - segmentation errors: the recorder now saves the SDK's player index (`player_registered.u8`), whose
+    errors at the body's edges and feet were not modelled;
   - keypoints: MediaPipe's keypoints are not SMPL-X joints, which adds its own bias.
 - **Mass is the mesh volume at 1,000 kg/m³**, compared with the same quantity. Real body density
   (985–1,100 kg/m³) and a scale differ.

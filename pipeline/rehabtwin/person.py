@@ -268,6 +268,51 @@ def set_bone_density(person_dir, record_path):
     return save(d, rec, f"bone density: {b['method']} {b['date']} ({c['category']})")
 
 
+SHAPE_HEIGHT_TOL_M, SHAPE_MASS_TOL = 0.03, 0.10      # beyond these the fit disagrees with the person's measurements
+
+
+def set_surface_shape(person_dir, fit, source):
+    """Store a body-shape fit (``rehabtwin.shape.fit_shape`` on this person's depth frames) as the surface layer.
+
+    The fit's height and mesh-volume mass are checked against the person's measured height and mass (when the fit
+    did not use the height): a fit that disagrees by more than 3 cm or 10 % is refused, as is one with warnings.
+    ``source``: where the frames came from (recording, frames, body model file and sha256).
+    """
+    d = Path(person_dir)
+    rec = load(d)
+    if fit["fit"]["warnings"]:
+        raise PersonRefused("the shape fit has warnings, not stored: " + "; ".join(fit["fit"]["warnings"])
+                            + ". Record a moment standing still, facing the sensor, arms slightly away from the body")
+    a, checks = rec["anthropometrics"], {}
+    if a.get("height_m", {}).get("measured") and fit["fit"].get("height_given_m") is None:
+        dh = fit["height_m"] - a["height_m"]["value"]
+        checks["height_m"] = {"fit": round(fit["height_m"], 3), "measured": a["height_m"]["value"], "difference": round(dh, 3)}
+        if abs(dh) > SHAPE_HEIGHT_TOL_M:
+            raise PersonRefused(f"the fitted body is {dh * 100:+.1f} cm from the measured height: not stored (check the "
+                                "focal length, the frames and that the person stood upright)")
+    if a.get("mass_kg", {}).get("measured"):
+        dm = fit["mass_kg"] / a["mass_kg"]["value"] - 1
+        checks["mass_kg"] = {"fit_from_volume": round(fit["mass_kg"], 1), "measured": a["mass_kg"]["value"],
+                             "difference": round(dm, 3)}
+        if abs(dm) > SHAPE_MASS_TOL:
+            raise PersonRefused(f"the fitted body's volume gives {fit['mass_kg']:.1f} kg, {dm:+.0%} from the measured "
+                                f"{a['mass_kg']['value']:g} kg: not stored (loose clothing, segmentation or pose?)")
+    rec["surface_shape"] = {
+        "method": "SMPL-X fitted to Kinect v1 depth points (rehabtwin/shape.py)", "source": source, "fitted_at": _now(),
+        "betas": [round(float(b), 5) for b in fit["betas"]], "height_m": round(fit["height_m"], 4),
+        "volume_m3": round(fit["volume_m3"], 5), "mass_kg_from_volume": round(fit["mass_kg"], 2),
+        "bmi_from_volume": round(fit["bmi"], 2), "segment_lengths_m": fit.get("segment_lengths_m"),
+        "surface_to_centre_m": fit.get("surface_to_centre_m"), "checks": checks,
+        "frames": [{"residuals": f["residuals"], "transl": f["transl"]} for f in fit["frames"]],
+        "validated": "on synthetic BEDLAM2 bodies only (docs/bedlam2.md, result 4); not against a scan of this person",
+        "joints_note": fit.get("joints_note")}
+    said = "; ".join(f"{k} {v['difference']:+g} vs measured" for k, v in checks.items()) or "no measured height or mass to check"
+    rec["layers"]["surface_shape"] = {
+        "status": f"SMPL-X fitted to {len(fit['frames'])} Kinect depth frame(s) ({source.get('recording')}); {said}; "
+                  "error measured on synthetic bodies only, not against a scan of this person", "tier": "C"}
+    return save(d, rec, f"surface shape from {source.get('recording')}")
+
+
 def attach_personalised_model(person_dir, model_path, provenance_path):
     """Use an imaging-personalised model (with its signed provenance record) as this person's model."""
     d = Path(person_dir)
@@ -335,6 +380,10 @@ def summary(rec):
         ff = {k: e["fat_fraction"] for k, e in im["muscles"].items() if e.get("fat_fraction") is not None}
         if ff:
             lines.append("  fat       " + ", ".join(f"{k} {v * 100:.1f} %" for k, v in ff.items()))
+    if rec.get("surface_shape"):
+        sh = rec["surface_shape"]
+        lines.append(f"  shape     SMPL-X fit: height {sh['height_m']:.3f} m, volume mass {sh['mass_kg_from_volume']:g} kg, "
+                     f"BMI {sh['bmi_from_volume']:g}" + "".join(f"; {k} {v['difference']:+g}" for k, v in sh["checks"].items()))
     if rec.get("bone_density"):
         c = rec["bone_density"]["classification"]
         lines.append(f"  bone      {c['category']} at {c['site']} ({c['value']}), {c['method']} {c['date']}")

@@ -88,6 +88,7 @@ def _project(p):
 
 
 _DEPTH = {}
+_PLAYER = {}
 
 
 def _squat_pose():
@@ -122,6 +123,8 @@ def _scene(tilt_deg=8.0, occlude_right_hip=False, seed=0, squat=False):
     key = (tilt_deg, occlude_right_hip, squat)                  # a static pose: render each one once
     if key not in _DEPTH:
         _DEPTH[key] = _render(_spheres(joints), [(floor_n, 1.0), (wall_n, 4.5)])
+        body = _render(_spheres(joints), [])
+        _PLAYER[key] = ((body > 0) & (body == _DEPTH[key])).astype(np.uint8)       # what the SDK's player index marks
     depth = _DEPTH[key]
     rng = np.random.default_rng(seed)
     shift = rng.normal(0, 0.05, 3)                             # MediaPipe's hip centre is not the true one
@@ -138,10 +141,10 @@ def _scene(tilt_deg=8.0, occlude_right_hip=False, seed=0, squat=False):
     for n, s in SDK_OF.items():
         j = kinect.SDK_JOINTS.index(s)
         sk_uv[j], sk_state[j] = np.round(_project(joints[n])), 2
-    return depth, {"image_xy": xy, "world": world, "visibility": vis}, sk_uv, sk_state, joints, R
+    return depth, {"image_xy": xy, "world": world, "visibility": vis}, sk_uv, sk_state, joints, R, _PLAYER[key]
 
 
-def _write_capture(d, depths, sk_uv, sk_state, frame_numbers=None, floor=(0.0, 0.0, 0.0, 0.0)):
+def _write_capture(d, depths, sk_uv, sk_state, frame_numbers=None, floor=(0.0, 0.0, 0.0, 0.0), players=None):
     """A recording in KinectCapture's format (rehabtwin-kinect-v1/1), written without the C# tool."""
     d.mkdir(parents=True)
     T = len(depths)
@@ -154,9 +157,11 @@ def _write_capture(d, depths, sk_uv, sk_state, frame_numbers=None, floor=(0.0, 0
     np.asarray(depths, "<u2").tofile(d / "depth_registered.u16")
     np.asarray(depths, "<u2").tofile(d / "depth_raw.u16")
     rows = [("frame,colour_frame_number,colour_timestamp_ms,depth_frame_number,depth_timestamp_ms,host_ms,"
-             "accel_x,accel_y,accel_z,floor_a,floor_b,floor_c,floor_d,skeleton_id")]
+             "accel_x,accel_y,accel_z,floor_a,floor_b,floor_c,floor_d,skeleton_id" + (",player_index" if players is not None else ""))]
     rows += [f"{t},{f},{33 * f},{f},{33 * f + 2},{33.3 * t},0,-1,0,{floor[0]},{floor[1]},{floor[2]},{floor[3]},1"
-             for t, f in enumerate(frame_numbers)]
+             + (",1" if players is not None else "") for t, f in enumerate(frame_numbers)]
+    if players is not None:
+        np.asarray(players, "u1").tofile(d / "player_registered.u8")
     (d / "frames.csv").write_text("\n".join(rows) + "\n")
     sk = ["frame,joint,state,x,y,z,u,v"]
     states = {v: k for k, v in kinect.JOINT_STATES.items()}
@@ -176,15 +181,17 @@ def _recording(tmp_path, T=12, mirrored_stream=False, occlude_from=None, squat_f
     raws = [f[1] for f in frames]
     sk_uv = np.stack([f[2] for f in frames])
     sk_state = np.stack([f[3] for f in frames])
+    players = np.stack([f[6] for f in frames])
     raw = {"image_xy": np.stack([r["image_xy"] for r in raws]), "world": np.stack([r["world"] for r in raws]),
            "visibility": np.stack([r["visibility"] for r in raws]), "detected": np.ones(T, bool),
            "size": np.array([640, 480]), "fps": np.array(30.0)}
     if mirrored_stream:            # what a mirrored colour stream gives: image flipped, MediaPipe labels by appearance
         depths = depths[:, :, ::-1].copy()
+        players = players[:, :, ::-1].copy()
         raw = unmirror_raw(raw)    # reflection is self-inverse: the true scene's dump reflected
         sk_uv = sk_uv.copy()
         sk_uv[..., 0] = 640 - sk_uv[..., 0]     # SDK labels stay anatomical, positions move with the image
-    cap = kinect.read_capture(_write_capture(tmp_path / "rec", depths, sk_uv, sk_state))
+    cap = kinect.read_capture(_write_capture(tmp_path / "rec", depths, sk_uv, sk_state, players=players))
     return cap, raw, frames
 
 
@@ -294,6 +301,72 @@ def test_kinect_cli_takes_height_mass_and_thigh_lengths_from_the_person_model(tm
     assert "the session is of 'P2'" in capsys.readouterr().err
 
 
+def test_shape_frames_are_the_persons_pixels_in_standing_frames(tmp_path):
+    cap, raw, _ = _recording(tmp_path, T=45)
+    fr, info = kinect.shape_frames(cap, raw)
+    assert len(fr) == 2 and abs(info["frames"][1] - info["frames"][0]) >= 30 and not info["mirrored"]
+    up, offset = info["floor"]
+    t = info["frames"][0]
+    for f in fr:
+        h = f["points"] @ up - offset
+        assert (h > 0.02).all() and (f["points"][:, 2] < 4.0).all()          # neither floor nor back wall
+        assert f["keypoints_uv"].shape == (12, 2) and np.isfinite(f["keypoints_uv"]).all()
+    n_body = int((np.asarray(cap["player"][t]) == 1).sum())
+    assert 0.9 * n_body <= len(fr[0]["points"]) <= n_body                       # minus the 2 cm above the floor
+    from rehabtwin.shape import KEYPOINTS
+    np.testing.assert_allclose(fr[0]["keypoints_uv"][list(KEYPOINTS).index("LKnee")],
+                               raw["image_xy"][t, POSE2SIM_MEDIAPIPE["LKnee"]])
+    # a mirrored stream: the same body points once un-mirrored
+    mcap, mraw, _ = _recording(tmp_path / "m", T=45, mirrored_stream=True)
+    mfr, minfo = kinect.shape_frames(mcap, mraw)
+    assert minfo["mirrored"] and len(mfr[0]["points"]) == len(fr[0]["points"])
+    np.testing.assert_allclose(np.sort(mfr[0]["points"][:, 0]), np.sort(fr[0]["points"][:, 0]), atol=1e-9)
+    # squatting frames are not standing frames; a recording without the player index cannot be segmented
+    scap, sraw, _ = _recording(tmp_path / "s", T=45, squat_from=10)
+    sfr, sinfo = kinect.shape_frames(scap, sraw)
+    assert all(t < 10 for t in sinfo["frames"]) and len(sfr) == 1
+    with pytest.raises(ValueError, match="no player index"):
+        kinect.shape_frames({**cap, "player": None}, raw)
+    with pytest.raises(ValueError, match="no detected person"):
+        kinect.shape_frames(cap, raw, frames=[999])
+
+
+def test_person_shape_stores_a_fit_that_agrees_with_the_measurements(tmp_path, monkeypatch, capsys):
+    from rehabtwin import cli, person, shape
+    cap, raw, _ = _recording(tmp_path, T=45)
+    np.savez(tmp_path / "mp.npz", **raw)
+    (tmp_path / "smplx.npz").write_bytes(b"licensed model stand-in")
+    seen = {}
+
+    def fake_fit(model, frames, K, **kw):
+        seen.update(kw, n=len(frames))
+        return {"betas": [0.5] * 16, "height_m": 1.762, "volume_m3": 0.0702, "mass_kg": 70.2, "bmi": 22.6,
+                "segment_lengths_m": {"hip-knee": [0.41, 0.41]}, "surface_to_centre_m": {"LHip": 0.11},
+                "frames": [{"residuals": {"fraction_line_of_sight": 0.97}, "transl": [0, 0, 2.7]}] * len(frames),
+                "fit": {"warnings": warn, "height_given_m": kw.get("height_m"), "runtime_s": 1.0},
+                "joints_note": "SMPL-X joints"}
+    monkeypatch.setattr(shape, "load_model", lambda p: {})
+    monkeypatch.setattr(shape, "fit_shape", fake_fit)
+    d = tmp_path / "P1"
+    person.init(d, "P1", height_m=1.75, mass_kg=72)
+    args = ["person", "shape", str(d), cap["dir"], str(tmp_path / "mp.npz"), "--smplx-model", str(tmp_path / "smplx.npz")]
+    warn = []
+    assert cli.main(args) == 0
+    rec = person.load(d)
+    sh = rec["surface_shape"]
+    assert seen["n"] == 2 and seen["height_m"] is None and seen["floor"] is not None   # height left free to check the fit
+    assert sh["checks"]["height_m"]["difference"] == pytest.approx(0.012) and sh["checks"]["mass_kg"]["difference"] == pytest.approx(-0.025)
+    assert sh["source"]["body_model"]["file"] == "smplx.npz" and len(sh["source"]["body_model"]["sha256"]) == 64
+    assert rec["layers"]["surface_shape"]["tier"] == "C" and "synthetic bodies only" in rec["layers"]["surface_shape"]["status"]
+    assert "SMPL-X fit: height 1.762 m" in capsys.readouterr().out
+    warn = ["frame 0: 60% of the depth points lie on the model"]
+    assert cli.main(args) == 2 and "has warnings" in capsys.readouterr().err
+    warn = []
+    person.set_measurement(d, mass_kg=85)                                     # the fit's 70 kg is now 17 % off
+    assert cli.main(args) == 2 and "from the measured 85 kg" in capsys.readouterr().err
+    assert person.load(d)["surface_shape"]["checks"]["mass_kg"]["measured"] == 72  # the earlier fit is kept
+
+
 @pytest.mark.skipif(not (shutil.which("mcs") and shutil.which("mono")), reason="needs Mono (mcs + mono)")
 def test_csharp_recorder_output_reads_back(tmp_path):
     """KinectCapture.cs against the SDK stub's fake sensor: the C# writer and this reader agree on the format."""
@@ -319,6 +392,9 @@ def test_csharp_recorder_output_reads_back(tmp_path):
     hc = kinect.SDK_JOINTS.index("HipCenter")
     np.testing.assert_allclose(cap["skeleton"]["uv"][0, hc], [round(320 + 531.15 * 0.1 / 2.5), round(240 - 531.15 * 0.8 / 2.5)])
     assert kinect.angle_deg(kinect.sdk_floor_up_cv(cap["frames"]), [0, -0.98, -0.2]) < 0.1
+    assert (cap["player_index"] == 1).all()                    # the tracked body sits in skeleton slot 0
+    pl = np.asarray(cap["player"][0])
+    assert set(np.unique(pl)) == {0, 1} and (pl[reg == 2500] == 1).all() and (pl[reg == 3000] == 0).all()
 
 
 def test_skin_to_centre_grows_with_bmi_and_is_recorded(tmp_path):

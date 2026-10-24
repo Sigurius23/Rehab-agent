@@ -69,7 +69,8 @@ writes about 40 MB/s:
 | `colour/000000.jpg …` | 640 × 480 colour frames |
 | `depth_registered.u16` | per frame 640 × 480 uint16 depth in mm on the colour pixel grid. It uses the SDK's factory registration (`CoordinateMapper.MapDepthFrameToColorFrame`); 0 = no depth |
 | `depth_raw.u16` | the same depth on the depth camera's own grid |
-| `frames.csv` | sensor frame numbers and timestamps, host time, accelerometer, SDK floor plane |
+| `player_registered.u8` | per frame 640 × 480 SDK player index on the colour grid, registered like the depth (0 = nobody): the person's pixels for `person shape` |
+| `frames.csv` | sensor frame numbers and timestamps, host time, accelerometer, SDK floor plane, the tracked person's player index |
 | `skeleton.csv` | the SDK's 20-joint skeleton of the nearest tracked person, in metres and colour pixels |
 | `meta.json` | format `rehabtwin-kinect-v1/1`, sensor id, nominal intrinsics, tilt, frame counts |
 
@@ -98,6 +99,10 @@ Its output records:
 - which keypoints were left empty because their depth disagreed with the pose by more than 0.2 m;
 - the floor fit, and its angle to the SDK's floor plane;
 - the left/right decision.
+
+Standing still and facing the sensor for a few seconds also gives the body's surface:
+`rehabtwin person shape PERSON RECORDING MEDIAPIPE --smplx-model SMPLX_NEUTRAL.npz` (`docs/person-model.md`).
+Recordings made before the recorder saved `player_registered.u8` cannot be used for it.
 
 ## Validating it
 

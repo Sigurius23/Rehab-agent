@@ -104,6 +104,14 @@ def read_capture(rec_dir):
         if size != T * H * W * 2:
             raise ValueError(f"{d / name}: {size} bytes, expected {T} frames x {H}x{W} uint16 (truncated recording?)")
         out[key] = np.memmap(d / name, dtype="<u2", mode="r", shape=(T, H, W))
+    out["player"], out["player_index"] = None, None      # recordings made before the recorder saved them
+    if (d / "player_registered.u8").exists():
+        size = (d / "player_registered.u8").stat().st_size
+        if size != T * H * W:
+            raise ValueError(f"{d / 'player_registered.u8'}: {size} bytes, expected {T} frames x {H}x{W} uint8")
+        out["player"] = np.memmap(d / "player_registered.u8", dtype="u1", mode="r", shape=(T, H, W))
+        if "player_index" in (frames.dtype.names or ()):
+            out["player_index"] = np.atleast_1d(frames["player_index"])
     xyz = np.full((T, len(SDK_JOINTS), 3), np.nan)
     uv = np.full((T, len(SDK_JOINTS), 2), np.nan)
     state = np.zeros((T, len(SDK_JOINTS)), int)
@@ -313,15 +321,8 @@ def mirror_vote(raw, skeleton, min_visibility=0.5, decisive=0.8):
     return {"decision": decision, "frames_same": int(same), "frames_swapped": int(swapped)}
 
 
-def rgbd_sequence(capture, raw, height_m=None, mirrored="auto", min_visibility=0.5, max_inconsistency_m=0.20,
-                  meta=None, seed=0, mass_kg=None, segment_lengths_m=None):
-    """MarkerSequence (frame 'opencv_camera', metres) of the 25 Pose2Sim keypoints from a capture + MediaPipe dump.
-
-    ``mirrored``: 'auto' (decide from the SDK skeleton, refuse when it cannot), True or False.
-    ``height_m`` and ``mass_kg`` set the skin-to-joint-centre distances (``surface_to_centre``).
-    ``segment_lengths_m``: known lengths for SEGMENTS pairs ({"LHip-LKnee": 0.43}, e.g. the person's model);
-    pairs not given are measured from this recording's side-on frames.
-    """
+def _checked_dump(capture, raw, mirrored, min_visibility):
+    """(raw un-mirrored if needed, mirrored, vote): refuses a dump that does not belong to the recording."""
     T = capture["T"]
     if len(raw["image_xy"]) != T:
         raise ValueError(f"MediaPipe dump has {len(raw['image_xy'])} frames, the recording {T}: run the adapter "
@@ -334,8 +335,102 @@ def rgbd_sequence(capture, raw, height_m=None, mirrored="auto", min_visibility=0
             raise ValueError(f"cannot tell whether the colour stream is mirrored ({vote}): face the sensor for part "
                              "of the recording, or pass mirrored=True/False (--mirrored / --not-mirrored)")
         mirrored = vote["decision"] == "mirrored"
-    if mirrored:
-        raw = unmirror_raw(raw)
+    return (unmirror_raw(raw) if mirrored else raw), bool(mirrored), vote
+
+
+def knee_flexion_deg(world_hip, world_knee, world_ankle):
+    """Knee flexion (deg, 0 = straight) from 3D hip, knee and ankle points (..., 3)."""
+    a, b = np.asarray(world_hip) - world_knee, np.asarray(world_ankle) - world_knee
+    cos = np.sum(a * b, axis=-1) / (np.linalg.norm(a, axis=-1) * np.linalg.norm(b, axis=-1))
+    return 180.0 - np.degrees(np.arccos(np.clip(cos, -1.0, 1.0)))
+
+
+def shape_frames(capture, raw, mirrored="auto", frames=None, max_frames=2, min_visibility=0.5, max_knee_deg=20.0,
+                 min_pixels=3000, min_gap_s=1.0, floor_clear_m=0.02, seed=0):
+    """(frame dicts for ``rehabtwin.shape.fit_shape``, info) from standing frames of a recording.
+
+    Each frame holds the tracked person's depth pixels (the SDK player index the recorder saved), back-projected
+    in camera coordinates, minus the lowest ``floor_clear_m`` above the floor, plus the 12 MediaPipe keypoints the
+    fit uses with their visibility. Without ``frames``, it picks up to ``max_frames`` frames at least ``min_gap_s``
+    apart where both knees are within ``max_knee_deg`` of straight and every keypoint is seen.
+    """
+    from .shape import KEYPOINTS, depth_points
+    if capture.get("player") is None or capture.get("player_index") is None:
+        raise ValueError(f"{capture['dir']}: no player index (player_registered.u8): it tells the person's pixels from "
+                         "the room. Record again with the current KinectCapture")
+    raw, mirrored, vote = _checked_dump(capture, raw, mirrored, min_visibility)
+    K = intrinsics(capture["meta"])
+    idx = [POSE2SIM_MEDIAPIPE[n] for n in KEYPOINTS]
+    uv = np.asarray(raw["image_xy"], float)[:, idx]
+    vis = np.asarray(raw["visibility"], float)[:, idx]
+    world = np.asarray(raw["world"], float)[:, idx]
+    T = capture["T"]
+    detected = np.asarray(raw.get("detected", np.isfinite(uv).all(axis=(1, 2))), bool)
+    n = {k: i for i, k in enumerate(KEYPOINTS)}
+    flex = np.stack([knee_flexion_deg(world[:, n[s + "Hip"]], world[:, n[s + "Knee"]], world[:, n[s + "Ankle"]])
+                     for s in "LR"], axis=1)
+    pidx = np.asarray(capture["player_index"], float)
+
+    def grid(img, t):
+        a = np.asarray(img[t])
+        return a[:, ::-1] if mirrored else a
+
+    def person(t):
+        return np.isfinite(pidx[t]) and pidx[t] > 0 and int((grid(capture["player"], t) == int(pidx[t])).sum()) >= min_pixels
+
+    if frames is None:
+        ok = [t for t in range(T) if detected[t] and (vis[t] >= min_visibility).all() and np.isfinite(flex[t]).all()
+              and (flex[t] <= max_knee_deg).all() and person(t)]
+        if not ok:
+            raise ValueError(f"no standing frame with every keypoint seen, knees within {max_knee_deg:g} deg of straight "
+                             f"and >= {min_pixels} person pixels: stand facing the sensor for a moment")
+        chosen = []
+        for t in sorted(ok, key=lambda t: -vis[t].mean()):
+            if all(abs(t - c) >= min_gap_s * float(capture["meta"].get("fps", 30)) for c in chosen):
+                chosen.append(t)
+            if len(chosen) == max_frames:
+                break
+    else:
+        chosen = [int(t) for t in frames]
+        bad = [t for t in chosen if not (0 <= t < T and detected[t] and person(t))]
+        if bad:
+            raise ValueError(f"frames {bad}: no detected person with >= {min_pixels} pixels there")
+    rng = np.random.default_rng(seed)
+
+    def room(t):              # the floor fit must not see the person (standing legs are near-planar too)
+        img = grid(capture["depth"], t).copy()
+        img[grid(capture["player"], t) == int(pidx[t])] = 0
+        return img
+    fits = [f for f in (floor_up(room(t), K, rng) for t in chosen) if f]
+    floor = None
+    if fits:
+        up = np.median([f["up_cv"] for f in fits], axis=0)
+        floor = (up / np.linalg.norm(up), float(np.median([f["offset_m"] for f in fits])))
+    out = []
+    for t in sorted(chosen):
+        pts = depth_points(grid(capture["depth"], t), K, grid(capture["player"], t) == int(pidx[t]))
+        if floor is not None:
+            pts = pts[pts @ floor[0] - floor[1] > floor_clear_m]
+        kp = uv[t].copy()
+        kp[vis[t] < min_visibility] = np.nan
+        out.append({"points": pts, "keypoints_uv": kp, "keypoint_conf": vis[t], "floor": floor})
+    info = {"frames": sorted(chosen), "mirrored": mirrored, "mirror_check": vote, "K": K, "floor": floor,
+            "knee_flexion_deg": {int(t): [round(float(v), 1) for v in flex[t]] for t in chosen},
+            "person_points": [len(f["points"]) for f in out]}
+    return out, info
+
+
+def rgbd_sequence(capture, raw, height_m=None, mirrored="auto", min_visibility=0.5, max_inconsistency_m=0.20,
+                  meta=None, seed=0, mass_kg=None, segment_lengths_m=None):
+    """MarkerSequence (frame 'opencv_camera', metres) of the 25 Pose2Sim keypoints from a capture + MediaPipe dump.
+
+    ``mirrored``: 'auto' (decide from the SDK skeleton, refuse when it cannot), True or False.
+    ``height_m`` and ``mass_kg`` set the skin-to-joint-centre distances (``surface_to_centre``).
+    ``segment_lengths_m``: known lengths for SEGMENTS pairs ({"LHip-LKnee": 0.43}, e.g. the person's model);
+    pairs not given are measured from this recording's side-on frames.
+    """
+    T = capture["T"]
+    raw, mirrored, vote = _checked_dump(capture, raw, mirrored, min_visibility)
     K = intrinsics(capture["meta"])
     height = float(height_m) if height_m else DEFAULT_HEIGHT_M
     bmi = float(mass_kg) / height ** 2 if mass_kg and height_m else None

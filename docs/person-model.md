@@ -35,7 +35,7 @@ what fills it and its tier:
 |---|---|---|
 | bone geometry | generic bones scaled per segment in one calibration session; or an imaging-personalised model | C; B/A with a provenance record |
 | joint centres | scaled with the bones; markers placed on the static frames | C; B/A from the personalised model |
-| surface shape | not built yet (body shape from depth is in progress) | — |
+| surface shape | SMPL-X body fitted to standing Kinect depth frames (`person shape`), checked against measured height and mass | C until checked against a scan |
 | kinematics | per session (not stored) | per session's validation |
 | muscle | Rajagopal leg muscles; force from measured volume and fat fraction where imaged (`person muscles`), else scaled to measured height and mass; trunk generic | C; B/A when all leg muscles are imaged |
 | soft tissue | not modelled | — |
@@ -131,6 +131,33 @@ What it is and is not:
   muscle; results say so.
 - **A better base for dynamometry.** `strength` now calibrates the tested groups relative to the
   body-size-scaled model, and the untested muscles keep body-size capacities instead of generic ones.
+
+## Surface shape from the Kinect
+
+```bash
+python -m rehabtwin person shape people/P01 C:\rec\calib01 C:\rec\calib01\mediapipe.npz --smplx-model SMPLX_NEUTRAL.npz
+```
+
+It fits an SMPL-X body (16 shape parameters, a pose per frame) to the person's depth pixels in up to two
+standing frames, 1 s apart (`pipeline/rehabtwin/shape.py`; `docs/bedlam2.md`, result 4):
+- **Standing frames:** knees within 20° of straight, all 12 keypoints seen.
+- **The person's pixels:** the SDK player index, which the recorder now saves (`player_registered.u8`).
+- **Floor:** fitted to the depth with the person's own pixels left out.
+- **Checks:** the fit's height and mesh-volume mass are compared with the person's measured ones and stored
+  with the result. A fit more than 3 cm or 10 % off, or with fit warnings, is refused.
+- **Height:** it is left out of the fit so it can check it; `--use-height` uses it as a prior instead.
+
+What it gives the twin: the body's surface (betas), segment lengths between SMPL-X joints, front
+skin-to-joint distances, and a volume-based mass. On 45 synthetic BEDLAM2 bodies the fit got height within
+±1.4 cm and mass within ±5.2 % on every body, from one frame. That is unclothed synthetic data fitted by the
+model that made it, so it is a lower bound on the real error. The layer stays Tier C until a 3D scan or
+tape measures of a real person check it. The SMPL-X model file is licensed separately and never enters
+the repository; `person.json` records its name and sha256.
+
+A smoke test of the whole chain (two BEDLAM2 bodies written as Kinect recordings, standing with arms down,
+4 px keypoint noise) stored fits within −0.9 cm and −1.2 % (BMI 25) and −2.8 cm and −2.9 % (BMI 35) of the
+true body. It caught one bug on the way: the floor fit had taken the standing legs for the floor and cut
+most of the body away, until the person's pixels were left out of it.
 
 ## Muscle size, muscle quality and bone density from imaging
 

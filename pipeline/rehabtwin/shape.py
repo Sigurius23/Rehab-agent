@@ -258,6 +258,19 @@ def kinect_v1_noise(depth_m, rng, sd_coeff=KINECT_SD_COEFF, edge_px=2, edge_drop
     return np.where(valid & ~drop & (mm > 0), np.clip(mm, 0, 65535), 0).astype(np.uint16)
 
 
+def load_model(path):
+    """The numeric arrays of an SMPL-X-format model .npz for ``BodyModel`` (object entries skipped, never
+    unpickled). The model file is licensed separately (smpl-x.is.tue.mpg.de) and stays outside the repository."""
+    m = np.load(path, allow_pickle=False)
+    out = {}
+    for k in m.files:
+        try:
+            out[k] = m[k]
+        except ValueError:          # pickled dicts (part2num, joint2num): not needed, not trusted
+            continue
+    return out
+
+
 def depth_points(depth_mm, K, mask=None):
     """Camera-coordinate points (N,3) m of the non-zero depth pixels (within ``mask``), at pixel centres."""
     fx, fy, cx, cy = K

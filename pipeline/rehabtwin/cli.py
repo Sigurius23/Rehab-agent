@@ -478,6 +478,26 @@ def selftest(out_dir):
     return res, failures
 
 
+def person_shape(a):
+    """``person shape``: fit the body surface to a recording's standing frames and store it in the person model."""
+    from . import kinect, shape, tiers
+    from . import person as person_mod
+    rec = person_mod.load(a.folder)
+    cap = kinect.read_capture(a.recording)
+    frames, info = kinect.shape_frames(cap, dict(np.load(a.mediapipe)),
+                                       True if a.mirrored else False if a.not_mirrored else "auto",
+                                       frames=[int(f) for f in a.frames.split(",")] if a.frames else None)
+    height = rec["anthropometrics"].get("height_m", {})
+    print(f"fitting {len(frames)} frame(s) {info['frames']} ({', '.join(map(str, info['person_points']))} person points)",
+          file=sys.stderr)
+    fit = shape.fit_shape(shape.load_model(a.smplx_model), frames, info["K"], floor=info["floor"],
+                          height_m=height.get("value") if a.use_height and height.get("measured") else None)
+    source = {"recording": Path(a.recording).name, "frames": info["frames"], "mirrored": info["mirrored"],
+              "body_model": {"file": Path(a.smplx_model).name, "sha256": tiers.sha256(a.smplx_model)},
+              "runtime_s": fit["fit"]["runtime_s"]}
+    return person_mod.set_surface_shape(a.folder, fit, source)
+
+
 def person_command(a):
     from . import person as person_mod
     try:
@@ -493,6 +513,8 @@ def person_command(a):
             rec = person_mod.set_muscle_imaging(a.folder, a.record)
         elif a.person_cmd == "bone":
             rec = person_mod.set_bone_density(a.folder, a.record)
+        elif a.person_cmd == "shape":
+            rec = person_shape(a)
         else:
             rec = person_mod.load(a.folder)
     except (ValueError, FileNotFoundError) as e:     # includes PersonRefused and records.StaleResult
@@ -606,6 +628,17 @@ def main(argv=None):
     pbo = psub.add_parser("bone", help="bone density (DXA T/Z-scores or QCT vBMD) -> screening category")
     pbo.add_argument("folder")
     pbo.add_argument("record", help="JSON: method, date, age_years, sex, postmenopausal, sites (docs/person-model.md)")
+    psp = psub.add_parser("shape", help="body surface: SMPL-X fitted to standing frames of a Kinect recording")
+    psp.add_argument("folder")
+    psp.add_argument("recording", help="KinectCapture folder with player_registered.u8")
+    psp.add_argument("mediapipe", help="adapters/mediapipe_pose.py dump of RECORDING/colour/%%06d.jpg")
+    psp.add_argument("--smplx-model", required=True, help="SMPL-X .npz (licensed separately; stays outside the repo)")
+    psp.add_argument("--frames", help="comma-separated frame numbers (default: up to 2 standing frames, 1 s apart)")
+    psp.add_argument("--use-height", action="store_true",
+                     help="fit with the measured height as a prior (then the height no longer checks the fit)")
+    psm = psp.add_mutually_exclusive_group()
+    psm.add_argument("--mirrored", action="store_true")
+    psm.add_argument("--not-mirrored", action="store_true")
     psh = psub.add_parser("show", help="what the person model holds, per twin layer")
     psh.add_argument("folder")
     au = sub.add_parser("augment", help="add OpenCap's LSTM anatomical markers to a keypoint sequence (pip install onnxruntime)")

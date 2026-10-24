@@ -11,8 +11,11 @@
 //                           (CoordinateMapper.MapDepthFrameToColorFrame, the sensor's factory calibration;
 //                           0 = no depth). This is what the keypoints are lifted with.
 //   depth_raw.u16           per frame 640x480 uint16 depth in mm on the depth camera's own grid (0 = unknown)
+//   player_registered.u8    per frame 640x480 uint8 SDK player index on the colour grid, registered like
+//                           depth_registered.u16 (0 = nobody, 1-6 = a person): the person's pixels for the
+//                           body-shape fit
 //   frames.csv              one row per recorded frame: sensor frame numbers and timestamps, host time,
-//                           accelerometer, SDK floor plane, tracked skeleton id
+//                           accelerometer, SDK floor plane, tracked skeleton id and its player index
 //   skeleton.csv            the SDK's 20-joint skeleton of the nearest tracked person, in skeleton space (m)
 //                           and in colour pixels: a Tier-C baseline and the left/right (mirroring) check
 //   meta.json               sensor id, formats, nominal intrinsics, elevation, counts
@@ -142,11 +145,12 @@ sealed class Recorder
     readonly DepthImagePixel[] depthPixels = new DepthImagePixel[W * H];
     readonly ColorImagePoint[] colourPoints = new ColorImagePoint[W * H];
     readonly ushort[] registered = new ushort[W * H];
+    readonly byte[] player = new byte[W * H];
     readonly ushort[] raw = new ushort[W * H];
     readonly byte[] depthBytes = new byte[W * H * 2];
     readonly Skeleton[] skeletons = new Skeleton[6];
     readonly Stopwatch clock = new Stopwatch();
-    BinaryWriter depthReg, depthRaw;
+    BinaryWriter depthReg, depthRaw, playerReg;
     StreamWriter framesCsv, skeletonCsv;
     DateTime startUtc;
     string sensorId, connectionId;
@@ -174,9 +178,10 @@ sealed class Recorder
         {
             depthReg = new BinaryWriter(File.Create(Path.Combine(dir, "depth_registered.u16")));
             depthRaw = new BinaryWriter(File.Create(Path.Combine(dir, "depth_raw.u16")));
+            playerReg = new BinaryWriter(File.Create(Path.Combine(dir, "player_registered.u8")));
             framesCsv = new StreamWriter(Path.Combine(dir, "frames.csv"), false, new UTF8Encoding(false));
             framesCsv.WriteLine("frame,colour_frame_number,colour_timestamp_ms,depth_frame_number,depth_timestamp_ms,"
-                                + "host_ms,accel_x,accel_y,accel_z,floor_a,floor_b,floor_c,floor_d,skeleton_id");
+                                + "host_ms,accel_x,accel_y,accel_z,floor_a,floor_b,floor_c,floor_d,skeleton_id,player_index");
             skeletonCsv = new StreamWriter(Path.Combine(dir, "skeleton.csv"), false, new UTF8Encoding(false));
             skeletonCsv.WriteLine("frame,joint,state,x,y,z,u,v");
             sensorId = sensor.UniqueKinectId;          // read while the sensor runs
@@ -225,6 +230,7 @@ sealed class Recorder
                 sensor.CoordinateMapper.MapDepthFrameToColorFrame(DepthImageFormat.Resolution640x480Fps30, depthPixels,
                                                                   ColorImageFormat.RgbResolution640x480Fps30, colourPoints);
                 Array.Clear(registered, 0, registered.Length);
+                Array.Clear(player, 0, player.Length);
                 for (int i = 0; i < depthPixels.Length; i++)
                 {
                     ushort d = depthPixels[i].IsKnownDepth && depthPixels[i].Depth > 0 ? (ushort)depthPixels[i].Depth : (ushort)0;
@@ -233,10 +239,15 @@ sealed class Recorder
                     ColorImagePoint p = colourPoints[i];
                     if (p.X < 0 || p.X >= W || p.Y < 0 || p.Y >= H) continue;
                     int k = p.Y * W + p.X;
-                    if (registered[k] == 0 || d < registered[k]) registered[k] = d;   // nearest surface wins
+                    if (registered[k] == 0 || d < registered[k])                       // nearest surface wins
+                    {
+                        registered[k] = d;
+                        player[k] = (byte)depthPixels[i].PlayerIndex;
+                    }
                 }
                 WriteDepth(depthReg, registered);
                 WriteDepth(depthRaw, raw);
+                playerReg.Write(player);
 
                 if (accelAge >= 30)          // gravity does not change; one reading a second is plenty
                 {
@@ -248,7 +259,8 @@ sealed class Recorder
                     I(Written), I(colour.FrameNumber), L(colour.Timestamp), I(depth.FrameNumber), L(depth.Timestamp),
                     F(clock.Elapsed.TotalMilliseconds), F(accel.X), F(accel.Y), F(accel.Z),
                     F(floor.Item1), F(floor.Item2), F(floor.Item3), F(floor.Item4),
-                    body == null ? "" : I(body.TrackingId) }));
+                    body == null ? "" : I(body.TrackingId),
+                    body == null ? "" : I(Array.IndexOf(skeletons, body) + 1) }));   // depth player index = slot + 1
                 if (body != null)
                 {
                     foreach (JointType j in Joints)
@@ -296,7 +308,7 @@ sealed class Recorder
         jpegThread.Join();
         lock (gate)
         {
-            if (depthReg != null) { depthReg.Close(); depthRaw.Close(); framesCsv.Close(); skeletonCsv.Close(); }
+            if (depthReg != null) { depthReg.Close(); depthRaw.Close(); playerReg.Close(); framesCsv.Close(); skeletonCsv.Close(); }
         }
         StringBuilder m = new StringBuilder();
         m.Append("{\n");
@@ -317,7 +329,8 @@ sealed class Recorder
          .Append("\"nominal (NuiSensor.h), not calibrated\"},\n");
         m.Append("  \"depth\": {\"width\": 640, \"height\": 480, \"format\": \"Resolution640x480Fps30\", \"unit\": \"mm\", ")
          .Append("\"focal_px\": ").Append(F(DepthFocalPx)).Append(", \"registered\": \"depth_registered.u16: nearest depth ")
-         .Append("splatted onto colour pixels with CoordinateMapper.MapDepthFrameToColorFrame\"},\n");
+         .Append("splatted onto colour pixels with CoordinateMapper.MapDepthFrameToColorFrame\", \"player\": ")
+         .Append("\"player_registered.u8: SDK player index of the same nearest depth pixel (0 = nobody)\"},\n");
         m.Append("  \"skeleton\": \"SDK 1.8, standing mode, no smoothing; skeleton space metres, x to the sensor's ")
          .Append("left, y up, z out of the sensor\",\n");
         m.Append("  \"accelerometer\": \"KinectSensor.AccelerometerGetCurrentReading (g), read once a second\"\n");
