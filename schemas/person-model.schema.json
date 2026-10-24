@@ -1,0 +1,86 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Rehab Agent person model",
+  "description": "PERSON/person.json (pipeline/rehabtwin/person.py, docs/person-model.md): what is known about one person, where each value came from, and which twin layer (docs/accuracy.md) it fills. Every session of the person uses it. No direct identifiers: person_ref is pseudonymous.",
+  "type": "object",
+  "required": ["format", "person_ref", "version", "created_at", "updated_at", "anthropometrics", "model", "segments", "keypoint_segments", "layers", "history"],
+  "properties": {
+    "format": {"const": "rehabtwin-person/1"},
+    "person_ref": {"type": "string", "minLength": 1},
+    "version": {"type": "integer", "minimum": 1, "description": "Raised on every change; earlier versions are in history/person_vNNN.json."},
+    "created_at": {"type": "string"},
+    "updated_at": {"type": "string"},
+    "synthetic": {"type": "boolean", "description": "Built from a synthetic session (tests): only synthetic sequences may use it."},
+    "anthropometrics": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "object",
+        "required": ["value", "source", "measured", "measured_at"],
+        "properties": {
+          "value": {"type": "number", "exclusiveMinimum": 0},
+          "source": {"type": "string"},
+          "measured": {"type": "boolean", "description": "false: an assumed value, never used where a measured one is required."},
+          "measured_at": {"type": "string"}
+        }
+      }
+    },
+    "model": {
+      "oneOf": [
+        {"type": "null"},
+        {
+          "type": "object",
+          "required": ["kind", "file", "sha256", "generic_model", "generic_model_sha256", "scale_set", "config", "built_from"],
+          "properties": {
+            "kind": {"const": "scaled-generic"},
+            "file": {"type": "string"},
+            "sha256": {"type": "string"},
+            "generic_model": {"type": "string"},
+            "generic_model_sha256": {"type": "string", "description": "The scale factors apply to this generic model only; process refuses another."},
+            "scale_set": {"type": "object", "additionalProperties": {"type": "array", "items": {"type": "number"}, "minItems": 3, "maxItems": 3}},
+            "config": {"type": "string"},
+            "built_from": {"type": "object", "required": ["session_id"]}
+          }
+        },
+        {
+          "type": "object",
+          "required": ["kind", "file", "sha256", "provenance", "tier", "evidence"],
+          "properties": {
+            "kind": {"const": "personalised"},
+            "file": {"type": "string"},
+            "sha256": {"type": "string"},
+            "provenance": {"type": "string", "description": "Copy of the model-provenance record (pipeline/rehabtwin/tiers.py) next to person.json."},
+            "tier": {"enum": ["A", "B"]},
+            "evidence": {"type": "string"}
+          }
+        }
+      ]
+    },
+    "segments": {
+      "type": "object",
+      "description": "Joint-centre distances of the model in its default pose, m.",
+      "additionalProperties": {"type": "object", "required": ["length_m"], "properties": {"length_m": {"type": "number"}}}
+    },
+    "keypoint_segments": {
+      "type": "object",
+      "description": "Distances between model markers (e.g. LHip-LKnee), as rehabtwin kinect's segment check uses them, m.",
+      "additionalProperties": {"type": "object", "required": ["length_m"], "properties": {"length_m": {"type": "number"}}}
+    },
+    "surface_shape": {
+      "type": "object",
+      "description": "Body surface fitted to depth (Tier B surface layer); see docs/person-model.md."
+    },
+    "layers": {
+      "type": "object",
+      "required": ["bone_geometry", "joint_centres", "surface_shape", "kinematics", "muscle", "soft_tissue"],
+      "additionalProperties": {
+        "type": "object",
+        "required": ["status", "tier"],
+        "properties": {"status": {"type": "string"}, "tier": {"enum": ["A", "B", "C", null]}}
+      }
+    },
+    "history": {
+      "type": "array",
+      "items": {"type": "object", "required": ["version", "at", "event"]}
+    }
+  }
+}

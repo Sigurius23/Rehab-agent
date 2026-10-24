@@ -377,3 +377,120 @@ def test_lstm_path_splits_at_a_lost_knee_instead_of_freezing_it(tmp_path):
     hit = [r["start_s"] <= 359 / 30.0 and r["stop_s"] >= 340 / 30.0 for r in reps]
     assert any(hit) and [r["contains_missing_markers"] for r in reps] == hit
     assert "frames not solved" in (tmp_path / "s" / "report.html").read_text()
+
+
+def test_person_model_keeps_the_bones_across_sessions(selftest_run, tmp_path):
+    """Build a person from the selftest session, re-process another recording of that body with it: the bones
+    are the person's (same scale factors and segment lengths), not re-fitted to the new frames."""
+    from rehabtwin import person
+    out, res, _ = selftest_run
+    d = tmp_path / "person"
+    person.init(d, "SYNTHETIC-NOT-A-PATIENT")
+    with pytest.raises(person.PersonRefused, match="synthetic session"):
+        person.build_from_session(d, out)
+    rec = person.build_from_session(d, out, allow_synthetic=True)
+    assert rec["synthetic"] and rec["model"]["scale_set"] == res["qc"]["scale_factors"]
+    assert rec["layers"]["bone_geometry"]["tier"] == "C"
+    assert 0.3 < rec["segments"]["thigh_r"]["length_m"] < 0.6 and set(rec["keypoint_segments"]) == set(person.KEYPOINT_SEGMENTS)
+
+    seq2, truth2, truth_model2 = cli._synth(tmp_path / "s2", seed=1)
+    alone = cli.process(seq2, tmp_path / "alone", reference=truth2, reference_model=truth_model2,
+                        reference_system="synthetic truth")
+    used = cli.process(seq2, tmp_path / "with", reference=truth2, reference_model=truth_model2,
+                       reference_system="synthetic truth", person=d)
+    sc = used["qc"]["scaling"]
+    assert sc["person_model"]["version"] == rec["version"] and sc["max_scale_factor_difference"] < 1e-4
+    assert used["session"]["person_model"]["kind"] == "scaled-generic" and records.validate(used["session"], "session")
+    segs, _ = person.model_lengths(tmp_path / "with" / used["session"]["pipeline"]["outputs"]["model"])
+    for k, v in rec["segments"].items():
+        assert abs(segs[k] - v["length_m"]) < 1e-3, k
+    # each session's own scaling moves the bones a little; the person's stay put and still track as well
+    drift = max(abs(a - b) for body, f in rec["model"]["scale_set"].items()
+                for a, b in zip(f, alone["qc"]["scale_factors"][body]))
+    assert drift > sc["max_scale_factor_difference"]
+    per, per_alone = used["validation"]["per_coordinate"], alone["validation"]["per_coordinate"]
+    worse = {c: (per[c]["rmse_deg"], per_alone[c]["rmse_deg"]) for c in cli.SELFTEST_LIMITS
+             if per[c]["rmse_deg"] > per_alone[c]["rmse_deg"] + 0.1}
+    assert worse == {}
+    assert abs(sc["recording_scale"]["recording_vs_person"] - 1.0) < 0.02 and "rescaled_by" not in sc["recording_scale"]
+    with pytest.raises(person.PersonRefused, match="itself processed with a person model"):
+        person.build_from_session(d, tmp_path / "with", allow_synthetic=True)
+
+    # a recording 15% small: one camera's size is a guess, so it is brought to the person's; a calibrated one
+    # that far off is another body or a fault
+    from rehabtwin.sequence import MarkerSequence
+    small = MarkerSequence.load(seq2)
+    for k in ("markers", "joints", "static_markers", "static_joints"):     # every point the front end gave
+        if getattr(small, k, None) is not None:
+            setattr(small, k, getattr(small, k) * 0.85)
+    small.meta["metric_scale"] = False
+    small.save(tmp_path / "small.npz")
+    mono = cli.process(tmp_path / "small.npz", tmp_path / "small", reference=truth2, reference_model=truth_model2,
+                       reference_system="synthetic truth", person=d)
+    rs = mono["qc"]["scaling"]["recording_scale"]
+    assert rs["rescaled_by"] == pytest.approx(1 / 0.85, abs=0.02) and not rs["scale_measured"]
+    per_small = mono["validation"]["per_coordinate"]
+    assert {c: per_small[c]["rmse_deg"] for c in cli.SELFTEST_LIMITS
+            if per_small[c]["rmse_deg"] > per_alone[c]["rmse_deg"] + 0.3} == {}
+    assert mono["qc"]["ik"]["marker_rms_m"]["mean"] < used["qc"]["ik"]["marker_rms_m"]["mean"] + 0.002
+    small.meta["metric_scale"] = True
+    small.save(tmp_path / "small_metric.npz")
+    with pytest.raises(ValueError, match="0.85 times the person model's size"):
+        cli.process(tmp_path / "small_metric.npz", tmp_path / "small_metric", person=d)
+    assert not (tmp_path / "small_metric" / "opensim" / "markers_dynamic.trc").exists()   # refused before writing
+
+
+def test_personalised_person_model_is_used_as_it_is(selftest_run, tmp_path):
+    """An imaging-personalised model (here: the synthetic generator's truth model with a Tier B record) is not
+    re-scaled: unit scale factors, only the segment masses follow the person's measured mass."""
+    from rehabtwin import person, tiers
+    from rehabtwin.sequence import MarkerSequence
+    out, _, _ = selftest_run
+    seq = MarkerSequence.load(out / "skel_seq.npz")
+    seq.meta.update(synthetic=False, person_ref="P-TEST")      # stands in for a real recording of this person
+    seq.meta.pop("mass_kg", None)
+    seq.save(tmp_path / "seq.npz")
+    model = out / "truth" / "truth_model.osim"
+    prov = tmp_path / "prov.json"
+    prov.write_text(json.dumps({"tier": "B", "person_ref": "P-TEST", "model": model.name,
+                                "model_sha256": tiers.sha256(model), "evidence": "test stand-in for an MRI model",
+                                "approved_by": "test"}))
+    d = tmp_path / "person"
+    person.init(d, "P-TEST", height_m=1.75, mass_kg=80)
+    rec = person.attach_personalised_model(d, model, prov)
+    assert rec["layers"]["bone_geometry"]["tier"] == "B" and rec["model"]["kind"] == "personalised"
+    res = cli.process(tmp_path / "seq.npz", tmp_path / "s", person=d, tier="B")
+    sess = res["session"]
+    assert sess["twin_tier"] == "B" and sess["person_model"]["kind"] == "personalised"
+    assert res["qc"]["scaling"]["max_scale_factor_difference"] < 1e-4
+    assert abs(res["qc"]["scaling"]["recording_scale"]["recording_vs_person"] - 1.0) < 0.03   # the size is checked too
+    assert res["qc"]["subject"] == {"mass_kg": 80.0, "mass_source": "measured", "height_m": 1.75,
+                                    "mass_from": f"person model v{rec['version']}"}
+    assert "used as it is" in sess["accuracy_layers"]["bone_geometry"]["error"]
+    m = opensim.Model(str(tmp_path / "s" / sess["pipeline"]["outputs"]["model"]))
+    assert abs(m.getTotalMass(m.initSystem()) - 80.0) < 0.01
+    segs, _ = person.model_lengths(tmp_path / "s" / sess["pipeline"]["outputs"]["model"])
+    assert all(abs(segs[k] - v["length_m"]) < 1e-3 for k, v in rec["segments"].items())
+    with pytest.raises(tiers.TierRefused):
+        cli.process(tmp_path / "seq.npz", tmp_path / "s2", tier="B")          # the generic model has no record
+
+
+def test_leg_capacity_scales_with_body_size(selftest_run, tmp_path):
+    """Fmax ∝ limb muscle volume / fibre length: heavier and taller -> stronger legs, trunk unchanged."""
+    from rehabtwin import capacity
+    out, res, _ = selftest_run
+    model = out / res["session"]["pipeline"]["outputs"]["model"]
+    generic = resolve(CFG["model"])
+    small = capacity.scale_model(model, generic, 55.0, 1.60, tmp_path / "small.osim")
+    big = capacity.scale_model(model, generic, 110.0, 1.90, tmp_path / "big.osim")
+    assert small["muscles_scaled"] == big["muscles_scaled"] == 80
+    assert small["leg_fmax_N"]["right"]["scaled"] < small["leg_fmax_N"]["right"]["generic"] < big["leg_fmax_N"]["right"]["scaled"]
+    assert big["caveats"][0].startswith("BMI 30.5")
+    g, m, b = (opensim.Model(str(p)) for p in (generic, model, tmp_path / "big.osim"))
+    v = capacity.limb_muscle_volume_cm3(110.0, 1.90) / capacity.limb_muscle_volume_cm3(**{k: capacity.REFERENCE[k] for k in ("mass_kg", "height_m")})
+    for n in ("vaslat_r", "soleus_l"):
+        expect = v * g.getMuscles().get(n).getOptimalFiberLength() / m.getMuscles().get(n).getOptimalFiberLength()
+        assert b.getMuscles().get(n).getMaxIsometricForce() == pytest.approx(g.getMuscles().get(n).getMaxIsometricForce() * expect, rel=1e-6)
+    assert b.getMuscles().get("rect_abd_r").getMaxIsometricForce() == g.getMuscles().get("rect_abd_r").getMaxIsometricForce()
+    with pytest.raises(ValueError, match="already changed"):
+        capacity.scale_model(tmp_path / "big.osim", generic, 80.0, 1.80, tmp_path / "twice.osim")

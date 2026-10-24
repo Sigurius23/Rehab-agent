@@ -11,6 +11,8 @@ video ──► HSMR (SKEL q, betas, camera)            [hsmr env, GPU, gated SK
             └─► adapters/hsmr_to_skelseq.py ──► skel_seq.npz   (105 SKEL skin markers + 24 joints + q=0 static)
 video ──► MediaPipe Pose (non-gated, Tier C)       [twin-live env]
             └─► adapters/mediapipe_pose.py ──► rehabtwin mp-mono / mp-multiview ──► *_seq.npz
+Kinect v1 ──► capture/kinect_v1 (Windows, SDK 1.8) ──► colour + registered depth
+            └─► mediapipe_pose.py on colour/%06d.jpg ──► rehabtwin kinect (depth-lifted) ──► *_seq.npz
                                                     │
 skel_seq.npz ──► rehabtwin process ─────────────────┘   [biomech env, CPU]
    1. camera → gravity → OpenSim ground   (device gravity > floor-plane fit > camera-level, all logged)
@@ -82,6 +84,24 @@ A mirrored front-camera ("selfie") clip swaps every left/right landmark silently
 `--mirrored` to the adapter (or to `mp-mono` for a dump made without it); see the mirroring
 check in `docs/hardware.md`. `mp-multiview` has no `--mirrored`: un-mirror each front-camera clip
 at the adapter. Each camera's setting is kept in the sequence meta (`camera_mirroring`).
+
+A Kinect v1 (Xbox 360) adds depth from one viewpoint: `capture/kinect_v1/KinectCapture.exe` records on
+Windows, and `rehabtwin kinect` lifts the MediaPipe keypoints of its colour frames with the registered depth.
+Gravity comes from the floor in the depth image; a mirrored stream is detected from the SDK skeleton's sides.
+Setup, placement and the validation plan are in `docs/kinect-v1.md`. It has not run on a real sensor yet.
+
+**One body across sessions.** By default every `process` run fits the generic model to its own frames, so a
+person's bones change with the camera setup. A person folder keeps them (`docs/person-model.md`):
+
+```bash
+python -m rehabtwin person init people/P01 --person-ref P01 --height-m 1.80 --mass-kg 75
+python -m rehabtwin person build people/P01 out/calib          # a processed calibration session (best setup)
+python -m rehabtwin process phone_aug.npz out/s02 --exercise squat --person people/P01
+```
+
+`--person` applies the stored scale factors and checks the recording's size against them: one camera's
+recording is scaled to the person, and a calibrated one more than 10 % off is refused. `session.json`
+records the person model's version (`person_model`).
 
 Several phones (OpenCap-style checkerboard calibration, unsynchronised starts) and OpenCap's LSTM
 anatomical-marker augmenter, which the pelvis needs (validation-results §4):
@@ -266,7 +286,7 @@ untested step is a physical BLE write.
 | Command | What it does | Guard rails |
 |---|---|---|
 | `correct` | Spec modes `set / clamp / scale / offset / mirror` (e.g. right hip follows the left). OpenSim IK tracks the changed coordinates strongly and the rest weakly, keeping 3 anchor points per foot in place. Reports requested changes, the **compensations** elsewhere, range-of-motion violations and feet drift (`admissible`). | Refused below Tier A without `--illustrative`; then every output says ILLUSTRATION ONLY. Specs ship as TEMPLATEs for a clinician to author. |
-| `muscles` | Ground forces from whole-body Newton (F = m(a_com + g)), split between the feet by the centre of mass and placed by moment balance. Then OpenSim inverse dynamics and static optimisation on the 318-muscle model, with group activation as a fraction of capacity, joint moments (N·m/kg), and measured vs corrected vs weakened. | Valid only for slow double-stance exercises (`grf.feet_planted`, `valid_exercise`). Pelvis residuals and reserve-torque use are reported. Phrased as a what-if on generic muscles, never as a claim about the person's muscles. |
+| `muscles` | Ground forces from whole-body Newton (F = m(a_com + g)), split between the feet by the centre of mass and placed by moment balance. Then OpenSim inverse dynamics and static optimisation on the 318-muscle model, with group activation as a fraction of capacity, joint moments (N·m/kg), and measured vs corrected vs weakened. | Valid only for slow double-stance exercises (`grf.feet_planted`, `valid_exercise`). Pelvis residuals and reserve-torque use are reported. Leg muscle capacity is scaled to the measured height and mass (Handsfield 2014 regression, `capacity/`; `--generic-capacity` for the generic subject's). Phrased as a what-if, never as a claim about the person's muscles. |
 | `muscles --assist` | **Ideal assistive device** (exoskeleton what-if, after Dembia et al. 2017): a torque actuator at a joint, capped at the device's max torque (optionally one direction only), that the optimiser uses as it sees fit. Reports the device torque profile (peak, mean, time at cap) and which muscles it offloads. | An upper bound on the benefit (massless, instantaneous, optimal control). Offloading a muscle also removes the training stimulus, so the caveat recommends assist-as-needed. |
 | `cues` | Streaming `CueEngine` (same code for offline replay and a live suit): threshold with hysteresis, minimum duration, per-actuator refractory period, **faded feedback** (cue share falls from 100 % to ~33 % over the first violations). Writes `cues.json`, LSL-ready `commands.csv`, `cues.html`. | A cue is *sent* only on a Tier-A twin and only for joint/planes listed in a non-synthetic validation report; otherwise it is logged as `would_cue` with the reason. |
 
@@ -309,6 +329,7 @@ let IK jitter 6.6 cm sideways, and static optimisation then "needed" 70 N·m res
 | `report.html` | self-contained charts (reference dashed when present), per-rep table, gates |
 | `correction/<spec>/` | `corrected.mot`, `correction.json`, `correction.html` (measured vs corrected 3D replay) |
 | `progress/` (`--out`) | `progress.json` (verdicts per signal, series), `progress.html` (trend per signal) |
+| `capacity/` | `model_capacity.osim`, `capacity.json`: leg muscle forces scaled to the measured height and mass (`muscles`, `strength`) |
 | `strength/` | `model_strength.osim`, `strength.json` (factors, LSI), `strength.html` |
 | `muscles/` | per variant: `grf.mot`, `inverse_dynamics.sto`, static-optimisation activations/forces, `muscles.json`; `study.json`, `muscles.html` |
 | `feedback/<rules>/` | `cues.json` (event log + summary), `commands.csv` (actuator events), `cues.html` |

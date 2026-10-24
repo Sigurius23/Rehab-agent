@@ -20,7 +20,7 @@
         "required": ["device_id", "type"],
         "properties": {
           "device_id": {"type": "string"},
-          "type": {"enum": ["rgb-camera", "iphone-lidar", "realsense-d455", "imu-suit", "emg", "other"]},
+          "type": {"enum": ["rgb-camera", "iphone-lidar", "realsense-d455", "kinect-v1", "imu-suit", "emg", "other"]},
           "serial_or_name": {"type": "string"},
           "firmware": {"type": "string"}
         }
@@ -71,6 +71,18 @@
         "processing_id": {"type": "string", "description": "sha256 (truncated) of scaled model + motion + tier + exercise. Derived results (validation, correction, strength, muscles, cues) store the id they were computed from; a mismatch marks them STALE."},
         "processed_at": {"type": "string", "format": "date-time"},
         "reprocessing_started_at": {"type": "string", "format": "date-time", "description": "Set (and processing_id removed) while process rewrites the folder; left behind only by a run that did not finish."}
+      }
+    },
+    "person_model": {
+      "type": "object",
+      "required": ["person_ref", "version", "sha256", "kind"],
+      "description": "The persistent person model (pipeline/rehabtwin/person.py) whose bones this session used instead of scaling new ones; version and sha256 of its person.json make a later change visible.",
+      "properties": {
+        "person_ref": {"type": "string"},
+        "version": {"type": "integer", "minimum": 1},
+        "sha256": {"type": "string"},
+        "kind": {"enum": ["scaled-generic", "personalised"]},
+        "folder": {"type": "string"}
       }
     },
     "accuracy_layers": {

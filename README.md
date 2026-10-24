@@ -54,7 +54,8 @@ Measured so far ([`docs/validation-results.md`](docs/validation-results.md)): th
 recovers known kinematics to about 1° (trunk lean vs gravity 0.35°). On real video,
 single-camera MediaPipe fails every gate against a 4-camera reference, so it is not the
 answer. The next step is HSMR/SKEL on the public OpenCap LabValidation dataset against
-marker mocap. Details: [`pipeline/README.md`](pipeline/README.md) ·
+marker mocap. A person model keeps one person's bones and measurements across sessions and setups
+([`docs/person-model.md`](docs/person-model.md)). Details: [`pipeline/README.md`](pipeline/README.md) ·
 [`stacks/video-skel-opensim.md`](stacks/video-skel-opensim.md).
 
 ## Quick start

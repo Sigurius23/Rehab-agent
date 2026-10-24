@@ -45,8 +45,9 @@ every claim it makes.
 |---|---|---|
 | 1–2 Capture, pose | `adapters/hsmr_to_skelseq.py` (HSMR + SKEL), `adapters/mediapipe_pose.py` + `mp-mono` / `mp-multiview`, `vmc-posture` (SlimeVR) | file contract: `rehabtwin/sequence.py` (`skel_seq.npz`) |
 | 3–4 Body model, skeleton | SKEL skin markers + joint centres → OpenSim scaling (`opensim_stage.py`) | Pose2Sim full-body model, 318 muscles |
+| Person model | `person` (`person.py`): the person's bones, measurements and twin layers across sessions; `process --person`, `kinect --person` | `docs/person-model.md`; `schemas/person-model.schema.json` |
 | 5 Biomechanics | `process` (gravity, gaps, filtering, scale, static IK, marker placement, IK), `muscles` (estimated GRF, ID) | QC in `qc.json`; validation per joint × plane |
-| 6 Muscle sim | `muscles` (static optimisation; weakness and ideal-exo what-ifs) | Tier-labelled what-ifs |
+| 6 Muscle sim | `muscles` (static optimisation; weakness and ideal-exo what-ifs), leg capacity scaled to body size (`capacity.py`) | Tier-labelled what-ifs |
 | 7 Control / assistance | `muscles --assist` (ideal assistive device sizing) | upper bound; assist-as-needed caveat |
 | 8 Visualisation | `report.html`, `correction.html`, `muscles.html`, `cues.html`, `index.html` (3D replay, charts) | self-contained HTML |
 | Feedback | `correct` (correction view), `cues` / `lsl-live` / `suit-bridge` (haptic loop) | gated: Tier A + validated joint/plane only |

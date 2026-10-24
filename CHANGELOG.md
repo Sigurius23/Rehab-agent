@@ -1,6 +1,41 @@
 # Changelog
 
 ## Unreleased
+- **Kinect v1 depth viewpoint** (`docs/kinect-v1.md`; not yet run on a real sensor):
+  - `pipeline/capture/kinect_v1`: a Windows recorder (Kinect for Windows SDK 1.8, built with Windows' own C#
+    compiler). It writes colour, depth registered to the colour grid, raw depth, the SDK skeleton, floor plane
+    and accelerometer.
+  - `rehabtwin kinect`: lifts MediaPipe keypoints with that depth, leaves occluded joints empty, takes gravity
+    from the floor in the depth, and detects a mirrored stream from the SDK skeleton.
+  - Tested on rendered synthetic recordings, and the recorder against a fake sensor under Mono.
+- **BEDLAM2 as a body-type testing ground** (`docs/bedlam2.md`, `pipeline/adapters/bedlam2.py`; the data
+  stays outside the repo): on 1,526 SMPL-X bodies (BMI 17.7–43.2), the skin-to-joint-centre distance the
+  Kinect path adds grows with BMI, not just height. It is now height × (a + b × (BMI − 25)), with residual
+  SD ≤ 0.32 cm (height alone: hip 1.6 cm SD, up to 5.5 cm short above BMI 30). `rehabtwin kinect --mass-kg`
+  provides the BMI.
+  - Squat visibility (32 squats, BMI 19.5–42.1, virtual front-facing Kinect): knees and ankles are lifted
+    within 3 cm in ≥ 90% of frames at every depth. In deep squats only 64% of hips are, because the thigh
+    hides the hip; 24% are wrong by 3–20 cm, which the 0.2 m check cannot catch, and 38% above BMI 30.
+  - Segment-length check (`kinect.SEGMENTS`, `--segment-lengths`): a hip not at the person's thigh length
+    from its knee is placed on its own line of sight at that length. With MediaPipe-like noise, deep-squat
+    hips within 3 cm go from 64% to 81%, and those more than 10 cm off from 15% to 2%.
+- **Person model** (`docs/person-model.md`, `rehabtwin person init/set/build/attach/show`): one versioned folder per
+  person with their bones, dated measured height and mass, and what fills each twin layer at which tier.
+  - `person build` takes a calibration session's scaled model. `process --person` re-applies its per-body scale
+    factors instead of fitting new ones; markers are still placed per session. `kinect --person` takes height,
+    mass and thigh lengths from it. `person attach` takes an imaging-personalised model with its provenance
+    record (Tier B/A), used unscaled with masses following the measured body mass.
+  - A recording's size is checked against the person's bones. A single-camera recording, whose size is a guess,
+    is scaled to the person; a calibrated one more than 10 % off is refused.
+  - Real video (OpenCap subject 2, one squat trial): the camera setup alone moved the right thigh between
+    34.7 and 46.0 cm. With the 5-phone session's bones, the 3-phone session's sagittal pelvis, hip and trunk
+    agreement improved by 0.4–1.8°, ankles 0.2–0.5° worse. Without the size check, the bones made the 1-phone
+    session worse (knee 20° → 48°).
+- **Muscle capacity scaled to body size** (`rehabtwin/capacity.py`): `muscles` and `strength` scale the 80 leg
+  muscles' maximum force with the Handsfield 2014 limb muscle volume (from measured height and mass) over fibre
+  length. Previously every body had the generic subject's leg strength. Trunk muscles stay generic. It needs a
+  measured mass and a height; `--generic-capacity` turns it off; BMI > 30 is flagged as likely overestimated.
+  `strength` calibrates on top of it.
 - **Safety gates:**
   - Tier B/A only with a model-provenance record bound to the model by sha256 (`--model-provenance`).
   - `--reference-grade` is required with any reference.
