@@ -174,6 +174,7 @@ def test_fit_recovers_known_shape_from_noise_free_depth():
     h_true = shape.body_measures(bm.rest(true)[0], bm.faces)[0]
     assert fit["height_m"] == pytest.approx(h_true, abs=0.003)
     assert len(fit["frames"]) == 2 and fit["tier"] == "B" and "not anatomical" in fit["joints_note"]
+    assert fit["fit"]["warnings"] == []
     for f in fit["frames"]:
         assert f["residuals"]["rms_depth_residual_mm"] < 2.0
     # one frame and a measured height: the height term holds the stretch along y

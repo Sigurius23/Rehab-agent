@@ -8,7 +8,7 @@ and eyes stay at zero. Each term is divided by its expected error:
 - **Depth:** each depth point against the model's depth along the same line of sight, where the sensor's
   error lies (a point the model does not cover: to the nearest visible model surface). Points are re-matched
   every outer iteration and robustly weighted. The error is the sensor's depth noise plus a few mm of model
-  error. The nearest-surface distance alone, with noise along the line of sight, made bodies 6-8% too light.
+  error. The nearest-surface distance alone, with noise along the line of sight, made a body 8% too light.
 - **Silhouette:** the model's visible surface outside the depth silhouette, in metres at its depth, with
   1 px tolerance for the pixels a sensor drops at edges.
 - **Floor** (optional): no model vertex below the floor plane.

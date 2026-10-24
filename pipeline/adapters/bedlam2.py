@@ -11,6 +11,9 @@ smpl-x.is.tue.mpg.de; its shape space differs from SMPL-X v1.1) the bodies can b
 measures, for every body in its rest pose, how far each joint centre lies behind the skin when seen from
 the front: the distance ``rehabtwin.kinect`` has to add to a depth-sensor reading. It fits
 ``offset = height * (a + b * (BMI - 25))`` per joint and prints the table ``SURFACE_TO_CENTRE`` uses.
+``visibility`` measures what a front-facing depth sensor lifts during squats. ``shapefit`` renders one
+near-standing frame per body as a Kinect v1 would see it and fits ``rehabtwin.shape`` to it (docs/bedlam2.md,
+result 4).
 
 Only numeric arrays are read from the downloaded files (``allow_pickle=False``): the model's two pickled
 dictionaries (``part2num``, ``joint2num``) are skipped.
