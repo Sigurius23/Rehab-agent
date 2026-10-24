@@ -23,6 +23,11 @@ It does not:
   fitted on 1,526 BEDLAM2 body models (`docs/bedlam2.md`). The hip's distance grows from about 10 cm at
   BMI < 22 to 14 cm above BMI 30, so height alone is not enough. The fit uses unclothed bodies standing
   upright; clothing and deep flexion change the distance, and the validation measures how much.
+- **See a hip behind the thigh.** In a deep squat facing the sensor, the thigh lies in front of the hip. The
+  front end checks every hip against the person's thigh length: measured in frames where the thigh is seen
+  side-on, or given with `--segment-lengths` (e.g. `{"LHip-LKnee": 0.43, "RHip-RKnee": 0.43}` from the
+  person's model). A hip that is not at that distance from its knee is placed on its own line of sight at
+  thigh length behind the knee (`docs/bedlam2.md`, result 3).
 - **Measure the heels, toes or hand points.** From the front the heel is behind the foot, and hand points
   are too small for the depth. These are placed from the depth-measured ankle or wrist, using MediaPipe's
   own 3D offset between them.

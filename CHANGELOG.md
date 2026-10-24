@@ -16,6 +16,9 @@
   - Squat visibility (32 squats, BMI 19.5–42.1, virtual front-facing Kinect): knees and ankles are lifted
     within 3 cm in ≥ 90% of frames at every depth. In deep squats only 64% of hips are, because the thigh
     hides the hip; 24% are wrong by 3–20 cm, which the 0.2 m check cannot catch, and 38% above BMI 30.
+  - Segment-length check (`kinect.SEGMENTS`, `--segment-lengths`): a hip not at the person's thigh length
+    from its knee is placed on its own line of sight at that length. With MediaPipe-like noise, deep-squat
+    hips within 3 cm go from 64% to 81%, and those more than 10 cm off from 15% to 2%.
 - **Safety gates:**
   - Tier B/A only with a model-provenance record bound to the model by sha256 (`--model-provenance`).
   - `--reference-grade` is required with any reference.

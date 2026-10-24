@@ -62,6 +62,15 @@ RELATIVE_TO = {"LHeel": "LAnkle", "RHeel": "RAnkle", "LBigToe": "LAnkle", "RBigT
 DEFAULT_HEIGHT_M = 1.70
 
 
+# The person's anatomy as a check on depth: a keypoint must lie at its segment's length from the segment's
+# other end. In a deep squat seen from the front the thigh hides the hip, and depth puts the hip on the
+# thigh: on BEDLAM2 squats only 64% of deep-squat hips were within 3 cm, and 24% were 3-20 cm off, too
+# little for the 0.2 m pose check. The knee stays reliable (96%). Such a hip is placed on its own line of
+# sight at thigh length from the knee. Keypoint -> the keypoint it is checked against.
+SEGMENTS = {"LHip": "LKnee", "RHip": "RKnee"}
+SEGMENT_TOL_M = 0.04
+
+
 def surface_to_centre(name, height_m, bmi=None):
     """Skin-to-joint-centre distance (m) of keypoint ``name`` seen from the front (BMI_REF when unknown)."""
     a, b = SURFACE_TO_CENTRE[name]
@@ -140,7 +149,8 @@ def lift_frame(uv, visibility, world, depth_mm, K, offsets_m, min_visibility=0.5
                floor=None, relative=()):
     """(points (N,3) m, source (N,)) for one frame: 1 = lifted from depth, 2 = depth inconsistent with the
     pose (occluded, left NaN), 3 = placed from its parent (``relative``: (child, parent) indices) with
-    MediaPipe's 3D offset, 0 = not visible or no depth there. ``floor``: see ``sample_depth``."""
+    MediaPipe's 3D offset, 0 = not visible or no depth there (4, placed by segment length, is set later by
+    ``constrain_segments``). ``floor``: see ``sample_depth``."""
     fx, fy, cx, cy = K
     N = len(uv)
     P = np.full((N, 3), np.nan)
@@ -171,6 +181,66 @@ def lift_frame(uv, visibility, world, depth_mm, K, offsets_m, min_visibility=0.5
         if src[par] == 1 and visibility[c] >= min_visibility and np.isfinite(world[[c, par]]).all():
             P[c], src[c] = P[par] + world[c] - world[par], 3
     return P, src
+
+
+def segment_lengths(markers, source, names, min_frames=10, side_on_deg=60.0):
+    """{"LHip-LKnee": {...}} per SEGMENTS pair: the median length over frames where both ends were lifted from
+    depth and the segment is seen side-on (at least ``side_on_deg`` to the line of sight), so neither end can
+    hide behind the other. Pairs with fewer than ``min_frames`` such frames are left out."""
+    out = {}
+    for c, a in SEGMENTS.items():
+        i, j = names.index(c), names.index(a)
+        seg = markers[:, i] - markers[:, j]
+        mid = (markers[:, i] + markers[:, j]) / 2
+        with np.errstate(invalid="ignore"):
+            cos = np.abs(np.einsum("ij,ij->i", seg, mid)) / (np.linalg.norm(seg, axis=1) * np.linalg.norm(mid, axis=1))
+            ok = (source[:, i] == 1) & (source[:, j] == 1) & (cos <= np.cos(np.radians(side_on_deg)))
+        if ok.sum() >= min_frames:
+            out[f"{c}-{a}"] = {"length_m": round(float(np.median(np.linalg.norm(seg[ok], axis=1))), 4),
+                               "frames": int(ok.sum()), "source": f"measured in side-on frames (>= {side_on_deg:g} deg)"}
+    return out
+
+
+def place_on_ray(u, v, anchor, length, predicted, K):
+    """Point on the line of sight through pixel (u, v) at ``length`` from ``anchor`` (camera coordinates).
+    Of the two such points, the one nearer ``predicted`` (the farther one if that is unknown). When the line
+    passes farther than ``length`` from the anchor, its closest approach."""
+    d = back_project(u, v, 1.0, *K)
+    d = d / np.linalg.norm(d)
+    b = float(d @ anchor)
+    disc = b * b - float(anchor @ anchor) + length ** 2
+    if disc < 0:
+        return b * d
+    roots = (b - np.sqrt(disc), b + np.sqrt(disc))
+    if np.isfinite(predicted).all():
+        t = min(roots, key=lambda r: abs(r - float(d @ predicted)))
+    else:
+        t = roots[1]
+    return t * d
+
+
+def constrain_segments(markers, source, uv, visibility, world, K, lengths, names, tol_m=SEGMENT_TOL_M,
+                       min_visibility=0.5):
+    """Re-place, in place, every SEGMENTS keypoint whose distance to its reliable anchor is off its length by
+    more than ``tol_m`` (or that got no depth): on its own line of sight at that length (``place_on_ray``),
+    choosing the side MediaPipe's pose predicts. Marks them source 4; returns frames re-placed per keypoint."""
+    placed = {}
+    for c, a in SEGMENTS.items():
+        key = f"{c}-{a}"
+        if key not in lengths:
+            continue
+        i, j = names.index(c), names.index(a)
+        L = lengths[key]["length_m"]
+        for t in range(len(markers)):
+            if source[t, j] != 1 or visibility[t, i] < min_visibility or not np.isfinite(uv[t, i]).all():
+                continue
+            if source[t, i] == 1 and abs(np.linalg.norm(markers[t, i] - markers[t, j]) - L) <= tol_m:
+                continue
+            pred = markers[t, j] + world[t, i] - world[t, j]
+            markers[t, i] = place_on_ray(uv[t, i, 0], uv[t, i, 1], markers[t, j], L, pred, K)
+            source[t, i] = 4
+            placed[c] = placed.get(c, 0) + 1
+    return placed
 
 
 def floor_up(depth_mm, K, rng, stride=4, iters=200, tol_m=0.02, min_inlier_frac=0.15):
@@ -244,11 +314,13 @@ def mirror_vote(raw, skeleton, min_visibility=0.5, decisive=0.8):
 
 
 def rgbd_sequence(capture, raw, height_m=None, mirrored="auto", min_visibility=0.5, max_inconsistency_m=0.20,
-                  meta=None, seed=0, mass_kg=None):
+                  meta=None, seed=0, mass_kg=None, segment_lengths_m=None):
     """MarkerSequence (frame 'opencv_camera', metres) of the 25 Pose2Sim keypoints from a capture + MediaPipe dump.
 
     ``mirrored``: 'auto' (decide from the SDK skeleton, refuse when it cannot), True or False.
     ``height_m`` and ``mass_kg`` set the skin-to-joint-centre distances (``surface_to_centre``).
+    ``segment_lengths_m``: known lengths for SEGMENTS pairs ({"LHip-LKnee": 0.43}, e.g. the person's model);
+    pairs not given are measured from this recording's side-on frames.
     """
     T = capture["T"]
     if len(raw["image_xy"]) != T:
@@ -293,6 +365,12 @@ def rgbd_sequence(capture, raw, height_m=None, mirrored="auto", min_visibility=0
         if detected[t]:
             markers[t], source[t] = lift_frame(uv[t], vis[t], world[t], depth(t), K, offsets, min_visibility,
                                                max_inconsistency_m, floor, relative)
+    lengths = segment_lengths(markers, source, names)
+    for key, length in (segment_lengths_m or {}).items():
+        if key not in {f"{c}-{a}" for c, a in SEGMENTS.items()}:
+            raise ValueError(f"segment {key!r} is not one of {sorted(f'{c}-{a}' for c, a in SEGMENTS.items())}")
+        lengths[key] = {"length_m": float(length), "source": "given (the person's model)"}
+    placed = constrain_segments(markers, source, uv, vis, world, K, lengths, names, min_visibility=min_visibility)
     valid = detected & (np.isfinite(markers).all(axis=2).sum(axis=1) >= 12)
     m = {"source": "Kinect v1 RGB-D + MediaPipe Pose (keypoints lifted with registered depth)",
          "intrinsics_source": capture["meta"]["colour"].get("intrinsics_source", "unspecified"),
@@ -310,7 +388,10 @@ def rgbd_sequence(capture, raw, height_m=None, mirrored="auto", min_visibility=0
                                         if n not in RELATIVE_TO},
                     "depth_inconsistent_frames": {n: int((source[:, k] == 2).sum()) for k, n in enumerate(names)
                                                   if (source[:, k] == 2).any()},
-                    "max_inconsistency_m": max_inconsistency_m}}
+                    "max_inconsistency_m": max_inconsistency_m,
+                    "segment_lengths": lengths, "segment_tolerance_m": SEGMENT_TOL_M,
+                    "placed_by_segment_length_frames": placed,
+                    "segments_without_length": sorted(f"{c}-{a}" for c, a in SEGMENTS.items() if f"{c}-{a}" not in lengths)}}
     if capture["meta"].get("started_at"):
         m["started_at"] = capture["meta"]["started_at"]
     if fits:

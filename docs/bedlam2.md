@@ -96,10 +96,33 @@ What it means for the Kinect path:
 - **The 0.2 m check cannot catch thigh occlusion.** Whether a tighter one is safe depends on MediaPipe's real
   3D error, which the rendered videos will measure.
 
+## Result 3: the person's thigh length puts the hidden hip back
+
+`rehabtwin/kinect.py` now checks every hip against the person's thigh length. The length is either measured
+in frames where the thigh is seen side-on (both ends lifted, at least 60° to the line of sight) or given
+from the person's model (`--segment-lengths`). A hip more than 4 cm off that length from its knee is placed
+on its own line of sight at thigh length from the knee. Of the two such points, it takes the one MediaPipe's
+pose predicts.
+
+The same squats run through the same code (`visibility` above), with MediaPipe-like noise: 3 px on the
+hip's 2D keypoint and 3 cm per axis on its 3D pose. Deep-squat hips, before → after:
+
+| Sensor | Correct (≤ 3 cm) | 3–20 cm | > 20 cm or empty | > 5 cm | > 10 cm | Median error after |
+|---|---|---|---|---|---|---|
+| Level, 1.0 m | 64% → 81% | 24% → 18% | 12% → 1% | 26% → 7% | 15% → 2% | 1.5 cm |
+| High, 1.6 m | 50% → 69% | 29% → 31% | 21% → 1% | 41% → 15% | 32% → 4% | 1.6 cm |
+
+- **Larger bodies gain most.** Above BMI 30, level sensor: 57% → 76% correct.
+- **The other joints are unaffected.** Standing hips are re-placed in only 10 of 2,986 frames, and knees and
+  ankles don't change.
+- **What remains is small.** The 3–20 cm band is now mostly just over 3 cm (median 4.1 cm).
+
+The thigh length is a property of the person, not of the recording. The `--segment-lengths` hook lets it
+come from the person's model once that model exists.
+
 ## Next experiments
 
-1. **Bone-length placement of occluded hips** (above), on these squats, with MediaPipe-like noise added.
-2. **MediaPipe on the rendered videos** of the static-camera jobs: keypoint error against the ground truth,
+1. **MediaPipe on the rendered videos** of the static-camera jobs: keypoint error against the ground truth,
    by BMI and clothing.
-3. **OpenSim scaling and IK** on markers placed on the SMPL-X surface: segment lengths and joint angles
+2. **OpenSim scaling and IK** on markers placed on the SMPL-X surface: segment lengths and joint angles
    against the body's own, from small to large bodies.

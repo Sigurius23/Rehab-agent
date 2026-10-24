@@ -460,6 +460,8 @@ def main(argv=None):
     kn.add_argument("--mass-kg", type=float, help="body mass: with --height-m gives the BMI the offsets grow with "
                                                   "(default: BMI 25 assumed)")
     kn.add_argument("--person-ref", default="UNSPECIFIED")
+    kn.add_argument("--segment-lengths", help="JSON of known segment lengths in m, e.g. {\"LHip-LKnee\": 0.43} from "
+                                              "the person's model (default: measured in this recording)")
     km = kn.add_mutually_exclusive_group()
     km.add_argument("--mirrored", action="store_true", help="the colour stream is mirrored (default: decided from the "
                                                             "SDK skeleton's left/right labels)")
@@ -612,7 +614,9 @@ def main(argv=None):
             cap = kinect.read_capture(a.recording)
             seq = kinect.rgbd_sequence(cap, dict(np.load(a.mediapipe)), a.height_m,
                                        True if a.mirrored else False if a.not_mirrored else "auto",
-                                       meta={"person_ref": a.person_ref, "raw": str(a.mediapipe)}, mass_kg=a.mass_kg)
+                                       meta={"person_ref": a.person_ref, "raw": str(a.mediapipe)}, mass_kg=a.mass_kg,
+                                       segment_lengths_m=json.loads(Path(a.segment_lengths).read_text())
+                                       if a.segment_lengths else None)
         except ValueError as e:
             print(f"refused: {e}", file=sys.stderr)
             return 2
@@ -621,7 +625,9 @@ def main(argv=None):
         print(json.dumps({"out": a.out, "frames": seq.n_frames, "valid": int(seq.valid.sum()),
                           "mirrored": seq.meta["mirrored"], "gravity_source": seq.meta.get("gravity_source"),
                           "lifted_fraction_median": float(np.median(list(k["lifted_fraction"].values()))),
-                          "depth_inconsistent_frames": k["depth_inconsistent_frames"]}))
+                          "depth_inconsistent_frames": k["depth_inconsistent_frames"],
+                          "placed_by_segment_length_frames": k["placed_by_segment_length_frames"],
+                          "segments_without_length": k["segments_without_length"]}))
     elif a.cmd == "augment":
         from .augmenter import augment
         seq = augment(MarkerSequence.load(a.sequence), a.height_m, a.mass_kg, max_gap_s=a.max_gap_s,

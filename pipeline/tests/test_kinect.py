@@ -90,10 +90,26 @@ def _project(p):
 _DEPTH = {}
 
 
-def _scene(tilt_deg=8.0, occlude_right_hip=False, seed=0):
+def _squat_pose():
+    """LEVEL in a deep squat with both thighs pointing at the camera (thigh lengths kept)."""
+    level = {n: np.asarray(p, float) for n, p in LEVEL.items()}
+    out = dict(level)
+    for side in "LR":
+        hip, knee = level[f"{side}Hip"], level[f"{side}Knee"]
+        k = np.array([knee[0], 0.55, 2.45])
+        back = np.array([0.0, -0.12, 1.0])
+        out[f"{side}Knee"], out[f"{side}Hip"] = k, k + np.linalg.norm(hip - knee) * back / np.linalg.norm(back)
+    shift = (out["LHip"] + out["RHip"]) / 2 - (level["LHip"] + level["RHip"]) / 2
+    for n, p in level.items():                                 # trunk, arms and head go down with the hips
+        if not any(n.endswith(x) for x in ("Hip", "Knee", "Ankle", "Heel", "BigToe")):
+            out[n] = p + shift
+    return out
+
+
+def _scene(tilt_deg=8.0, occlude_right_hip=False, seed=0, squat=False):
     """(registered depth, MediaPipe-like raw frame dicts, SDK skeleton uv/state, true joints) for one frame."""
     R = _rot_x(tilt_deg)
-    level = {n: np.asarray(p, float) for n, p in LEVEL.items()}
+    level = _squat_pose() if squat else {n: np.asarray(p, float) for n, p in LEVEL.items()}
     if occlude_right_hip:                    # right forearm across the hip, its wrist on the hip's line of sight
         h = level["RHip"]
         level["RWrist"] = h * (1 - 0.35 / np.linalg.norm(h))
@@ -103,7 +119,7 @@ def _scene(tilt_deg=8.0, occlude_right_hip=False, seed=0):
     joints = {n: R @ p for n, p in level.items()}
     floor_n = R @ np.array([0.0, 1.0, 0.0])                     # floor: level y = +1 m
     wall_n = R @ np.array([0.0, 0.0, 1.0])                      # back wall: level z = 4.5 m
-    key = (tilt_deg, occlude_right_hip)                         # a static pose: render each one once
+    key = (tilt_deg, occlude_right_hip, squat)                  # a static pose: render each one once
     if key not in _DEPTH:
         _DEPTH[key] = _render(_spheres(joints), [(floor_n, 1.0), (wall_n, 4.5)])
     depth = _DEPTH[key]
@@ -153,8 +169,9 @@ def _write_capture(d, depths, sk_uv, sk_state, frame_numbers=None, floor=(0.0, 0
     return d
 
 
-def _recording(tmp_path, T=12, mirrored_stream=False, occlude_from=None, **kw):
-    frames = [_scene(occlude_right_hip=occlude_from is not None and t >= occlude_from, seed=t, **kw) for t in range(T)]
+def _recording(tmp_path, T=12, mirrored_stream=False, occlude_from=None, squat_from=None, **kw):
+    frames = [_scene(occlude_right_hip=occlude_from is not None and t >= occlude_from, seed=t,
+                     squat=squat_from is not None and t >= squat_from, **kw) for t in range(T)]
     depths = np.stack([f[0] for f in frames])
     raws = [f[1] for f in frames]
     sk_uv = np.stack([f[2] for f in frames])
@@ -369,3 +386,51 @@ def test_bedlam2_posing_and_line_of_sight_on_a_toy_body():
     J[1], J[2], J[4], J[5], J[7], J[8] = [0.1, 1, 0], [-0.1, 1, 0], [0.1, 0.5, 0.2], [-0.1, 0.5, 0.2], [0.1, 0, 0], [-0.1, 0, 0]
     np.testing.assert_allclose(b2.facing(J), [0, 0, 1], atol=1e-12)                   # left hip at +x: facing +z
     assert 40 < b2.knee_flexion_deg(J) < 50
+
+
+def test_a_hip_hidden_behind_the_thigh_is_placed_at_thigh_length_from_the_knee(tmp_path):
+    """Deep squat facing the sensor: depth at the hip's pixel is the thigh. The person's thigh length (measured
+    standing, side-on) puts the hip back on its own line of sight behind the knee."""
+    cap, raw, frames = _recording(tmp_path, T=16, squat_from=10)
+    seq = kinect.rgbd_sequence(cap, raw, height_m=HEIGHT)
+    k = seq.meta["kinect"]
+    for side in "LR":
+        hip, knee = seq.marker_names.index(f"{side}Hip"), seq.marker_names.index(f"{side}Knee")
+        L = np.linalg.norm(frames[0][4][f"{side}Hip"] - frames[0][4][f"{side}Knee"])
+        assert k["segment_lengths"][f"{side}Hip-{side}Knee"]["length_m"] == pytest.approx(L, abs=0.02)
+        assert k["segment_lengths"][f"{side}Hip-{side}Knee"]["frames"] == 10           # the standing frames
+        err = np.linalg.norm(seq.markers[:, hip] - np.stack([f[4][f"{side}Hip"] for f in frames]), axis=1)
+        assert err[:10].max() < 0.02 and err[10:].max() < 0.03, (side, err.round(3))
+        assert np.linalg.norm(seq.markers[12, knee] - frames[12][4][f"{side}Knee"]) < 0.02
+        assert k["placed_by_segment_length_frames"][f"{side}Hip"] == 6
+    # depth alone puts a deep-squat hip on the thigh, or drops it as inconsistent with the pose
+    names = list(POSE2SIM_MEDIAPIPE)
+    idx = [POSE2SIM_MEDIAPIPE[n] for n in names]
+    offsets = np.array([kinect.surface_to_centre(n, HEIGHT) if n in kinect.SURFACE_TO_CENTRE else 0.0 for n in names])
+    P, src = kinect.lift_frame(raw["image_xy"][12][idx], raw["visibility"][12][idx], raw["world"][12][idx],
+                               np.asarray(cap["depth"][12]), K, offsets)
+    lhip = names.index("LHip")
+    assert src[lhip] == 2 or np.linalg.norm(P[lhip] - frames[12][4]["LHip"]) > 0.1
+    given = kinect.rgbd_sequence(cap, raw, height_m=HEIGHT, segment_lengths_m={"LHip-LKnee": 0.44, "RHip-RKnee": 0.44})
+    assert given.meta["kinect"]["segment_lengths"]["LHip-LKnee"]["source"].startswith("given")
+    with pytest.raises(ValueError, match="not one of"):
+        kinect.rgbd_sequence(cap, raw, height_m=HEIGHT, segment_lengths_m={"LKnee-LAnkle": 0.4})
+    # a standing recording needs no re-placing
+    cap2, raw2, _ = _recording(tmp_path / "standing", T=12)
+    assert kinect.rgbd_sequence(cap2, raw2, height_m=HEIGHT).meta["kinect"]["placed_by_segment_length_frames"] == {}
+
+
+def test_place_on_ray_picks_the_side_the_pose_predicts():
+    K = (500.0, 500.0, 320.0, 240.0)
+    knee, hip = np.array([0.1, 0.5, 2.5]), np.array([0.1, 0.45, 2.94])
+    L = np.linalg.norm(hip - knee)
+    uv = (K[0] * hip[0] / hip[2] + K[2], K[1] * hip[1] / hip[2] + K[3])
+    np.testing.assert_allclose(kinect.place_on_ray(*uv, knee, L, hip + 0.03, K), hip, atol=1e-9)
+    near = kinect.place_on_ray(*uv, knee, L, knee - [0, 0, 0.4], K)          # the pose says "in front"
+    assert near[2] < knee[2] and np.linalg.norm(near - knee) == pytest.approx(L)
+    far = kinect.place_on_ray(*uv, knee, L, np.full(3, np.nan), K)            # no pose: behind the anchor
+    np.testing.assert_allclose(far, hip, atol=1e-9)
+    miss = kinect.place_on_ray(*uv, knee, 0.01, hip, K)                        # line farther than L: closest approach
+    d = hip / np.linalg.norm(hip)
+    np.testing.assert_allclose(miss, (d @ knee) * d, atol=1e-9)
+

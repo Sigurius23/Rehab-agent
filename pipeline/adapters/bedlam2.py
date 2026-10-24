@@ -195,19 +195,27 @@ KINECT_K = (531.15, 531.15, 320.0, 240.0)
 SETUPS = {"level 1.0 m": (1.0, False), "high 1.6 m, aimed at pelvis": (1.6, True)}
 
 
-def visibility(model, motion_dir, mapping_csv, pattern="squat", distance_m=2.7, step=3, max_sequences=None):
-    """Per frame and keypoint of the matching motions: what a front-facing depth sensor would lift.
+def visibility(model, motion_dir, mapping_csv, pattern="squat", distance_m=2.7, step=3, max_sequences=None,
+               px_noise=3.0, pose_noise_m=0.03, caught_m=0.20, seed=0):
+    """Per frame and keypoint of the matching motions: what a front-facing depth sensor would lift, before and
+    after rehabtwin.kinect's segment-length check.
 
     The sensor stands ``distance_m`` in front of the body's mean facing direction. For each keypoint it takes
     the first surface on the line of sight and adds ``rehabtwin.kinect.surface_to_centre`` (this body's height
-    and BMI). ``error_m`` > 0: the lifted point lies behind the joint, < 0: in front of it. A large negative
-    error means the line of sight hit another body part first.
+    and BMI). ``error_m`` is that point's signed error along the line of sight. Below zero means in front of
+    the joint, i.e. the line of sight hit another body part first. Errors over ``caught_m`` count as dropped
+    by the pose check. Then ``segment_lengths`` / ``constrain_segments`` run as in ``rgbd_sequence``, with
+    MediaPipe-like noise: ``px_noise`` on the 2D keypoint, ``pose_noise_m`` per axis on its 3D pose.
+    ``error_after_m`` is the distance to the joint afterwards (None: still empty).
     """
     sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), ".."))     # pipeline/ -> rehabtwin
-    from rehabtwin.kinect import surface_to_centre
+    from rehabtwin.kinect import constrain_segments, segment_lengths, surface_to_centre
     faces = model["f"].astype(int)
+    names = list(LIFTED)
     with open(mapping_csv) as fh:
         seqs = [r for r in csv.DictReader(fh) if re.search(pattern, r["motion_rel_fname"], re.IGNORECASE)]
+    rng = np.random.default_rng(seed)
+    fx, fy, cx, cy = KINECT_K
     out = []
     for r in seqs[:max_sequences]:
         path = os.path.join(motion_dir, f"{r['body_id']}_{r['motion_id']}.npz")
@@ -217,7 +225,8 @@ def visibility(model, motion_dir, mapping_csv, pattern="squat", distance_m=2.7, 
         betas, poses, trans = d["betas"].astype(float), d["poses"], d["trans"]
         v_rest, _ = rest_body(model, betas)
         h, _, bmi = body_stats(v_rest, faces)
-        frames = range(0, len(poses), step)
+        offsets = np.array([surface_to_centre(n, h, bmi) for n in names])
+        frames = list(range(0, len(poses), step))
         posed = [pose_body(model, betas, poses[i], trans[i]) for i in frames]
         f = np.mean([facing(J) for _, J in posed], axis=0)
         f /= np.linalg.norm(f)
@@ -225,13 +234,32 @@ def visibility(model, motion_dir, mapping_csv, pattern="squat", distance_m=2.7, 
         for setup, (cam_h, aim) in SETUPS.items():
             pos = np.array([pelvis[0], cam_h, pelvis[2]]) + distance_m * f
             C, R = camera(pos, np.array([pelvis[0], pelvis[1] if aim else cam_h, pelvis[2]]))
-            for fi, (v, J) in zip(frames, posed):
-                flex = knee_flexion_deg(J)
-                for name, j in LIFTED.items():
-                    dist, hit = first_hit_culled(C, R, KINECT_K, v, faces, J[j])
-                    err = hit + surface_to_centre(name, h, bmi) - dist
+            F, n = len(frames), len(names)
+            Jc = np.zeros((F, n, 3))
+            P = np.full((F, n, 3), np.nan)
+            err = np.full((F, n), np.nan)
+            flex = np.zeros(F)
+            for k, (v, J) in enumerate(posed):
+                flex[k] = knee_flexion_deg(J)
+                for q, name in enumerate(names):
+                    Jc[k, q] = R @ (J[LIFTED[name]] - C)
+                    dist, hit = first_hit_culled(C, R, KINECT_K, v, faces, J[LIFTED[name]])
+                    err[k, q] = hit + offsets[q] - dist
+                    P[k, q] = Jc[k, q] / dist * (hit + offsets[q])
+            source = np.where(np.abs(err) <= caught_m, 1, 2)
+            P[source == 2] = np.nan
+            uv = np.stack([fx * Jc[..., 0] / Jc[..., 2] + cx, fy * Jc[..., 1] / Jc[..., 2] + cy], -1)
+            uv = uv + rng.normal(0, px_noise, uv.shape)
+            world = Jc + rng.normal(0, pose_noise_m, Jc.shape)
+            lengths = segment_lengths(P, source, names)
+            constrain_segments(P, source, uv, np.ones((F, n)), world, KINECT_K, lengths, names)
+            after = np.linalg.norm(P - Jc, axis=2)
+            for k, fi in enumerate(frames):
+                for q, name in enumerate(names):
                     out.append({"body": r["body_id"], "motion": r["motion_rel_fname"], "frame": fi, "setup": setup,
-                                "bmi": bmi, "knee_flexion_deg": flex, "keypoint": name, "error_m": err})
+                                "bmi": bmi, "knee_flexion_deg": float(flex[k]), "keypoint": name,
+                                "error_m": float(err[k, q]), "placed": bool(source[k, q] == 4),
+                                "error_after_m": None if np.isnan(after[k, q]) else float(after[k, q])})
     return out
 
 
@@ -239,9 +267,10 @@ DEPTH_BINS = (("standing (<30 deg knee)", 0, 30), ("mid (30-70)", 30, 70), ("dee
 BMI_BINS = (("BMI<25", 0, 25), ("25-30", 25, 30), (">30", 30, 99))
 
 
-def summarise_visibility(rows, good_m=0.03, caught_m=0.20):
-    """Share of keypoint-frames lifted within ``good_m``, wrong by up to ``caught_m`` (what the Kinect path's
-    0.2 m consistency check cannot catch), or worse (left empty by that check), per setup, joint and squat depth."""
+def summarise_visibility(rows, good_m=0.03, caught_m=0.20, key="error_m"):
+    """Share of keypoint-frames within ``good_m``, wrong by up to ``caught_m`` (what the Kinect path's 0.2 m
+    pose check cannot catch), or worse / empty, per setup, joint and squat depth. ``key``: ``error_m`` (depth
+    alone) or ``error_after_m`` (after the segment-length check)."""
     out = {}
     for r in rows:
         joint = r["keypoint"][1:]
@@ -251,7 +280,8 @@ def summarise_visibility(rows, good_m=0.03, caught_m=0.20):
                     if blo <= r["bmi"] < bhi:
                         cell = out.setdefault(r["setup"], {}).setdefault(joint, {}).setdefault(dname, {}).setdefault(
                             bname, {"n": 0, "good": 0, "silent": 0, "caught": 0})
-                        e = abs(r["error_m"])
+                        e = r.get(key)
+                        e = np.inf if e is None else abs(e)
                         cell["n"] += 1
                         cell["good" if e <= good_m else "silent" if e <= caught_m else "caught"] += 1
     return out
@@ -275,7 +305,8 @@ def main(argv=None):
     if a.cmd == "visibility":
         rows = visibility(load_smplx(a.model), a.motions, a.mapping, a.pattern, step=a.step)
         with open(a.out, "w") as fh:
-            json.dump({"rows": rows, "summary": summarise_visibility(rows)}, fh)
+            json.dump({"rows": rows, "summary": summarise_visibility(rows),
+                       "summary_after": summarise_visibility(rows, key="error_after_m")}, fh)
         print(f"{len(rows)} keypoint-frames from {len({(r['body'], r['motion']) for r in rows})} sequences -> {a.out}")
         return
     rows = measure_offsets(load_smplx(a.model), a.motions)
