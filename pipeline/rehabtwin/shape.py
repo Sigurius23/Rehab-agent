@@ -18,8 +18,8 @@ and eyes stay at zero. Each term is divided by its expected error:
   (``POSE_SD``; tight for the spine).
 
 Fingers are not fitted (too small for the sensor) and are left out of the data and silhouette terms. The
-betas are released coarse to fine (4, 8, then 16): released all at once, high-order components and a
-folded spine stood in for a heavy body's belly and chest.
+betas are released coarse to fine (none, 4, 8, then 16): released all at once, high-order components and a
+folded spine stood in for a heavy body's belly and chest, and an initial pose error was absorbed into shape.
 
 It returns:
 - betas and pose;
@@ -60,10 +60,11 @@ BODY_JOINTS = 21                    # SMPL-X joints 1..21 are fitted; jaw, eyes 
 # Pose prior SD (rad) per SMPL-X joint and local axis (x, y, z), 1.0 when not listed: about twice the SD
 # across BEDLAM2's (AMASS) motion frames, where spine2 and spine3 flex by 9 and 5 deg SD and the spine
 # twists and bends sideways by 3-5 deg. Left loose, the spine of a heavy body (far behind the skin seen from
-# the front) folds into a zig-zag whose skinning bulges stand in for belly and chest shape.
+# the front) folds into a zig-zag whose skinning bulges stand in for belly and chest shape. Ankles twist by
+# ~7 deg: a turned-out foot is hip rotation, and a loose ankle let a foot turn backwards.
 POSE_SD = {3: (0.3, 0.1, 0.1), 6: (0.15, 0.1, 0.1), 9: (0.1, 0.1, 0.1), 12: (0.3, 0.3, 0.2), 15: (0.3, 0.3, 0.2),
            13: (0.3, 0.3, 0.3), 14: (0.3, 0.3, 0.3), 10: (0.3, 0.3, 0.3), 11: (0.3, 0.3, 0.3),
-           4: (1.0, 0.3, 0.3), 5: (1.0, 0.3, 0.3)}
+           4: (1.0, 0.3, 0.3), 5: (1.0, 0.3, 0.3), 7: (0.5, 0.3, 0.3), 8: (0.5, 0.3, 0.3)}
 ARMS_DOWN = {16: (0.0, 0.0, -1.2), 17: (0.0, 0.0, 1.2)}   # start with the arms hanging, not in the T-pose
 KINECT_SD_COEFF = 1.5e-3            # depth SD = 1.5e-3 z^2 m (Khoshelham & Elberink 2012: ~4 cm at 5 m)
 KINECT_FB_PXM = 0.075 * 580.0       # IR baseline x focal length (m px) of a Kinect v1: disparity = fb / z
@@ -403,11 +404,15 @@ class _Fit:
         sd_ray = np.sqrt(sd_z[ray] ** 2 + (cfg["model_sd_m"] / cos[ray]) ** 2)
         sd_near = np.sqrt(sd_z[~ray] ** 2 + cfg["model_sd_m"] ** 2)
 
-        def weights(r, sd):                                      # Huber, linear beyond 2 SD; gated
+        def weights(r, sd, g):                                   # Huber, linear beyond 2 SD; gated
             c = 2.0 * sd
             rob = np.where(np.abs(r) <= c, 1.0, np.sqrt(c / np.maximum(np.abs(r), 1e-12)))
-            return np.where(np.abs(r) <= gate, rob / sd, 0.0)
-        w_ray, w_near = weights(dz[ray], sd_ray), np.where(on_finger, 0.0, weights(dist, sd_near))
+            return np.where(np.abs(r) <= g, rob / sd, 0.0)
+        # a point outside the model's silhouette is the person where the model is not: kept up to 15 cm away
+        outside = hit[~ray] < 0
+        w_ray = weights(dz[ray], sd_ray, gate)
+        w_near = np.where(on_finger, 0.0, np.where(outside, weights(dist, sd_near, max(gate, 0.15)),
+                                                    weights(dist, sd_near, gate)))
         used = int((w_ray > 0).sum() + (w_near > 0).sum())
         scale = np.sqrt(cfg["n_eff"] / max(used, 1))
         fr.w_ray, fr.w_near = w_ray * scale, w_near * scale
@@ -572,10 +577,10 @@ def _unit_floor(floor):
 
 
 def fit_shape(model, frames, K, size=(640, 480), height_m=None, height_sd_m=0.005, floor=None, n_betas=16,
-              keypoint_sd_px=3.0, beta_sd=1.0, depth_sd=None, model_sd_m=0.004, n_eff=1000, sil_sd_m=0.005,
-              n_eff_sil=300, sil_tol_px=1.0, floor_sd_m=0.005, floor_clear_m=0.02, outer=25, inner_nfev=8,
+              keypoint_sd_px=3.0, beta_sd=1.0, depth_sd=None, model_sd_m=0.004, n_eff=300, sil_sd_m=0.005,
+              n_eff_sil=100, sil_tol_px=1.0, floor_sd_m=0.005, floor_clear_m=0.02, outer=25, inner_nfev=8,
               tol=5e-3, max_points=4000, closing_px=2, keypoint_joints=None, keypoint_names=None, init=None,
-              beta_schedule=((0, 4), (2, 8), (4, None)), seed=0):
+              beta_schedule=((0, 0), (1, 4), (3, 8), (5, None)), seed=0):
     """Fit an SMPL-X body (shared betas, a pose per frame) to a person's depth points.
 
     ``model``: a BodyModel, or the model's arrays (``adapters/bedlam2.load_smplx``). ``frames``: one dict per
@@ -589,17 +594,23 @@ def fit_shape(model, frames, K, size=(640, 480), height_m=None, height_sd_m=0.00
     frame without its own ``floor`` entry. It keeps the model above the floor, and the silhouette term then
     ignores the model's lowest ``floor_clear_m``, which a segmentation cannot tell from the floor.
     ``depth_sd(z)``: the sensor's depth SD (m); default Kinect v1.
-    ``n_eff``: how many independent observations the depth points count as (a real sensor's errors are
-    correlated); it sets their weight against the keypoints and priors. ``init``: start from an earlier
+    ``n_eff``: how many independent observations the depth points count as. A Kinect v1 matches its pattern
+    over ~9x9 px windows, so ~16k person pixels carry a few hundred independent errors; this sets their
+    weight against the keypoints and priors (at 1000, betas ran to +-6 SD to absorb a wrong arm pose). ``init``: start from an earlier
     result (its ``betas`` and per frame ``global_orient``, ``body_pose``, ``transl``) instead of the keypoints.
-    ``beta_schedule``: (outer iteration, number of betas free from then on; None = all). The fit stops when
+    ``beta_schedule``: (outer iteration, number of betas free from then on; None = all): the first iteration
+    aligns pose and translation with the mean shape before any shape is fitted. The fit stops when
     the cost fell by less than ``tol`` (relative) over two outer iterations, at most ``outer``.
 
     Returns a dict: ``betas``; ``height_m``, ``volume_m3``, ``mass_kg``, ``bmi`` (rest pose, mesh volume at
     1000 kg/m^3); ``rest_joints``; ``segment_lengths_m`` {segment: (left, right)}; ``surface_to_centre_m``
     {keypoint: front skin-to-joint distance}; ``frames``, one per frame: global_orient (axis-angle, camera
     coordinates), body_pose (21,3), transl, joints (J,3) in camera coordinates, residuals; ``fit`` (runtime,
-    iterations). The SMPL-X joints are regressed from the surface, not anatomical joint centres.
+    iterations, ``warnings``). The SMPL-X joints are regressed from the surface, not anatomical joint centres.
+
+    ``fit.warnings`` flags fits not to trust: a beta beyond +-4 SD (outside the range of real body shapes;
+    the shape absorbed a wrong pose), under 90% of the depth points on the model along their line of sight
+    (pose or segmentation wrong), or no convergence.
     """
     t_start = time.time()
     bm = model if isinstance(model, BodyModel) else BodyModel(model, n_betas)
@@ -634,6 +645,16 @@ def fit_shape(model, frames, K, size=(640, 480), height_m=None, height_sd_m=0.00
             fr.lifted = None
     if any(fr.lifted is not None for fr in frs):          # stage 1: pose onto the keypoints, mean shape
         Qs = least_squares(fit.fun, Qs.ravel(), jac=fit.jac, method="lm", max_nfev=30).x.reshape(Qs.shape)
+        refit = False
+        for fr, Q in zip(frs, Qs):                        # a keypoint whose depth belongs to whatever is in
+            if fr.lifted is None:                         # front of it (a forearm across the hip) is dropped
+                continue
+            J = bm.posed(np.zeros((1, bm.n_betas)), fit.rots(fr, Q[None]), Q[None, -3:], idx=np.zeros(0, np.int64),
+                         offsets=np.zeros((0, 3)))[1][0]
+            far = (np.linalg.norm(J[fit.kp_joints] - fr.lifted, axis=1) > 0.10) & (fr.lifted_w > 0)
+            fr.lifted_w[far], refit = 0.0, refit or far.any()
+        if refit:
+            Qs = least_squares(fit.fun, Qs.ravel(), jac=fit.jac, method="lm", max_nfev=30).x.reshape(Qs.shape)
     fit.free_betas, fit.stage = True, "surface"
     x = np.r_[fit.betas_fixed if init is None else np.asarray(init["betas"], float)[:bm.n_betas], Qs.ravel()]
     if init is not None:
@@ -641,7 +662,8 @@ def fit_shape(model, frames, K, size=(640, 480), height_m=None, height_sd_m=0.00
     history = []
     for it in range(outer):                               # stage 2: everything, correspondences re-matched
         betas, Qs = fit.split(x)
-        active = [n for start, n in beta_schedule if it >= start][-1] or bm.n_betas
+        active = [n for start, n in beta_schedule if it >= start][-1]
+        active = bm.n_betas if active is None else active
         fit.beta_sd = np.where(np.arange(bm.n_betas) < active, beta_sd, 1e-3)   # coarse to fine: others held
         vr = bm.rest(betas)[0]
         fit.top, fit.bot = int(np.argmax(vr[:, 1])), int(np.argmin(vr[:, 1]))
@@ -667,10 +689,19 @@ def fit_shape(model, frames, K, size=(640, 480), height_m=None, height_sd_m=0.00
         out_frames.append({"global_orient": Rotation.from_matrix(R[0, 0]).as_rotvec().tolist(),
                            "body_pose": Q[3:3 + 3 * fit.nbj].reshape(-1, 3).tolist(), "transl": Q[-3:].tolist(),
                            "joints": J.tolist(), "residuals": stats})
+    warnings = []
+    if np.abs(betas).max() > 4.0:
+        warnings.append(f"a shape parameter at {np.abs(betas).max():.1f} SD: the shape may stand in for a wrong pose")
+    for k, f in enumerate(out_frames):
+        if f["residuals"]["fraction_line_of_sight"] < 0.9:
+            warnings.append(f"frame {k}: {f['residuals']['fraction_line_of_sight']:.0%} of the depth points lie on the "
+                            "model along their line of sight: pose or segmentation wrong?")
+    if len(history) == outer:
+        warnings.append(f"not converged in {outer} outer iterations")
     out = {"betas": betas.tolist(), "height_m": h, "volume_m3": vol, "mass_kg": mass, "bmi": bmi,
            "rest_joints": Jr.tolist(), "frames": out_frames,
            "fit": {"outer_iterations": len(history), "runtime_s": round(time.time() - t_start, 2), "history": history,
-                   "height_given_m": height_m, "frames": len(frs)},
+                   "height_given_m": height_m, "frames": len(frs), "warnings": warnings},
            "tier": "B", "joints_note": "SMPL-X joints, regressed from the fitted surface: not anatomical joint centres"}
     if bm.n_joints == 55:
         out["segment_lengths_m"] = segment_lengths(Jr)

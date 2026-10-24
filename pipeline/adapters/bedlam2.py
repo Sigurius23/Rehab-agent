@@ -370,9 +370,15 @@ def standing_frames(bm, model, betas, motions, n=2, max_knee_deg=20.0, step=15):
     return out
 
 
+# The bodies looked at while developing rehabtwin.shape (one per size label, and the XS body whose
+# arms-across-the-body frame broke an early version). The test split leaves them out.
+DEVELOPMENT_BODIES = ("it_4324_XS", "nl_5562_XS", "it_4592_S", "nl_6228_M", "us_2526_L", "us_1253_XL", "us_2116_2XL",
+                      "us_1459_3XL", "nl_6537_4XL", "nl_1079_5XL")
+
+
 def pick_bodies(bm, model, motion_dir, mapping_csv, per_size=5, split="test", seed=0):
-    """Bodies stratified by size label: ``per_size`` per label with near-standing frames. ``split`` 'test'
-    takes the first eligible ones of a seeded shuffle, 'dev' (for tuning) the next ones."""
+    """Bodies stratified by size label, each with near-standing frames. 'test': the first ``per_size`` per
+    label of a seeded shuffle, DEVELOPMENT_BODIES left out. 'dev': DEVELOPMENT_BODIES."""
     with open(mapping_csv) as fh:
         rows = list(csv.DictReader(fh))
     motions = {}
@@ -383,16 +389,18 @@ def pick_bodies(bm, model, motion_dir, mapping_csv, per_size=5, split="test", se
     rng = np.random.default_rng(seed)
     out = []
     for size in SIZES:
-        cand = sorted(b for b in motions if b.rsplit("_", 1)[-1] == size)
+        cand = rng.permutation(sorted(b for b in motions if b.rsplit("_", 1)[-1] == size))
         found = []
-        for body in rng.permutation(cand):
+        for body in cand:
+            if (body in DEVELOPMENT_BODIES) != (split == "dev"):
+                continue
             betas = np.load(motions[body][0][0], allow_pickle=False)["betas"][:16].astype(float)
             frames = standing_frames(bm, model, betas, motions[body])
             if frames:
                 found.append({"body": str(body), "size": size, "betas": betas, "frames": frames})
-            if len(found) == 2 * per_size:
+            if len(found) == per_size:
                 break
-        out += found[:per_size] if split == "test" else found[per_size:]
+        out += found
     return out
 
 
@@ -488,6 +496,7 @@ def shapefit_body(item, conditions=None):
                      "offsets_true_m": _sides(true_off), "offsets_fit_m": _sides(res["surface_to_centre_m"]),
                      "offsets_baseline_m": _sides({n: surface_to_centre(n, h, bmi) for n in shape.KEYPOINTS}),
                      "joint_error_m": jerr, "lift_error_m": lift, "runtime_s": res["fit"]["runtime_s"],
+                     "warnings": res["fit"]["warnings"],
                      "outer_iterations": res["fit"]["outer_iterations"],
                      "residuals": [f["residuals"] for f in res["frames"]]})
     return rows
@@ -514,7 +523,7 @@ def summarise_shapefit(rows, seg_coef):
             off = {j: stats([100 * (r["offsets_fit_m"][j] - r["offsets_true_m"][j]) for r in g]) for j in JOINTS}
             off_base = {j: stats([100 * (r["offsets_baseline_m"][j] - r["offsets_true_m"][j]) for r in g]) for j in JOINTS}
             out.setdefault(cond, {})[gname] = {
-                "bodies": len(g), "failed": failed, "bmi_range": [round(min(r["bmi_true"] for r in g), 1), round(max(r["bmi_true"] for r in g), 1)],
+                "bodies": len(g), "failed": failed, "flagged": [r["body"] for r in g if r["warnings"]], "bmi_range": [round(min(r["bmi_true"] for r in g), 1), round(max(r["bmi_true"] for r in g), 1)],
                 "height_cm": stats([100 * (r["height_fit_m"] - r["height_true_m"]) for r in g]),
                 "mass_pct": stats([100 * (r["mass_fit_kg"] / r["mass_true_kg"] - 1) for r in g]),
                 "bmi": stats([r["bmi_fit"] - r["bmi_true"] for r in g]),
@@ -544,19 +553,32 @@ def print_shapefit(summary):
                   f"{s['joint_error_cm_median']:4.1f} ({s['lift_error_cm_median']:3.1f}) {s['runtime_s_median']:4.0f}")
 
 
-def shapefit(model_path, motion_dir, mapping_csv, per_size=5, split="test", jobs=1, conditions=None, seed=0):
-    """Validation of ``rehabtwin.shape.fit_shape`` on BEDLAM2 bodies: rows, summary and settings."""
+def shapefit(model_path, motion_dir, mapping_csv, per_size=5, split="test", jobs=1, conditions=None, seed=0,
+             partial=None):
+    """Validation of ``rehabtwin.shape.fit_shape`` on BEDLAM2 bodies: rows, summary and settings. Each body's
+    rows are appended to ``partial`` (JSON lines) as they come; bodies already there are not fitted again."""
     _rehabtwin()
     from rehabtwin import shape
     model = load_smplx(model_path)
     bm = shape.BodyModel(model)
     items = pick_bodies(bm, model, motion_dir, mapping_csv, per_size, split, seed)
-    other = {it["body"] for it in pick_bodies(bm, model, motion_dir, mapping_csv, per_size,
-                                              "dev" if split == "test" else "test", seed)}
-    seg_coef = segment_baseline(model, motion_dir, exclude={it["body"] for it in items} | other)
+    seg_coef = segment_baseline(model, motion_dir, exclude={it["body"] for it in items} | set(DEVELOPMENT_BODIES))
     conds = {c: SHAPE_CONDITIONS[c] for c in conditions} if conditions else SHAPE_CONDITIONS
-    print(f"{len(items)} bodies ({split}), {len(conds)} conditions, {jobs} jobs", flush=True)
     rows = []
+    if partial and os.path.exists(partial):
+        with open(partial) as fh:
+            rows = [json.loads(line) for line in fh if line.strip()]
+        rows = [r for r in rows if r["body"] in {it["body"] for it in items} and r["condition"] in conds]
+    done = {r["body"] for r in rows}
+    items = [it for it in items if it["body"] not in done]
+    print(f"{len(items)} bodies to fit ({split}, {len(done)} done before), {len(conds)} conditions, {jobs} jobs",
+          flush=True)
+
+    def keep(rs):
+        rows.extend(rs)
+        if partial:
+            with open(partial, "a") as fh:
+                fh.writelines(json.dumps(r) + "\n" for r in rs)
     if jobs > 1:
         import functools
         import multiprocessing as mp
@@ -564,17 +586,18 @@ def shapefit(model_path, motion_dir, mapping_csv, per_size=5, split="test", jobs
             os.environ.setdefault(var, "1")          # one BLAS thread per worker; read by the spawned workers
         with mp.get_context("spawn").Pool(jobs, _shape_worker_init, (model_path,)) as pool:
             for k, rs in enumerate(pool.imap_unordered(functools.partial(shapefit_body, conditions=conds), items)):
-                rows += rs
+                keep(rs)
                 print(f"  {k + 1}/{len(items)} {rs[0]['body'] if rs else ''}", flush=True)
     else:
         _W["model"], _W["bm"] = model, bm
         for k, it in enumerate(items):
-            rows += shapefit_body(it, conds)
+            keep(shapefit_body(it, conds))
             print(f"  {k + 1}/{len(items)} {it['body']}", flush=True)
     settings = {"split": split, "per_size": per_size, "seed": seed, "sensor": "2.7 m in front, level at 1.0 m",
                 "intrinsics": KINECT_K, "conditions": {c: [v[0], v[1], v[2]] for c, v in conds.items()},
                 "segment_baseline": {"model": "c0 + c1 height + c2 BMI", "coef": seg_coef,
-                                     "fitted_on": "size-labelled BEDLAM2 bodies outside the test and dev splits"},
+                                     "fitted_on": "size-labelled BEDLAM2 bodies outside this split and "
+                                                  "DEVELOPMENT_BODIES"},
                 "offset_baseline": "rehabtwin.kinect.surface_to_centre(true height, true BMI)"}
     return {"rows": rows, "summary": summarise_shapefit(rows, seg_coef), "settings": settings}
 
@@ -597,14 +620,16 @@ def main(argv=None):
     sf.add_argument("--model", required=True)
     sf.add_argument("--motions", required=True)
     sf.add_argument("--mapping", required=True, help="b2_bedlam2amass_motion_training.csv")
-    sf.add_argument("--per-size", type=int, default=5, help="bodies per size label XS..5XL")
-    sf.add_argument("--split", choices=("test", "dev"), default="test", help="dev: other bodies, for tuning")
+    sf.add_argument("--per-size", type=int, default=5, help="test bodies per size label XS..5XL")
+    sf.add_argument("--split", choices=("test", "dev"), default="test", help="dev: the bodies used in development")
     sf.add_argument("--conditions", nargs="*", choices=list(SHAPE_CONDITIONS), help="default: all")
     sf.add_argument("--jobs", type=int, default=1)
-    sf.add_argument("--out", required=True)
+    sf.add_argument("--out", required=True, help="JSON; rows also go to OUT.partial.jsonl as they come, and a "
+                    "rerun skips the bodies already there")
     a = ap.parse_args(argv)
     if a.cmd == "shapefit":
-        res = shapefit(a.model, a.motions, a.mapping, a.per_size, a.split, a.jobs, a.conditions)
+        res = shapefit(a.model, a.motions, a.mapping, a.per_size, a.split, a.jobs, a.conditions,
+                       partial=a.out + ".partial.jsonl")
         with open(a.out, "w") as fh:
             json.dump(res, fh)
         print_shapefit(res["summary"])
