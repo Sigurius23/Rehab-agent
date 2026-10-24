@@ -287,6 +287,298 @@ def summarise_visibility(rows, good_m=0.03, caught_m=0.20, key="error_m"):
     return out
 
 
+def _rehabtwin():
+    sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), ".."))     # pipeline/ -> rehabtwin
+
+
+def synth_frame(model, betas, pose, trans, rng, distance_m=2.7, sensor_height_m=1.0, yaw_deg=0.0, px_noise=3.0,
+                noise=None, floor_clear_m=0.02, focal_scale=1.0):
+    """One depth frame of a posed body as a front-facing Kinect v1 would see it (floor at y = 0 or below).
+
+    The sensor stands ``distance_m`` in front of the pelvis along the body's facing direction (turned by
+    ``yaw_deg`` about the vertical), level at ``sensor_height_m``. Depth is the first surface per pixel
+    (``shape.render_depth``) with the sensor's noise (``shape.kinect_v1_noise``, keyword arguments ``noise``).
+    The person's pixels are known (as the SDK's player index would give them), minus those within
+    ``floor_clear_m`` of the floor. 2D keypoints are the projected SMPL-X joints plus ``px_noise`` px.
+    ``focal_scale``: the true focal length over the nominal one that back-projects the points."""
+    _rehabtwin()
+    from rehabtwin import shape
+    v, J = pose_body(model, betas, pose, trans)
+    f = facing(J)
+    a = np.radians(yaw_deg)
+    f = np.array([np.cos(a) * f[0] + np.sin(a) * f[2], 0.0, -np.sin(a) * f[0] + np.cos(a) * f[2]])
+    eye = np.array([J[0, 0], sensor_height_m, J[0, 2]])
+    C, R = camera(eye + distance_m * f, eye)
+    vc, Jc = (v - C) @ R.T, (J - C) @ R.T
+    fx, fy, cx, cy = KINECT_K
+    K_true = (fx * focal_scale, fy * focal_scale, cx, cy)
+    depth, _ = shape.render_depth(vc, model["f"].astype(np.int64), K_true)
+    mm = shape.kinect_v1_noise(depth, rng, **(noise or {}))
+    floor_y = min(0.0, float(v[:, 1].min()))                   # y = 0, or lower where a foot sinks below it
+    up, offset = R @ np.array([0.0, 1.0, 0.0]), floor_y - C[1]  # up . p = offset (camera coordinates)
+    pts = shape.depth_points(mm, KINECT_K)
+    pts = pts[pts @ up - offset > floor_clear_m]
+    jj = list(shape.KEYPOINTS.values())
+    kp = np.stack([K_true[0] * Jc[jj, 0] / Jc[jj, 2] + cx, K_true[1] * Jc[jj, 1] / Jc[jj, 2] + cy], 1)
+    return {"points": pts, "keypoints_uv": kp + rng.normal(0, px_noise, kp.shape) if px_noise else kp,
+            "floor": (up, offset), "joints_cam": Jc, "depth_mm": mm, "camera": (C, R)}
+
+
+SIZES = ("XS", "S", "M", "L", "XL", "2XL", "3XL", "4XL", "5XL")
+FIT_BMI_BINS = (("BMI < 20", 0, 20), ("20-25", 20, 25), ("25-30", 25, 30), ("30-35", 30, 35), ("> 35", 35, 99))
+PREFERRED = (re.compile(r"stand|a_?pose|t_?pose|idle", re.IGNORECASE), re.compile(r"walk", re.IGNORECASE))
+# condition -> (synth_frame keyword arguments, fit options, frames). Conditions with the same synthesis
+# and frames see the same noisy data, so their differences are paired.
+SHAPE_CONDITIONS = {
+    "main": ({}, {}, "A"),
+    "measured height": ({}, {"height": True}, "A"),
+    "no keypoints": ({}, {"keypoints": False}, "A"),
+    "noise-free": ({"noise": {"sd_coeff": 0.0, "edge_drop": 0.0}, "px_noise": 0.0}, {}, "A"),
+    "depth noise x2": ({"noise": {"sd_coeff": 3.0e-3}}, {}, "A"),
+    "disparity steps + correlated noise": ({"noise": {"disparity_step_px": 0.125, "corr_px": 3.0}}, {}, "A"),
+    "keypoints 8 px": ({"px_noise": 8.0}, {}, "A"),
+    "turned 30 deg": ({"yaw_deg": 30.0}, {}, "A"),
+    "focal length +2%": ({"focal_scale": 1.02}, {}, "A"),
+    "second frame": ({}, {}, "B"),
+    "two frames": ({}, {}, "AB"),
+}
+
+
+def standing_frames(bm, model, betas, motions, n=2, max_knee_deg=20.0, step=15):
+    """Up to ``n`` near-standing frames of one body, each from another motion: [(path, frame, knee flexion,
+    source motion)]. Knee flexion under ``max_knee_deg`` on average, lowest vertex within 2-3 cm of the floor.
+    ``motions``: [(path, source name)], standing motions tried first, then walking, then the rest."""
+    _rehabtwin()
+    from rehabtwin import shape
+    rank = [next((k for k, rx in enumerate(PREFERRED) if rx.search(name)), len(PREFERRED)) for _, name in motions]
+    out = []
+    for _, (path, name) in sorted(zip(rank, motions), key=lambda t: t[0]):
+        d = np.load(path, allow_pickle=False)
+        idx = np.arange(0, len(d["poses"]), step)
+        R = shape.rodrigues(d["poses"][idx].reshape(len(idx), -1, 3))
+        _, J = bm.posed(np.repeat(betas[None], len(idx), 0), R, d["trans"][idx], idx=np.zeros(0, np.int64),
+                        offsets=np.zeros((0, 3)))
+        for k, fi in enumerate(idx):
+            flex = knee_flexion_deg(J[k])
+            if flex < max_knee_deg:
+                v, _ = pose_body(model, betas, d["poses"][fi], d["trans"][fi])
+                if -0.02 < v[:, 1].min() < 0.03:
+                    out.append((path, int(fi), flex, name))
+                    break
+        if len(out) == n:
+            break
+    return out
+
+
+def pick_bodies(bm, model, motion_dir, mapping_csv, per_size=5, split="test", seed=0):
+    """Bodies stratified by size label: ``per_size`` per label with near-standing frames. ``split`` 'test'
+    takes the first eligible ones of a seeded shuffle, 'dev' (for tuning) the next ones."""
+    with open(mapping_csv) as fh:
+        rows = list(csv.DictReader(fh))
+    motions = {}
+    for r in rows:
+        p = os.path.join(motion_dir, f"{r['body_id']}_{r['motion_id']}.npz")
+        if os.path.exists(p):
+            motions.setdefault(r["body_id"], []).append((p, r["motion_rel_fname"]))
+    rng = np.random.default_rng(seed)
+    out = []
+    for size in SIZES:
+        cand = sorted(b for b in motions if b.rsplit("_", 1)[-1] == size)
+        found = []
+        for body in rng.permutation(cand):
+            betas = np.load(motions[body][0][0], allow_pickle=False)["betas"][:16].astype(float)
+            frames = standing_frames(bm, model, betas, motions[body])
+            if frames:
+                found.append({"body": str(body), "size": size, "betas": betas, "frames": frames})
+            if len(found) == 2 * per_size:
+                break
+        out += found[:per_size] if split == "test" else found[per_size:]
+    return out
+
+
+def segment_baseline(model, motion_dir, exclude):
+    """Per segment, length = c0 + c1 height + c2 BMI (least squares) over all size-labelled bodies but
+    ``exclude``: what height and mass alone predict. Returns {segment: (c0, c1, c2)}."""
+    _rehabtwin()
+    from rehabtwin import shape
+    faces = model["f"].astype(np.int64)
+    X, Y = [], {s: [] for s in shape.SEGMENTS}
+    for body, path in body_ids(motion_dir).items():
+        if body in exclude or body.rsplit("_", 1)[-1] not in SIZES:
+            continue
+        v, J = rest_body(model, np.load(path, allow_pickle=False)["betas"][:16])
+        h, _, _, bmi = shape.body_measures(v, faces)
+        X.append([1.0, h, bmi])
+        for s, lr in shape.segment_lengths(J).items():
+            Y[s].append(np.mean(lr))
+    X = np.array(X)
+    return {s: tuple(np.linalg.lstsq(X, np.array(y), rcond=None)[0].tolist()) for s, y in Y.items()}
+
+
+_W = {}
+
+
+def _shape_worker_init(model_path):
+    _rehabtwin()
+    from rehabtwin import shape
+    _W["model"] = load_smplx(model_path)
+    _W["bm"] = shape.BodyModel(_W["model"])
+
+
+def _seed(*parts):
+    import zlib
+    return zlib.crc32("|".join(map(str, parts)).encode())
+
+
+def _sides(d):
+    """{"Hip": mean of LHip and RHip, ...}"""
+    return {g: float(np.mean([d[f"L{g}"], d[f"R{g}"]])) for g in JOINTS}
+
+
+def shapefit_body(item, conditions=None):
+    """All conditions of one body (``pick_bodies`` entry): per condition the fitted and true height, mass,
+    BMI, segment lengths, skin-to-joint offsets (and the height+BMI baseline's), joint errors, runtime."""
+    _rehabtwin()
+    from rehabtwin import shape
+    from rehabtwin.kinect import back_project, sample_depth, surface_to_centre
+    model, bm = _W["model"], _W["bm"]
+    betas = item["betas"]
+    vt, Jt = bm.rest(betas)
+    h, _, mass, bmi = shape.body_measures(vt, bm.faces)
+    true_off = shape.front_offsets(vt, Jt, bm.faces)
+    true_seg = {s: float(np.mean(lr)) for s, lr in shape.segment_lengths(Jt).items()}
+    picks = dict(zip("AB", item["frames"]))
+    rows = []
+    for cname, (synth_kw, opts, labels) in (conditions or SHAPE_CONDITIONS).items():
+        if any(lab not in picks for lab in labels):
+            continue
+        obs = []
+        for lab in labels:
+            path, fi, _, _ = picks[lab]
+            d = np.load(path, allow_pickle=False)
+            rng = np.random.default_rng(_seed(item["body"], lab, json.dumps(synth_kw, sort_keys=True)))
+            obs.append(synth_frame(model, betas, d["poses"][fi], d["trans"][fi], rng, **synth_kw))
+        height = h + np.random.default_rng(_seed(item["body"], "height")).normal(0, 0.005) if opts.get("height") else None
+        frames = [{"points": o["points"], "floor": o["floor"],
+                   "keypoints_uv": o["keypoints_uv"] if opts.get("keypoints", True) else None} for o in obs]
+        try:
+            res = shape.fit_shape(bm, frames, KINECT_K, height_m=height)
+        except (ValueError, IndexError, np.linalg.LinAlgError) as e:    # a failed fit is a result too
+            rows.append({"body": item["body"], "size": item["size"], "condition": cname, "bmi_true": bmi,
+                         "error": f"{type(e).__name__}: {e}"})
+            continue
+        J = np.array(res["frames"][0]["joints"])
+        jerr, lift = {}, {}
+        for n, j in shape.KEYPOINTS.items():
+            jerr[n] = float(np.linalg.norm(J[j] - obs[0]["joints_cam"][j]))
+            u, v = obs[0]["keypoints_uv"][list(shape.KEYPOINTS).index(n)]
+            z = sample_depth(obs[0]["depth_mm"], u, v)
+            if np.isfinite(z):                     # the Kinect path: first surface + offset from true height, BMI
+                s = back_project(u, v, z, *KINECT_K)
+                lift[n] = float(np.linalg.norm(s * (1 + surface_to_centre(n, h, bmi) / np.linalg.norm(s))
+                                               - obs[0]["joints_cam"][j]))
+        rows.append({"body": item["body"], "size": item["size"], "condition": cname,
+                     "frames": [{"motion": picks[lab][3], "frame": picks[lab][1],
+                                 "knee_flexion_deg": round(picks[lab][2], 1)} for lab in labels],
+                     "height_true_m": h, "mass_true_kg": mass, "bmi_true": bmi, "height_given_m": height,
+                     "height_fit_m": res["height_m"], "mass_fit_kg": res["mass_kg"], "bmi_fit": res["bmi"],
+                     "betas_true": betas.tolist(), "betas_fit": res["betas"],
+                     "segments_true_m": true_seg,
+                     "segments_fit_m": {s: float(np.mean(lr)) for s, lr in res["segment_lengths_m"].items()},
+                     "offsets_true_m": _sides(true_off), "offsets_fit_m": _sides(res["surface_to_centre_m"]),
+                     "offsets_baseline_m": _sides({n: surface_to_centre(n, h, bmi) for n in shape.KEYPOINTS}),
+                     "joint_error_m": jerr, "lift_error_m": lift, "runtime_s": res["fit"]["runtime_s"],
+                     "outer_iterations": res["fit"]["outer_iterations"],
+                     "residuals": [f["residuals"] for f in res["frames"]]})
+    return rows
+
+
+def summarise_shapefit(rows, seg_coef):
+    """Per condition and BMI group (and 'all'): mean (bias), SD and mean absolute error of each quantity, and
+    the height+mass baselines (segment lengths from ``seg_coef``, offsets from ``surface_to_centre``)."""
+    def stats(x):
+        x = np.asarray(x, float)
+        return {"n": len(x), "bias": float(x.mean()), "sd": float(x.std()), "mae": float(np.abs(x).mean()),
+                "max_abs": float(np.abs(x).max())}
+    out = {}
+    for cond in dict.fromkeys(r["condition"] for r in rows):
+        for gname, lo, hi in FIT_BMI_BINS + (("all", 0, 99),):
+            g = [r for r in rows if r["condition"] == cond and lo <= r["bmi_true"] < hi]
+            failed = [r["body"] for r in g if "error" in r]
+            g = [r for r in g if "error" not in r]
+            if not g:
+                continue
+            seg = {s: stats([100 * (r["segments_fit_m"][s] - r["segments_true_m"][s]) for r in g]) for s in seg_coef}
+            seg_base = {s: stats([100 * (c[0] + c[1] * r["height_true_m"] + c[2] * r["bmi_true"] - r["segments_true_m"][s])
+                                  for r in g]) for s, c in seg_coef.items()}
+            off = {j: stats([100 * (r["offsets_fit_m"][j] - r["offsets_true_m"][j]) for r in g]) for j in JOINTS}
+            off_base = {j: stats([100 * (r["offsets_baseline_m"][j] - r["offsets_true_m"][j]) for r in g]) for j in JOINTS}
+            out.setdefault(cond, {})[gname] = {
+                "bodies": len(g), "failed": failed, "bmi_range": [round(min(r["bmi_true"] for r in g), 1), round(max(r["bmi_true"] for r in g), 1)],
+                "height_cm": stats([100 * (r["height_fit_m"] - r["height_true_m"]) for r in g]),
+                "mass_pct": stats([100 * (r["mass_fit_kg"] / r["mass_true_kg"] - 1) for r in g]),
+                "bmi": stats([r["bmi_fit"] - r["bmi_true"] for r in g]),
+                "segment_cm": seg, "segment_baseline_cm": seg_base,
+                "segment_mae_cm": float(np.mean([v["mae"] for v in seg.values()])),
+                "segment_baseline_mae_cm": float(np.mean([v["mae"] for v in seg_base.values()])),
+                "offset_cm": off, "offset_baseline_cm": off_base,
+                "offset_mae_cm": float(np.mean([v["mae"] for v in off.values()])),
+                "offset_baseline_mae_cm": float(np.mean([v["mae"] for v in off_base.values()])),
+                "joint_error_cm_median": float(100 * np.median([np.mean(list(r["joint_error_m"].values())) for r in g])),
+                "lift_error_cm_median": float(100 * np.median([np.mean(list(r["lift_error_m"].values())) for r in g])),
+                "runtime_s_median": float(np.median([r["runtime_s"] for r in g])),
+                "runtime_s_max": float(np.max([r["runtime_s"] for r in g]))}
+    return out
+
+
+def print_shapefit(summary):
+    for cond, groups in summary.items():
+        print(f"\n{cond}")
+        print(f"  {'group':9s} {'n':>2s} {'height cm':>12s} {'mass %':>12s} {'BMI':>11s} {'seg MAE cm':>14s} "
+              f"{'offset MAE cm':>14s} {'joints cm':>11s} {'s':>4s}")
+        for g, s in groups.items():
+            print(f"  {g:9s} {s['bodies']:2d} {s['height_cm']['bias']:+5.1f} ± {s['height_cm']['sd']:4.1f} "
+                  f"{s['mass_pct']['bias']:+5.1f} ± {s['mass_pct']['sd']:4.1f} {s['bmi']['bias']:+4.1f} ± {s['bmi']['sd']:4.1f} "
+                  f"{s['segment_mae_cm']:5.2f} ({s['segment_baseline_mae_cm']:4.2f}) "
+                  f"{s['offset_mae_cm']:5.2f} ({s['offset_baseline_mae_cm']:4.2f}) "
+                  f"{s['joint_error_cm_median']:4.1f} ({s['lift_error_cm_median']:3.1f}) {s['runtime_s_median']:4.0f}")
+
+
+def shapefit(model_path, motion_dir, mapping_csv, per_size=5, split="test", jobs=1, conditions=None, seed=0):
+    """Validation of ``rehabtwin.shape.fit_shape`` on BEDLAM2 bodies: rows, summary and settings."""
+    _rehabtwin()
+    from rehabtwin import shape
+    model = load_smplx(model_path)
+    bm = shape.BodyModel(model)
+    items = pick_bodies(bm, model, motion_dir, mapping_csv, per_size, split, seed)
+    other = {it["body"] for it in pick_bodies(bm, model, motion_dir, mapping_csv, per_size,
+                                              "dev" if split == "test" else "test", seed)}
+    seg_coef = segment_baseline(model, motion_dir, exclude={it["body"] for it in items} | other)
+    conds = {c: SHAPE_CONDITIONS[c] for c in conditions} if conditions else SHAPE_CONDITIONS
+    print(f"{len(items)} bodies ({split}), {len(conds)} conditions, {jobs} jobs", flush=True)
+    rows = []
+    if jobs > 1:
+        import functools
+        import multiprocessing as mp
+        for var in ("OMP_NUM_THREADS", "OPENBLAS_NUM_THREADS", "MKL_NUM_THREADS"):
+            os.environ.setdefault(var, "1")          # one BLAS thread per worker; read by the spawned workers
+        with mp.get_context("spawn").Pool(jobs, _shape_worker_init, (model_path,)) as pool:
+            for k, rs in enumerate(pool.imap_unordered(functools.partial(shapefit_body, conditions=conds), items)):
+                rows += rs
+                print(f"  {k + 1}/{len(items)} {rs[0]['body'] if rs else ''}", flush=True)
+    else:
+        _W["model"], _W["bm"] = model, bm
+        for k, it in enumerate(items):
+            rows += shapefit_body(it, conds)
+            print(f"  {k + 1}/{len(items)} {it['body']}", flush=True)
+    settings = {"split": split, "per_size": per_size, "seed": seed, "sensor": "2.7 m in front, level at 1.0 m",
+                "intrinsics": KINECT_K, "conditions": {c: [v[0], v[1], v[2]] for c, v in conds.items()},
+                "segment_baseline": {"model": "c0 + c1 height + c2 BMI", "coef": seg_coef,
+                                     "fitted_on": "size-labelled BEDLAM2 bodies outside the test and dev splits"},
+                "offset_baseline": "rehabtwin.kinect.surface_to_centre(true height, true BMI)"}
+    return {"rows": rows, "summary": summarise_shapefit(rows, seg_coef), "settings": settings}
+
+
 def main(argv=None):
     ap = argparse.ArgumentParser(description=__doc__.split("\n")[0])
     sub = ap.add_subparsers(dest="cmd", required=True)
@@ -301,7 +593,24 @@ def main(argv=None):
     vi.add_argument("--pattern", default="squat", help="regex on the source motion file name")
     vi.add_argument("--step", type=int, default=3, help="every n-th frame (30 fps)")
     vi.add_argument("--out", required=True)
+    sf = sub.add_parser("shapefit", help="body shape from one synthetic Kinect v1 depth frame, per BMI group")
+    sf.add_argument("--model", required=True)
+    sf.add_argument("--motions", required=True)
+    sf.add_argument("--mapping", required=True, help="b2_bedlam2amass_motion_training.csv")
+    sf.add_argument("--per-size", type=int, default=5, help="bodies per size label XS..5XL")
+    sf.add_argument("--split", choices=("test", "dev"), default="test", help="dev: other bodies, for tuning")
+    sf.add_argument("--conditions", nargs="*", choices=list(SHAPE_CONDITIONS), help="default: all")
+    sf.add_argument("--jobs", type=int, default=1)
+    sf.add_argument("--out", required=True)
     a = ap.parse_args(argv)
+    if a.cmd == "shapefit":
+        res = shapefit(a.model, a.motions, a.mapping, a.per_size, a.split, a.jobs, a.conditions)
+        with open(a.out, "w") as fh:
+            json.dump(res, fh)
+        print_shapefit(res["summary"])
+        print("columns: bias ± SD; segment and offset MAE: fit (height+mass baseline); joints: median of the "
+              "per-body mean 3D error, fit (Kinect-path lift)")
+        return
     if a.cmd == "visibility":
         rows = visibility(load_smplx(a.model), a.motions, a.mapping, a.pattern, step=a.step)
         with open(a.out, "w") as fh:
