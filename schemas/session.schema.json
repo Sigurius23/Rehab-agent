@@ -20,7 +20,7 @@
         "required": ["device_id", "type"],
         "properties": {
           "device_id": {"type": "string"},
-          "type": {"enum": ["rgb-camera", "iphone-lidar", "realsense-d455", "imu-suit", "emg", "other"]},
+          "type": {"enum": ["rgb-camera", "iphone-lidar", "realsense-d455", "kinect-v1", "imu-suit", "emg", "other"]},
           "serial_or_name": {"type": "string"},
           "firmware": {"type": "string"}
         }

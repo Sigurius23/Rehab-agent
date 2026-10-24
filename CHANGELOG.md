@@ -1,6 +1,13 @@
 # Changelog
 
 ## Unreleased
+- **Kinect v1 depth viewpoint** (`docs/kinect-v1.md`; not yet run on a real sensor):
+  - `pipeline/capture/kinect_v1`: a Windows recorder (Kinect for Windows SDK 1.8, built with Windows' own C#
+    compiler). It writes colour, depth registered to the colour grid, raw depth, the SDK skeleton, floor plane
+    and accelerometer.
+  - `rehabtwin kinect`: lifts MediaPipe keypoints with that depth, leaves occluded joints empty, takes gravity
+    from the floor in the depth, and detects a mirrored stream from the SDK skeleton.
+  - Tested on rendered synthetic recordings, and the recorder against a fake sensor under Mono.
 - **Safety gates:**
   - Tier B/A only with a model-provenance record bound to the model by sha256 (`--model-provenance`).
   - `--reference-grade` is required with any reference.

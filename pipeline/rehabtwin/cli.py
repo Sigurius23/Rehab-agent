@@ -6,6 +6,7 @@
   selftest  synth -> process -> validate, exits non-zero if the round trip regresses
   mp-mono   raw MediaPipe dump (adapters/mediapipe_pose.py) -> monocular sequence .npz
   mp-multiview  raw MediaPipe dumps + Qualisys or OpenCap calibration (+ --sync) -> triangulated sequence .npz
+  kinect    Kinect v1 recording (capture/kinect_v1) + MediaPipe dump of its colour frames -> depth-lifted sequence .npz
   augment   keypoint sequence -> + 43 anatomical markers (OpenCap LSTM via Pose2Sim) for mediapipe_lstm_pose2sim
   correct   session folder + correction spec -> corrected motion, correction.json, correction.html
   muscles   session folder -> estimated GRF, inverse dynamics, static optimisation (+ corrected / weakened what-ifs)
@@ -451,6 +452,16 @@ def main(argv=None):
                          "are checked; refused if one of those beats the window's best)")
     mv.add_argument("--out", required=True)
     mv.add_argument("--person-ref", default="UNSPECIFIED")
+    kn = sub.add_parser("kinect", help="Kinect v1 recording + MediaPipe dump of its colour frames -> depth-lifted sequence")
+    kn.add_argument("recording", help="KinectCapture output folder (docs/kinect-v1.md)")
+    kn.add_argument("mediapipe", help="adapters/mediapipe_pose.py dump of RECORDING/colour/%%06d.jpg")
+    kn.add_argument("out")
+    kn.add_argument("--height-m", type=float, help="standing height; scales the skin-to-joint-centre offsets (default 1.70)")
+    kn.add_argument("--person-ref", default="UNSPECIFIED")
+    km = kn.add_mutually_exclusive_group()
+    km.add_argument("--mirrored", action="store_true", help="the colour stream is mirrored (default: decided from the "
+                                                            "SDK skeleton's left/right labels)")
+    km.add_argument("--not-mirrored", action="store_true", help="the colour stream is not mirrored")
     au = sub.add_parser("augment", help="add OpenCap's LSTM anatomical markers to a keypoint sequence (pip install onnxruntime)")
     au.add_argument("sequence")
     au.add_argument("out")
@@ -593,6 +604,22 @@ def main(argv=None):
         seq.save(a.out)
         print(json.dumps({"out": a.out, "frames": seq.n_frames, "valid": int(seq.valid.sum()),
                           **{k: seq.meta[k] for k in ("intrinsics_source", "reprojection_px_median") if k in seq.meta}}))
+    elif a.cmd == "kinect":
+        from . import kinect
+        try:
+            cap = kinect.read_capture(a.recording)
+            seq = kinect.rgbd_sequence(cap, dict(np.load(a.mediapipe)), a.height_m,
+                                       True if a.mirrored else False if a.not_mirrored else "auto",
+                                       meta={"person_ref": a.person_ref, "raw": str(a.mediapipe)})
+        except ValueError as e:
+            print(f"refused: {e}", file=sys.stderr)
+            return 2
+        seq.save(a.out)
+        k = seq.meta["kinect"]
+        print(json.dumps({"out": a.out, "frames": seq.n_frames, "valid": int(seq.valid.sum()),
+                          "mirrored": seq.meta["mirrored"], "gravity_source": seq.meta.get("gravity_source"),
+                          "lifted_fraction_median": float(np.median(list(k["lifted_fraction"].values()))),
+                          "depth_inconsistent_frames": k["depth_inconsistent_frames"]}))
     elif a.cmd == "augment":
         from .augmenter import augment
         seq = augment(MarkerSequence.load(a.sequence), a.height_m, a.mass_kg, max_gap_s=a.max_gap_s,

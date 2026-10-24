@@ -11,6 +11,8 @@ video ──► HSMR (SKEL q, betas, camera)            [hsmr env, GPU, gated SK
             └─► adapters/hsmr_to_skelseq.py ──► skel_seq.npz   (105 SKEL skin markers + 24 joints + q=0 static)
 video ──► MediaPipe Pose (non-gated, Tier C)       [twin-live env]
             └─► adapters/mediapipe_pose.py ──► rehabtwin mp-mono / mp-multiview ──► *_seq.npz
+Kinect v1 ──► capture/kinect_v1 (Windows, SDK 1.8) ──► colour + registered depth
+            └─► mediapipe_pose.py on colour/%06d.jpg ──► rehabtwin kinect (depth-lifted) ──► *_seq.npz
                                                     │
 skel_seq.npz ──► rehabtwin process ─────────────────┘   [biomech env, CPU]
    1. camera → gravity → OpenSim ground   (device gravity > floor-plane fit > camera-level, all logged)
@@ -82,6 +84,11 @@ A mirrored front-camera ("selfie") clip swaps every left/right landmark silently
 `--mirrored` to the adapter (or to `mp-mono` for a dump made without it); see the mirroring
 check in `docs/hardware.md`. `mp-multiview` has no `--mirrored`: un-mirror each front-camera clip
 at the adapter. Each camera's setting is kept in the sequence meta (`camera_mirroring`).
+
+A Kinect v1 (Xbox 360) adds depth from one viewpoint: `capture/kinect_v1/KinectCapture.exe` records on
+Windows, and `rehabtwin kinect` lifts the MediaPipe keypoints of its colour frames with the registered depth.
+Gravity comes from the floor in the depth image; a mirrored stream is detected from the SDK skeleton's sides.
+Setup, placement and the validation plan are in `docs/kinect-v1.md`. It has not run on a real sensor yet.
 
 Several phones (OpenCap-style checkerboard calibration, unsynchronised starts) and OpenCap's LSTM
 anatomical-marker augmenter, which the pelvis needs (validation-results §4):
