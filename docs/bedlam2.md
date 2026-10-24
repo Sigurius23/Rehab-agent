@@ -55,10 +55,50 @@ Limits:
 - In deep flexion the line of sight to a joint can pass through another segment (the thigh in front of the
   hip at the bottom of a squat seen from the front). The next experiment measures that on the posed squats.
 
+## Result 2: what a front-facing depth sensor gets right during squats
+
+`python adapters/bedlam2.py visibility --model SMPLX_NEUTRAL.npz --motions motions_npz_training/ --mapping
+b2_bedlam2amass_motion_training.csv --out squat_visibility.json` (about 11 minutes):
+- **Motions:** all 32 squat sequences (SOMA and MoSh squats), on 32 bodies with BMI 19.5–42.1, posed with
+  SMPL-X skinning.
+- **Sensor:** a virtual Kinect 2.7 m in front of the person. Either level at 1.0 m, or at 1.6 m aimed at the
+  pelvis.
+- **Per keypoint, every 3rd frame:** the first surface on the line of sight plus the skin-to-joint distance
+  of `rehabtwin/kinect.py`, compared with the true joint.
+
+The 2D keypoint is exact here (no MediaPipe error), so this is the best case for the depth step alone.
+
+% of keypoint-frames **correct** (within 3 cm) / **silently wrong** (3–20 cm: too small for the 0.2 m
+consistency check to catch) / **caught** (over 20 cm: left empty). Level sensor at 1.0 m:
+
+| Joint | Standing (knee < 30°) | Mid (30–70°) | Deep (> 70°) |
+|---|---|---|---|
+| Hip | 99 / 1 / 0 | 91 / 8 / 1 | **64 / 24 / 12** |
+| Knee | 99 / 0 / 0 | 98 / 1 / 1 | 96 / 3 / 1 |
+| Ankle | 99 / 1 / 0 | 93 / 7 / 0 | 90 / 9 / 1 |
+| Shoulder | 77 / 11 / 13 | 48 / 25 / 27 | 67 / 19 / 14 |
+| Elbow | 73 / 26 / 1 | 44 / 53 / 3 | 39 / 51 / 11 |
+| Wrist | 78 / 21 / 0 | 55 / 42 / 3 | 53 / 43 / 4 |
+
+- **Knees and ankles** are reliable at every depth.
+- **Hips** are reliable standing, but in a deep squat the thigh lies in front of the hip on the line of
+  sight. Errors are negative: the lifted hip lands on the thigh.
+  - **Above BMI 30**, deep-squat hips are 57 / 38 / 5: thigh and belly sit closer to the hip, so the error
+    falls below the 0.2 m check.
+  - **The 1.6 m sensor** does worse on hips (deep: 50 / 29 / 21), though better on shoulders.
+- **Arms:** these squats are done with the arms held forward. The wrist is a median 15 cm ahead of the
+  shoulder, and more than 25 cm ahead in 36% of frames. So forearms and hands often hide the elbows and
+  shoulders. Arms hanging down will do better; the posture profile needs its own check.
+
+What it means for the Kinect path:
+- **Hips:** in deep flexion they should not be taken from depth. A candidate fix: place the hip on its own
+  line of sight at the thigh length (measured in standing frames) from the knee, which stays reliable.
+- **The 0.2 m check cannot catch thigh occlusion.** Whether a tighter one is safe depends on MediaPipe's real
+  3D error, which the rendered videos will measure.
+
 ## Next experiments
 
-1. **Posed squats, bending and sitting:** which keypoints a front-facing depth sensor can see during the
-   movement, per body type.
+1. **Bone-length placement of occluded hips** (above), on these squats, with MediaPipe-like noise added.
 2. **MediaPipe on the rendered videos** of the static-camera jobs: keypoint error against the ground truth,
    by BMI and clothing.
 3. **OpenSim scaling and IK** on markers placed on the SMPL-X surface: segment lengths and joint angles

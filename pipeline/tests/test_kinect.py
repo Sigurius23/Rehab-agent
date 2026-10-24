@@ -341,3 +341,31 @@ def test_bedlam2_adapter_geometry_on_known_shapes(tmp_path):
     c = b2.fit(rows)["Hip"]
     assert c["a"] == pytest.approx(0.05, abs=1e-4) and c["b"] == pytest.approx(0.002, abs=1e-5) and c["residual_sd_m"] < 1e-6
 
+
+
+def test_bedlam2_posing_and_line_of_sight_on_a_toy_body():
+    b2 = _bedlam2_adapter()
+    # two joints: root at the origin, child 1 m up; one vertex on each, the child's 1 m above it
+    model = {"v_template": np.array([[0.0, 0, 0], [0, 2.0, 0]]), "shapedirs": np.zeros((2, 3, 1)),
+             "posedirs": np.zeros((2, 3, 9)), "J_regressor": np.array([[1.0, 0], [0.5, 0.5]]),
+             "kintree_table": np.array([[2 ** 32 - 1, 0], [0, 1]], dtype=np.uint32), "weights": np.array([[1.0, 0], [0, 1.0]])}
+    v, J = b2.pose_body(model, [0.0], np.zeros(6), np.zeros(3))
+    np.testing.assert_allclose(v, model["v_template"], atol=1e-12)
+    v, J = b2.pose_body(model, [0.0], [0, 0, 0, 0, 0, np.pi / 2], [1.0, 0, 0])   # child +90 deg about z, body moved 1 m
+    np.testing.assert_allclose(J, [[1, 0, 0], [1, 1, 0]], atol=1e-12)
+    np.testing.assert_allclose(v, [[1, 0, 0], [0, 1, 0]], atol=1e-12)
+    v, J = b2.pose_body(model, [0.0], [0, 0, np.pi / 2, 0, 0, 0], [0, 0, 0])     # root +90 deg about z: everything turns
+    np.testing.assert_allclose(v, [[0, 0, 0], [-2, 0, 0]], atol=1e-12)
+    # a camera 3 m in front, looking back: a sphere's centre lies one radius behind the surface it sees
+    sv, sf = _icosphere(0.3)
+    C, R = b2.camera(np.array([0, 0, 3.0]), np.zeros(3))
+    np.testing.assert_allclose(R @ np.array([0, 0, -1.0]), [0, 0, 1], atol=1e-12)      # optical axis towards the target
+    np.testing.assert_allclose(R @ np.array([0, -1.0, 0]), [0, 1, 0], atol=1e-12)      # image y down
+    for target in (np.zeros(3), np.array([0.1, -0.05, 0.0])):
+        dist, hit = b2.first_hit_culled(C, R, b2.KINECT_K, sv, sf, target)
+        d = (target - C) / np.linalg.norm(target - C)
+        assert hit == pytest.approx(b2.first_hit(C, d, sv, sf), abs=1e-9) and dist - hit > 0.25
+    J = np.zeros((22, 3))
+    J[1], J[2], J[4], J[5], J[7], J[8] = [0.1, 1, 0], [-0.1, 1, 0], [0.1, 0.5, 0.2], [-0.1, 0.5, 0.2], [0.1, 0, 0], [-0.1, 0, 0]
+    np.testing.assert_allclose(b2.facing(J), [0, 0, 1], atol=1e-12)                   # left hip at +x: facing +z
+    assert 40 < b2.knee_flexion_deg(J) < 50

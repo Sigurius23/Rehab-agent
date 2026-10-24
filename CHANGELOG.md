@@ -13,6 +13,9 @@
   Kinect path adds grows with BMI, not just height. It is now height × (a + b × (BMI − 25)), with residual
   SD ≤ 0.32 cm (height alone: hip 1.6 cm SD, up to 5.5 cm short above BMI 30). `rehabtwin kinect --mass-kg`
   provides the BMI.
+  - Squat visibility (32 squats, BMI 19.5–42.1, virtual front-facing Kinect): knees and ankles are lifted
+    within 3 cm in ≥ 90% of frames at every depth. In deep squats only 64% of hips are, because the thigh
+    hides the hip; 24% are wrong by 3–20 cm, which the 0.2 m check cannot catch, and 38% above BMI 30.
 - **Safety gates:**
   - Tier B/A only with a model-provenance record bound to the model by sha256 (`--model-provenance`).
   - `--reference-grade` is required with any reference.
