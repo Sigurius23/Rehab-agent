@@ -101,7 +101,9 @@ python -m rehabtwin process phone_aug.npz out/s02 --exercise squat --person peop
 
 `--person` applies the stored scale factors and checks the recording's size against them: one camera's
 recording is scaled to the person, and a calibrated one more than 10 % off is refused. `session.json`
-records the person model's version (`person_model`).
+records the person model's version (`person_model`). `person muscles` adds MRI/CT muscle volumes and fat
+fractions, which `muscles` and `strength` use instead of the height-and-mass regression. `person bone`
+adds a DXA or QCT result, which device and correction what-ifs show.
 
 Several phones (OpenCap-style checkerboard calibration, unsynchronised starts) and OpenCap's LSTM
 anatomical-marker augmenter, which the pelvis needs (validation-results §4):
@@ -329,7 +331,7 @@ let IK jitter 6.6 cm sideways, and static optimisation then "needed" 70 N·m res
 | `report.html` | self-contained charts (reference dashed when present), per-rep table, gates |
 | `correction/<spec>/` | `corrected.mot`, `correction.json`, `correction.html` (measured vs corrected 3D replay) |
 | `progress/` (`--out`) | `progress.json` (verdicts per signal, series), `progress.html` (trend per signal) |
-| `capacity/` | `model_capacity.osim`, `capacity.json`: leg muscle forces scaled to the measured height and mass (`muscles`, `strength`) |
+| `capacity/` | `model_capacity.osim`, `capacity.json`: leg muscle forces from imaged volume and fat fraction, else scaled to the measured height and mass (`muscles`, `strength`) |
 | `strength/` | `model_strength.osim`, `strength.json` (factors, LSI), `strength.html` |
 | `muscles/` | per variant: `grf.mot`, `inverse_dynamics.sto`, static-optimisation activations/forces, `muscles.json`; `study.json`, `muscles.html` |
 | `feedback/<rules>/` | `cues.json` (event log + summary), `commands.csv` (actuator events), `cues.html` |

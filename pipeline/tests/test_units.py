@@ -1512,7 +1512,7 @@ def test_capacity_scaling_needs_a_measured_mass_and_a_height(tmp_path, monkeypat
     calls = []
     _fake_muscles_and_strength(monkeypatch, calls)
     scaled = []
-    monkeypatch.setattr(capacity, "scale_model", lambda *a: scaled.append(a) or {
+    monkeypatch.setattr(capacity, "scale_model", lambda *a, **k: scaled.append(a) or {
         "method": "m", "subject": {"mass_kg": 81.5, "height_m": 1.8, "bmi": 25.2}, "factor_median": 1.1,
         "caveats": ["BMI x"]})
     monkeypatch.setattr(cli, "resolve", lambda p: Path("generic.osim"))

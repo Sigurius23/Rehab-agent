@@ -494,3 +494,36 @@ def test_leg_capacity_scales_with_body_size(selftest_run, tmp_path):
     assert b.getMuscles().get("rect_abd_r").getMaxIsometricForce() == g.getMuscles().get("rect_abd_r").getMaxIsometricForce()
     with pytest.raises(ValueError, match="already changed"):
         capacity.scale_model(tmp_path / "big.osim", generic, 80.0, 1.80, tmp_path / "twice.osim")
+
+
+def test_measured_muscle_size_and_fat_fraction_set_capacity(selftest_run, tmp_path):
+    """Imaging replaces the regression where it measures: Fmax = σ·V·q/lopt per muscle, group volumes split by
+    the model's reference shares, fat fraction against healthy young muscle."""
+    from rehabtwin import capacity
+    out, res, _ = selftest_run
+    model = out / res["session"]["pipeline"]["outputs"]["model"]
+    generic = resolve(CFG["model"])
+    g, m = (opensim.Model(str(p)) for p in (generic, model))
+    vref = {n: g.getMuscles().get(n).getMaxIsometricForce() * g.getMuscles().get(n).getOptimalFiberLength() * 100 / 60.0
+            for n in ("recfem_r", "vaslat_r", "vasmed_r", "vasint_r")}
+    assert sum(vref.values()) == pytest.approx(853 + 443 + 281 + 277, abs=2)     # the model's own quadriceps volume
+    imaging = {"method": "MRI test", "date": "2026-09-14",
+               "muscles": {"quadriceps_r": {"volume_cm3": 1.5 * sum(vref.values())},   # 50 % more than the reference
+                           "hamstrings_l": {"fat_fraction": 0.20},                       # fatty, size from the regression
+                           "soleus_r": {"volume_cm3": 454.0 * 0.8, "fat_fraction": 0.026}}}
+    rec = capacity.scale_model(model, generic, 80.0, 1.80, tmp_path / "imaged.osim", imaging=imaging)
+    b = opensim.Model(str(tmp_path / "imaged.osim"))
+    lratio = lambda n: g.getMuscles().get(n).getOptimalFiberLength() / m.getMuscles().get(n).getOptimalFiberLength()
+    f = lambda mdl, n: mdl.getMuscles().get(n).getMaxIsometricForce()
+    v = capacity.limb_muscle_volume_cm3(80, 1.8) / capacity.limb_muscle_volume_cm3(75.337, 1.70)
+    assert f(b, "vaslat_r") == pytest.approx(f(g, "vaslat_r") * 1.5 * lratio("vaslat_r"), rel=1e-6)
+    assert f(b, "semimem_l") == pytest.approx(f(g, "semimem_l") * v * 0.80 / (1 - 0.026) * lratio("semimem_l"), rel=1e-6)
+    assert f(b, "soleus_r") == pytest.approx(f(g, "soleus_r") * 454.0 * 0.8 / (f(g, "soleus_r") * g.getMuscles().get(
+        "soleus_r").getOptimalFiberLength() * 100 / 60) * lratio("soleus_r"), rel=1e-4)
+    assert f(b, "vaslat_l") == pytest.approx(f(g, "vaslat_l") * v * lratio("vaslat_l"), rel=1e-6)    # not imaged
+    assert rec["sources"] == {"measured": 4, "measured + fat fraction": 1, "regression": 71, "regression + fat fraction": 4}
+    # imaging alone (no measured mass): the rest stays generic in size
+    rec = capacity.scale_model(model, generic, None, None, tmp_path / "only.osim", imaging=imaging)
+    o = opensim.Model(str(tmp_path / "only.osim"))
+    assert f(o, "vaslat_l") == pytest.approx(f(g, "vaslat_l") * lratio("vaslat_l"), rel=1e-6)
+    assert rec["sources"]["generic"] == 71 and "subject" not in rec

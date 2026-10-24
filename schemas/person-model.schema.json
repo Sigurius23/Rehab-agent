@@ -65,6 +65,43 @@
       "description": "Distances between model markers (e.g. LHip-LKnee), as rehabtwin kinect's segment check uses them, m.",
       "additionalProperties": {"type": "object", "required": ["length_m"], "properties": {"length_m": {"type": "number"}}}
     },
+    "muscle_imaging": {
+      "type": "object",
+      "required": ["method", "date", "muscles", "sha256"],
+      "description": "Measured muscle size and quality from MRI/CT segmentation (pipeline/rehabtwin/capacity.py): per labelled muscle or group and side, volume in cm³ and/or MRI proton-density fat fraction (0-1). Muscles it covers get Fmax from the measured contractile volume; the rest from height and mass.",
+      "properties": {
+        "method": {"type": "string"},
+        "date": {"type": "string"},
+        "approved_by": {"type": "string"},
+        "muscles": {
+          "type": "object",
+          "minProperties": 1,
+          "additionalProperties": {
+            "type": "object",
+            "properties": {
+              "volume_cm3": {"type": "number", "exclusiveMinimum": 0},
+              "fat_fraction": {"type": "number", "minimum": 0, "exclusiveMaximum": 1},
+              "mean_hu": {"type": "number", "description": "CT attenuation, recorded only (protocol-dependent)"}
+            }
+          }
+        }
+      }
+    },
+    "bone_density": {
+      "type": "object",
+      "required": ["method", "date", "sites", "classification", "sha256"],
+      "description": "DXA or QCT bone density with its screening category (pipeline/rehabtwin/bone.py). Not part of the OpenSim model; load what-ifs show it.",
+      "properties": {
+        "method": {"type": "string", "pattern": "^(DXA|QCT)"},
+        "date": {"type": "string"},
+        "age_years": {"type": "number"},
+        "sex": {"enum": ["female", "male"]},
+        "postmenopausal": {"type": "boolean"},
+        "approved_by": {"type": "string"},
+        "sites": {"type": "object", "minProperties": 1},
+        "classification": {"type": "object", "required": ["category", "site", "value", "basis"]}
+      }
+    },
     "surface_shape": {
       "type": "object",
       "description": "Body surface fitted to depth (Tier B surface layer); see docs/person-model.md."

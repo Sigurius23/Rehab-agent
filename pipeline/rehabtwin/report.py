@@ -510,14 +510,23 @@ def _muscle_banner(study):
                 + (f"Measured deficits: {e(flags)}. " if flags else "No between-limb deficit below 90 %. ")
                 + "Ground forces are estimated, not measured.</p>")
     cap = mm.get("capacity") or {}
+    bmi = "".join(e(c) + " " for c in cap.get("caveats", []) if c.startswith("BMI"))
+    if cap.get("scaled") and cap.get("imaging"):
+        im, src = cap["imaging"], cap.get("sources", {})
+        rest = sum(v for k, v in src.items() if not k.startswith("measured") and "fat" not in k)
+        return (f"<p class='banner'><b>What-if simulation with measured leg muscles</b> (Tier {e(study['twin_tier'])}): "
+                f"{e(im.get('method', ''))} {e(im.get('date', ''))} gives size and/or fat fraction for "
+                f"{2 * 40 - rest} of 80 leg muscles"
+                + (f"; the other {rest} are scaled to height and mass" if rest else "")
+                + ". Muscle geometry stays generic, and maximum force follows contractile volume, not a strength "
+                "test. " + bmi + "Ground forces are estimated, not measured.</p>")
     if cap.get("scaled"):
         sub = cap["subject"]
         return (f"<p class='banner'><b>What-if simulation with leg capacities scaled to {sub['height_m']} m and "
                 f"{sub['mass_kg']} kg</b> (Tier {e(study['twin_tier'])}): a population regression (Handsfield 2014), "
                 f"leg Fmax ×{cap['factor_median']:.2f} median, trunk and arms generic. It is what an average young "
                 "healthy adult of this size has, not this person's measured strength (<code>rehabtwin strength</code> "
-                "adds dynamometry). " + "".join(e(c) + " " for c in cap["caveats"] if c.startswith("BMI"))
-                + "Ground forces are estimated, not measured.</p>")
+                "adds dynamometry). " + bmi + "Ground forces are estimated, not measured.</p>")
     return (f"<p class='banner'><b>What-if simulation on a generic (Tier {e(study['twin_tier'])}) muscle model.</b> "
             "Not a statement about this person's muscles (docs/accuracy.md: no 'underdeveloped muscle' claim without "
             "imaging/strength/EMG evidence; <code>rehabtwin strength</code> adds dynamometry). Ground forces are "
@@ -591,7 +600,8 @@ def write_muscles(path, study, view=None):
     exo_html += (f"<h2>Passive elastic supports</h2><table><tr><th>variant</th><th>joint</th><th>stiffness (N·m/rad)</th>"
                  f"<th>slack until</th><th>resists</th><th>peak (N·m)</th><th>mean (N·m)</th><th>engaged</th></tr>"
                  f"{pas_rows}</table>" if pas_rows else "")
-    exo_html = dev_banner + exo_html if exo_html else ""
+    bone_banner = f"<p class='banner'><b>{e(study['bone_caveat'])}</b></p>" if study.get("bone_caveat") else ""
+    exo_html = dev_banner + bone_banner + exo_html if exo_html else ""
     reserve_notes = "".join(f"<li>{e(lab)}: {e(', '.join(f'{k} {v} N·m' for k, v in r['reserve_torque_peaks_Nm'].items()) or 'none')}"
                             f"; saturated muscles: {e(', '.join(r['muscles_saturated']) or 'none')}</li>" for lab, r in runs.items())
     grf = base["grf"]
@@ -798,6 +808,8 @@ def write_correction(path, summary, measured_time, signals_measured, signals_cor
               "or for feedback. It shows what the requested change implies for the rest of the body.</p>"
               if summary["twin_tier"] != "A" else
               "<p class='banner'><b>Tier A correction target.</b> Clinician review required before use.</p>")
+    if summary.get("bone_caveat"):
+        banner += f"<p class='banner'>{e(summary['bone_caveat'])}</p>"
     doc = f"""<!doctype html><html lang="en"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1"><title>Correction {e(summary['spec'])}</title>
 <style>{_CSS}</style></head><body>

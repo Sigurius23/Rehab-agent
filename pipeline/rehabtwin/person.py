@@ -28,7 +28,7 @@ from pathlib import Path
 from . import tiers
 
 FORMAT = "rehabtwin-person/1"
-LAYERS = ("bone_geometry", "joint_centres", "surface_shape", "kinematics", "muscle", "soft_tissue")
+LAYERS = ("bone_geometry", "joint_centres", "surface_shape", "kinematics", "muscle", "soft_tissue", "bone_density")
 # joint-centre distances read from the model in its default pose: name -> (body, body), body origins
 JOINT_SEGMENTS = {"thigh_r": ("femur_r", "tibia_r"), "thigh_l": ("femur_l", "tibia_l"),
                   "shank_r": ("tibia_r", "talus_r"), "shank_l": ("tibia_l", "talus_l"),
@@ -80,6 +80,8 @@ def load(person_dir):
     rec = json.loads(p.read_text())
     if rec.get("format") != FORMAT:
         raise PersonRefused(f"{p}: format {rec.get('format')!r}, expected {FORMAT!r}")
+    for k in LAYERS:                     # folders made before a layer existed
+        rec["layers"].setdefault(k, {"status": "not modelled", "tier": None})
     m = rec.get("model")
     if m and tiers.sha256(d / m["file"]) != m["sha256"]:
         raise PersonRefused(f"{d / m['file']} changed since it was recorded in person.json (sha256 differs)")
@@ -201,10 +203,69 @@ def build_from_session(person_dir, session_dir, allow_synthetic=False):
     rec["layers"]["bone_geometry"] = {"status": src, "tier": "C"}
     rec["layers"]["joint_centres"] = {"status": "scaled with the bones, markers placed on the static frames; "
                                                 "not checked against imaging", "tier": "C"}
-    rec["layers"]["muscle"] = {"status": "generic Rajagopal leg muscles; capacity scaled to measured height and mass "
-                                         "when a session uses them (rehabtwin/capacity.py); trunk muscles generic",
-                               "tier": "C"}
+    rec["layers"]["muscle"] = _muscle_layer(rec)
     return save(d, rec, f"model built from session {sess['session_id']}")
+
+
+def _muscle_layer(rec):
+    from . import capacity
+    im = rec.get("muscle_imaging")
+    if not im:
+        return {"status": "generic Rajagopal leg muscles; capacity scaled to measured height and mass when a session "
+                          "uses them (rehabtwin/capacity.py); trunk muscles generic", "tier": "C"}
+    covered = len(capacity.check_imaging(im))
+    size = sum(1 for e in im["muscles"].values() if e.get("volume_cm3") is not None)
+    quality = sum(1 for e in im["muscles"].values() if e.get("fat_fraction") is not None)
+    full = covered == 2 * len(capacity.LEG_MUSCLES)
+    return {"status": f"{im['method']} {im['date']}: {size} volume and {quality} fat-fraction labels covering {covered} of "
+                      f"{2 * len(capacity.LEG_MUSCLES)} leg muscles; the rest by height and mass; trunk generic"
+                      + ("" if im.get("approved_by") else "; not clinician-reviewed"),
+            "tier": ("A" if im.get("approved_by") else "B") if full else "C"}
+
+
+def _imaging_record(record_path, required=("method", "date")):
+    rec = json.loads(Path(record_path).read_text())
+    missing = [k for k in required if not rec.get(k)]
+    if missing:
+        raise PersonRefused(f"{record_path}: imaging record lacks {missing}")
+    return {**rec, "sha256": tiers.sha256(record_path), "recorded_at": _now()}
+
+
+def set_muscle_imaging(person_dir, record_path):
+    """Measured muscle size and quality from MRI/CT segmentation: {"method", "date", "approved_by"?, "muscles":
+    {label_side: {"volume_cm3", "fat_fraction"}}} with labels from rehabtwin.capacity (GROUPS, ALIASES)."""
+    from . import capacity
+    d = Path(person_dir)
+    rec = load(d)
+    im = _imaging_record(record_path)
+    try:
+        capacity.check_imaging(im)
+    except ValueError as e:
+        raise PersonRefused(f"{record_path}: {e}") from e
+    if not im.get("muscles"):
+        raise PersonRefused(f"{record_path}: no 'muscles'")
+    rec["muscle_imaging"] = im
+    rec["layers"]["muscle"] = _muscle_layer(rec)
+    return save(d, rec, f"muscle imaging: {im['method']} {im['date']}")
+
+
+def set_bone_density(person_dir, record_path):
+    """A DXA or QCT result: {"method": "DXA ...", "date", "age_years", "sex", "postmenopausal"?, "approved_by"?,
+    "sites": {site: {"bmd_g_cm2", "t_score", "z_score"} | {"vbmd_mg_cm3"}}} (rehabtwin/bone.py)."""
+    from . import bone
+    d = Path(person_dir)
+    rec = load(d)
+    b = _imaging_record(record_path)
+    try:
+        b["classification"] = bone.classify(b)
+    except ValueError as e:
+        raise PersonRefused(f"{record_path}: {e}") from e
+    rec["bone_density"] = b
+    c = b["classification"]
+    rec["layers"]["bone_density"] = {"status": f"{b['method']} {b['date']}: {c['category']} at {c['site']} ({c['value']}; "
+                                               f"{c['basis']})" + ("" if b.get("approved_by") else "; report not reviewed"),
+                                     "tier": "A" if b.get("approved_by") else "B"}
+    return save(d, rec, f"bone density: {b['method']} {b['date']} ({c['category']})")
 
 
 def attach_personalised_model(person_dir, model_path, provenance_path):
@@ -267,6 +328,16 @@ def summary(rec):
                  if m else "  model     none yet")
     for k, v in rec.get("segments", {}).items():
         lines.append(f"  {k:12s} {v['length_m']:.3f} m")
+    if rec.get("muscle_imaging"):
+        im = rec["muscle_imaging"]
+        lines.append(f"  muscles   {im['method']} {im['date']}: " + ", ".join(
+            f"{k} {e['volume_cm3']:g} cm³" if e.get("volume_cm3") is not None else k for k, e in im["muscles"].items()))
+        ff = {k: e["fat_fraction"] for k, e in im["muscles"].items() if e.get("fat_fraction") is not None}
+        if ff:
+            lines.append("  fat       " + ", ".join(f"{k} {v * 100:.1f} %" for k, v in ff.items()))
+    if rec.get("bone_density"):
+        c = rec["bone_density"]["classification"]
+        lines.append(f"  bone      {c['category']} at {c['site']} ({c['value']}), {c['method']} {c['date']}")
     lines.append("  layers:")
     for k, v in rec["layers"].items():
         lines.append(f"    {k:14s} {('Tier ' + v['tier']) if v.get('tier') else '-':7s} {v['status']}")

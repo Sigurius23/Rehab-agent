@@ -37,8 +37,9 @@ what fills it and its tier:
 | joint centres | scaled with the bones; markers placed on the static frames | C; B/A from the personalised model |
 | surface shape | not built yet (body shape from depth is in progress) | — |
 | kinematics | per session (not stored) | per session's validation |
-| muscle | Rajagopal leg muscles, capacity scaled to measured height and mass; trunk generic | C |
+| muscle | Rajagopal leg muscles; force from measured volume and fat fraction where imaged (`person muscles`), else scaled to measured height and mass; trunk generic | C; B/A when all leg muscles are imaged |
 | soft tissue | not modelled | — |
+| bone density | DXA or QCT result with its screening category (`person bone`) | B; A with a reviewed report |
 
 Measured height and body mass are stored with their dates. A mass entered as assumed is kept, marked
 `measured: false`, and never used where a measured mass is required.
@@ -131,6 +132,77 @@ What it is and is not:
 - **A better base for dynamometry.** `strength` now calibrates the tested groups relative to the
   body-size-scaled model, and the untested muscles keep body-size capacities instead of generic ones.
 
+## Muscle size, muscle quality and bone density from imaging
+
+The regression above gives every person of one height and mass the same muscles. Imaging measures them:
+
+```bash
+python -m rehabtwin person muscles people/P01 P01_mri.json    # volume and/or fat fraction per muscle or group
+python -m rehabtwin person bone people/P01 P01_dxa.json       # DXA T/Z-scores or QCT vBMD
+python -m rehabtwin muscles out/s02 --person people/P01      # default: the folder the session was processed with
+```
+
+**Muscle size and quality** (`P01_mri.json`), from an MRI or CT segmentation (for example MuscleMap or
+TotalSegmentator; map their labels onto these by each tool's own label definitions):
+
+```json
+{"method": "MRI 3 T 6-echo Dixon, MuscleMap segmentation", "date": "2026-09-14", "approved_by": "radiologist",
+ "muscles": {"quadriceps_r": {"volume_cm3": 1980, "fat_fraction": 0.05},
+             "quadriceps_l": {"volume_cm3": 1720, "fat_fraction": 0.09},
+             "hamstrings_r": {"volume_cm3": 1010},
+             "gluteus_maximus_r": {"fat_fraction": 0.07}}}
+```
+
+- **Labels:** groups (`quadriceps`, `hamstrings`, `adductors`, `adductor_magnus`, `gluteus_maximus`,
+  `gluteus_medius`, `gluteus_minimus`, `iliopsoas`, `triceps_surae`, `gastrocnemius`, `anterior_leg`,
+  `lateral_leg`, `deep_posterior_leg`), anatomical names (`vastus_lateralis`, `soleus`, ...) or model names
+  (`vaslat`). Each needs a side suffix (`_r` or `_l`). Two labels covering the same muscle are refused.
+- **Size:** each model muscle's force follows its contractile volume, Fmax = σ · V · q / lopt with
+  σ = 60 N/cm² as in Rajagopal 2016. The model encodes the reference volumes it was built with
+  (V_ref = Fmax · lopt / σ): 7,089 cm³ per leg against 7,304 cm³ from the Handsfield regression for the same
+  subject, which checks the regression's units. A group volume is split among its model muscles by their
+  reference shares.
+- **Quality:** a fat fraction (MRI proton-density fat fraction, as a fraction 0–1) scales the contractile part,
+  q = (1 − FF) / (1 − FF_healthy). FF_healthy is the young healthy level the generic muscles stand for: 2.6 %
+  for the quadriceps and 5.4 % for the gluteal muscles (3 T water–fat MRI of 30 adults around 30 years,
+  Eur Radiol Exp 2020, doi 10.1186/s41747-020-00162-5). No reference was found for the other groups; they use
+  the quadriceps value. CT attenuation (`mean_hu`) is stored but not converted, since it depends on the
+  scanner and protocol.
+- Muscles without imaging keep the height-and-mass regression, or generic sizes when the mass is not
+  measured. The geometry (paths, fibre and tendon lengths) stays the scaled generic model's, so measured size
+  changes force, not shape.
+- The muscle layer is Tier B, or A with `approved_by`, only when all 80 leg muscles are imaged; otherwise it
+  stays C and its status says how many are.
+
+**Bone density** (`P01_dxa.json`):
+
+```json
+{"method": "DXA (scanner model)", "date": "2026-09-01", "age_years": 62, "sex": "female", "postmenopausal": true,
+ "sites": {"lumbar_spine_L1_L4": {"bmd_g_cm2": 0.86, "t_score": -2.1, "z_score": -0.6},
+           "femoral_neck": {"bmd_g_cm2": 0.61, "t_score": -2.6, "z_score": -1.0}}}
+```
+
+- **Categories** (`pipeline/rehabtwin/bone.py`), with the lowest site counting:
+  - DXA T-score for postmenopausal women and men aged 50 and over (WHO; ISCD official positions): ≤ −2.5
+    osteoporosis, below −1.0 low bone mass.
+  - DXA Z-score for younger people: ≤ −2.0 is below the expected range for age.
+  - QCT spine vBMD (ACR): below 80 mg/cm³ osteoporosis, 80–120 low bone mass.
+- **Refused:** raw Hounsfield units from an ordinary CT, since they are not a calibrated density. A woman's
+  record without `postmenopausal` is also refused, since that decides which score applies.
+- Bone density does not change the OpenSim model. It changes what the twin may suggest. Device what-ifs
+  (`muscles --assist/--passive`) and corrections show it on the page when it is low, and say when it was
+  never measured.
+- These are screening categories from a measured report, not a diagnosis.
+
+**Not validated yet.** The open MRI sets would test this against real people:
+- MyoSegmenTUM–Thigh (osf.io/svwa7): water–fat thigh MRI with manual quadriceps, hamstrings, sartorius and
+  gracilis masks for 15 healthy adults and 4 with neuromuscular disease. It would test how far the
+  regression is from each person's measured muscles, and how far fat fraction separates the patients.
+- TotalSegmentator's CT set (Zenodo): for the segmentation step.
+
+Neither is reachable from this environment: osf.io, files.osf.io and zenodo.org are not on the network
+allow-list.
+
 ## Verified
 
 On synthetic sessions (`pipeline/tests/test_pipeline.py`):
@@ -205,6 +277,7 @@ Reproduce: `examples/person_model_opencap.sh` after `examples/opencap_agreement.
 - **Skeleton from body shape (SKEL/OSSO).** These fit anatomical bones inside a measured body surface
   instead of scaling generic ones. Their model files need registration on the authors' sites, so the user
   has to download them; the code to use them is not written yet.
+- **Muscle MRI from real people** to test the regression and the fat-fraction scaling (above).
 - **Imaging for Tier A.** `person attach` takes an MRI- or CT-personalised OpenSim model (e.g. from
   msk-PIPE or STAPLE) with a signed provenance record. Producing that model needs scans and clinician
   review; nothing in this repository makes one.

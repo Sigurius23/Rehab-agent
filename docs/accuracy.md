@@ -107,8 +107,9 @@ The person model (`docs/person-model.md`) records this per person; `person show`
 | 2 | Joint centres | scaled with the bones; markers placed per session | C | imaging, or functional joint-centre calibration |
 | 3 | Surface shape | not built yet (body shape from depth is in progress) | — | a 3D scan or tape measurements of the person to measure its error |
 | 4 | Kinematics | per session, validated per joint × plane against a reference | per validation | marker mocap for the person and exercise |
-| 5 | Muscle | Rajagopal leg muscles, capacity scaled to measured height and mass (`capacity.py`); dynamometry for tested groups (`strength`) | C | muscle volumes from MRI; EMG calibration (CEINMS) |
+| 5 | Muscle | Rajagopal leg muscles: force from MRI/CT volume and fat fraction where imaged (`person muscles`), else scaled to measured height and mass (`capacity.py`); dynamometry for tested groups (`strength`) | C (B/A once all leg muscles are imaged) | imaged muscle geometry (attachments, paths); EMG calibration (CEINMS); a test on real MRI data |
 | 6 | Soft tissue | not modelled | — | — |
+| — | Bone density | DXA/QCT result and screening category (`person bone`, `bone.py`); shown on device and correction what-ifs | measured | not in the OpenSim model; bone strength and fracture risk are not modelled |
 
 ## Red lines
 

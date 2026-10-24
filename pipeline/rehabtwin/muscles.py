@@ -402,13 +402,18 @@ def muscle_caveat(muscle_model=None):
     """Which capacities are measured and which generic: dynamometry fixes only the tested groups."""
     mm = muscle_model or {}
     cap = mm.get("capacity") or {}
-    size = ("leg muscles scaled to the measured height and mass by a population regression (Handsfield 2014), "
+    size = ("leg muscles from measured volume/fat fraction where imaged (" + (cap["imaging"].get("method") or "imaging")
+            + "), the others scaled to height and mass, trunk and arms generic" if cap.get("imaging") else
+            "leg muscles scaled to the measured height and mass by a population regression (Handsfield 2014), "
             "trunk and arms generic" if cap.get("scaled") else "generic (scaled) parameters")
     bmi = next((c for c in cap.get("caveats", []) if c.startswith("BMI")), "")
     if mm.get("source", "").startswith("strength"):
         return (f"Muscle capacities of the tested groups ({', '.join(mm.get('tests', [])) or 'none'}; "
                 f"{mm.get('calibrated_muscles', '?')} muscles) come from dynamometry; all other muscles: {size}. "
                 f"Muscle geometry is generic; no EMG calibration. {bmi}").strip()
+    if cap.get("imaging"):
+        return (f"Muscle capacities: {size}. Force follows contractile volume, not a strength test; muscle geometry "
+                f"is generic; no EMG calibration. {bmi}").strip()
     if cap.get("scaled"):
         return (f"Muscle capacities: {size}. A population estimate, not this person's measured strength; "
                 f"muscle geometry is generic; no EMG calibration. {bmi}").strip()

@@ -32,6 +32,7 @@ from . import opensim_stage, records, report, validation
 from .config import load_config, resolve
 from .io_formats import read_table, to_degrees
 from .kinematics import skeleton_positions
+from .person import PersonRefused
 from .sequence import MarkerSequence
 
 
@@ -152,7 +153,11 @@ def run_correction(session_dir, spec_name, illustrative=False):
     spec = correction.load_spec(spec_name)
     sess = json.loads((Path(session_dir) / "session.json").read_text())
     records.require_current(sess, "correct")
+    from . import bone
     summary, measured, corrected, out = correction.correct(session_dir, spec, illustrative=illustrative)
+    person_rec, _ = _person_record(Path(session_dir), sess)
+    bone_status = ((person_rec or {}).get("bone_density") or {}).get("classification")
+    summary["bone_density"], summary["bone_caveat"] = bone_status, bone.caveat(bone_status)
     model = Path(session_dir) / sess["pipeline"]["outputs"]["model"]
     sig_m = {c: measured.col(c) for c in measured.columns}
     sig_m.update(metrics_mod.derived_signals(measured, model))
@@ -195,36 +200,55 @@ def _session_mass(session_dir, allow_assumed_mass=False):
     return bm
 
 
-def _capacity_model(session_dir, sess, body_mass, use=True):
-    """(model, record): the session model with leg muscle capacity scaled to the measured height and mass
-    (rehabtwin/capacity.py), written to SESSION/capacity/, or the session model and why it was not scaled."""
+def _person_record(session_dir, sess, person=None):
+    """(person.json, folder) of the session's person: ``person`` or the folder the session was processed with."""
+    from . import person as person_mod
+    folder = person or (sess.get("person_model") or {}).get("folder")
+    if not folder:
+        return None, None
+    rec = person_mod.load(folder)
+    if rec["person_ref"] != sess.get("person_ref"):
+        raise person_mod.PersonRefused(f"person model {folder} is of {rec['person_ref']!r}, the session of "
+                                       f"{sess.get('person_ref')!r}")
+    return rec, Path(folder)
+
+
+def _capacity_model(session_dir, sess, body_mass, use=True, person_rec=None):
+    """(model, record): the session model with leg muscle capacity for this person (rehabtwin/capacity.py):
+    measured volumes and fat fractions from the person model's muscle imaging, the rest scaled to the measured
+    height and mass. Written to SESSION/capacity/; otherwise the session model and why it was not scaled."""
     from . import capacity
     model = session_dir / sess["pipeline"]["outputs"]["model"]
     qc = json.loads((session_dir / "qc.json").read_text())
     height = qc.get("subject", {}).get("height_m")
+    imaging = (person_rec or {}).get("muscle_imaging")
+    regression = not body_mass["assumed"] and bool(height)
     why = ("not requested (--generic-capacity)" if not use else
-           f"body mass {body_mass['source']}, not measured" if body_mass["assumed"] else
-           "no height (process with --height-m or --person)" if not height else
            "personalised model: its own muscle parameters"
            if qc.get("scaling", {}).get("method", "").startswith("person model: its personalised") else
+           f"body mass {body_mass['source']}, not measured" if body_mass["assumed"] and not imaging else
+           "no height (process with --height-m or --person)" if not height and not imaging else
            "session.json names no config (re-process)" if not sess["pipeline"].get("config") else None)
     if why:
         return model, {"scaled": False, "why_not": why}
     out = session_dir / "capacity"
     out.mkdir(exist_ok=True)
     cfg = load_config(Path(sess["pipeline"]["config"]).stem)
-    rec = capacity.scale_model(model, resolve(cfg["model"]), body_mass["kg"], height, out / "model_capacity.osim")
+    rec = capacity.scale_model(model, resolve(cfg["model"]), body_mass["kg"] if regression else None,
+                               height if regression else None, out / "model_capacity.osim", imaging=imaging)
     rec = {"scaled": True, "model": "capacity/model_capacity.osim", **rec}
+    if imaging:
+        rec["person_model"] = {"person_ref": person_rec["person_ref"], "version": person_rec["version"]}
     records.write_json(out / "capacity.json", records.stamp(sess, rec))
     return out / "model_capacity.osim", rec
 
 
 def _capacity_summary(rec):
     return {k: rec[k] for k in ("scaled", "why_not", "method", "subject", "volume_ratio", "factor_min",
-                                "factor_median", "factor_max", "leg_fmax_N", "caveats") if k in rec}
+                                "factor_median", "factor_max", "leg_fmax_N", "sources", "imaging", "caveats") if k in rec}
 
 
-def strength_calibration(session_dir, tests_file, allow_assumed_mass=False, capacity=True):
+def strength_calibration(session_dir, tests_file, allow_assumed_mass=False, capacity=True, person=None):
     """Dynamometer torques → strength-calibrated copy of the session model (SESSION/strength/)."""
     from . import strength
     session_dir = Path(session_dir)
@@ -234,7 +258,7 @@ def strength_calibration(session_dir, tests_file, allow_assumed_mass=False, capa
     spec = json.loads(Path(tests_file).read_text())
     out = session_dir / "strength"
     # untested muscles keep body-size capacities, and the tested groups' factors are relative to them
-    base, cap = _capacity_model(session_dir, sess, body_mass, capacity)
+    base, cap = _capacity_model(session_dir, sess, body_mass, capacity, _person_record(session_dir, sess, person)[0])
     rec = strength.calibrate(base, spec["tests"], out)
     rec.update({k: spec[k] for k in ("device", "protocol", "tester", "date") if k in spec})
     rec["capacity"] = _capacity_summary(cap)
@@ -247,7 +271,7 @@ def strength_calibration(session_dir, tests_file, allow_assumed_mass=False, capa
 
 def muscle_study(session_dir, rep=1, start=None, stop=None, correction=None, weaken=(), assist=(), view_3d=True,
                  grf_sensitivity=0.0, use_strength=False, passive=(), workers=None, max_fps=30.0, plant=True,
-                 illustrative=False, allow_assumed_mass=False, capacity=True):
+                 illustrative=False, allow_assumed_mass=False, capacity=True, person=None):
     """Measured motion (+ corrected motion, + weakened variants) through GRF estimate → ID → SO.
 
     ``capacity``: scale leg muscle capacity to the measured height and mass (rehabtwin/capacity.py)."""
@@ -262,9 +286,13 @@ def muscle_study(session_dir, rep=1, start=None, stop=None, correction=None, wea
             "Re-run with illustrative=True (--illustrative) for a labelled design-space bound, not a device profile.")
     body_mass = _session_mass(session_dir, allow_assumed_mass)
     met = json.loads((session_dir / "metrics.json").read_text())
-    model, cap = _capacity_model(session_dir, sess, body_mass, capacity and not use_strength)
-    muscle_model = {"source": "body-size scaled (Handsfield 2014 regression)" if cap["scaled"]
+    from . import bone
+    person_rec, _ = _person_record(session_dir, sess, person)
+    model, cap = _capacity_model(session_dir, sess, body_mass, capacity and not use_strength, person_rec)
+    muscle_model = {"source": ("measured muscle imaging + body-size regression" if cap.get("imaging") else
+                               "body-size scaled (Handsfield 2014 regression)") if cap["scaled"]
                     else "generic (scaled literature muscle parameters)", "capacity": _capacity_summary(cap)}
+    bone_status = ((person_rec or {}).get("bone_density") or {}).get("classification")
     if use_strength:
         model = session_dir / "strength" / "model_strength.osim"
         if not model.exists():
@@ -340,7 +368,8 @@ def muscle_study(session_dir, rep=1, start=None, stop=None, correction=None, wea
         by_bias.setdefault(b, {})[lab] = r
     runs = by_bias[0.0]
     study = {"twin_tier": sess["twin_tier"], "muscle_model": muscle_model, "body_mass": body_mass,
-             "kinematics_prior": prior, "runs": runs,
+             "kinematics_prior": prior, "runs": runs, "bone_density": bone_status,
+             "bone_caveat": bone.caveat(bone_status) if (assist or passive) else None,
              "devices_status": (None if not (assist or passive)
                                 else "ILLUSTRATION ONLY - design-space bound on a generic body, not an assistance profile"
                                 if sess["twin_tier"] != "A" else
@@ -460,6 +489,10 @@ def person_command(a):
             rec = person_mod.build_from_session(a.folder, a.session)
         elif a.person_cmd == "attach":
             rec = person_mod.attach_personalised_model(a.folder, a.model, a.provenance)
+        elif a.person_cmd == "muscles":
+            rec = person_mod.set_muscle_imaging(a.folder, a.record)
+        elif a.person_cmd == "bone":
+            rec = person_mod.set_bone_density(a.folder, a.record)
         else:
             rec = person_mod.load(a.folder)
     except (ValueError, FileNotFoundError) as e:     # includes PersonRefused and records.StaleResult
@@ -566,6 +599,13 @@ def main(argv=None):
     pa.add_argument("folder")
     pa.add_argument("model")
     pa.add_argument("--provenance", required=True, help="model-provenance record (rehabtwin/tiers.py)")
+    pmu = psub.add_parser("muscles", help="measured muscle size and quality (MRI/CT segmentation: volume, fat fraction)")
+    pmu.add_argument("folder")
+    pmu.add_argument("record", help="JSON: method, date, muscles {label_side: {volume_cm3, fat_fraction}} "
+                                    "(docs/person-model.md)")
+    pbo = psub.add_parser("bone", help="bone density (DXA T/Z-scores or QCT vBMD) -> screening category")
+    pbo.add_argument("folder")
+    pbo.add_argument("record", help="JSON: method, date, age_years, sex, postmenopausal, sites (docs/person-model.md)")
     psh = psub.add_parser("show", help="what the person model holds, per twin layer")
     psh.add_argument("folder")
     au = sub.add_parser("augment", help="add OpenCap's LSTM anatomical markers to a keypoint sequence (pip install onnxruntime)")
@@ -599,6 +639,8 @@ def main(argv=None):
     mu.add_argument("--illustrative", action="store_true",
                     help="allow --assist/--passive below Tier A as a labelled design-space bound (never a device profile)")
     mu.add_argument("--strength", action="store_true", help="use the strength-calibrated model (rehabtwin strength)")
+    mu.add_argument("--person", help="person folder whose muscle imaging and bone density to use (default: the one "
+                                     "the session was processed with)")
     mu.add_argument("--generic-capacity", action="store_true",
                     help="keep the generic subject's muscle forces (default: leg capacity scaled to measured height and mass)")
     mu.add_argument("--workers", type=int, help="parallel static-optimisation processes (default: up to 4)")
@@ -616,6 +658,7 @@ def main(argv=None):
     stp = sub.add_parser("strength", help="calibrate muscle capacities from dynamometer joint torques")
     stp.add_argument("session")
     stp.add_argument("--tests", required=True, help="JSON with measured isometric torques (see configs/strength/)")
+    stp.add_argument("--person", help="person folder whose muscle imaging to use (default: the session's)")
     stp.add_argument("--generic-capacity", action="store_true",
                      help="calibrate on the generic subject's muscle forces instead of body-size scaled ones")
     stp.add_argument("--allow-assumed-mass", action="store_true",
@@ -754,7 +797,7 @@ def main(argv=None):
         from .correction import CorrectionRefused
         try:
             summary, out = run_correction(a.session, a.spec, a.illustrative)
-        except (CorrectionRefused, records.StaleResult) as e:
+        except (CorrectionRefused, records.StaleResult, PersonRefused) as e:
             print(f"refused: {e}", file=sys.stderr)
             return 2
         print(json.dumps({"status": summary["status"], "admissible": summary["admissible"],
@@ -764,8 +807,8 @@ def main(argv=None):
         try:
             study, out = muscle_study(a.session, a.rep, a.start, a.stop, a.correction, a.weaken, a.assist, not a.no_3d,
                                       a.grf_sensitivity, a.strength, a.passive, a.workers, a.max_fps, not a.no_plant,
-                                      a.illustrative, a.allow_assumed_mass, not a.generic_capacity)
-        except (CorrectionRefused, AssumedMassRefused, records.StaleResult) as e:
+                                      a.illustrative, a.allow_assumed_mass, not a.generic_capacity, a.person)
+        except (CorrectionRefused, AssumedMassRefused, records.StaleResult, PersonRefused) as e:
             print(f"refused: {e}", file=sys.stderr)
             return 2
         for lab, cmp in study["comparisons"].items():
@@ -774,8 +817,8 @@ def main(argv=None):
         print(f"report: {out / 'muscles.html'}")
     elif a.cmd == "strength":
         try:
-            rec, out = strength_calibration(a.session, a.tests, a.allow_assumed_mass, not a.generic_capacity)
-        except (AssumedMassRefused, records.StaleResult) as e:
+            rec, out = strength_calibration(a.session, a.tests, a.allow_assumed_mass, not a.generic_capacity, a.person)
+        except (AssumedMassRefused, records.StaleResult, PersonRefused) as e:
             print(f"refused: {e}", file=sys.stderr)
             return 2
         for t in rec["tests"]:

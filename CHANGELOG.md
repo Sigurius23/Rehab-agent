@@ -36,6 +36,15 @@
   length. Previously every body had the generic subject's leg strength. Trunk muscles stay generic. It needs a
   measured mass and a height; `--generic-capacity` turns it off; BMI > 30 is flagged as likely overestimated.
   `strength` calibrates on top of it.
+- **Muscle size, muscle quality and bone density from imaging** (`rehabtwin person muscles` / `person bone`):
+  - MRI/CT muscle volumes and MRI fat fractions per muscle or group replace the height-and-mass regression
+    where they measure: Fmax = σ·V·q/lopt, with the model's own reference volumes (7,089 cm³ per leg, 97 %
+    of the regression's, which checks its units).
+  - Fat fraction scales the contractile part against healthy young muscle (quadriceps 2.6 %, gluteal 5.4 %).
+  - DXA T/Z-scores or QCT vBMD get the standard screening category. Device and correction what-ifs show low
+    or unmeasured bone density. Raw CT Hounsfield units are refused as a bone density.
+  - Not yet tested on real MRI: the open sets (MyoSegmenTUM, TotalSegmentator) are not reachable from this
+    environment.
 - **Safety gates:**
   - Tier B/A only with a model-provenance record bound to the model by sha256 (`--model-provenance`).
   - `--reference-grade` is required with any reference.
