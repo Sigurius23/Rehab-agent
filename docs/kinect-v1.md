@@ -18,9 +18,11 @@ flexion). The front end puts each MediaPipe keypoint at the depth the sensor mea
 It does not:
 
 - **See behind the body.** A hip hidden behind an arm has no depth; that keypoint is left empty, not guessed.
-- **Measure joint centres.** It measures skin, so each keypoint is moved along the line of sight by a
-  rough adult half-thickness (`SURFACE_TO_CENTRE` in `rehabtwin/kinect.py`, scaled by `--height-m`).
-  The validation measures how biased that is.
+- **Measure joint centres.** It measures skin, so each keypoint is moved along the line of sight by the
+  distance from skin to joint centre. That distance comes from height and BMI (`--height-m`, `--mass-kg`),
+  fitted on 1,526 BEDLAM2 body models (`docs/bedlam2.md`). The hip's distance grows from about 10 cm at
+  BMI < 22 to 14 cm above BMI 30, so height alone is not enough. The fit uses unclothed bodies standing
+  upright; clothing and deep flexion change the distance, and the validation measures how much.
 - **Measure the heels, toes or hand points.** From the front the heel is behind the foot, and hand points
   are too small for the depth. These are placed from the depth-measured ankle or wrist, using MediaPipe's
   own 3D offset between them.
@@ -73,7 +75,7 @@ time, never shifted frames.
 
 ```
 python pipeline/adapters/mediapipe_pose.py C:\rec\squat01\colour\%06d.jpg --model pose_landmarker_heavy.task --out C:\rec\squat01\mediapipe.npz
-python -m rehabtwin kinect C:\rec\squat01 C:\rec\squat01\mediapipe.npz squat01_seq.npz --height-m 1.80 --person-ref P01
+python -m rehabtwin kinect C:\rec\squat01 C:\rec\squat01\mediapipe.npz squat01_seq.npz --height-m 1.80 --mass-kg 75 --person-ref P01
 python -m rehabtwin augment squat01_seq.npz squat01_aug.npz --height-m 1.80 --mass-kg 75 --mass-source measured
 python -m rehabtwin process squat01_aug.npz out\squat01 --exercise squat --height-m 1.80
 ```

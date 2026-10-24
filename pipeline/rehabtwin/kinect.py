@@ -9,7 +9,8 @@ and ``augment`` / ``process`` as for any MediaPipe sequence.
 
 Each keypoint is lifted with the depth registered to its colour pixel: the nearest surface in a small window
 (floor pixels excluded), back-projected with the colour camera's nominal intrinsics, then moved along the
-viewing ray by the distance from skin to joint centre (``SURFACE_TO_CENTRE``, a fraction of standing height).
+viewing ray by the distance from skin to joint centre (``surface_to_centre``: from height and BMI, fitted on
+BEDLAM2 bodies).
 Heels, toes and hand points are placed from the lifted ankle or wrist with MediaPipe's own offset
 (``RELATIVE_TO``): from the front the heel is behind the foot, where the sensor cannot see. A keypoint whose depth
 disagrees with MediaPipe's own 3D pose by more than ``max_inconsistency_m`` is left NaN, not guessed: the
@@ -19,7 +20,8 @@ by comparing MediaPipe's left/right labels with the SDK skeleton's in the same i
 
 What it does not do: calibrate this unit (the nominal 531.15 px focal length; a few % focal error scales
 lateral positions by the same few %), or see a joint the sensor cannot see. The surface-to-centre distances
-are rough adult half-thicknesses; a validation against another system measures their bias.
+come from unclothed SMPL-X bodies in a standing rest pose; clothing and deep flexion change them, which a
+validation against another system measures.
 """
 from __future__ import annotations
 
@@ -38,13 +40,19 @@ SDK_JOINTS = ["HipCenter", "Spine", "ShoulderCenter", "Head", "ShoulderLeft", "E
               "HipRight", "KneeRight", "AnkleRight", "FootRight"]
 JOINT_STATES = {"NotTracked": 0, "Inferred": 1, "Tracked": 2}
 
-# Skin to joint centre along the viewing ray, as a fraction of standing height (about half the segment's
-# thickness at that joint for an adult: knee ~10 cm deep at 1.75 m -> 0.028). Face landmarks lie on the skin.
+# Skin to joint centre along the line of sight from the front: height * (a + b * (BMI - BMI_REF)). Fitted on
+# 1,526 BEDLAM2 SMPL-X bodies (1.44-1.99 m, BMI 17.7-43.2; rest pose, minimal clothing; adapters/bedlam2.py
+# offsets): residual SD <= 0.32 cm. Height alone left the hip 1.6 cm SD off, and up to 5.5 cm short above
+# BMI 30. SMPL-X joints stand in for MediaPipe's keypoints; clothing adds to the distance. Face landmarks lie
+# on the skin.
 SURFACE_TO_CENTRE = {
-    "Nose": 0.0, "LEye": 0.0, "REye": 0.0,
-    "LShoulder": 0.033, "RShoulder": 0.033, "LElbow": 0.02, "RElbow": 0.02, "LWrist": 0.014, "RWrist": 0.014,
-    "LHip": 0.05, "RHip": 0.05, "LKnee": 0.028, "RKnee": 0.028, "LAnkle": 0.02, "RAnkle": 0.02,
+    "Nose": (0.0, 0.0), "LEye": (0.0, 0.0), "REye": (0.0, 0.0),
+    "LShoulder": (0.0251, 0.00057), "RShoulder": (0.0251, 0.00057), "LElbow": (0.0187, 0.00029),
+    "RElbow": (0.0187, 0.00029), "LWrist": (0.0173, 0.00013), "RWrist": (0.0173, 0.00013),
+    "LHip": (0.0659, 0.00169), "RHip": (0.0659, 0.00169), "LKnee": (0.0368, 0.00019), "RKnee": (0.0368, 0.00019),
+    "LAnkle": (0.0230, 0.00015), "RAnkle": (0.0230, 0.00015),
 }
+BMI_REF = 25.0
 # Not lifted: placed from the lifted ankle/wrist with MediaPipe's own 3D offset. From the front the heel is
 # hidden behind the foot, so the depth at its pixel belongs to the foot's front; hand points are smaller
 # than the depth's resolution at 2-3 m.
@@ -52,6 +60,12 @@ RELATIVE_TO = {"LHeel": "LAnkle", "RHeel": "RAnkle", "LBigToe": "LAnkle", "RBigT
                "LPinky": "LWrist", "RPinky": "RWrist", "LIndex": "LWrist", "RIndex": "RWrist",
                "LThumb": "LWrist", "RThumb": "RWrist"}
 DEFAULT_HEIGHT_M = 1.70
+
+
+def surface_to_centre(name, height_m, bmi=None):
+    """Skin-to-joint-centre distance (m) of keypoint ``name`` seen from the front (BMI_REF when unknown)."""
+    a, b = SURFACE_TO_CENTRE[name]
+    return height_m * (a + b * ((BMI_REF if bmi is None else bmi) - BMI_REF))
 # MediaPipe BlazePose index -> SDK joint of the same anatomical side (for the mirroring check)
 MIRROR_PAIRS = {11: "ShoulderLeft", 12: "ShoulderRight", 13: "ElbowLeft", 14: "ElbowRight", 15: "WristLeft",
                 16: "WristRight", 23: "HipLeft", 24: "HipRight", 25: "KneeLeft", 26: "KneeRight",
@@ -230,10 +244,11 @@ def mirror_vote(raw, skeleton, min_visibility=0.5, decisive=0.8):
 
 
 def rgbd_sequence(capture, raw, height_m=None, mirrored="auto", min_visibility=0.5, max_inconsistency_m=0.20,
-                  meta=None, seed=0):
+                  meta=None, seed=0, mass_kg=None):
     """MarkerSequence (frame 'opencv_camera', metres) of the 25 Pose2Sim keypoints from a capture + MediaPipe dump.
 
     ``mirrored``: 'auto' (decide from the SDK skeleton, refuse when it cannot), True or False.
+    ``height_m`` and ``mass_kg`` set the skin-to-joint-centre distances (``surface_to_centre``).
     """
     T = capture["T"]
     if len(raw["image_xy"]) != T:
@@ -251,9 +266,10 @@ def rgbd_sequence(capture, raw, height_m=None, mirrored="auto", min_visibility=0
         raw = unmirror_raw(raw)
     K = intrinsics(capture["meta"])
     height = float(height_m) if height_m else DEFAULT_HEIGHT_M
+    bmi = float(mass_kg) / height ** 2 if mass_kg and height_m else None
     names = list(POSE2SIM_MEDIAPIPE)
     idx = [POSE2SIM_MEDIAPIPE[n] for n in names]
-    offsets = np.array([SURFACE_TO_CENTRE.get(n, 0.0) * height for n in names])
+    offsets = np.array([surface_to_centre(n, height, bmi) if n in SURFACE_TO_CENTRE else 0.0 for n in names])
     relative = [(names.index(c), names.index(p)) for c, p in RELATIVE_TO.items()]
     uv = np.asarray(raw["image_xy"], float)[:, idx]
     vis = np.asarray(raw["visibility"], float)[:, idx]
@@ -286,6 +302,8 @@ def rgbd_sequence(capture, raw, height_m=None, mirrored="auto", min_visibility=0
                     "sensor_frames_missed": capture["meta"].get("sensor_frames_missed"),
                     "mirror_check": vote, "height_m_for_offsets": height,
                     "height_source": "argument" if height_m else f"default {DEFAULT_HEIGHT_M} m (pass --height-m)",
+                    "bmi_for_offsets": round(bmi, 1) if bmi else None,
+                    "bmi_source": "--mass-kg / --height-m^2" if bmi else f"assumed {BMI_REF:g} (pass --mass-kg and --height-m)",
                     "surface_to_centre_m": {n: round(float(o), 4) for n, o in zip(names, offsets) if n in SURFACE_TO_CENTRE},
                     "placed_relative_to": RELATIVE_TO,
                     "lifted_fraction": {n: round(float((source[:, k] == 1).mean()), 3) for k, n in enumerate(names)

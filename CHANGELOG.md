@@ -8,6 +8,11 @@
   - `rehabtwin kinect`: lifts MediaPipe keypoints with that depth, leaves occluded joints empty, takes gravity
     from the floor in the depth, and detects a mirrored stream from the SDK skeleton.
   - Tested on rendered synthetic recordings, and the recorder against a fake sensor under Mono.
+- **BEDLAM2 as a body-type testing ground** (`docs/bedlam2.md`, `pipeline/adapters/bedlam2.py`; the data
+  stays outside the repo): on 1,526 SMPL-X bodies (BMI 17.7–43.2), the skin-to-joint-centre distance the
+  Kinect path adds grows with BMI, not just height. It is now height × (a + b × (BMI − 25)), with residual
+  SD ≤ 0.32 cm (height alone: hip 1.6 cm SD, up to 5.5 cm short above BMI 30). `rehabtwin kinect --mass-kg`
+  provides the BMI.
 - **Safety gates:**
   - Tier B/A only with a model-provenance record bound to the model by sha256 (`--model-provenance`).
   - `--reference-grade` is required with any reference.

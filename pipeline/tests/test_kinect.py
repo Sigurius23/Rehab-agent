@@ -42,13 +42,17 @@ def _rot_x(deg):
     return np.array([[1, 0, 0], [0, np.cos(a), -np.sin(a)], [0, np.sin(a), np.cos(a)]])
 
 
+def _radius(name):
+    """Sphere radius of a keypoint: its skin-to-centre distance at BMI 25 (hands and feet: 2.5 cm)."""
+    return kinect.surface_to_centre(name, HEIGHT) if name in kinect.SURFACE_TO_CENTRE else 0.014 * HEIGHT
+
+
 def _spheres(joints):
     """Each keypoint a sphere of its skin-to-centre radius (so lifting should land on its centre), bones as
     chains of spheres, a head and a trunk."""
-    out = [(np.asarray(joints[n]), kinect.SURFACE_TO_CENTRE.get(n, 0.014) * HEIGHT) for n in joints
-           if kinect.SURFACE_TO_CENTRE.get(n, 1) > 0]
+    out = [(np.asarray(joints[n]), _radius(n)) for n in joints if _radius(n) > 0]
     for a, b in BONES:
-        ra, rb = (kinect.SURFACE_TO_CENTRE[n] * HEIGHT for n in (a, b))
+        ra, rb = (_radius(n) for n in (a, b))
         for s in np.linspace(0.15, 0.85, 8):
             out.append(((1 - s) * np.asarray(joints[a]) + s * np.asarray(joints[b]), (1 - s) * ra + s * rb))
     sh = (np.asarray(joints["LShoulder"]) + joints["RShoulder"]) / 2
@@ -273,3 +277,67 @@ def test_csharp_recorder_output_reads_back(tmp_path):
     hc = kinect.SDK_JOINTS.index("HipCenter")
     np.testing.assert_allclose(cap["skeleton"]["uv"][0, hc], [round(320 + 531.15 * 0.1 / 2.5), round(240 - 531.15 * 0.8 / 2.5)])
     assert kinect.angle_deg(kinect.sdk_floor_up_cv(cap["frames"]), [0, -0.98, -0.2]) < 0.1
+
+
+def test_skin_to_centre_grows_with_bmi_and_is_recorded(tmp_path):
+    lean, heavy = (kinect.surface_to_centre("LHip", 1.75, bmi) for bmi in (19.0, 38.0))
+    assert heavy - lean == pytest.approx(1.75 * 0.00169 * 19, abs=1e-6) and heavy - lean > 0.05
+    assert kinect.surface_to_centre("LKnee", 1.75) == pytest.approx(1.75 * 0.0368)       # BMI 25 when unknown
+    assert kinect.surface_to_centre("Nose", 1.75, 40.0) == 0.0                          # face landmarks: on the skin
+    cap, raw, _ = _recording(tmp_path, T=12)
+    k = kinect.rgbd_sequence(cap, raw, height_m=1.75, mass_kg=95.0).meta["kinect"]
+    assert k["bmi_for_offsets"] == pytest.approx(31.0, abs=0.05) and k["bmi_source"].startswith("--mass-kg")
+    assert k["surface_to_centre_m"]["LHip"] == pytest.approx(kinect.surface_to_centre("LHip", 1.75, 95 / 1.75 ** 2), abs=1e-4)
+    assert kinect.rgbd_sequence(cap, raw, height_m=1.75).meta["kinect"]["bmi_source"].startswith("assumed 25")
+
+
+def _bedlam2_adapter():
+    import importlib.util
+    spec = importlib.util.spec_from_file_location("bedlam2_adapter", Path(__file__).resolve().parents[1] / "adapters" / "bedlam2.py")
+    mod = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(mod)
+    return mod
+
+
+def _icosphere(r, subdiv=3):
+    t = (1 + 5 ** 0.5) / 2
+    v = [(-1, t, 0), (1, t, 0), (-1, -t, 0), (1, -t, 0), (0, -1, t), (0, 1, t), (0, -1, -t), (0, 1, -t),
+         (t, 0, -1), (t, 0, 1), (-t, 0, -1), (-t, 0, 1)]
+    f = [(0, 11, 5), (0, 5, 1), (0, 1, 7), (0, 7, 10), (0, 10, 11), (1, 5, 9), (5, 11, 4), (11, 10, 2), (10, 7, 6),
+         (7, 1, 8), (3, 9, 4), (3, 4, 2), (3, 2, 6), (3, 6, 8), (3, 8, 9), (4, 9, 5), (2, 4, 11), (6, 2, 10), (8, 6, 7), (9, 8, 1)]
+    v = [np.array(p, float) / np.linalg.norm(p) for p in v]
+    for _ in range(subdiv):
+        mid, nf = {}, []
+
+        def m(i, j, mid=mid):
+            key = (min(i, j), max(i, j))
+            if key not in mid:
+                p = v[i] + v[j]
+                v.append(p / np.linalg.norm(p))
+                mid[key] = len(v) - 1
+            return mid[key]
+        for a, b, c in f:
+            ab, bc, ca = m(a, b), m(b, c), m(c, a)
+            nf += [(a, ab, ca), (b, bc, ab), (c, ca, bc), (ab, bc, ca)]
+        f = nf
+    return np.array(v) * r, np.array(f)
+
+
+def test_bedlam2_adapter_geometry_on_known_shapes(tmp_path):
+    b2 = _bedlam2_adapter()
+    v, f = _icosphere(0.5)
+    h, mass, _ = b2.body_stats(v, f)
+    assert h == pytest.approx(1.0, abs=1e-6) and mass == pytest.approx(4 / 3 * np.pi * 0.125 * 1000, rel=0.02)
+    assert b2.first_hit(np.zeros(3), np.array([0, 0, 1.0]), v, f) == pytest.approx(0.5, abs=0.005)
+    assert b2.first_hit(np.array([0, 0, 0.3]), np.array([0, 0, 1.0]), v, f) == pytest.approx(0.2, abs=0.005)
+    assert b2.first_hit(np.array([0, 0, 2.0]), np.array([0, 0, 1.0]), v, f) == np.inf
+    # a model file's pickled entries are skipped, never unpickled
+    np.savez(tmp_path / "m.npz", v_template=v, f=f, joint2num=np.array({"pelvis": 0}, dtype=object))
+    m = b2.load_smplx(tmp_path / "m.npz")
+    assert set(m) == {"v_template", "f"}
+    # the fit recovers offset = height * (a + b * (BMI - 25)) exactly from bodies built that way
+    rows = [{"height_m": hh, "bmi": bb, **{n: hh * (0.05 + 0.002 * (bb - 25)) for n in b2.JOINTS}}
+            for hh, bb in ((1.5, 19.0), (1.7, 25.0), (1.9, 31.0), (1.6, 40.0))]
+    c = b2.fit(rows)["Hip"]
+    assert c["a"] == pytest.approx(0.05, abs=1e-4) and c["b"] == pytest.approx(0.002, abs=1e-5) and c["residual_sd_m"] < 1e-6
+

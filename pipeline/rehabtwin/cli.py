@@ -457,6 +457,8 @@ def main(argv=None):
     kn.add_argument("mediapipe", help="adapters/mediapipe_pose.py dump of RECORDING/colour/%%06d.jpg")
     kn.add_argument("out")
     kn.add_argument("--height-m", type=float, help="standing height; scales the skin-to-joint-centre offsets (default 1.70)")
+    kn.add_argument("--mass-kg", type=float, help="body mass: with --height-m gives the BMI the offsets grow with "
+                                                  "(default: BMI 25 assumed)")
     kn.add_argument("--person-ref", default="UNSPECIFIED")
     km = kn.add_mutually_exclusive_group()
     km.add_argument("--mirrored", action="store_true", help="the colour stream is mirrored (default: decided from the "
@@ -610,7 +612,7 @@ def main(argv=None):
             cap = kinect.read_capture(a.recording)
             seq = kinect.rgbd_sequence(cap, dict(np.load(a.mediapipe)), a.height_m,
                                        True if a.mirrored else False if a.not_mirrored else "auto",
-                                       meta={"person_ref": a.person_ref, "raw": str(a.mediapipe)})
+                                       meta={"person_ref": a.person_ref, "raw": str(a.mediapipe)}, mass_kg=a.mass_kg)
         except ValueError as e:
             print(f"refused: {e}", file=sys.stderr)
             return 2
