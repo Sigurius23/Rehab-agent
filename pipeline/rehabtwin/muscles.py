@@ -401,10 +401,17 @@ def run(model_path, motion_path, out_dir, weaken=None, label="measured", exercis
 def muscle_caveat(muscle_model=None):
     """Which capacities are measured and which generic: dynamometry fixes only the tested groups."""
     mm = muscle_model or {}
+    cap = mm.get("capacity") or {}
+    size = ("leg muscles scaled to the measured height and mass by a population regression (Handsfield 2014), "
+            "trunk and arms generic" if cap.get("scaled") else "generic (scaled) parameters")
+    bmi = next((c for c in cap.get("caveats", []) if c.startswith("BMI")), "")
     if mm.get("source", "").startswith("strength"):
         return (f"Muscle capacities of the tested groups ({', '.join(mm.get('tests', [])) or 'none'}; "
-                f"{mm.get('calibrated_muscles', '?')} muscles) come from dynamometry; all other muscles keep generic "
-                "(scaled) parameters. Muscle geometry is generic; no EMG calibration.")
+                f"{mm.get('calibrated_muscles', '?')} muscles) come from dynamometry; all other muscles: {size}. "
+                f"Muscle geometry is generic; no EMG calibration. {bmi}").strip()
+    if cap.get("scaled"):
+        return (f"Muscle capacities: {size}. A population estimate, not this person's measured strength; "
+                f"muscle geometry is generic; no EMG calibration. {bmi}").strip()
     return "Generic (scaled) muscle parameters: no personalised strength, no EMG calibration."
 
 

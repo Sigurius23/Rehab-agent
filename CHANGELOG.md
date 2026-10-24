@@ -19,6 +19,23 @@
   - Segment-length check (`kinect.SEGMENTS`, `--segment-lengths`): a hip not at the person's thigh length
     from its knee is placed on its own line of sight at that length. With MediaPipe-like noise, deep-squat
     hips within 3 cm go from 64% to 81%, and those more than 10 cm off from 15% to 2%.
+- **Person model** (`docs/person-model.md`, `rehabtwin person init/set/build/attach/show`): one versioned folder per
+  person with their bones, dated measured height and mass, and what fills each twin layer at which tier.
+  - `person build` takes a calibration session's scaled model. `process --person` re-applies its per-body scale
+    factors instead of fitting new ones; markers are still placed per session. `kinect --person` takes height,
+    mass and thigh lengths from it. `person attach` takes an imaging-personalised model with its provenance
+    record (Tier B/A), used unscaled with masses following the measured body mass.
+  - A recording's size is checked against the person's bones. A single-camera recording, whose size is a guess,
+    is scaled to the person; a calibrated one more than 10 % off is refused.
+  - Real video (OpenCap subject 2, one squat trial): the camera setup alone moved the right thigh between
+    34.7 and 46.0 cm. With the 5-phone session's bones, the 3-phone session's sagittal pelvis, hip and trunk
+    agreement improved by 0.4–1.8°, ankles 0.2–0.5° worse. Without the size check, the bones made the 1-phone
+    session worse (knee 20° → 48°).
+- **Muscle capacity scaled to body size** (`rehabtwin/capacity.py`): `muscles` and `strength` scale the 80 leg
+  muscles' maximum force with the Handsfield 2014 limb muscle volume (from measured height and mass) over fibre
+  length. Previously every body had the generic subject's leg strength. Trunk muscles stay generic. It needs a
+  measured mass and a height; `--generic-capacity` turns it off; BMI > 30 is flagged as likely overestimated.
+  `strength` calibrates on top of it.
 - **Safety gates:**
   - Tier B/A only with a model-provenance record bound to the model by sha256 (`--model-provenance`).
   - `--reference-grade` is required with any reference.

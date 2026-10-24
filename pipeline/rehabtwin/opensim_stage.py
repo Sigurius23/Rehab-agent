@@ -247,13 +247,14 @@ def _tasks_xml(names, weights, default_w, coord_tasks=None):
     return "<IKTaskSet><objects>" + "".join(out) + "</objects><groups/></IKTaskSet>"
 
 
-def scale_setup_xml(cfg, generic_model, static_trc, t_range, mass_kg, height_m, marker_names):
-    """ScaleTool setup (measurement scaling only; markers are placed by ``place_markers``).
+def scale_setup_xml(cfg, generic_model, static_trc, t_range, mass_kg, height_m, marker_names, manual_scales=None):
+    """ScaleTool setup (markers are placed by ``place_markers``): measurement scaling from the static trial, or,
+    with ``manual_scales`` ({body: [sx, sy, sz]}, a person model's), exactly those factors.
 
     OpenSim resolves these file names relative to the setup file's folder.
     """
     meas = []
-    for m in cfg["scaling"]["measurements"]:
+    for m in ([] if manual_scales else cfg["scaling"]["measurements"]):
         pairs = [p for p in m["pairs"] if p[0] in marker_names and p[1] in marker_names]
         if not pairs:
             continue
@@ -273,9 +274,10 @@ def scale_setup_xml(cfg, generic_model, static_trc, t_range, mass_kg, height_m, 
 <GenericModelMaker><model_file>{generic_model}</model_file><marker_set_file>Unassigned</marker_set_file></GenericModelMaker>
 <ModelScaler>
 <apply>true</apply>
-<scaling_order> measurements</scaling_order>
+<scaling_order> {"manualScale" if manual_scales else "measurements"}</scaling_order>
 <MeasurementSet><objects>{"".join(meas)}</objects><groups/></MeasurementSet>
-<ScaleSet><objects/><groups/></ScaleSet>
+<ScaleSet><objects>{"".join(f"<Scale><scales> {' '.join(repr(float(v)) for v in f)}</scales><segment>{b}</segment>"
+                             f"<apply>true</apply></Scale>" for b, f in (manual_scales or {}).items())}</objects><groups/></ScaleSet>
 <marker_file>{static_trc}</marker_file>
 <time_range> {t0} {t1}</time_range>
 <preserve_mass_distribution>true</preserve_mass_distribution>
@@ -427,6 +429,38 @@ def gap_qc(names, raw, clean, segs, frame_index, fps, upstream_imputed=None, wei
 # ------------------------------------------------------------- the stage
 
 KNOWN_MASS_SOURCES = ("measured", "synthetic truth")
+PERSON_SCALE_TOL = 0.10      # a calibrated recording this far off the person's bones is another body or a fault
+
+
+def scale_is_measured(meta):
+    """Whether the front end measured metric scale (calibrated cameras, depth). One camera only estimates it:
+    MediaPipe's world landmarks are sized for an average body, HSMR's from a shape prior at a fixed focal."""
+    if "metric_scale" in meta:
+        return bool(meta["metric_scale"])
+    src = str(meta.get("source", ""))
+    return not ("monocular" in src.lower() or src.startswith("HSMR"))
+
+
+def recording_scale(cfg, names, static, model_static, person_scales):
+    """(median, {measurement: ratio}): the static trial's own measurement scale factors (marker-pair distances
+    over the generic model's, as ScaleTool computes them) divided by the person's stored ones."""
+    idx = {n: i for i, n in enumerate(names)}
+    axis = {"X": 0, "Y": 1, "Z": 2}
+    per = {}
+    for m in cfg["scaling"]["measurements"]:
+        pairs = [p for p in m["pairs"] if p[0] in idx and p[1] in idx]
+        body, axes = next(iter(m["bodies"].items()))
+        if not pairs or body not in person_scales:
+            continue
+        own = [np.linalg.norm(static[idx[a]] - static[idx[b]]) / np.linalg.norm(model_static[idx[a]] - model_static[idx[b]])
+               for a, b in pairs]
+        own = [v for v in own if np.isfinite(v)]
+        if own:
+            per[m["name"]] = round(float(np.mean(own)) / person_scales[body][axis[axes.split()[0]]], 4)
+    if not per:
+        raise ValueError("no scaling measurement of this config has both markers in the recording: cannot check "
+                         "the recording against the person's bones")
+    return round(float(np.median(list(per.values()))), 4), per
 
 
 def subject_mass(meta, cfg, mass_kg=None):
@@ -452,8 +486,18 @@ def subject_mass(meta, cfg, mass_kg=None):
     return float(cfg.get("default_mass_kg", 70.0)), "assumed default"
 
 
-def run(seq: MarkerSequence, cfg: dict, out_dir, mass_kg=None, height_m=None, on_commit=None) -> StageResult:
+def run(seq: MarkerSequence, cfg: dict, out_dir, mass_kg=None, height_m=None, on_commit=None, person=None) -> StageResult:
+    """``person``: ``rehabtwin.person.for_session`` of the person model to use. Its scale factors are applied
+    to the generic model instead of fitting new ones (or its personalised model is used as it is)."""
     mass, mass_source = subject_mass(seq.meta, cfg, mass_kg)     # refuse a bad mass before any work
+    pm = (person or {}).get("model")
+    if pm and pm["kind"] == "personalised":
+        cfg = {**cfg, "model": pm["path"]}
+    elif pm:
+        from .tiers import sha256
+        if sha256(resolve(cfg["model"])) != pm["generic_model_sha256"]:
+            raise ValueError(f"the person model's scale factors belong to another generic model ({pm['generic_model']}) "
+                             f"than this config's ({cfg['model']}): use config {pm.get('config')!r}")
     aug_gap, gap = (seq.meta.get("augmenter") or {}).get("max_gap_s"), cfg.get("filter", {}).get("max_gap_s", 0.2)
     if aug_gap is not None and abs(aug_gap - gap) > 1e-9:
         # augmenter outputs are masked over input gaps > aug_gap; this stage bridges marker gaps <= gap
@@ -468,6 +512,15 @@ def run(seq: MarkerSequence, cfg: dict, out_dir, mass_kg=None, height_m=None, on
     # 1. model (its foot geometry informs the floor fit)
     generic, model_names, notes = prepare_model(cfg, od, set(seq.all_points()[0]))
     qc["model_notes"] = notes
+    manual = None                      # per-body factors a person model fixes (its personalised model: unit ones)
+    if pm and pm["kind"] == "personalised":
+        pmodel = osim.Model(str(generic))       # keep a reference: the body set lives in it
+        bodies = pmodel.getBodySet()
+        manual = {bodies.get(i).getName(): [1.0, 1.0, 1.0] for i in range(bodies.getSize())}
+        if not manual:
+            raise RuntimeError(f"{generic}: no bodies to scale")
+    elif pm:
+        manual = pm["scale_set"]
     foot = [n for n in cfg.get("frames", {}).get("foot_markers", []) if n in model_names]
     heights = foot_marker_heights(generic, foot) if foot else None
 
@@ -505,9 +558,6 @@ def run(seq: MarkerSequence, cfg: dict, out_dir, mass_kg=None, height_m=None, on
     qc["filter"] = {"type": "butterworth zero-lag", "cutoff_hz": fcfg.get("cutoff_hz", 6.0), "order": fcfg.get("order", 4),
                     "max_gap_s": fcfg.get("max_gap_s", 0.2)}
     times = seq.times
-    if on_commit:      # every refusal is behind us: the folder's model, motion and markers change from here
-        on_commit()
-    write_trc(od / "markers_dynamic.trc", names, clean, times)
 
     # 4. static trial, registered onto the model default pose
     try:  # prefer a window where every marker has a target (long per-marker gaps stay NaN)
@@ -519,7 +569,28 @@ def run(seq: MarkerSequence, cfg: dict, out_dir, mass_kg=None, height_m=None, on
     reg = [names.index(n) for n in reg_names]
     R, t, _, rms = frames.kabsch(static[reg], model_static[reg])
     static_g = frames.apply(R, static, t)
+    person_scale = None
+    if manual:
+        # the person's bones only fit a recording of the person's size
+        ratio, per = recording_scale(cfg, names, static_g, model_static, manual)
+        person_scale = {"recording_vs_person": ratio, "per_measurement": per, "scale_measured": scale_is_measured(seq.meta)}
+        if person_scale["scale_measured"] and abs(ratio - 1.0) > PERSON_SCALE_TOL:
+            raise ValueError(f"this recording measures the body {ratio:.2f} times the person model's size (median of "
+                             f"{len(per)} segments): another person's folder, or a calibration fault. Process without "
+                             "--person to compare")
+        if not person_scale["scale_measured"]:
+            # one camera: its size is a guess, the person's bones are measured. A uniform scale about a floor point
+            # changes no joint angle.
+            centre = np.array([np.nanmean(clean[..., 0]), 0.0, np.nanmean(clean[..., 2])])
+            clean = centre + (clean - centre) / ratio
+            static = static / ratio
+            R, t, _, rms = frames.kabsch(static[reg], model_static[reg])
+            static_g = frames.apply(R, static, t)
+            person_scale["rescaled_by"] = round(1.0 / ratio, 4)
     qc["static"] = {"source": static_desc, "registration_rms_m": round(rms, 4), "registration_markers": len(reg)}
+    if on_commit:      # every refusal is behind us: the folder's model, motion and markers change from here
+        on_commit()
+    write_trc(od / "markers_dynamic.trc", names, clean, times)
     n_static = 10
     static_times = np.arange(n_static) / 100.0
     write_trc(od / "markers_static.trc", names, np.repeat(static_g[None], n_static, axis=0), static_times)
@@ -530,12 +601,27 @@ def run(seq: MarkerSequence, cfg: dict, out_dir, mass_kg=None, height_m=None, on
     scale_xml.write_text(scale_setup_xml(cfg, generic.name, "markers_static.trc",
                                          (static_times[0], static_times[-1]), mass, height_m, names))
     (od / "model_scaled_only.osim").unlink(missing_ok=True)
+    if manual:        # the person's bones; with a personalised model only the masses follow today's
+        scale_xml.write_text(scale_setup_xml(cfg, generic.name, "markers_static.trc", (static_times[0], static_times[-1]),
+                                             mass, height_m, names, manual_scales=manual))
     with _cwd(od):
         # run() reports False whenever MarkerPlacer is off, so judge by the output file
         osim.ScaleTool(str(scale_xml)).run()
     if not (od / "model_scaled_only.osim").exists():
         raise RuntimeError(f"OpenSim ScaleTool failed (setup: {scale_xml})")
     qc["scale_factors"] = read_scale_factors(od / "scale_factors.xml")
+    qc["scaling"] = {"method": "measurements from the static frames (config scaling.measurements)"}
+    if pm:
+        qc["scaling"] = {"method": "person model: its personalised model, segment masses scaled to the session's body "
+                                   "mass (distribution kept)" if pm["kind"] == "personalised"
+                         else "person model: its stored per-body scale factors (manual scaling)",
+                         "person_model": {k: person[k] for k in ("person_ref", "version", "sha256")}}
+        if person_scale:
+            qc["scaling"]["recording_scale"] = person_scale
+        diff = max(abs(a - b) for body, f in manual.items() for a, b in zip(f, qc["scale_factors"].get(body, [9, 9, 9])))
+        qc["scaling"]["max_scale_factor_difference"] = round(diff, 5)
+        if diff > 1e-3:
+            raise RuntimeError(f"manual scaling reproduced the person's scale factors only to {diff:.4f}")
     scfg = cfg.get("static", {})
     pins = scfg.get("coordinate_pins", {}) if seq.static_markers is not None else scfg.get("coordinate_pins_measured", {})
     static_xml = od / "static_ik_setup.xml"

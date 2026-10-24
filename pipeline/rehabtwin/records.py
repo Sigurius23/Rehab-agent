@@ -118,11 +118,20 @@ def accuracy_layers(tier, qc, validation_report=None, tier_source=None):
         kin = "personalised" if validation_report.get("feedback_allowed_joint_planes") else "unvalidated"
         kin_err = f"see validation report; passing joint/planes: {', '.join(validation_report.get('feedback_allowed_joint_planes', [])) or 'none'}"
     ik = qc.get("ik", {}).get("marker_rms_m", {})
+    scaling = qc.get("scaling", {})
+    pm = scaling.get("person_model")
     if (tier_source or {}).get("basis") == "model-provenance record":
-        ev = f"per provenance record {tier_source['file']} ({tier_source.get('evidence', '')}); model is still " \
-             "scaled by marker pairs in this pipeline"
+        how = "used as it is, segment masses scaled to this session's body mass" \
+            if scaling.get("method", "").startswith("person model: its personalised") \
+            else "model is still scaled by marker pairs in this pipeline"
+        ev = f"per provenance record {tier_source['file']} ({tier_source.get('evidence', '')}); {how}"
         bones = {"status": "personalised", "error": ev}
         joints = {"status": "personalised" if tier == "A" else "generic", "error": ev}
+    elif pm:
+        ev = f"statistical skeleton scaled once in a calibration session (person model {pm['person_ref']} " \
+             f"v{pm['version']}), the same bones every session; no imaging"
+        bones = {"status": "generic", "error": ev}
+        joints = {"status": "generic", "error": ev}
     else:
         bones = {"status": "generic", "error": "statistical skeleton (SKEL/OpenSim scaled), no imaging"}
         joints = {"status": "generic", "error": "regressed from body shape and scaled, not measured"}

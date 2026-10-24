@@ -97,13 +97,27 @@ Repos: [TotalSegmentator](https://github.com/wasserth/TotalSegmentator) ·
 [Scalismo](https://github.com/unibas-gravis/scalismo) — a library for statistical shape modelling and model-based image analysis [1](https://github.com/unibas-gravis/scalismo) ·
 [msk-PIPE](https://github.com/PatrikMrnka/msk-PIPE) — an automated pipeline that converts CT/MRI scans into parameterised OpenSim models through segmentation, meshing and muscle-attachment extraction [6](https://github.com/PatrikMrnka/msk-PIPE)
 
+## Where `pipeline/` stands per layer
+
+The person model (`docs/person-model.md`) records this per person; `person show` prints it.
+
+| # | Layer | Built | Tier today | Missing for the next tier |
+|---|---|---|---|---|
+| 1 | Bone geometry | generic bones scaled once in a calibration session and reused (`person build`, `process --person`); an imaging model can be attached with its provenance record (`person attach`) | C | imaging → personalised model (msk-PIPE/STAPLE); or SKEL/OSSO bones fitted inside a measured surface (needs their registered model files) |
+| 2 | Joint centres | scaled with the bones; markers placed per session | C | imaging, or functional joint-centre calibration |
+| 3 | Surface shape | not built yet (body shape from depth is in progress) | — | a 3D scan or tape measurements of the person to measure its error |
+| 4 | Kinematics | per session, validated per joint × plane against a reference | per validation | marker mocap for the person and exercise |
+| 5 | Muscle | Rajagopal leg muscles, capacity scaled to measured height and mass (`capacity.py`); dynamometry for tested groups (`strength`) | C | muscle volumes from MRI; EMG calibration (CEINMS) |
+| 6 | Soft tissue | not modelled | — | — |
+
 ## Red lines
 
 - No muscle "underdevelopment" statement from surface shape (SMPL betas) alone —
   it requires Tier-A muscle geometry and/or strength/EMG evidence. Strength
   evidence can be added today with `rehabtwin strength` (dynamometer torques →
   calibrated capacities + limb symmetry index); it supports "weaker in this test"
-  and a capacity-scaled simulation, not a statement about muscle size.
+  and a capacity-scaled simulation, not a statement about muscle size. Body-size capacity scaling
+  (`capacity.py`) is a population regression from height and mass, not evidence about this person.
 - No "corrected posture" target generated from a generic skeleton; correction
   targets are computed on the patient's own joint geometry and range limits.
 - No exoskeleton assistance profile derived from an unvalidated tier (`muscles --assist/--passive`

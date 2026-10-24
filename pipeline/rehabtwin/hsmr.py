@@ -138,6 +138,7 @@ def build_sequence(frames, skel_forward, fps, image_size, marker_vertex_ids: dic
         markers, joints, static_m, static_j = markers * scale, joints * scale, static_m * scale, static_j * scale
     m = {
         "source": "HSMR+SKEL",
+        "metric_scale": False,
         "skel_gender": gender,
         "intrinsics_source": f"assumed: HSMR fixed focal {HSMR_FOCAL_PX:g} px (uncalibrated)",
         "hsmr_image_size": [int(img_w), int(img_h)],

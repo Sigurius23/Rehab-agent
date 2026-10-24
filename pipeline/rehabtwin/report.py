@@ -509,6 +509,15 @@ def _muscle_banner(study):
                 f"dynamometer tests, {mm['calibrated_muscles']} muscles; geometry generic, Tier {e(study['twin_tier'])}). "
                 + (f"Measured deficits: {e(flags)}. " if flags else "No between-limb deficit below 90 %. ")
                 + "Ground forces are estimated, not measured.</p>")
+    cap = mm.get("capacity") or {}
+    if cap.get("scaled"):
+        sub = cap["subject"]
+        return (f"<p class='banner'><b>What-if simulation with leg capacities scaled to {sub['height_m']} m and "
+                f"{sub['mass_kg']} kg</b> (Tier {e(study['twin_tier'])}): a population regression (Handsfield 2014), "
+                f"leg Fmax ×{cap['factor_median']:.2f} median, trunk and arms generic. It is what an average young "
+                "healthy adult of this size has, not this person's measured strength (<code>rehabtwin strength</code> "
+                "adds dynamometry). " + "".join(e(c) + " " for c in cap["caveats"] if c.startswith("BMI"))
+                + "Ground forces are estimated, not measured.</p>")
     return (f"<p class='banner'><b>What-if simulation on a generic (Tier {e(study['twin_tier'])}) muscle model.</b> "
             "Not a statement about this person's muscles (docs/accuracy.md: no 'underdeveloped muscle' claim without "
             "imaging/strength/EMG evidence; <code>rehabtwin strength</code> adds dynamometry). Ground forces are "
@@ -631,18 +640,19 @@ def write_strength(path, rec, tier):
         f"<tr><td>{e(a)}</td><td>{v['right_Nm']:.1f}</td><td>{v['left_Nm']:.1f}</td><td>{v['lsi_pct']:.0f}%</td>"
         f"<td>{e(v['weaker_side'] or '-')}</td><td>{low if v['flag'] else 'ok'}</td></tr>"
         for a, v in rec["symmetry"].items())
+    base_model = "body-size scaled model" if (rec.get("capacity") or {}).get("scaled") else "generic model"
     doc = f"""<!doctype html><html lang="en"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1"><title>Strength calibration</title>
 <style>{_CSS}</style></head><body>
 <h1>Strength calibration</h1>
 <p class="banner"><b>Measured joint strength, generic muscle geometry (Tier {e(tier)}).</b> Each factor is the
-person's torque relative to the generic model's capacity for that test's prime movers; it rescales their
+person's torque relative to the {base_model}'s capacity for that test's prime movers; it rescales their
 maximum isometric force and nothing else. "Weak" here means weak in the measured test — the factor says
 nothing about muscle size or why.</p>{mass_banner}
 <div class="kv">{mass_span}<span>muscles calibrated: {rec['calibrated_muscles']} of {rec['total_muscles']}</span>
 {''.join(f"<span>{e(k)}: {e(str(rec[k]))}</span>" for k in ("device", "protocol", "tester", "date") if k in rec)}</div>
 <h2>Tests</h2>
-<table><tr><th>action</th><th>posture</th><th>measured (N·m)</th><th>N·m/kg</th><th>generic model (N·m)</th>
+<table><tr><th>action</th><th>posture</th><th>measured (N·m)</th><th>N·m/kg</th><th>{base_model} (N·m)</th>
 <th>factor</th><th>muscles scaled (prime + synergists)</th></tr>{rows}</table>
 <h2>Limb symmetry</h2>
 {f"<table><tr><th>action</th><th>right (N·m)</th><th>left (N·m)</th><th>LSI</th><th>weaker side</th><th></th></tr>{sym}</table>" if sym else "<p class='muted'>No action measured on both sides.</p>"}

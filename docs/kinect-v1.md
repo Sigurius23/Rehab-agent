@@ -121,8 +121,10 @@ The Kinect (plus phones) session is meant as a calibration step for one person. 
 - metric scale and segment lengths;
 - a check of what a single phone gets wrong for this person.
 
-Later sessions could then use one phone with that personal model. The scaling would come from the
-calibration session instead of each session's own frames; this is not built yet. What a phone-only
-session may claim follows from that per-person check. An iPhone with LiDAR is a colour-plus-depth source
+Later sessions can then use one phone with that person's model: `person build` stores the calibration
+session's bones, and `process --person` uses them instead of each session's own scaling, bringing a
+single-camera recording to the person's size (`docs/person-model.md`). `kinect --person` takes height,
+mass and thigh lengths from the same folder. What a phone-only session may claim follows from that
+per-person check; the person model fixes the bones, not one camera's depth errors. An iPhone with LiDAR is a colour-plus-depth source
 too, so the same lifting applies to its depth (`record3d` in the catalog). Once the Kinect path is
 validated, a LiDAR phone can follow it.

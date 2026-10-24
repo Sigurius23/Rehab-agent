@@ -112,7 +112,7 @@ def monocular_sequence(raw, focal_px=None, min_visibility=0.5, meta=None, mirror
     low = vis < min_visibility
     markers[low] = np.nan
     valid = np.asarray(raw["detected"], bool) & np.isfinite(markers).all(axis=2).sum(axis=1).astype(bool)
-    m = {"source": "MediaPipe Pose (monocular)", "intrinsics_source":
+    m = {"source": "MediaPipe Pose (monocular)", "metric_scale": False, "intrinsics_source":
          f"{'calibrated' if focal_px else 'assumed (75 deg diagonal FOV)'} focal {f:.1f} px, principal point at image centre",
          "focal_px": f, "tier": "C", "default_config": "mediapipe33_pose2sim", "min_visibility": min_visibility,
          "camera_facing": "front" if mirrored else src.get("camera_facing", "unspecified"),
@@ -385,7 +385,7 @@ def multiview_sequence(raws, cams, up_axis="z", min_visibility=0.5, max_reproj_p
     elif up_axis == "-y":  # y-down board frame (OpenCap) -> y-up: half turn about x
         X = X @ np.diag([1.0, -1.0, -1.0]).T
     valid = np.isfinite(X).all(axis=2).sum(axis=1) >= 12
-    m = {"source": f"MediaPipe Pose, {len(cams)}-camera DLT triangulation", "tier": "C",
+    m = {"source": f"MediaPipe Pose, {len(cams)}-camera DLT triangulation", "tier": "C", "metric_scale": True,
          "default_config": "mediapipe33_pose2sim", "reprojection_px_median": float(np.nanmedian(err)),
          "reprojection_px_p95": float(np.nanpercentile(err, 95)), "intrinsics_source": intrinsics_source,
          "cameras": [c.name for c in cams],

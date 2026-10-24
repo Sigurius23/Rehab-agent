@@ -372,7 +372,7 @@ def rgbd_sequence(capture, raw, height_m=None, mirrored="auto", min_visibility=0
         lengths[key] = {"length_m": float(length), "source": "given (the person's model)"}
     placed = constrain_segments(markers, source, uv, vis, world, K, lengths, names, min_visibility=min_visibility)
     valid = detected & (np.isfinite(markers).all(axis=2).sum(axis=1) >= 12)
-    m = {"source": "Kinect v1 RGB-D + MediaPipe Pose (keypoints lifted with registered depth)",
+    m = {"source": "Kinect v1 RGB-D + MediaPipe Pose (keypoints lifted with registered depth)", "metric_scale": True,
          "intrinsics_source": capture["meta"]["colour"].get("intrinsics_source", "unspecified"),
          "focal_px": K[0], "tier": "C", "default_config": "mediapipe33_pose2sim", "min_visibility": min_visibility,
          "camera_facing": "front", "mirrored": bool(mirrored),

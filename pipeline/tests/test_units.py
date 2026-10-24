@@ -1469,9 +1469,82 @@ def test_muscle_caveat_follows_the_muscle_model(tmp_path, monkeypatch):
     study, mdir = cli.muscle_study(d, plant=False, view_3d=False, use_strength=True)
     cav = study["runs"]["measured"]["caveats"][0]
     assert calls[-1]["muscle_model"]["source"].startswith("strength")       # reaches muscles.run (and muscles.json)
-    assert "knee_extension_r" in cav and "dynamometry" in cav and "all other muscles keep generic" in cav
+    assert "knee_extension_r" in cav and "dynamometry" in cav and "all other muscles: generic" in cav
     assert "no personalised strength" not in cav and "no EMG calibration" in cav
     assert cav in (mdir / "muscles.html").read_text()
+
+
+def test_recording_scale_against_the_person_and_which_front_ends_measure_scale():
+    cfg = {"scaling": {"measurements": [
+        {"name": "femur_r", "pairs": [["A", "B"]], "bodies": {"femur_r": "X Y Z"}},
+        {"name": "pelvisZ", "pairs": [["C", "D"]], "bodies": {"pelvis": "Z"}},
+        {"name": "absent", "pairs": [["A", "Q"]], "bodies": {"tibia_r": "X Y Z"}}]}}
+    model = np.array([[0, 0, 0], [0, 0.4, 0], [0, 0, 0], [0, 0, 0.2]], float)
+    static = model * 0.9                                    # a recording 10% small ...
+    person = {"femur_r": [1.0, 1.0, 1.0], "pelvis": [1.2, 1.2, 1.0]}
+    ratio, per = opensim_stage.recording_scale(cfg, ["A", "B", "C", "D"], static, model, person)
+    assert per == {"femur_r": 0.9, "pelvisZ": 0.9} and ratio == 0.9   # ... measured against the person's Z factor
+    with pytest.raises(ValueError, match="no scaling measurement"):
+        opensim_stage.recording_scale(cfg, ["A", "B", "C", "D"], static, model, {})
+    measured = opensim_stage.scale_is_measured
+    assert not measured({"source": "MediaPipe Pose (monocular)"}) and not measured({"source": "HSMR+SKEL"})
+    assert measured({"source": "MediaPipe Pose, 5-camera DLT triangulation"}) and measured({"source": "synthetic"})
+    assert not measured({"source": "anything", "metric_scale": False})
+
+
+def test_capacity_regression_and_caveats():
+    from rehabtwin import capacity
+    ref = capacity.REFERENCE
+    assert capacity.limb_muscle_volume_cm3(ref["mass_kg"], ref["height_m"]) == pytest.approx(7304.4, abs=0.1)
+    # twice the mass at the same height: less than twice the muscle (the regression's intercept)
+    r = capacity.limb_muscle_volume_cm3(2 * ref["mass_kg"], ref["height_m"]) / capacity.limb_muscle_volume_cm3(
+        ref["mass_kg"], ref["height_m"])
+    assert 1.8 < r < 1.9
+    assert not any(c.startswith("BMI") for c in capacity.caveats(70, 1.75))
+    assert capacity.caveats(110, 1.75)[0].startswith("BMI 35.9 > 30")
+    assert len(set(capacity.LEG_MUSCLES)) == 40
+
+
+def test_capacity_scaling_needs_a_measured_mass_and_a_height(tmp_path, monkeypatch):
+    import json
+
+    from rehabtwin import capacity, cli, muscles
+    calls = []
+    _fake_muscles_and_strength(monkeypatch, calls)
+    scaled = []
+    monkeypatch.setattr(capacity, "scale_model", lambda *a: scaled.append(a) or {
+        "method": "m", "subject": {"mass_kg": 81.5, "height_m": 1.8, "bmi": 25.2}, "factor_median": 1.1,
+        "caveats": ["BMI x"]})
+    monkeypatch.setattr(cli, "resolve", lambda p: Path("generic.osim"))
+    d = _mass_session(tmp_path, "measured", 81.5)
+    study, _ = cli.muscle_study(d, plant=False, view_3d=False)
+    assert study["muscle_model"]["capacity"] == {"scaled": False, "why_not": "no height (process with --height-m or --person)"}
+    assert calls[-1]["model_path"] == d / "model.osim" and not scaled
+    qc = json.loads((d / "qc.json").read_text())
+    qc["subject"]["height_m"] = 1.8
+    (d / "qc.json").write_text(json.dumps(qc))
+    sess = json.loads((d / "session.json").read_text())
+    sess["pipeline"]["config"] = "skel105_pose2sim.json"
+    (d / "session.json").write_text(json.dumps(sess))
+    study, _ = cli.muscle_study(d, plant=False, view_3d=False)
+    assert scaled[-1][2:4] == (81.5, 1.8) and calls[-1]["model_path"] == d / "capacity" / "model_capacity.osim"
+    assert study["muscle_model"]["source"].startswith("body-size scaled")
+    assert json.loads((d / "capacity" / "capacity.json").read_text())["processing_id"] == "p0"
+    assert "population regression" in muscles.muscle_caveat(study["muscle_model"]) and "BMI x" in muscles.muscle_caveat(
+        study["muscle_model"])
+    study, _ = cli.muscle_study(d, plant=False, view_3d=False, capacity=False)
+    assert study["muscle_model"]["capacity"]["why_not"].startswith("not requested")
+    qc["scaling"] = {"method": "person model: its personalised model, segment masses scaled", "person_model": {}}
+    (d / "qc.json").write_text(json.dumps(qc))
+    study, _ = cli.muscle_study(d, plant=False, view_3d=False)
+    assert study["muscle_model"]["capacity"]["why_not"].startswith("personalised model")
+    qc["scaling"] = {}
+    qc["subject"]["mass_source"] = "assumed default"
+    (d / "qc.json").write_text(json.dumps(qc))
+    study, _ = cli.muscle_study(d, plant=False, view_3d=False, allow_assumed_mass=True)
+    assert study["muscle_model"]["capacity"]["why_not"] == "body mass assumed default, not measured"
+    rec, _ = cli.strength_calibration(d, d / "tests.json", allow_assumed_mass=True)
+    assert rec["capacity"]["scaled"] is False
 
 
 # ------------------------------------------------------------- re-processing: stale derived results

@@ -269,6 +269,31 @@ def test_kinect_cli_writes_a_sequence_the_pipeline_reads(tmp_path, capsys):
     assert "refused: MediaPipe dump has 2 frames" in capsys.readouterr().err
 
 
+def test_kinect_cli_takes_height_mass_and_thigh_lengths_from_the_person_model(tmp_path, capsys):
+    from rehabtwin import cli, person, tiers
+    from rehabtwin.sequence import MarkerSequence
+    cap, raw, _ = _recording(tmp_path, T=12)
+    np.savez(tmp_path / "mp.npz", **raw)
+    d = tmp_path / "P1"
+    person.init(d, "P1", height_m=1.62, mass_kg=88)
+    (d / "model.osim").write_text("<OpenSimDocument/>")
+    rec = person.load(d)
+    rec["model"] = {"kind": "scaled-generic", "file": "model.osim", "sha256": tiers.sha256(d / "model.osim"),
+                    "generic_model": "g.osim", "generic_model_sha256": "0" * 64, "scale_set": {},
+                    "config": "mediapipe33_pose2sim.json", "built_from": {"session_id": "s1"}}
+    rec["keypoint_segments"] = {"LHip-LKnee": {"length_m": 0.395}, "RHip-RKnee": {"length_m": 0.4}}
+    person.save(d, rec, "test model")
+    assert cli.main(["kinect", cap["dir"], str(tmp_path / "mp.npz"), str(tmp_path / "seq.npz"), "--person", str(d)]) in (None, 0)
+    k = MarkerSequence.load(tmp_path / "seq.npz").meta
+    assert k["person_ref"] == "P1" and k["person_model"]["version"] == 2
+    assert k["kinect"]["height_m_for_offsets"] == 1.62 and k["kinect"]["bmi_for_offsets"] == round(88 / 1.62 ** 2, 1)
+    assert k["kinect"]["segment_lengths"]["LHip-LKnee"] == {"length_m": 0.395, "source": "given (the person's model)"}
+    capsys.readouterr()
+    assert cli.main(["kinect", cap["dir"], str(tmp_path / "mp.npz"), str(tmp_path / "x.npz"), "--person", str(d),
+                     "--person-ref", "P2"]) == 2
+    assert "the session is of 'P2'" in capsys.readouterr().err
+
+
 @pytest.mark.skipif(not (shutil.which("mcs") and shutil.which("mono")), reason="needs Mono (mcs + mono)")
 def test_csharp_recorder_output_reads_back(tmp_path):
     """KinectCapture.cs against the SDK stub's fake sensor: the C# writer and this reader agree on the format."""
