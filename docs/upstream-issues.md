@@ -61,3 +61,21 @@ pattern appears in the image branch with `flex_resize_img`.
 `flex_resize_video(frames, (MAX_IMG_W, -1), ...)`.
 (Our workaround: `rehabtwin.hsmr.hsmr_input_size` replicates the current behaviour; the
 adapter takes `--image-size` to override.)
+
+---
+
+## MyoSegmenTUM thigh (Schlaeger et al. 2018) — Table2 volumes use 1 mm pixels and double-count overlapping slices
+
+**Data:** OSF project `svwa7` (view-only key in the paper's data availability statement), `Table2.csv`, and the
+per-stack masks in each subject zip.
+
+The `*_V [mm3]` columns equal mask voxel counts times the masks' header spacing (`ElementSpacing = 1 1 4` for the
+healthy volunteers, `1 1 1` for the patients). The scans' DICOM files give PixelSpacing 0.78125 / 0.9375 mm
+(HV001 stacks 1 / 2), 1.0185 mm (HV012) and 0.81875 mm (P001), and SpacingBetweenSlices 4 mm for the patients.
+The healthy volunteers' two stacks also overlap by about 16 mm, and both stacks' masks segment the overlap.
+HV001's right quadriceps is 2,110 cm³ from the masks with the DICOM geometry, slices counted once; the table
+gives 3,105 cm³. HV012's is 1,107 cm³ against 1,067 cm³, and P001's 1,490 cm³ against 556 cm³. The mean
+fat fractions are unaffected.
+
+Workaround here: `pipeline/adapters/myosegmentum.py volumes` recomputes every volume from the masks.
+

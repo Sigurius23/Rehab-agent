@@ -25,7 +25,9 @@ level (``HEALTHY_FAT_FRACTION``). CT attenuation (HU) is recorded but not conver
 and protocol.
 
 The Pose2Sim model's 80 leg muscles are Rajagopal's; its 238 trunk muscles come from other sources and stay
-generic. The regression is a population estimate: the leg muscle an average young, healthy adult of this
+generic. The regression is a population estimate: on MyoSegmenTUM thigh MRI (15 healthy adults) it gave a third
+more quadriceps than measured, +-15 % between people, while measured volume predicted knee-extension strength at
+r = 0.86 against its 0.44 (adapters/myosegmentum.py). It gives the leg muscle an average young, healthy adult of this
 height and mass has, not this person's strength. Fat mass raises body mass without muscle (BMI > 30), and age,
 training and injury change muscle volume and quality; that is what the imaging inputs are for.
 """

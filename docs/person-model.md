@@ -125,7 +125,9 @@ generic model and the 110 kg, 1.90 m body stronger ones. Each scaled Fmax matche
 trunk is unchanged, and scaling a model twice is refused.
 
 What it is and is not:
-- **A population estimate.** It gives the leg the muscle an average young, healthy adult of this height and
+- **A population estimate, and a poor one for individuals.** On 15 healthy adults' thigh MRI it gave a third
+  more quadriceps than measured, ±15 % between people, and the patients twice theirs (MyoSegmenTUM, below).
+  It gives the leg the muscle an average young, healthy adult of this height and
   mass has. Age, training, disuse and injury are not in the regression, which matters in rehab.
 - **Not reliable above BMI 30.** Extra body mass is then mostly fat, so the regression likely overestimates
   muscle; results say so.
@@ -221,14 +223,57 @@ TotalSegmentator; map their labels onto these by each tool's own label definitio
   never measured.
 - These are screening categories from a measured report, not a diagnosis.
 
-**Not validated yet.** The open MRI sets would test this against real people:
-- MyoSegmenTUM–Thigh (osf.io/svwa7): water–fat thigh MRI with manual quadriceps, hamstrings, sartorius and
-  gracilis masks for 15 healthy adults and 4 with neuromuscular disease. It would test how far the
-  regression is from each person's measured muscles, and how far fat fraction separates the patients.
-- TotalSegmentator's CT set (Zenodo): for the segmentation step.
+### Tested on real MRI and dynamometry: MyoSegmenTUM thigh
 
-Neither is reachable from this environment: osf.io, files.osf.io and zenodo.org are not on the network
-allow-list.
+MyoSegmenTUM (Schlaeger et al. 2018, PLOS ONE) gives water–fat MRI of both thighs with manual masks for 15
+healthy adults and 4 patients with neuromuscular disease. The healthy volunteers also have maximum isometric
+knee-extension torque, seated with the hip at 90° and the knee at 60° and 90°. `pipeline/adapters/myosegmentum.py`
+recomputes the muscle volumes from the masks, then predicts each person's torque with the model scaled to their
+height and mass. The prediction is the isometric knee-extension moment at the same posture, with three sources
+of leg capacity.
+
+**The published volume table is wrong.** It counts mask voxels as 1 × 1 mm pixels (the scans' real spacing is
+0.78–1.02 mm, per stack) and the patients' slices as 1 mm (really 4 mm). It also counts the slices where the
+healthy volunteers' two stacks overlap twice. The adapter takes the geometry from each stack's DICOM and counts
+each slice once. The healthy volunteers' quadriceps are then 0.65–0.70× the table's (sequence A) or 1.04×
+(sequence B); the fat fractions in the table are right. Repeat scans of three volunteers agree to 2.2 %
+(quadriceps volume, coefficient of variation).
+
+**Muscle size:** the height-and-mass regression against measured volumes (15 healthy adults, both legs):
+
+| Muscle group | measured / regression | spread between people (CV) | r |
+|---|---|---|---|
+| quadriceps | 0.75 | 15 % | 0.52 |
+| hamstrings (lower ends below the scans) | 0.70 | 21 % | 0.57 |
+| quadriceps, 4 patients | 0.49 | 24 % | 0.67 |
+
+The regression gave these adults a third more quadriceps than they have. It cannot tell one person from another
+better than ±15 %, and it gave the patients twice the muscle they have. People in rehab are the ones it fits
+worst.
+
+**Strength:** predicted against measured knee-extension torque. These are HV001–HV011, where the tables'
+labels are unambiguous; for HV012–HV015 the paper says 60° on both legs, while the tables label the values
+90°.
+
+| Leg capacity from | 60°: measured / model | spread (CV) | r | 90°: measured / model | spread | r |
+|---|---|---|---|---|---|---|
+| generic subject | 0.90 | 17.5 % | 0.50 | 1.13 | 24.5 % | 0.41 |
+| height-and-mass regression | 0.80 | 16.3 % | 0.44 | 0.98 | 19.1 % | 0.62 |
+| MRI quadriceps volume + fat fraction | 1.12 | 9.9 % | 0.86 | 1.39 | 17.0 % | 0.76 |
+
+- **Measured muscle size predicts strength:** with the MRI volume, the model's torque correlates with the
+  dynamometer at r = 0.86 at 60° (0.44 with the regression), and the person-to-person error halves (16 % → 10 %).
+- **The remaining bias** is the generic model's knee-angle dependence: the model loses more torque from 60° to
+  90° than these people do. Dynamometry at the tested angles (`rehabtwin strength`) calibrates that.
+- **With HV012–HV015 added** (read as 60°, different MRI sequence): r 0.67 against 0.57 for the regression.
+
+**Muscle quality:** mean quadriceps fat fraction is 3.8 % in the healthy adults (1.0–7.0 %) and 13 % in the
+patients (hamstrings 4 % and 26 %). The healthy reference used for q (2.6 %, another study's sequence) is 1.2
+points lower than this one's. That moves q by about 1 %: the sequence matters less than the disease, which
+moves it by 10–20 %.
+
+Limits: 15 healthy adults, 12 men; one site and two sequences; the moment arms are the generic model's scaled to
+height. The volumes are of the thigh between hip and kneecap.
 
 ## Verified
 
@@ -304,7 +349,8 @@ Reproduce: `examples/person_model_opencap.sh` after `examples/opencap_agreement.
 - **Skeleton from body shape (SKEL/OSSO).** These fit anatomical bones inside a measured body surface
   instead of scaling generic ones. Their model files need registration on the authors' sites, so the user
   has to download them; the code to use them is not written yet.
-- **Muscle MRI from real people** to test the regression and the fat-fraction scaling (above).
+- **Muscle MRI and strength of people in rehab.** The MyoSegmenTUM test covers 15 healthy adults (above); the
+  regression is furthest off for patients, and only 4 patients' scans, without strength, were available.
 - **Imaging for Tier A.** `person attach` takes an MRI- or CT-personalised OpenSim model (e.g. from
   msk-PIPE or STAPLE) with a signed provenance record. Producing that model needs scans and clinician
   review; nothing in this repository makes one.

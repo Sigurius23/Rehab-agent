@@ -50,8 +50,12 @@
   - Fat fraction scales the contractile part against healthy young muscle (quadriceps 2.6 %, gluteal 5.4 %).
   - DXA T/Z-scores or QCT vBMD get the standard screening category. Device and correction what-ifs show low
     or unmeasured bone density. Raw CT Hounsfield units are refused as a bone density.
-  - Not yet tested on real MRI: the open sets (MyoSegmenTUM, TotalSegmentator) are not reachable from this
-    environment.
+  - Tested on MyoSegmenTUM thigh MRI with dynamometry (`adapters/myosegmentum.py`, `docs/person-model.md`):
+    with measured quadriceps volume and fat fraction, predicted knee-extension torque correlates with the
+    dynamometer at r = 0.86 (the height-and-mass regression 0.44), and the person-to-person error halves
+    (16 % → 10 %). The regression gave these adults a third more quadriceps than measured and the patients
+    twice theirs. The database's own volume table is wrong (1 mm pixels, overlapping slices counted twice);
+    the adapter recomputes the volumes from the masks with the DICOM geometry (`docs/upstream-issues.md`).
 - **Safety gates:**
   - Tier B/A only with a model-provenance record bound to the model by sha256 (`--model-provenance`).
   - `--reference-grade` is required with any reference.
