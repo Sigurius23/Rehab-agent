@@ -395,6 +395,21 @@ measured / predicted between people once the common bias is divided out:
 - **A statistical model as a fairer baseline** (trained on 1999–2000, tested on 2001–2002): test R² 0.66 from
   age, sex, height and mass, and 0.70 with the leg's DXA lean mass. Adding leg fat or the other leg adds nothing.
 
+**On a real squat** (OpenCap subject 2, 1.96 m, 78.2 kg; `muscles --rep 2`): the same session run with each
+rung. The DXA record is made up, not this person's scan: it is a functional check of how the scan reaches
+the results, not a validation.
+
+| Leg muscle from | leg muscle R / L | leg Fmax R / L | quadriceps mean activation R / L | knee moment, peak extension R |
+|---|---|---|---|---|
+| height and mass | 8,239 / 8,239 cm³ | 48.5 / 48.7 kN | 0.23 / 0.21 | 1.46 N·m/kg |
+| age 27, male | 7,231 / 7,231 cm³ | 42.5 / 42.7 kN | 0.25 / 0.23 | 1.46 N·m/kg |
+| illustrative DXA (right leg 1 kg more lean; trunk 45 % of the mass, the model's 51 %) | 8,031 / 7,295 cm³ | 47.2 / 43.1 kN | 0.23 / 0.23 | 1.29 N·m/kg |
+
+- **Capacity alone** (rows 1–2) changes how hard the muscles work, not the joint moments.
+- **The scan's mass distribution** also changes the moments. With less of the mass in the trunk, the right
+  knee's peak extension moment drops 12 % and the hip's peak flexion moment 17 %.
+- **Static optimisation** ran as before. The pelvis residual changed by 3 %.
+
 **What a DXA scan does not make perfect.** With the scan, measured strength still spreads 22 % around the
 prediction. The rest comes from what body composition does not see:
 - muscle quality: intramuscular fat and fibre type;
