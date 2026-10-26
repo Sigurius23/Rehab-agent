@@ -214,38 +214,69 @@ def _person_record(session_dir, sess, person=None):
 
 
 def _capacity_model(session_dir, sess, body_mass, use=True, person_rec=None):
-    """(model, record): the session model with leg muscle capacity for this person (rehabtwin/capacity.py):
-    measured volumes and fat fractions from the person model's muscle imaging, the rest scaled to the measured
-    height and mass. Written to SESSION/capacity/; otherwise the session model and why it was not scaled."""
+    """(model, record): the session model with leg muscle capacity for this person (rehabtwin/capacity.py).
+
+    From the person model, best first: measured volumes and fat fractions from muscle imaging; each leg's muscle
+    from a DXA scan, whose regional masses also set the segment masses (rehabtwin/dxa.py); the age-and-sex model;
+    the measured height and mass. Written to SESSION/capacity/; otherwise the session model and why it was not
+    scaled."""
     from . import capacity
+    from . import dxa as dxa_mod
+    from . import person as person_mod
     model = session_dir / sess["pipeline"]["outputs"]["model"]
     qc = json.loads((session_dir / "qc.json").read_text())
     height = qc.get("subject", {}).get("height_m")
-    imaging = (person_rec or {}).get("muscle_imaging")
+    p = person_rec or {}
+    imaging, scan = p.get("muscle_imaging"), p.get("dxa")
     regression = not body_mass["assumed"] and bool(height)
     why = ("not requested (--generic-capacity)" if not use else
            "personalised model: its own muscle parameters"
            if qc.get("scaling", {}).get("method", "").startswith("person model: its personalised") else
-           f"body mass {body_mass['source']}, not measured" if body_mass["assumed"] and not imaging else
-           "no height (process with --height-m or --person)" if not height and not imaging else
+           f"body mass {body_mass['source']}, not measured" if body_mass["assumed"] and not (imaging or scan) else
+           "no height (process with --height-m or --person)" if not height and not (imaging or scan) else
            "session.json names no config (re-process)" if not sess["pipeline"].get("config") else None)
     if why:
         return model, {"scaled": False, "why_not": why}
     out = session_dir / "capacity"
     out.mkdir(exist_ok=True)
     cfg = load_config(Path(sess["pipeline"]["config"]).stem)
+    age = person_mod.age_years(p, sess.get("started_at")) if p else None
     rec = capacity.scale_model(model, resolve(cfg["model"]), body_mass["kg"] if regression else None,
-                               height if regression else None, out / "model_capacity.osim", imaging=imaging)
+                               height if regression else None, out / "model_capacity.osim", imaging=imaging,
+                               age_years=age, male=(p["sex"] == "male") if p.get("sex") else None,
+                               dxa_leg_lean_kg=dxa_mod.leg_lean_kg(scan) if scan else None)
     rec = {"scaled": True, "model": "capacity/model_capacity.osim", **rec}
-    if imaging:
+    if scan:
+        rec["dxa"] = {k: scan[k] for k in ("method", "date", "approved_by", "sha256") if scan.get(k)}
+        if scan["checks"]["distribution"]:
+            from .opensim_stage import _osim
+            m = _osim().Model(str(out / "model_capacity.osim"))
+            rec["mass_distribution"] = dxa_mod.apply_mass_distribution(m, scan)
+            m.finalizeConnections()
+            m.printToXML(str(out / "model_capacity.osim"))
+        else:
+            rec["caveats"].append("Segment masses: the generic model's distribution (the DXA record lacks the full "
+                                  "regional table: lean, fat and BMC of arms, legs, trunk and head).")
+    if imaging or scan or rec.get("leg_source") == "anthropometry":
         rec["person_model"] = {"person_ref": person_rec["person_ref"], "version": person_rec["version"]}
     records.write_json(out / "capacity.json", records.stamp(sess, rec))
     return out / "model_capacity.osim", rec
 
 
 def _capacity_summary(rec):
-    return {k: rec[k] for k in ("scaled", "why_not", "method", "subject", "volume_ratio", "factor_min",
-                                "factor_median", "factor_max", "leg_fmax_N", "sources", "imaging", "caveats") if k in rec}
+    return {k: rec[k] for k in ("scaled", "why_not", "method", "subject", "volume_ratio", "leg_source",
+                                "leg_source_text", "leg_muscle_cm3", "factor_min", "factor_median", "factor_max",
+                                "leg_fmax_N", "sources", "imaging", "dxa", "mass_distribution", "caveats") if k in rec}
+
+
+def _muscle_source(cap):
+    if not cap["scaled"]:
+        return "generic (scaled literature muscle parameters)"
+    leg = {"dxa": "DXA-calibrated leg muscle (per-leg lean mass)",
+           "anthropometry": "body-size scaled by age, sex, height and mass (NHANES DXA model)",
+           "regression": "body-size scaled (Handsfield 2014 regression)",
+           "generic": "generic leg sizes"}[cap.get("leg_source", "regression")]
+    return f"measured muscle imaging + {leg}" if cap.get("imaging") else leg
 
 
 def strength_calibration(session_dir, tests_file, allow_assumed_mass=False, capacity=True, person=None):
@@ -289,9 +320,7 @@ def muscle_study(session_dir, rep=1, start=None, stop=None, correction=None, wea
     from . import bone
     person_rec, _ = _person_record(session_dir, sess, person)
     model, cap = _capacity_model(session_dir, sess, body_mass, capacity and not use_strength, person_rec)
-    muscle_model = {"source": ("measured muscle imaging + body-size regression" if cap.get("imaging") else
-                               "body-size scaled (Handsfield 2014 regression)") if cap["scaled"]
-                    else "generic (scaled literature muscle parameters)", "capacity": _capacity_summary(cap)}
+    muscle_model = {"source": _muscle_source(cap), "capacity": _capacity_summary(cap)}
     bone_status = ((person_rec or {}).get("bone_density") or {}).get("classification")
     if use_strength:
         model = session_dir / "strength" / "model_strength.osim"
@@ -502,9 +531,10 @@ def person_command(a):
     from . import person as person_mod
     try:
         if a.person_cmd == "init":
-            rec = person_mod.init(a.folder, a.person_ref, a.height_m, a.mass_kg, a.mass_source)
+            rec = person_mod.init(a.folder, a.person_ref, a.height_m, a.mass_kg, a.mass_source, age_years=a.age_years,
+                                  sex=a.sex)
         elif a.person_cmd == "set":
-            rec = person_mod.set_measurement(a.folder, a.height_m, a.mass_kg, a.mass_source)
+            rec = person_mod.set_measurement(a.folder, a.height_m, a.mass_kg, a.mass_source, a.age_years, a.sex)
         elif a.person_cmd == "build":
             rec = person_mod.build_from_session(a.folder, a.session)
         elif a.person_cmd == "attach":
@@ -513,6 +543,8 @@ def person_command(a):
             rec = person_mod.set_muscle_imaging(a.folder, a.record)
         elif a.person_cmd == "bone":
             rec = person_mod.set_bone_density(a.folder, a.record)
+        elif a.person_cmd == "dxa":
+            rec = person_mod.set_dxa(a.folder, a.record)
         elif a.person_cmd == "shape":
             rec = person_shape(a)
         else:
@@ -608,12 +640,15 @@ def main(argv=None):
     pi = psub.add_parser("init", help="start a person folder")
     pi.add_argument("folder")
     pi.add_argument("--person-ref", required=True, help="pseudonymous subject reference (never a name)")
-    pset = psub.add_parser("set", help="record a new measured height and/or body mass")
+    pset = psub.add_parser("set", help="record a new measured height and/or body mass, age or sex")
     pset.add_argument("folder")
     for q in (pi, pset):
         q.add_argument("--height-m", type=float)
         q.add_argument("--mass-kg", type=float)
         q.add_argument("--mass-source", choices=["measured", "assumed"], default="measured")
+        q.add_argument("--age-years", type=float, help="age today (stored with the date; counts on from there)")
+        q.add_argument("--sex", choices=["female", "male"],
+                       help="with the age, sizes the leg muscles when no scan does (NHANES DXA reference data)")
     pb = psub.add_parser("build", help="take a processed calibration session's scaled model as the person's bones")
     pb.add_argument("folder")
     pb.add_argument("session")
@@ -628,6 +663,11 @@ def main(argv=None):
     pbo = psub.add_parser("bone", help="bone density (DXA T/Z-scores or QCT vBMD) -> screening category")
     pbo.add_argument("folder")
     pbo.add_argument("record", help="JSON: method, date, age_years, sex, postmenopausal, sites (docs/person-model.md)")
+    pdx = psub.add_parser("dxa", help="whole-body DXA regional table: leg muscle per leg, segment masses, fat, "
+                                      "bone density")
+    pdx.add_argument("folder")
+    pdx.add_argument("record", help="JSON: method, date, regions {left_leg: {lean_kg, fat_kg, bmc_kg}, ...}, "
+                                    "bone_density? (docs/person-model.md)")
     psp = psub.add_parser("shape", help="body surface: SMPL-X fitted to standing frames of a Kinect recording")
     psp.add_argument("folder")
     psp.add_argument("recording", help="KinectCapture folder with player_registered.u8")

@@ -37,12 +37,14 @@ what fills it and its tier:
 | joint centres | scaled with the bones; markers placed on the static frames | C; B/A from the personalised model |
 | surface shape | SMPL-X body fitted to standing Kinect depth frames (`person shape`), checked against measured height and mass | C until checked against a scan |
 | kinematics | per session (not stored) | per session's validation |
-| muscle | Rajagopal leg muscles; force from measured volume and fat fraction where imaged (`person muscles`), else scaled to measured height and mass; trunk generic | C; B/A when all leg muscles are imaged |
-| soft tissue | not modelled | — |
+| muscle | Rajagopal leg muscles; force from measured volume and fat fraction where imaged (`person muscles`), else each leg's volume from a DXA scan (`person dxa`), from age, sex, height and mass, or from height and mass; trunk generic | C; B/A when all leg muscles are imaged |
+| soft tissue | regional fat and lean mass from a DXA scan (`person dxa`), which also sets the segment masses; tissue deformation not modelled | B; A with a reviewed report |
 | bone density | DXA or QCT result with its screening category (`person bone`) | B; A with a reviewed report |
 
 Measured height and body mass are stored with their dates. A mass entered as assumed is kept, marked
-`measured: false`, and never used where a measured mass is required.
+`measured: false`, and never used where a measured mass is required. Age (`--age-years`) is stored with the
+date it was given and counts on from there; with sex (`--sex female|male`) it sizes the leg muscles when no
+scan does (below).
 
 ## Workflow
 
@@ -116,7 +118,9 @@ leg strength. `muscles` and `strength` now scale it (`pipeline/rehabtwin/capacit
   the same regression for a 75.3 kg, 1.70 m subject, which is the reference.
 - The 238 trunk muscles and the arms come from other sources and keep generic forces.
 
-It runs only when the session's mass is measured and its height known (`process --height-m` or `--person`).
+When the person model holds age and sex, or a DXA scan, those replace this regression
+([below](#leg-muscle-from-age-and-sex-or-from-a-dxa-scan)); the regression is what is left when nothing else is
+known. It runs only when the session's mass is measured and its height known (`process --height-m` or `--person`).
 It does not run on a personalised model, which carries its own muscle parameters. `--generic-capacity`
 turns it off. `capacity/capacity.json` records the factors; reports say which capacity a result rests on.
 
@@ -197,8 +201,9 @@ TotalSegmentator; map their labels onto these by each tool's own label definitio
   Eur Radiol Exp 2020, doi 10.1186/s41747-020-00162-5). No reference was found for the other groups; they use
   the quadriceps value. CT attenuation (`mean_hu`) is stored but not converted, since it depends on the
   scanner and protocol.
-- Muscles without imaging keep the height-and-mass regression, or generic sizes when the mass is not
-  measured. The geometry (paths, fibre and tendon lengths) stays the scaled generic model's, so measured size
+- Muscles without imaging take their leg's volume from the next source the person model has: a DXA scan,
+  age and sex, or height and mass ([below](#leg-muscle-from-age-and-sex-or-from-a-dxa-scan)). They keep
+  generic sizes when none is known. The geometry (paths, fibre and tendon lengths) stays the scaled generic model's, so measured size
   changes force, not shape.
 - The muscle layer is Tier B, or A with `approved_by`, only when all 80 leg muscles are imaged; otherwise it
   stays C and its status says how many are.
@@ -274,6 +279,142 @@ moves it by 10–20 %.
 
 Limits: 15 healthy adults, 12 men; one site and two sequences; the moment arms are the generic model's scaled to
 height. The volumes are of the thigh between hip and kneecap.
+
+## Leg muscle from age and sex, or from a DXA scan
+
+A twin should work for anyone without a scan, and be as close as the data allow when there is one. Each leg's
+muscle volume now comes from the best source the person model holds (`pipeline/rehabtwin/capacity.py`,
+`dxa.py`):
+
+| Source, best first | What it gives | Set with | Against measured knee strength |
+|---|---|---|---|
+| MRI/CT segmentation | volume and fat fraction per muscle or group | `person muscles` | r 0.86 (MyoSegmenTUM, 11 adults) |
+| whole-body DXA scan | each leg's muscle; segment masses; regional fat; bone density if reported | `person dxa` | r 0.79, spread 22 % (NHANES, 2,104 adults) |
+| age, sex, height and mass | the leg muscle an average person of that age, sex and size has | `person init/set --age-years --sex` | r 0.75, spread 24 % |
+| height and mass | Handsfield 2014, young healthy adults | measured height and mass | r 0.65, spread 28 % |
+| nothing measured | the generic subject's | — | — |
+
+Every rung works on its own. `capacity/capacity.json` (`leg_source`), the report banner and each result's
+caveat say which one a result rests on. Imaging still overrides per muscle; muscles it does not cover take their
+leg's volume from the next rung. Within a leg, each muscle keeps its generic share.
+
+```bash
+python -m rehabtwin person set people/P01 --age-years 62 --sex female   # no scan: the age-and-sex default
+python -m rehabtwin person dxa people/P01 P01_dxa_body.json             # a whole-body DXA scan
+python -m rehabtwin muscles out/s02 --person people/P01
+```
+
+### The default without a scan: age, sex, height and mass
+
+Leg lean mass (DXA lean soft tissue, mean of both legs) was fitted to age, (age − 50)², sex, height and mass,
+with sex interactions, on 7,528 NHANES 1999–2002 adults aged 18–85 with a complete whole-body DXA
+(`adapters/nhanes_strength.py fit-default` reproduces `capacity.LEG_LEAN_MODEL`). Trained on 1999–2000 alone,
+it predicted the 2001–2002 adults' leg lean within 7.5 % on average: 7.5 % for ages 18–49, 7.6 % for 50+,
+7.7 % above BMI 30, 8.0 % for women and 7.1 % for men. Leg lean then becomes muscle as with a scan (below).
+
+Against the height-and-mass regression it gives:
+
+| Person | leg muscle, age and sex | height and mass (Handsfield, in the model's volumes) | ratio |
+|---|---|---|---|
+| man 25 y, 1.70 m, 75.3 kg (the generic subject) | 6,039 cm³ | 7,089 cm³ | 0.85 |
+| woman 25 y, 1.65 m, 60 kg | 4,123 cm³ | 5,763 cm³ | 0.72 |
+| man 70 y, 1.75 m, 80 kg | 5,745 cm³ | 7,633 cm³ | 0.75 |
+| woman 70 y, 1.62 m, 68 kg | 3,970 cm³ | 6,272 cm³ | 0.63 |
+
+Handsfield's 24 young adults had more muscle than the general population, and the regression knows neither
+sex nor age. On the MyoSegmenTUM thigh MRI the regression gave a third more quadriceps than measured
+(measured / predicted 0.75); the age-and-sex model gives 0.93 (r 0.60 against 0.54). It cannot tell two
+people of the same age, sex and size apart: the spread between them stays ±15 %.
+
+### With a DXA scan: each leg measured
+
+**Record** (`P01_dxa_body.json`): the regional table of a whole-body scan, in kg.
+
+```json
+{"method": "DXA Hologic Horizon A, whole body", "date": "2026-10-01", "approved_by": "radiologist",
+ "regions": {"left_arm":  {"lean_kg": 3.0,  "fat_kg": 1.2,  "bmc_kg": 0.20},
+             "right_arm": {"lean_kg": 3.2,  "fat_kg": 1.2,  "bmc_kg": 0.20},
+             "left_leg":  {"lean_kg": 8.6,  "fat_kg": 3.5,  "bmc_kg": 0.50},
+             "right_leg": {"lean_kg": 9.4,  "fat_kg": 3.4,  "bmc_kg": 0.50},
+             "trunk":     {"lean_kg": 27.0, "fat_kg": 10.0, "bmc_kg": 0.80},
+             "head":      {"lean_kg": 3.3,  "fat_kg": 1.0,  "bmc_kg": 0.50}},
+ "bone_density": {"postmenopausal": true,
+                  "sites": {"femoral_neck": {"bmd_g_cm2": 0.61, "t_score": -2.6, "z_score": -1.0}}}}
+```
+
+- **`lean_kg`** is lean soft tissue without bone mineral. Hologic tables also list "Lean + BMC"; subtract
+  the BMC from it.
+- **Leg lean is required.** The other regions are needed for the segment masses and fat.
+- **`bone_density`** is optional. When present, it is classified like `person bone`, with the person's age
+  at the scan and sex.
+- **Refused:**
+  - a method that is not DXA (a bioimpedance scale is not a DXA);
+  - grams typed as kg;
+  - a leg outside 2–25 kg lean;
+  - regions that add up to more than 15 % away from the person's measured mass.
+
+**Leg muscle per leg:** skeletal muscle of both legs = 0.78 × leg lean − 1.07 kg (McCarthy et al. 2023,
+Sci Rep 13:2580). It comes from a Deming regression against whole-body MRI in 475 adults, with validation RMSE
+0.95 kg and R² 0.91. It is applied per leg with half the intercept each, at a muscle density of 1.06 g/cm³.
+A leg with more lean mass gets more muscle, so a side difference shows.
+
+**Segment masses:** each region's share of the scanned mass (lean + fat + BMC) becomes the share of the model
+bodies in that region:
+- legs: femur, patella, tibia, talus, calcn, toes;
+- arms: humerus, ulna, radius, hand;
+- head;
+- trunk: pelvis, lumbar vertebrae, torso.
+
+The model's total mass stays the measured body mass, and within a region the bodies keep their relative masses.
+Inertia scales with mass, but segment shapes and centres of mass stay the model's. A region whose mass would
+change by more than ×2 either way is refused as a data error. This goes into the muscle model
+(`capacity/model_capacity.osim`), where inverse dynamics, the ground-force estimate and static optimisation use
+it. Kinematics do not depend on mass and are unchanged. A record with the legs only sizes the legs and keeps
+the generic mass distribution, and the caveat says so.
+
+**Layers:**
+- Soft tissue becomes Tier B (A with `approved_by`): the regional fat is measured.
+- Muscle stays Tier C. DXA measures each leg, not each muscle.
+
+**Tested on NHANES 1999–2002** (`adapters/nhanes_strength.py analyse`). The data are public domain and stay
+outside the repo. 2,104 adults aged 50+ had isokinetic knee extension at 60°/s and a whole-body DXA with no
+region imputed. With the model scaled to a person's height, knee torque is proportional to the muscle volume
+it is given. Each source is therefore compared with measured torque by correlation, and by the spread of
+measured / predicted between people once the common bias is divided out:
+
+| Group | n | height and mass r / spread | age and sex r / spread | DXA (that leg) r / spread |
+|---|---|---|---|---|
+| all | 2,104 | 0.65 / 28.0 % | 0.75 / 23.7 % | 0.79 / 22.3 % |
+| women | 983 | 0.51 / 24.4 % | 0.56 / 23.5 % | 0.62 / 22.4 % |
+| men | 1,121 | 0.51 / 24.3 % | 0.58 / 23.0 % | 0.65 / 21.5 % |
+| age 65+ | 997 | 0.64 / 26.9 % | 0.72 / 23.5 % | 0.77 / 22.1 % |
+| BMI ≥ 30 | 563 | 0.66 / 27.6 % | 0.75 / 23.6 % | 0.78 / 22.1 % |
+
+- **Sex and age do most of the work.** Within one sex, where they cannot help, the scan adds the most:
+  r 0.62 against 0.56 for women, 0.65 against 0.58 for men.
+- **A statistical model as a fairer baseline** (trained on 1999–2000, tested on 2001–2002): test R² 0.66 from
+  age, sex, height and mass, and 0.70 with the leg's DXA lean mass. Adding leg fat or the other leg adds nothing.
+
+**What a DXA scan does not make perfect.** With the scan, measured strength still spreads 22 % around the
+prediction. The rest comes from what body composition does not see:
+- muscle quality: intramuscular fat and fibre type;
+- how hard the person can drive the muscle on the day;
+- moment arms and the knee-angle curve, which stay the generic model's.
+
+DXA also gives no bone geometry or joint centres (it is a 2-D projection), and no individual muscles: the
+lean tissue of a region is about 70 % muscle in the legs. Two steps close more of the gap:
+- per-muscle MRI, which brought the spread to 10 % on MyoSegmenTUM;
+- dynamometry of the tested groups (`rehabtwin strength`), which measures the strength itself.
+
+**Limits:**
+- **The McCarthy equation** was developed in Caucasian adults (mean age about 50, BMI 26) on a Hologic
+  QDR 4500A, the same scanner family as NHANES 1999–2002. Other scanners report lean mass a few percent
+  differently, and other populations are untested.
+- **Where the leg ends.** DXA's leg region is cut through the femoral neck, while the twin spreads the leg
+  muscle over all 40 model muscles of a leg, hip muscles included. On MyoSegmenTUM, the measured quadriceps
+  was 24.4 % of the leg muscle predicted for that person; it is 26.2 % in the model.
+- **Who the reference data cover:** the age-and-sex model covers ages 18–85; outside that, height and mass
+  are used and the caveat says so. Sex is the binary sex NHANES recorded.
 
 ## Verified
 
@@ -355,3 +496,5 @@ Reproduce: `examples/person_model_opencap.sh` after `examples/opencap_agreement.
   msk-PIPE or STAPLE) with a signed provenance record. Producing that model needs scans and clinician
   review; nothing in this repository makes one.
 - **A strength measurement**, to check the capacity regression for the person it is used on.
+- **A DXA scan and strength test of the same rehab patients.** NHANES tests the DXA rung on healthy adults
+  aged 50+; whether it holds for people after injury or surgery, where one leg has wasted, is untested.

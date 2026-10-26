@@ -510,23 +510,41 @@ def _muscle_banner(study):
                 + (f"Measured deficits: {e(flags)}. " if flags else "No between-limb deficit below 90 %. ")
                 + "Ground forces are estimated, not measured.</p>")
     cap = mm.get("capacity") or {}
-    bmi = "".join(e(c) + " " for c in cap.get("caveats", []) if c.startswith("BMI"))
+    bmi = "".join(e(c) + " " for c in cap.get("caveats", []) if c.startswith(("BMI", "Age")))
+    scan = cap.get("dxa")
+    masses = (f" Segment masses follow the scan's regional masses ({e(scan['method'])} {e(scan['date'])})."
+              if cap.get("mass_distribution") else "")
     if cap.get("scaled") and cap.get("imaging"):
         im, src = cap["imaging"], cap.get("sources", {})
         rest = sum(v for k, v in src.items() if not k.startswith("measured") and "fat" not in k)
         return (f"<p class='banner'><b>What-if simulation with measured leg muscles</b> (Tier {e(study['twin_tier'])}): "
                 f"{e(im.get('method', ''))} {e(im.get('date', ''))} gives size and/or fat fraction for "
                 f"{2 * 40 - rest} of 80 leg muscles"
-                + (f"; the other {rest} are scaled to height and mass" if rest else "")
+                + (f"; the other {rest} take their leg's volume from {e(cap.get('leg_source_text', 'height and mass'))}"
+                   if rest else "")
                 + ". Muscle geometry stays generic, and maximum force follows contractile volume, not a strength "
-                "test. " + bmi + "Ground forces are estimated, not measured.</p>")
+                "test." + masses + " " + bmi + "Ground forces are estimated, not measured.</p>")
+    if cap.get("scaled") and cap.get("leg_source") == "dxa":
+        v = cap["leg_muscle_cm3"]
+        return (f"<p class='banner'><b>What-if simulation with leg muscle sized from a DXA scan</b> "
+                f"({e(scan['method'])} {e(scan['date'])}; Tier {e(study['twin_tier'])}): {v['right']} cm³ right and "
+                f"{v['left']} cm³ left leg muscle from each leg's lean mass (McCarthy 2023, against MRI), shared among "
+                "the leg's muscles as in the generic model; trunk and arms generic." + masses + " DXA measures each "
+                "leg, not each muscle, nor muscle quality or strength (<code>rehabtwin strength</code> adds "
+                "dynamometry). Ground forces are estimated, not measured.</p>")
     if cap.get("scaled"):
         sub = cap["subject"]
-        return (f"<p class='banner'><b>What-if simulation with leg capacities scaled to {sub['height_m']} m and "
-                f"{sub['mass_kg']} kg</b> (Tier {e(study['twin_tier'])}): a population regression (Handsfield 2014), "
-                f"leg Fmax ×{cap['factor_median']:.2f} median, trunk and arms generic. It is what an average young "
-                "healthy adult of this size has, not this person's measured strength (<code>rehabtwin strength</code> "
-                "adds dynamometry). " + bmi + "Ground forces are estimated, not measured.</p>")
+        who = (f"a {sub['age_years']:.0f}-year-old {e(sub['sex'])} of {sub['height_m']} m and {sub['mass_kg']} kg"
+               if cap.get("leg_source") == "anthropometry" else f"{sub['height_m']} m and {sub['mass_kg']} kg")
+        how = ("NHANES DXA reference data (age, sex, height and mass)" if cap.get("leg_source") == "anthropometry" else
+               "a population regression (Handsfield 2014)")
+        typical = "an average person of this age, sex and size" if cap.get("leg_source") == "anthropometry" else \
+            "an average young healthy adult of this size"
+        return (f"<p class='banner'><b>What-if simulation with leg capacities scaled to {who}</b> "
+                f"(Tier {e(study['twin_tier'])}): {how}, leg Fmax ×{cap['factor_median']:.2f} median, trunk and arms "
+                f"generic. It is what {typical} has, not this person's measured strength (<code>rehabtwin strength</code> "
+                "adds dynamometry; a DXA scan, <code>rehabtwin person dxa</code>, measures each leg's muscle). "
+                + bmi + "Ground forces are estimated, not measured.</p>")
     return (f"<p class='banner'><b>What-if simulation on a generic (Tier {e(study['twin_tier'])}) muscle model.</b> "
             "Not a statement about this person's muscles (docs/accuracy.md: no 'underdeveloped muscle' claim without "
             "imaging/strength/EMG evidence; <code>rehabtwin strength</code> adds dynamometry). Ground forces are "

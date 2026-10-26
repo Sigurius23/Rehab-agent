@@ -11,6 +11,7 @@
     "created_at": {"type": "string"},
     "updated_at": {"type": "string"},
     "synthetic": {"type": "boolean", "description": "Built from a synthetic session (tests): only synthetic sequences may use it."},
+    "sex": {"enum": ["female", "male"], "description": "As the reference data record it (NHANES: recorded sex); with anthropometrics.age_years it sizes the leg muscles when no scan does."},
     "anthropometrics": {
       "type": "object",
       "additionalProperties": {
@@ -100,6 +101,32 @@
         "approved_by": {"type": "string"},
         "sites": {"type": "object", "minProperties": 1},
         "classification": {"type": "object", "required": ["category", "site", "value", "basis"]}
+      }
+    },
+    "dxa": {
+      "type": "object",
+      "required": ["method", "date", "regions", "sha256", "checks"],
+      "description": "Whole-body DXA regional table (pipeline/rehabtwin/dxa.py): leg muscle per leg from leg lean mass, segment mass distribution from each region's share of the scanned mass, regional fat.",
+      "properties": {
+        "method": {"type": "string", "pattern": "^DXA"},
+        "date": {"type": "string"},
+        "approved_by": {"type": "string"},
+        "regions": {
+          "type": "object",
+          "required": ["left_leg", "right_leg"],
+          "propertyNames": {"enum": ["left_arm", "right_arm", "left_leg", "right_leg", "trunk", "head"]},
+          "additionalProperties": {
+            "type": "object",
+            "properties": {
+              "lean_kg": {"type": "number", "minimum": 0, "description": "lean soft tissue without bone mineral"},
+              "fat_kg": {"type": "number", "minimum": 0},
+              "bmc_kg": {"type": "number", "minimum": 0}
+            },
+            "additionalProperties": false
+          }
+        },
+        "checks": {"type": "object", "required": ["distribution"], "description": "distribution: all six regions with lean, fat and BMC (segment masses can follow the scan); mass_check: scanned vs measured mass."},
+        "fat": {"type": "object"}
       }
     },
     "surface_shape": {

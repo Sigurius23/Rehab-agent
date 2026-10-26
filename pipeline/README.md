@@ -102,8 +102,11 @@ python -m rehabtwin process phone_aug.npz out/s02 --exercise squat --person peop
 `--person` applies the stored scale factors and checks the recording's size against them: one camera's
 recording is scaled to the person, and a calibrated one more than 10 % off is refused. `session.json`
 records the person model's version (`person_model`). `person muscles` adds MRI/CT muscle volumes and fat
-fractions, which `muscles` and `strength` use instead of the height-and-mass regression. `person bone`
-adds a DXA or QCT result, which device and correction what-ifs show. `person shape` fits an SMPL-X body
+fractions, which `muscles` and `strength` use instead of the height-and-mass regression. `person dxa` adds
+a whole-body DXA regional table: each leg's muscle, the segment masses of the muscle model, regional fat and,
+if reported, bone density. Without a scan, `person set --age-years --sex` sizes the leg muscles by age, sex,
+height and mass (NHANES DXA reference data). `person bone` adds a DXA or QCT bone-density result, which device
+and correction what-ifs show. `person shape` fits an SMPL-X body
 surface to standing frames of a Kinect recording (the SMPL-X model file is licensed separately).
 
 Several phones (OpenCap-style checkerboard calibration, unsynchronised starts) and OpenCap's LSTM
@@ -289,7 +292,7 @@ untested step is a physical BLE write.
 | Command | What it does | Guard rails |
 |---|---|---|
 | `correct` | Spec modes `set / clamp / scale / offset / mirror` (e.g. right hip follows the left). OpenSim IK tracks the changed coordinates strongly and the rest weakly, keeping 3 anchor points per foot in place. Reports requested changes, the **compensations** elsewhere, range-of-motion violations and feet drift (`admissible`). | Refused below Tier A without `--illustrative`; then every output says ILLUSTRATION ONLY. Specs ship as TEMPLATEs for a clinician to author. |
-| `muscles` | Ground forces from whole-body Newton (F = m(a_com + g)), split between the feet by the centre of mass and placed by moment balance. Then OpenSim inverse dynamics and static optimisation on the 318-muscle model, with group activation as a fraction of capacity, joint moments (N·m/kg), and measured vs corrected vs weakened. | Valid only for slow double-stance exercises (`grf.feet_planted`, `valid_exercise`). Pelvis residuals and reserve-torque use are reported. Leg muscle capacity is scaled to the measured height and mass (Handsfield 2014 regression, `capacity/`; `--generic-capacity` for the generic subject's). Phrased as a what-if, never as a claim about the person's muscles. |
+| `muscles` | Ground forces from whole-body Newton (F = m(a_com + g)), split between the feet by the centre of mass and placed by moment balance. Then OpenSim inverse dynamics and static optimisation on the 318-muscle model, with group activation as a fraction of capacity, joint moments (N·m/kg), and measured vs corrected vs weakened. | Valid only for slow double-stance exercises (`grf.feet_planted`, `valid_exercise`). Pelvis residuals and reserve-torque use are reported. Leg muscle capacity comes from the person model: imaging per muscle, a DXA scan per leg, age and sex, or measured height and mass (`capacity/`; `--generic-capacity` for the generic subject's). Phrased as a what-if, never as a claim about the person's muscles. |
 | `muscles --assist` | **Ideal assistive device** (exoskeleton what-if, after Dembia et al. 2017): a torque actuator at a joint, capped at the device's max torque (optionally one direction only), that the optimiser uses as it sees fit. Reports the device torque profile (peak, mean, time at cap) and which muscles it offloads. | An upper bound on the benefit (massless, instantaneous, optimal control). Offloading a muscle also removes the training stimulus, so the caveat recommends assist-as-needed. |
 | `cues` | Streaming `CueEngine` (same code for offline replay and a live suit): threshold with hysteresis, minimum duration, per-actuator refractory period, **faded feedback** (cue share falls from 100 % to ~33 % over the first violations). Writes `cues.json`, LSL-ready `commands.csv`, `cues.html`. | A cue is *sent* only on a Tier-A twin and only for joint/planes listed in a non-synthetic validation report; otherwise it is logged as `would_cue` with the reason. |
 
@@ -332,7 +335,7 @@ let IK jitter 6.6 cm sideways, and static optimisation then "needed" 70 N·m res
 | `report.html` | self-contained charts (reference dashed when present), per-rep table, gates |
 | `correction/<spec>/` | `corrected.mot`, `correction.json`, `correction.html` (measured vs corrected 3D replay) |
 | `progress/` (`--out`) | `progress.json` (verdicts per signal, series), `progress.html` (trend per signal) |
-| `capacity/` | `model_capacity.osim`, `capacity.json`: leg muscle forces from imaged volume and fat fraction, else scaled to the measured height and mass (`muscles`, `strength`) |
+| `capacity/` | `model_capacity.osim`, `capacity.json`: leg muscle forces from imaged volume and fat fraction, else each leg's volume from DXA, age and sex, or height and mass (`leg_source`); segment masses from a DXA scan (`mass_distribution`) (`muscles`, `strength`) |
 | `strength/` | `model_strength.osim`, `strength.json` (factors, LSI), `strength.html` |
 | `muscles/` | per variant: `grf.mot`, `inverse_dynamics.sto`, static-optimisation activations/forces, `muscles.json`; `study.json`, `muscles.html` |
 | `feedback/<rules>/` | `cues.json` (event log + summary), `commands.csv` (actuator events), `cues.html` |

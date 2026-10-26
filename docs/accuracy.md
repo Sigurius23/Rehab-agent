@@ -107,8 +107,8 @@ The person model (`docs/person-model.md`) records this per person; `person show`
 | 2 | Joint centres | scaled with the bones; markers placed per session | C | imaging, or functional joint-centre calibration |
 | 3 | Surface shape | SMPL-X fitted to standing Kinect depth frames (`person shape`, `shape.py`), checked against measured height and mass; synthetic BEDLAM2: height ±1.4 cm, mass ±5.2 % | C | a 3D scan or tape measurements of a real person to measure its error |
 | 4 | Kinematics | per session, validated per joint × plane against a reference | per validation | marker mocap for the person and exercise |
-| 5 | Muscle | Rajagopal leg muscles: force from MRI/CT volume and fat fraction where imaged (`person muscles`), else scaled to measured height and mass (`capacity.py`); dynamometry for tested groups (`strength`) | C (B/A once all leg muscles are imaged) | imaged muscle geometry (attachments, paths); EMG calibration (CEINMS). Tested on 15 adults' thigh MRI + dynamometry: measured volume r = 0.86 with strength, the regression 0.44 (`docs/person-model.md`) |
-| 6 | Soft tissue | not modelled | — | — |
+| 5 | Muscle | Rajagopal leg muscles: force from MRI/CT volume and fat fraction where imaged (`person muscles`), else each leg's volume from a DXA scan (`person dxa`), from age, sex, height and mass, or from height and mass (`capacity.py`); dynamometry for tested groups (`strength`) | C (B/A once all leg muscles are imaged) | imaged muscle geometry (attachments, paths); EMG calibration (CEINMS). Tested on 15 adults' thigh MRI + dynamometry: measured volume r = 0.86 with strength, the regression 0.44 (`docs/person-model.md`) |
+| 6 | Soft tissue | regional fat and lean mass from a whole-body DXA (`person dxa`, `dxa.py`); sets the segment masses of the muscle model | B with a DXA scan (A reviewed); — without | tissue deformation (research-grade only) |
 | — | Bone density | DXA/QCT result and screening category (`person bone`, `bone.py`); shown on device and correction what-ifs | measured | not in the OpenSim model; bone strength and fracture risk are not modelled |
 
 ## Red lines

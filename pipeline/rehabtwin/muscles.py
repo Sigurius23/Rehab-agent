@@ -402,11 +402,17 @@ def muscle_caveat(muscle_model=None):
     """Which capacities are measured and which generic: dynamometry fixes only the tested groups."""
     mm = muscle_model or {}
     cap = mm.get("capacity") or {}
+    leg = {"dxa": "each leg's volume from its DXA lean mass (McCarthy 2023)",
+           "anthropometry": "scaled to the person's age, sex, height and mass (NHANES DXA reference data)"}.get(
+        cap.get("leg_source"), "scaled to the measured height and mass by a population regression (Handsfield 2014)")
     size = ("leg muscles from measured volume/fat fraction where imaged (" + (cap["imaging"].get("method") or "imaging")
-            + "), the others scaled to height and mass, trunk and arms generic" if cap.get("imaging") else
-            "leg muscles scaled to the measured height and mass by a population regression (Handsfield 2014), "
-            "trunk and arms generic" if cap.get("scaled") else "generic (scaled) parameters")
-    bmi = next((c for c in cap.get("caveats", []) if c.startswith("BMI")), "")
+            + f"), the others take their leg's volume from {cap.get('leg_source_text', 'height and mass')}, trunk and "
+            "arms generic"
+            if cap.get("imaging") else f"leg muscles {leg}, trunk and arms generic" if cap.get("scaled")
+            else "generic (scaled) parameters")
+    if cap.get("mass_distribution"):
+        size += "; segment masses from the DXA regional masses"
+    bmi = next((c for c in cap.get("caveats", []) if c.startswith(("BMI", "Age"))), "")
     if mm.get("source", "").startswith("strength"):
         return (f"Muscle capacities of the tested groups ({', '.join(mm.get('tests', [])) or 'none'}; "
                 f"{mm.get('calibrated_muscles', '?')} muscles) come from dynamometry; all other muscles: {size}. "
@@ -414,6 +420,9 @@ def muscle_caveat(muscle_model=None):
     if cap.get("imaging"):
         return (f"Muscle capacities: {size}. Force follows contractile volume, not a strength test; muscle geometry "
                 f"is generic; no EMG calibration. {bmi}").strip()
+    if cap.get("scaled") and cap.get("leg_source") == "dxa":
+        return (f"Muscle capacities: {size}. Measured per leg, not per muscle; force follows volume, not a strength "
+                f"test; muscle geometry is generic; no EMG calibration. {bmi}").strip()
     if cap.get("scaled"):
         return (f"Muscle capacities: {size}. A population estimate, not this person's measured strength; "
                 f"muscle geometry is generic; no EMG calibration. {bmi}").strip()

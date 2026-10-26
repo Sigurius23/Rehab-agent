@@ -527,3 +527,80 @@ def test_measured_muscle_size_and_fat_fraction_set_capacity(selftest_run, tmp_pa
     o = opensim.Model(str(tmp_path / "only.osim"))
     assert f(o, "vaslat_l") == pytest.approx(f(g, "vaslat_l") * lratio("vaslat_l"), rel=1e-6)
     assert rec["sources"]["generic"] == 71 and "subject" not in rec
+
+
+def test_dxa_sizes_each_leg_and_age_sex_sizes_the_default(selftest_run, tmp_path):
+    """Leg volume, best first: DXA per leg (McCarthy 2023), then age, sex, height and mass (NHANES), then height
+    and mass (Handsfield); the generic share per muscle within a leg either way, imaging still per muscle."""
+    from rehabtwin import capacity
+    out, res, _ = selftest_run
+    model = out / res["session"]["pipeline"]["outputs"]["model"]
+    generic = resolve(CFG["model"])
+    g, m = (opensim.Model(str(p)) for p in (generic, model))
+    f = lambda mdl, n: mdl.getMuscles().get(n).getMaxIsometricForce()
+    lratio = lambda n: g.getMuscles().get(n).getOptimalFiberLength() / m.getMuscles().get(n).getOptimalFiberLength()
+    ref_leg = sum(f(g, b + "_r") * g.getMuscles().get(b + "_r").getOptimalFiberLength() * 100 / 60
+                  for b in capacity.LEG_MUSCLES)
+    assert ref_leg == pytest.approx(7089, abs=5)
+    rec = capacity.scale_model(model, generic, 80.0, 1.80, tmp_path / "dxa.osim", dxa_leg_lean_kg={"_r": 9.5, "_l": 8.0})
+    d = opensim.Model(str(tmp_path / "dxa.osim"))
+    for n, lean in (("vaslat_r", 9.5), ("soleus_l", 8.0)):
+        k = capacity.leg_muscle_cm3(lean) / ref_leg * lratio(n)
+        assert f(d, n) == pytest.approx(f(g, n) * k, rel=1e-3)
+    assert rec["leg_source"] == "dxa" and rec["sources"] == {"dxa": 80}
+    assert rec["leg_muscle_cm3"] == {"right": round(capacity.leg_muscle_cm3(9.5)), "left": round(capacity.leg_muscle_cm3(8.0))}
+    assert rec["leg_fmax_N"]["right"]["scaled"] > rec["leg_fmax_N"]["left"]["scaled"]
+    imaged = capacity.scale_model(model, generic, 80.0, 1.80, tmp_path / "both.osim", dxa_leg_lean_kg={"_r": 9.5, "_l": 8.0},
+                                  imaging={"muscles": {"quadriceps_r": {"volume_cm3": 2000}}})
+    assert imaged["sources"] == {"dxa": 76, "measured": 4}
+    old = capacity.scale_model(model, generic, 68.0, 1.62, tmp_path / "old.osim", age_years=70, male=False)
+    assert old["leg_source"] == "anthropometry" and old["subject"]["sex"] == "female"
+    assert old["leg_muscle_cm3"]["right"] == round(capacity.leg_muscle_cm3(capacity.predicted_leg_lean_kg(70, False, 1.62, 68)))
+    young = capacity.scale_model(model, generic, 68.0, 1.62, tmp_path / "young.osim")
+    assert old["leg_fmax_N"]["right"]["scaled"] < 0.8 * young["leg_fmax_N"]["right"]["scaled"]
+    beyond = capacity.scale_model(model, generic, 68.0, 1.62, tmp_path / "beyond.osim", age_years=91, male=False)
+    assert beyond["leg_source"] == "regression" and beyond["caveats"][0].startswith("Age 91 is outside")
+
+
+def test_dxa_scan_sets_segment_masses_in_the_muscle_model(selftest_run, tmp_path):
+    """cli._capacity_model with a person's DXA scan: legs sized per side, each region's mass share from the scan,
+    total body mass unchanged."""
+    import shutil
+
+    from rehabtwin import dxa
+    out, _, _ = selftest_run
+    s = tmp_path / "s"
+    shutil.copytree(out, s, ignore=shutil.ignore_patterns("muscles", "correction", "strength", "capacity"))
+    sess = json.loads((s / "session.json").read_text())
+    scan = {"method": "DXA (test)", "date": "2026-10-01", "sha256": "x",
+            "regions": {"left_arm": {"lean_kg": 3.0, "fat_kg": 1.2, "bmc_kg": 0.2},
+                        "right_arm": {"lean_kg": 3.2, "fat_kg": 1.2, "bmc_kg": 0.2},
+                        "left_leg": {"lean_kg": 8.6, "fat_kg": 3.5, "bmc_kg": 0.5},
+                        "right_leg": {"lean_kg": 9.4, "fat_kg": 3.4, "bmc_kg": 0.5},
+                        "trunk": {"lean_kg": 27.0, "fat_kg": 10.0, "bmc_kg": 0.8},
+                        "head": {"lean_kg": 3.3, "fat_kg": 1.0, "bmc_kg": 0.5}}}
+    scan["checks"] = dxa.check(scan)
+    person_rec = {"person_ref": sess["person_ref"], "version": 3, "dxa": scan, "sex": "male",
+                  "anthropometrics": {"age_years": {"value": 60, "measured_at": "2026-10-01T00:00:00+00:00"}}}
+    body_mass = cli._session_mass(s, allow_assumed_mass=True)
+    path, rec = cli._capacity_model(s, sess, body_mass, True, person_rec)
+    assert rec["leg_source"] == "dxa" and rec["dxa"]["date"] == "2026-10-01"
+    before = opensim.Model(str(s / sess["pipeline"]["outputs"]["model"]))
+    after = opensim.Model(str(path))
+    mass = lambda mdl, names: sum(mdl.getBodySet().get(b).getMass() for b in names)
+    total = lambda mdl: sum(mdl.getBodySet().get(i).getMass() for i in range(mdl.getBodySet().getSize()))
+    assert total(after) == pytest.approx(total(before), rel=1e-9)
+    scanned = dxa.region_masses(scan)
+    for region, bodies in dxa.BODIES.items():
+        assert mass(after, bodies) / total(after) == pytest.approx(scanned[region] / sum(scanned.values()), rel=1e-6)
+        assert rec["mass_distribution"]["regions"][region]["dxa_share"] == pytest.approx(
+            scanned[region] / sum(scanned.values()), abs=1e-4)
+    fem = lambda mdl: mdl.getBodySet().get("femur_r")
+    k = rec["mass_distribution"]["regions"]["right_leg"]["factor"]
+    assert fem(after).getMass() == pytest.approx(fem(before).getMass() * k, rel=1e-3)
+    assert fem(after).getInertia().getMoments().get(0) == pytest.approx(
+        fem(before).getInertia().getMoments().get(0) * k, rel=1e-3)
+    assert "mass_distribution" in cli._capacity_summary(rec)
+    bad = {**scan, "regions": {**scan["regions"], "head": {"lean_kg": 30.0, "fat_kg": 5.0, "bmc_kg": 0.5}}}
+    with pytest.raises(ValueError, match="more than"):
+        dxa.apply_mass_distribution(opensim.Model(str(s / sess["pipeline"]["outputs"]["model"])), bad)

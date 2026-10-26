@@ -11,8 +11,9 @@ what is known about the person, where each value came from, and which twin layer
 
 ``process --person PERSON`` re-applies the stored per-body scale factors to the generic model (OpenSim manual
 scaling) instead of fitting new ones, so the bones keep their lengths; only that session's markers are placed
-on them. ``kinect --person`` takes height, mass and segment lengths from here, and ``muscles`` scales muscle
-capacity to the person's measured height and mass (rehabtwin/capacity.py).
+on them. ``kinect --person`` takes height, mass and segment lengths from here, and ``muscles`` sizes the leg
+muscles from what the person model holds, best first: MRI/CT per muscle, a DXA scan per leg (rehabtwin/dxa.py),
+age, sex, height and mass, height and mass (rehabtwin/capacity.py).
 
 What this does not do: make a video-scaled model anatomical. Scale factors from video are Tier C evidence;
 the layers record that, and only an imaging-personalised model with a signed provenance record supports
@@ -22,7 +23,7 @@ from __future__ import annotations
 
 import json
 import shutil
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 
 from . import tiers
@@ -46,20 +47,55 @@ class PersonRefused(ValueError):
 
 
 def _now():
-    return datetime.now(timezone.utc).replace(microsecond=0).isoformat()
+    return datetime.now(UTC).replace(microsecond=0).isoformat()
 
 
 def _measurement(value, source, measured=True, when=None):
     return {"value": float(value), "source": source, "measured": bool(measured), "measured_at": when or _now()}
 
 
-def init(person_dir, person_ref, height_m=None, mass_kg=None, mass_source="measured", note=None):
-    """Start a person folder (refuses an existing one)."""
+SEXES = ("female", "male")
+AGE_RANGE = (5.0, 110.0)
+
+
+def _check_age_sex(age_years, sex):
+    if age_years is not None and not AGE_RANGE[0] <= age_years <= AGE_RANGE[1]:
+        raise PersonRefused(f"age {age_years} years: give the age in years")
+    if sex is not None and sex not in SEXES:
+        raise PersonRefused(f"sex {sex!r}: one of {SEXES} (as the reference data record it)")
+
+
+def _set_age_sex(rec, age_years, sex):
+    if age_years is not None:
+        rec["anthropometrics"]["age_years"] = _measurement(age_years, "stated")
+    if sex is not None:
+        rec["sex"] = sex
+
+
+def _as_datetime(text):
+    t = datetime.fromisoformat(str(text))
+    return t if t.tzinfo else t.replace(tzinfo=UTC)
+
+
+def age_years(rec, at=None):
+    """The person's age (years) at ``at`` (ISO date/time; default now): the stated age plus the time since, or None."""
+    a = rec.get("anthropometrics", {}).get("age_years")
+    if not a:
+        return None
+    t = _as_datetime(at) if at else datetime.now(UTC)
+    return a["value"] + (t - _as_datetime(a["measured_at"])).total_seconds() / (365.25 * 86400)
+
+
+def init(person_dir, person_ref, height_m=None, mass_kg=None, mass_source="measured", note=None, age_years=None,
+         sex=None):
+    """Start a person folder (refuses an existing one). ``age_years`` and ``sex`` size the leg muscles when no
+    scan does (rehabtwin/capacity.py); the age is stored with its date and counts on from there."""
     d = Path(person_dir)
     if (d / "person.json").exists():
         raise PersonRefused(f"{d} already holds a person model; use 'person set' or 'person build' to update it")
     if mass_source not in ("measured", "assumed"):
         raise PersonRefused("mass_source must be 'measured' or 'assumed'")
+    _check_age_sex(age_years, sex)
     rec = {"format": FORMAT, "person_ref": person_ref, "version": 0, "created_at": _now(),
            "anthropometrics": {}, "model": None, "segments": {}, "keypoint_segments": {},
            "layers": {k: {"status": "not modelled", "tier": None} for k in LAYERS}, "history": []}
@@ -68,6 +104,7 @@ def init(person_dir, person_ref, height_m=None, mass_kg=None, mass_source="measu
         rec["anthropometrics"]["height_m"] = _measurement(height_m, "measured")
     if mass_kg:
         rec["anthropometrics"]["mass_kg"] = _measurement(mass_kg, mass_source, mass_source == "measured")
+    _set_age_sex(rec, age_years, sex)
     return save(d, rec, "created" + (f": {note}" if note else ""))
 
 
@@ -105,14 +142,18 @@ def save(person_dir, rec, event):
     return rec
 
 
-def set_measurement(person_dir, height_m=None, mass_kg=None, mass_source="measured"):
-    """Record a new height and/or mass (a person's mass changes during rehab; each value keeps its date)."""
+def set_measurement(person_dir, height_m=None, mass_kg=None, mass_source="measured", age_years=None, sex=None):
+    """Record a new height and/or mass (a person's mass changes during rehab; each value keeps its date), age, sex."""
     rec = load(person_dir)
+    _check_age_sex(age_years, sex)
     if height_m:
         rec["anthropometrics"]["height_m"] = _measurement(height_m, "measured")
     if mass_kg:
         rec["anthropometrics"]["mass_kg"] = _measurement(mass_kg, mass_source, mass_source == "measured")
-    return save(person_dir, rec, f"measurement: height {height_m} m, mass {mass_kg} kg ({mass_source})")
+    _set_age_sex(rec, age_years, sex)
+    said = [f"height {height_m} m" if height_m else "", f"mass {mass_kg} kg ({mass_source})" if mass_kg else "",
+            f"age {age_years:g}" if age_years is not None else "", f"sex {sex}" if sex else ""]
+    return save(person_dir, rec, "measurement: " + ", ".join(x for x in said if x))
 
 
 def model_lengths(model_path):
@@ -207,18 +248,32 @@ def build_from_session(person_dir, session_dir, allow_synthetic=False):
     return save(d, rec, f"model built from session {sess['session_id']}")
 
 
+def _leg_basis(rec):
+    """How muscles without per-muscle imaging get their leg's volume (rehabtwin/capacity.py), in words."""
+    from . import capacity, dxa
+    d = rec.get("dxa")
+    if d:
+        lean = dxa.leg_lean_kg(d)
+        return (f"per leg from {d['method']} {d['date']} (leg lean right {lean['_r']:g} kg, left {lean['_l']:g} kg; "
+                f"{capacity.LEG_SOURCES['dxa']})")
+    if rec.get("anthropometrics", {}).get("age_years") and rec.get("sex"):
+        return f"by {capacity.LEG_SOURCES['anthropometry']}"
+    return "by measured height and mass (Handsfield 2014)"
+
+
 def _muscle_layer(rec):
     from . import capacity
     im = rec.get("muscle_imaging")
     if not im:
-        return {"status": "generic Rajagopal leg muscles; capacity scaled to measured height and mass when a session "
-                          "uses them (rehabtwin/capacity.py); trunk muscles generic", "tier": "C"}
+        return {"status": f"generic Rajagopal leg muscles; volume {_leg_basis(rec)} when a session uses them, the "
+                          "generic share per muscle within a leg (rehabtwin/capacity.py); trunk muscles generic",
+                "tier": "C"}
     covered = len(capacity.check_imaging(im))
     size = sum(1 for e in im["muscles"].values() if e.get("volume_cm3") is not None)
     quality = sum(1 for e in im["muscles"].values() if e.get("fat_fraction") is not None)
     full = covered == 2 * len(capacity.LEG_MUSCLES)
     return {"status": f"{im['method']} {im['date']}: {size} volume and {quality} fat-fraction labels covering {covered} of "
-                      f"{2 * len(capacity.LEG_MUSCLES)} leg muscles; the rest by height and mass; trunk generic"
+                      f"{2 * len(capacity.LEG_MUSCLES)} leg muscles; the rest {_leg_basis(rec)}; trunk generic"
                       + ("" if im.get("approved_by") else "; not clinician-reviewed"),
             "tier": ("A" if im.get("approved_by") else "B") if full else "C"}
 
@@ -249,23 +304,73 @@ def set_muscle_imaging(person_dir, record_path):
     return save(d, rec, f"muscle imaging: {im['method']} {im['date']}")
 
 
-def set_bone_density(person_dir, record_path):
-    """A DXA or QCT result: {"method": "DXA ...", "date", "age_years", "sex", "postmenopausal"?, "approved_by"?,
-    "sites": {site: {"bmd_g_cm2", "t_score", "z_score"} | {"vbmd_mg_cm3"}}} (rehabtwin/bone.py)."""
+def _with_person_age_sex(rec, b):
+    """A bone-density record with the person's age at the scan and sex where the record does not give them."""
+    b = dict(b)
+    if b.get("age_years") is None and age_years(rec, b.get("date")) is not None:
+        b["age_years"] = round(age_years(rec, b["date"]), 1)
+    if not b.get("sex") and rec.get("sex"):
+        b["sex"] = rec["sex"]
+    return b
+
+
+def _store_bone_density(rec, b, source):
     from . import bone
-    d = Path(person_dir)
-    rec = load(d)
-    b = _imaging_record(record_path)
     try:
-        b["classification"] = bone.classify(b)
+        b["classification"] = bone.classify(_with_person_age_sex(rec, b))
     except ValueError as e:
-        raise PersonRefused(f"{record_path}: {e}") from e
+        raise PersonRefused(f"{source}: {e}") from e
     rec["bone_density"] = b
     c = b["classification"]
     rec["layers"]["bone_density"] = {"status": f"{b['method']} {b['date']}: {c['category']} at {c['site']} ({c['value']}; "
                                                f"{c['basis']})" + ("" if b.get("approved_by") else "; report not reviewed"),
                                      "tier": "A" if b.get("approved_by") else "B"}
+    return c
+
+
+def set_bone_density(person_dir, record_path):
+    """A DXA or QCT result: {"method": "DXA ...", "date", "age_years", "sex", "postmenopausal"?, "approved_by"?,
+    "sites": {site: {"bmd_g_cm2", "t_score", "z_score"} | {"vbmd_mg_cm3"}}} (rehabtwin/bone.py). Age and sex
+    default to the person model's."""
+    d = Path(person_dir)
+    rec = load(d)
+    b = _imaging_record(record_path)
+    c = _store_bone_density(rec, b, record_path)
     return save(d, rec, f"bone density: {b['method']} {b['date']} ({c['category']})")
+
+
+def set_dxa(person_dir, record_path):
+    """A whole-body DXA scan's regional table (rehabtwin/dxa.py): leg muscle per leg, segment mass distribution and
+    regional fat, and bone density when the record has a ``bone_density`` part. Checked against the person's
+    measured mass (refused beyond 15 %)."""
+    from . import dxa
+    d = Path(person_dir)
+    rec = load(d)
+    x = _imaging_record(record_path)
+    mass = rec["anthropometrics"].get("mass_kg", {})
+    try:
+        x["checks"] = dxa.check(x, mass["value"] if mass.get("measured") else None)
+    except ValueError as e:
+        raise PersonRefused(f"{record_path}: {e}") from e
+    reviewed = "" if x.get("approved_by") else "; report not reviewed"
+    if x["checks"]["distribution"]:
+        x["fat"] = dxa.fat_summary(x)
+        f = x["fat"]
+        rec["layers"]["soft_tissue"] = {
+            "status": f"{x['method']} {x['date']}: body fat {f['total']['fat_pct']:g} %, legs {f['right_leg']['fat_pct']:g} / "
+                      f"{f['left_leg']['fat_pct']:g} %, arms {f['right_arm']['fat_pct']:g} / {f['left_arm']['fat_pct']:g} %, "
+                      f"trunk {f['trunk']['fat_pct']:g} % (right / left); regional mass sets segment masses; tissue "
+                      "deformation not modelled" + reviewed, "tier": "A" if x.get("approved_by") else "B"}
+    bd = x.pop("bone_density", None)
+    rec["dxa"] = x
+    rec["layers"]["muscle"] = _muscle_layer(rec)
+    event = f"DXA: {x['method']} {x['date']}"
+    if bd:
+        b = {"method": x["method"], "date": x["date"], **{k: x[k] for k in ("approved_by", "age_years", "sex",
+                                                                            "postmenopausal") if x.get(k) is not None},
+             **bd, "sha256": x["sha256"], "recorded_at": x["recorded_at"], "from": "dxa record"}
+        event += f", bone density {_store_bone_density(rec, b, record_path)['category']}"
+    return save(d, rec, event)
 
 
 SHAPE_HEIGHT_TOL_M, SHAPE_MASS_TOL = 0.03, 0.10      # beyond these the fit disagrees with the person's measurements
@@ -364,7 +469,9 @@ def for_session(person_dir, person_ref=None, synthetic=False):
 
 def summary(rec):
     """Plain-text overview of a person.json: measurements, model, segment lengths and each twin layer."""
-    lines = [f"{rec['person_ref']}  person model v{rec['version']}" + ("  (SYNTHETIC)" if rec.get("synthetic") else "")]
+    lines = [f"{rec['person_ref']}  person model v{rec['version']}" + ("  (SYNTHETIC)" if rec.get("synthetic") else "")
+             + (f"  {rec['sex']}" if rec.get("sex") else "")
+             + (f", {age_years(rec):.0f} years" if age_years(rec) is not None else "")]
     for k, m in rec["anthropometrics"].items():
         lines.append(f"  {k:9s} {m['value']:g}  {m['source']}{'' if m['measured'] else ' (NOT measured)'}  {m['measured_at']}")
     m = rec.get("model")
@@ -380,6 +487,11 @@ def summary(rec):
         ff = {k: e["fat_fraction"] for k, e in im["muscles"].items() if e.get("fat_fraction") is not None}
         if ff:
             lines.append("  fat       " + ", ".join(f"{k} {v * 100:.1f} %" for k, v in ff.items()))
+    if rec.get("dxa"):
+        x, lean = rec["dxa"], rec["dxa"]["regions"]
+        lines.append(f"  DXA       {x['method']} {x['date']}: leg lean R {lean['right_leg']['lean_kg']:g} kg, "
+                     f"L {lean['left_leg']['lean_kg']:g} kg" + (f"; body fat {x['fat']['total']['fat_pct']:g} %, "
+                                                              f"scanned {x['checks']['mass_kg']:g} kg" if x.get("fat") else ""))
     if rec.get("surface_shape"):
         sh = rec["surface_shape"]
         lines.append(f"  shape     SMPL-X fit: height {sh['height_m']:.3f} m, volume mass {sh['mass_kg_from_volume']:g} kg, "

@@ -56,6 +56,22 @@
     (16 % → 10 %). The regression gave these adults a third more quadriceps than measured and the patients
     twice theirs. The database's own volume table is wrong (1 mm pixels, overlapping slices counted twice);
     the adapter recomputes the volumes from the masks with the DICOM geometry (`docs/upstream-issues.md`).
+- **Leg muscle from age and sex, or from a DXA scan** (`rehabtwin person set --age-years --sex`,
+  `person dxa`; `docs/person-model.md`): each leg's muscle volume comes from the best source the person model
+  holds. In order: MRI/CT per muscle, a whole-body DXA per leg, age, sex, height and mass, then height and mass.
+  Reports and `capacity.json` (`leg_source`) say which.
+  - Without a scan: leg lean mass from age, sex, height and mass, fitted on 7,528 NHANES 1999–2002 adults
+    (7.5 % mean error on the held-out cycle; `adapters/nhanes_strength.py fit-default`). It gives a
+    70-year-old woman 0.63× and the generic young man 0.85× the Handsfield volume. On MyoSegmenTUM, measured /
+    predicted quadriceps goes from 0.75 to 0.93.
+  - With DXA: each leg's muscle from its lean mass (0.78 × lean − 1.07 kg for both legs, McCarthy 2023,
+    against whole-body MRI). Segment masses of the muscle model follow the scan's regional masses, with the
+    total kept. Regional fat fills the soft-tissue layer (Tier B), and a `bone_density` part is classified
+    as by `person bone`. Records in grams, of another body (more than 15 % off the measured mass), or not
+    from a DXA are refused.
+  - Against NHANES knee-extension strength (2,104 adults aged 50+), the correlation goes from 0.65 (height
+    and mass) to 0.75 (age and sex) and 0.79 (DXA). The person-to-person spread goes from 28 % to 24 % and
+    22 %: a scan narrows the estimate but does not measure strength (`rehabtwin strength` does).
 - **Safety gates:**
   - Tier B/A only with a model-provenance record bound to the model by sha256 (`--model-provenance`).
   - `--reference-grade` is required with any reference.

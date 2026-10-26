@@ -70,10 +70,20 @@ HEALTHY_FAT_FRACTION = {**{m: 0.054 for m in GROUPS["gluteus_maximus"] + GROUPS[
 HEALTHY_FAT_FRACTION_DEFAULT = 0.026
 REFERENCE = {"mass_kg": 75.337, "height_m": 1.70,
              "source": "Rajagopal et al. 2016 generic subject (model mass; height as reported for the model)"}
-METHOD = ("Fmax = σ·V·q/lopt (Rajagopal et al. 2016, σ = 60 N/cm²). V: measured where imaging gives it, else "
-          "Handsfield et al. 2014 limb muscle volume 47·m·h + 1285 cm³ with each muscle's share kept. q: measured "
-          "fat fraction against healthy young muscle, else 1")
+METHOD = ("Fmax = σ·V·q/lopt (Rajagopal et al. 2016, σ = 60 N/cm²). V, best source first: MRI/CT volume per muscle; "
+          "DXA leg lean per leg (leg muscle = 0.78 × lean − 1.07 kg for both legs, McCarthy et al. 2023, against MRI); "
+          "leg lean predicted from age, sex, height and mass (NHANES 1999-2002 DXA); Handsfield et al. 2014 limb volume "
+          "47·m·h + 1285 cm³. A leg's volume is shared among its muscles as in the generic model. q: measured fat "
+          "fraction against healthy young muscle, else 1")
 BMI_CAVEAT = 30.0
+MUSCLE_DENSITY = 1.06                 # g/cm³
+MCCARTHY = (0.78, -1.07)              # leg skeletal muscle (kg) = a × DXA leg lean (kg) + b, both legs together
+# Mean DXA lean soft tissue of one leg (kg) from age, sex, height and mass: least squares on 7,528 NHANES 1999-2002
+# adults aged 18-85 with a measured whole-body DXA (no region imputed). Trained on 1999-2000 alone it predicted
+# 2001-2002 within 7.5 % on average (equally for ages 18-49, 50+ and BMI >= 30). adapters/nhanes_strength.py fit-default
+# reproduces it. Terms: 1, age, (age - 50)²/100, male, height m, mass kg, male·age, male·height, male·mass.
+LEG_LEAN_MODEL = (-5.320571, -0.012909, 0.0056, -0.308041, 4.804623, 0.066168, -0.009488, 0.814435, 0.00676)
+AGE_MODEL_RANGE = (18.0, 85.0)      # the ages it was fitted on (NHANES top-codes 85)
 
 
 def limb_muscle_volume_cm3(mass_kg, height_m):
@@ -81,11 +91,33 @@ def limb_muscle_volume_cm3(mass_kg, height_m):
     return 47.0 * float(mass_kg) * float(height_m) + 1285.0
 
 
-def caveats(mass_kg, height_m, imaged=0):
+def predicted_leg_lean_kg(age_years, male, height_m, mass_kg):
+    """Mean DXA lean soft tissue of one leg (kg) for a person's age, sex, height and mass (LEG_LEAN_MODEL)."""
+    a, m, h, w = float(age_years), float(bool(male)), float(height_m), float(mass_kg)
+    x = (1.0, a, (a - 50) ** 2 / 100, m, h, w, m * a, m * h, m * w)
+    return sum(c * v for c, v in zip(LEG_LEAN_MODEL, x))
+
+
+def leg_muscle_cm3(leg_lean_kg):
+    """One leg's skeletal muscle volume (cm³) from its DXA lean soft tissue (McCarthy 2023, intercept halved)."""
+    return (MCCARTHY[0] * float(leg_lean_kg) + MCCARTHY[1] / 2) * 1000 / MUSCLE_DENSITY
+
+
+LEG_SOURCES = {"dxa": "DXA leg lean (McCarthy 2023)", "anthropometry": "age, sex, height and mass (NHANES DXA)",
+               "regression": "height and mass (Handsfield 2014)", "generic": "the generic subject's"}
+
+
+def caveats(mass_kg, height_m, imaged=0, leg_source="regression"):
     out = []
-    if mass_kg and height_m:
+    if leg_source == "dxa":
+        out.append("Leg muscles not imaged: each leg's volume from its DXA lean mass with an MRI-calibrated equation "
+                   "(RMSE 0.95 kg for both legs). Within a leg the generic model's share per muscle is kept.")
+    elif leg_source == "anthropometry":
+        out.append("Muscles without imaging: the leg muscle an average person of this age, sex, height and mass has "
+                   "(NHANES DXA, 7.5 % mean error for the leg's lean mass). Training, injury and asymmetry are not in it.")
+    elif mass_kg and height_m:
         out.append("Muscles without imaging: population regression (young healthy adults), the leg muscle an average "
-                   "person of this height and mass has. Age, training and injury are not in it.")
+                   "person of this height and mass has. Age, sex, training and injury are not in it.")
         bmi = mass_kg / height_m ** 2
         if bmi > BMI_CAVEAT and imaged < 2 * len(LEG_MUSCLES):
             out.insert(0, f"BMI {bmi:.1f} > {BMI_CAVEAT:g}: extra body mass is mostly fat, so the regression likely "
@@ -128,18 +160,24 @@ def check_imaging(imaging):
     return owner
 
 
-def scale_model(model_path, generic_model_path, mass_kg, height_m, out_path, imaging=None):
+def scale_model(model_path, generic_model_path, mass_kg, height_m, out_path, imaging=None, age_years=None, male=None,
+                dxa_leg_lean_kg=None):
     """Write a copy of a scaled session model with leg Fmax for this person; returns the record.
 
     ``imaging``: a person model's muscle imaging record ({"muscles": {label: {"volume_cm3", "fat_fraction"}}}).
-    Muscles it does not cover use the regression, which needs ``mass_kg`` and ``height_m``; without them they keep
-    generic volumes. Refuses a model whose leg Fmax already differs from the generic model's (scaled before, or
+    Muscles it does not cover take their leg's volume from, best first: ``dxa_leg_lean_kg`` ({"_r": kg, "_l": kg}),
+    the age-and-sex model (``age_years``, ``male``, ``mass_kg``, ``height_m``), the height-and-mass regression, or
+    the generic model. Refuses a model whose leg Fmax already differs from the generic model's (scaled before, or
     another model), so capacity is never scaled twice.
     """
     from .opensim_stage import _osim
     owner = check_imaging(imaging)
     regression = bool(mass_kg and mass_kg > 0 and height_m and height_m > 0)
-    if not regression and not owner:
+    age_out = age_years is not None and not AGE_MODEL_RANGE[0] <= age_years <= AGE_MODEL_RANGE[1]
+    leg_source = ("dxa" if dxa_leg_lean_kg else
+                  "anthropometry" if regression and age_years is not None and not age_out and male is not None
+                  else "regression" if regression else "generic")
+    if leg_source == "generic" and not owner:
         raise ValueError(f"capacity scaling needs a body mass and height, got {mass_kg} kg, {height_m} m")
     osim = _osim()
     generic = osim.Model(str(generic_model_path))
@@ -152,6 +190,14 @@ def scale_model(model_path, generic_model_path, mass_kg, height_m, out_path, ima
         raise ValueError(f"{model_path}: not the Rajagopal leg muscles this regression covers (missing {missing[:4]}...)")
     vref = {b + s: gm.get(b + s).getMaxIsometricForce() * gm.get(b + s).getOptimalFiberLength() * 100 / SIGMA_N_PER_CM2
             for b in LEG_MUSCLES for s in ("_r", "_l")}
+    ref_leg = {s: sum(vref[b + s] for b in LEG_MUSCLES) for s in ("_r", "_l")}
+    if leg_source == "dxa":
+        leg = {s: leg_muscle_cm3(dxa_leg_lean_kg[s]) for s in ("_r", "_l")}
+    elif leg_source == "anthropometry":
+        leg = dict.fromkeys(("_r", "_l"), leg_muscle_cm3(predicted_leg_lean_kg(age_years, male, height_m, mass_kg)))
+    else:
+        leg = {s: ref_leg[s] * v_ratio for s in ("_r", "_l")}
+    leg_ratio = {s: leg[s] / ref_leg[s] for s in leg}
     factors, sources, used = {}, {}, {}
     for n, v_ref in vref.items():
         g, m = gm.get(n), ms.get(n)
@@ -163,7 +209,7 @@ def scale_model(model_path, generic_model_path, mass_kg, height_m, out_path, ima
             members = [k for k, (lab, _) in owner.items() if lab == label]
             v, src = e["volume_cm3"] * v_ref / sum(vref[k] for k in members), "measured"
         else:
-            v, src = v_ref * v_ratio, "regression" if regression else "generic"
+            v, src = v_ref * leg_ratio[n[-2:]], leg_source
         q = 1.0
         if e.get("fat_fraction") is not None:
             base = n[:-2]
@@ -178,17 +224,25 @@ def scale_model(model_path, generic_model_path, mass_kg, height_m, out_path, ima
     model.printToXML(str(out_path))
     ks = sorted(factors.values())
     total = lambda mdl, side: sum(mdl.getMuscles().get(b + side).getMaxIsometricForce() for b in LEG_MUSCLES)
-    imaged = sum(1 for s in sources.values() if s != ("regression" if regression else "generic"))
-    rec = {"method": METHOD, "reference": REFERENCE, "volume_ratio": round(v_ratio, 4), "muscles_scaled": len(factors),
+    imaged = sum(1 for s in sources.values() if s != leg_source)
+    rec = {"method": METHOD, "reference": REFERENCE, "volume_ratio": round(sum(leg_ratio.values()) / 2, 4),
+           "leg_source": leg_source, "leg_source_text": LEG_SOURCES[leg_source],
+           "leg_muscle_cm3": {side: round(leg[s]) for side, s in (("right", "_r"), ("left", "_l"))},
+           "muscles_scaled": len(factors),
            "factor_min": round(ks[0], 3), "factor_median": round(ks[len(ks) // 2], 3), "factor_max": round(ks[-1], 3),
            "leg_fmax_N": {side: {"generic": round(total(generic, s)), "scaled": round(total(model, s))}
                           for side, s in (("right", "_r"), ("left", "_l"))},
            "sources": {k: sum(1 for s in sources.values() if s == k) for k in sorted(set(sources.values()))},
            "imaging_labels_used": used, "factors": {n: round(k, 4) for n, k in sorted(factors.items())},
-           "caveats": caveats(mass_kg if regression else None, height_m if regression else None, imaged)}
+           "caveats": caveats(mass_kg if regression else None, height_m if regression else None, imaged, leg_source)}
+    if age_out and leg_source == "regression":
+        rec["caveats"].insert(0, f"Age {age_years:.0f} is outside the {AGE_MODEL_RANGE[0]:g}-{AGE_MODEL_RANGE[1]:g} years "
+                                 "the age-and-sex model was fitted on: height and mass only.")
     if regression:
         rec["subject"] = {"mass_kg": round(mass_kg, 2), "height_m": round(height_m, 3),
                           "bmi": round(mass_kg / height_m ** 2, 1)}
+        if leg_source == "anthropometry":
+            rec["subject"].update(age_years=round(float(age_years), 1), sex="male" if male else "female")
     if imaging:
         rec["imaging"] = {k: imaging[k] for k in ("method", "date", "approved_by", "sha256") if imaging.get(k)}
     return rec
