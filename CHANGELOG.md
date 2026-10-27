@@ -56,6 +56,21 @@
     (16 % → 10 %). The regression gave these adults a third more quadriceps than measured and the patients
     twice theirs. The database's own volume table is wrong (1 mm pixels, overlapping slices counted twice);
     the adapter recomputes the volumes from the masks with the DICOM geometry (`docs/upstream-issues.md`).
+- **Bones from body shape (SKEL)** (`rehabtwin person bones`, `pipeline/rehabtwin/skel_bones.py`,
+  `docs/person-model.md`): SKEL's anatomical joint centres for the person's body become the person's
+  per-body scale factors. The body is an SMPL surface fitted to Kinect depth (`person shape --smpl-model`),
+  or the SMPL body of their measured height and mass. The groups are the video measurement set's.
+  - Without a session-built model they become the person's model; otherwise they are stored next to it with
+    the difference per segment.
+  - Synthetic test (`adapters/bedlam2_skel.py`): on 45 bodies with BMI 17–43, SKEL bones from one depth frame
+    were within 0.2 cm of the true body's on average (worst 1.1 cm; 0.4 cm with the measured height). From
+    height and mass alone: 0.4–0.5 cm; from height alone: up to 4.8 cm (hip width). That is the chain's
+    error against SKEL, not against bone.
+  - On OpenCap subject 2, SKEL and OpenCap's own result put the shank at 0.49 m, ours at 0.54 m (see the
+    marker fix below). SKEL's upper arm is short against every other source.
+  - `adapters/body_model_files.py` converts the SMPL/SKEL/OSSO downloads (Python pickles) to plain arrays
+    with an unpickler that only builds arrays and refuses anything else.
+  - `person shape --smpl-model` fits SMPL (SKEL's skin) instead of SMPL-X.
 - **Leg muscle from age and sex, or from a DXA scan** (`rehabtwin person set --age-years --sex`,
   `person dxa`; `docs/person-model.md`): each leg's muscle volume comes from the best source the person model
   holds. In order: MRI/CT per muscle, a whole-body DXA per leg, age, sex, height and mass, then height and mass.

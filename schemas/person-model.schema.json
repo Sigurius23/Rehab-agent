@@ -39,7 +39,8 @@
             "generic_model_sha256": {"type": "string", "description": "The scale factors apply to this generic model only; process refuses another."},
             "scale_set": {"type": "object", "additionalProperties": {"type": "array", "items": {"type": "number"}, "minItems": 3, "maxItems": 3}},
             "config": {"type": "string"},
-            "built_from": {"type": "object", "required": ["session_id"]}
+            "built_from": {"type": "object", "anyOf": [{"required": ["session_id"]}, {"required": ["method"]}],
+                           "description": "The calibration session the scale factors came from, or method 'skel' (person bones)."}
           }
         },
         {
@@ -128,6 +129,12 @@
         "checks": {"type": "object", "required": ["distribution"], "description": "distribution: all six regions with lean, fat and BMC (segment masses can follow the scan); mass_check: scanned vs measured mass."},
         "fat": {"type": "object"}
       }
+    },
+    "skel_bones": {
+      "type": "object",
+      "required": ["method", "source", "sex", "betas", "measures_m", "segments_m", "scale_set", "skel_model", "smpl_model"],
+      "description": "Bones from body shape (pipeline/rehabtwin/skel_bones.py): SKEL's anatomical joint centres for the person's SMPL surface or height and mass, as segment lengths and per-body scale factors for the generic model. vs_model_cm: SKEL minus the session-built model, per segment.",
+      "properties": {"source": {"enum": ["shape", "height-mass"]}, "sex": {"enum": ["female", "male"]}}
     },
     "surface_shape": {
       "type": "object",

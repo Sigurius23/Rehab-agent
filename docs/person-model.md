@@ -33,7 +33,7 @@ what fills it and its tier:
 
 | Layer | Filled by | Tier |
 |---|---|---|
-| bone geometry | generic bones scaled per segment in one calibration session; or an imaging-personalised model | C; B/A with a provenance record |
+| bone geometry | generic bones scaled per segment in one calibration session; or scaled to SKEL's joint centres for the person's body surface or height and mass (`person bones`); or an imaging-personalised model | C; B/A with a provenance record |
 | joint centres | scaled with the bones; markers placed on the static frames | C; B/A from the personalised model |
 | surface shape | SMPL-X body fitted to standing Kinect depth frames (`person shape`), checked against measured height and mass | C until checked against a scan |
 | kinematics | per session (not stored) | per session's validation |
@@ -164,6 +164,81 @@ A smoke test of the whole chain (two BEDLAM2 bodies written as Kinect recordings
 4 px keypoint noise) stored fits within −0.9 cm and −1.2 % (BMI 25) and −2.8 cm and −2.9 % (BMI 35) of the
 true body. It caught one bug on the way: the floor fit had taken the standing legs for the floor and cut
 most of the body away, until the person's pixels were left out of it.
+
+## Bones from body shape (SKEL)
+
+A calibration session measures bones from markers that video places on the skin. SKEL (Keller et al.,
+SIGGRAPH Asia 2023) predicts them from the body itself. Its skin is SMPL, and its skeleton is the BSM
+OpenSim model, a Rajagopal-based full-body model like ours. SKEL regresses the BSM joint centres linearly
+from the SMPL body surface. `person bones` turns those joint centres into the person's per-body scale
+factors (`pipeline/rehabtwin/skel_bones.py`):
+
+```bash
+python -I adapters/body_model_files.py convert DOWNLOADS/ models_npz/     # once: the pickles to plain arrays
+python -m rehabtwin person set people/P01 --sex female                    # SKEL is female or male
+python -m rehabtwin person shape people/P01 C:\rec\calib01 C:\rec\calib01\mediapipe.npz \
+    --smpl-model models_npz/basicmodel_f_lbs_10_207_0_v1.1.0.npz            # SMPL of that sex, fitted to depth
+python -m rehabtwin person bones people/P01 --skel-dir models_npz --smpl-dir models_npz
+```
+
+- **Body:** the person's SMPL surface from the Kinect (`--source shape`), or, without one, the SMPL body
+  nearest the mean shape with their measured height and mass (`--source height-mass`).
+- **Joint centres to scale factors:** the same groups as the video measurement set (femur and tibia per
+  side, foot, pelvis depth/height and width, trunk height and shoulder width, upper arm, forearm). Each is a
+  distance between SKEL joint centres over the same distance between the generic model's body origins.
+- **Model:** with no session-built model, or with `--replace`, these factors become the person's model,
+  with segment masses scaled to the measured mass. A session-built model is otherwise kept, and
+  `skel_bones.vs_model_cm` records the difference per segment. An imaging model is never replaced.
+- **Model files:** SMPL and SKEL are licensed separately (non-commercial research) and never enter the
+  repository. They come as Python pickles, which can run code when loaded, so
+  `adapters/body_model_files.py` reads them with an unpickler that only builds arrays and refuses
+  anything else. Only the resulting `.npz` files are loaded.
+- **SMPL-X fits don't carry over.** A fit made with `--smplx-model` can't be used: SMPL-X bodies carried
+  over to SMPL through a surface correspondence came out 4–8 cm taller, so the surface is fitted with SMPL
+  itself.
+
+**What one depth frame gives** (`adapters/bedlam2_skel.py`; synthetic). The test used SMPL bodies with the
+heights and BMIs (17–43) of the 45 BEDLAM2 test bodies, 23 female and 22 male, each with its own
+proportions. Each was rendered standing in a BEDLAM2 motion frame, as a Kinect v1 2.7 m away sees it, and
+fitted with SMPL. The table compares SKEL segment lengths from each source with the true body's, in cm:
+bias / mean absolute error / worst.
+
+| Source | thigh | shank | upper arm | forearm | hip width |
+|---|---|---|---|---|---|
+| one depth frame | +0.0 / 0.2 / 0.9 | −0.0 / 0.2 / 1.1 | +0.1 / 0.2 / 0.6 | +0.0 / 0.2 / 0.6 | −0.0 / 0.1 / 0.3 |
+| one depth frame + measured height | +0.0 / 0.1 / 0.4 | +0.0 / 0.2 / 0.4 | +0.1 / 0.2 / 0.6 | +0.1 / 0.2 / 0.5 | −0.0 / 0.1 / 0.4 |
+| height and mass | +0.1 / 0.4 / 1.3 | +0.1 / 0.5 / 1.5 | −0.0 / 0.3 / 0.9 | −0.0 / 0.3 / 1.1 | −0.0 / 0.2 / 0.5 |
+| height only (SKEL template scaled) | +0.5 / 1.0 / 3.1 | +0.6 / 1.2 / 3.3 | +0.1 / 0.3 / 1.1 | +0.1 / 0.4 / 1.3 | −0.7 / 1.8 / 4.8 |
+
+- **The chain adds little to SKEL's own error.** Fitted height was within 0.6 cm on average (worst 3.0 cm;
+  1.1 cm with the measured height as a prior). No fit failed, and the BMI groups were alike (above BMI 35,
+  thigh and shank 0.2 cm on average).
+- **Height alone is not enough.** It misses hip width by up to 4.8 cm, and leg length by up to 3 cm above
+  BMI 30.
+- **Lower bound.** The truth bodies come from the model that fits them, unclothed, and their proportions
+  vary only as much as SMPL's shape space allows. Real bodies, clothes and the sensor will add error.
+- **Not checked against bone.** This measures the chain from sensor to SKEL, not whether SKEL's joint
+  centres are where a person's are. That needs imaging.
+
+**On a real person: OpenCap subject 2** (1.96 m, 78.2 kg; sex not recorded, taken as male). There is no body
+scan, so SKEL used height and mass. Joint-centre segment lengths, m:
+
+| Segment | our 5 phones | OpenCap's 5 phones | SKEL from height and mass | Winter's proportions |
+|---|---|---|---|---|
+| thigh | 0.446 / 0.440 | 0.437 / 0.440 | 0.471 | 0.480 |
+| shank | **0.542 / 0.546** | 0.485 / 0.495 | 0.491 | 0.482 |
+| upper arm | 0.369 | 0.358 | **0.313** | 0.365 |
+| forearm | 0.289 | 0.299 | 0.297 | 0.286 |
+| hip width | 0.203 | 0.201 | 0.162 | — |
+
+- **None of these is bone.** The two video columns come from the same videos with different keypoint
+  detectors.
+- **The cross-check is what it is for.** Our shank was 5 cm longer than every other source. The cause was
+  Pose2Sim's augmenter marker set, made for another model's bones, not this person; corrected in
+  `mediapipe_lstm_pose2sim` (`docs/upstream-issues.md`, `docs/validation-results.md` §4). SKEL's upper arm is short against every
+  other source here and on its own templates (0.16 × height, against about 0.17 for the OpenSim models
+  and 0.19 in Winter's tables), so its arm lengths should not replace measured ones.
+- **The layer stays Tier C:** a population prior from the body surface, not imaging.
 
 ## Muscle size, muscle quality and bone density from imaging
 
@@ -502,9 +577,10 @@ Reproduce: `examples/person_model_opencap.sh` after `examples/opencap_agreement.
 - **A real calibration session and repeat sessions of one person.** These measure how much a person
   model built in one session differs from one built in another, and whether a phone-only session with the
   person's bones agrees better with a reference.
-- **Skeleton from body shape (SKEL/OSSO).** These fit anatomical bones inside a measured body surface
-  instead of scaling generic ones. Their model files need registration on the authors' sites, so the user
-  has to download them; the code to use them is not written yet.
+- **Bone imaging to check SKEL.** `person bones` (above) gives bones from body shape. Whether SKEL's joint
+  centres are within centimetres of a person's needs MRI or CT of the same people. OSSO, which infers the
+  whole skeleton shape from the body, needs an old toolchain (Python 3.8, chumpy, the MPI mesh package); its
+  model files are loaded and converted, but it is not run yet.
 - **Muscle MRI and strength of people in rehab.** The MyoSegmenTUM test covers 15 healthy adults (above); the
   regression is furthest off for patients, and only 4 patients' scans, without strength, were available.
 - **Imaging for Tier A.** `person attach` takes an MRI- or CT-personalised OpenSim model (e.g. from

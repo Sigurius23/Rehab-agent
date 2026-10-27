@@ -519,10 +519,12 @@ def person_shape(a):
     height = rec["anthropometrics"].get("height_m", {})
     print(f"fitting {len(frames)} frame(s) {info['frames']} ({', '.join(map(str, info['person_points']))} person points)",
           file=sys.stderr)
-    fit = shape.fit_shape(shape.load_model(a.smplx_model), frames, info["K"], floor=info["floor"],
+    path = a.smplx_model or a.smpl_model
+    fit = shape.fit_shape(shape.load_model(path), frames, info["K"], floor=info["floor"],
                           height_m=height.get("value") if a.use_height and height.get("measured") else None)
     source = {"recording": Path(a.recording).name, "frames": info["frames"], "mirrored": info["mirrored"],
-              "body_model": {"file": Path(a.smplx_model).name, "sha256": tiers.sha256(a.smplx_model)},
+              "body_model": {"kind": "SMPL-X" if a.smplx_model else "SMPL", "file": Path(path).name,
+                             "sha256": tiers.sha256(path)},
               "runtime_s": fit["fit"]["runtime_s"]}
     return person_mod.set_surface_shape(a.folder, fit, source)
 
@@ -547,6 +549,8 @@ def person_command(a):
             rec = person_mod.set_dxa(a.folder, a.record)
         elif a.person_cmd == "shape":
             rec = person_shape(a)
+        elif a.person_cmd == "bones":
+            rec = person_mod.set_bones(a.folder, a.skel_dir, a.smpl_dir, a.source, a.config, a.replace)
         else:
             rec = person_mod.load(a.folder)
     except (ValueError, FileNotFoundError) as e:     # includes PersonRefused and records.StaleResult
@@ -672,13 +676,27 @@ def main(argv=None):
     psp.add_argument("folder")
     psp.add_argument("recording", help="KinectCapture folder with player_registered.u8")
     psp.add_argument("mediapipe", help="adapters/mediapipe_pose.py dump of RECORDING/colour/%%06d.jpg")
-    psp.add_argument("--smplx-model", required=True, help="SMPL-X .npz (licensed separately; stays outside the repo)")
+    psb = psp.add_mutually_exclusive_group(required=True)
+    psb.add_argument("--smplx-model", help="SMPL-X .npz (licensed separately; stays outside the repo)")
+    psb.add_argument("--smpl-model", help="SMPL .npz of the person's sex (adapters/body_model_files.py converts the "
+                                          "download): what 'person bones' needs")
     psp.add_argument("--frames", help="comma-separated frame numbers (default: up to 2 standing frames, 1 s apart)")
     psp.add_argument("--use-height", action="store_true",
                      help="fit with the measured height as a prior (then the height no longer checks the fit)")
     psm = psp.add_mutually_exclusive_group()
     psm.add_argument("--mirrored", action="store_true")
     psm.add_argument("--not-mirrored", action="store_true")
+    pbn = psub.add_parser("bones", help="bones from body shape: SKEL's anatomical joint centres -> scale factors")
+    pbn.add_argument("folder")
+    pbn.add_argument("--skel-dir", required=True, help="skel_female.npz / skel_male.npz (adapters/body_model_files.py)")
+    pbn.add_argument("--smpl-dir", required=True, help="basicmodel_{f,m}_lbs_10_207_0_v1.1.0.npz, converted likewise")
+    pbn.add_argument("--source", choices=["shape", "height-mass"],
+                     help="the person's SMPL surface (person shape --smpl-model) or measured height and mass "
+                          "(default: the surface when there is one)")
+    pbn.add_argument("--config", help="config whose generic model the factors are for (default: the person model's, "
+                                      "else mediapipe_lstm_pose2sim)")
+    pbn.add_argument("--replace", action="store_true",
+                     help="replace a model built from a session (default: keep it and record the comparison)")
     psh = psub.add_parser("show", help="what the person model holds, per twin layer")
     psh.add_argument("folder")
     au = sub.add_parser("augment", help="add OpenCap's LSTM anatomical markers to a keypoint sequence (pip install onnxruntime)")

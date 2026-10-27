@@ -103,7 +103,7 @@ The person model (`docs/person-model.md`) records this per person; `person show`
 
 | # | Layer | Built | Tier today | Missing for the next tier |
 |---|---|---|---|---|
-| 1 | Bone geometry | generic bones scaled once in a calibration session and reused (`person build`, `process --person`); an imaging model can be attached with its provenance record (`person attach`) | C | imaging → personalised model (msk-PIPE/STAPLE); or SKEL/OSSO bones fitted inside a measured surface (needs their registered model files) |
+| 1 | Bone geometry | generic bones scaled once in a calibration session and reused (`person build`, `process --person`); or scaled to SKEL's joint centres for the person's SMPL surface or height and mass (`person bones`, `skel_bones.py`; one synthetic depth frame: within 1.1 cm of the true body's SKEL bones); an imaging model can be attached with its provenance record (`person attach`) | C | imaging → personalised model (msk-PIPE/STAPLE); imaging of the same people to check SKEL's joint centres |
 | 2 | Joint centres | scaled with the bones; markers placed per session | C | imaging, or functional joint-centre calibration |
 | 3 | Surface shape | SMPL-X fitted to standing Kinect depth frames (`person shape`, `shape.py`), checked against measured height and mass; synthetic BEDLAM2: height ±1.4 cm, mass ±5.2 % | C | a 3D scan or tape measurements of a real person to measure its error |
 | 4 | Kinematics | per session, validated per joint × plane against a reference | per validation | marker mocap for the person and exercise |

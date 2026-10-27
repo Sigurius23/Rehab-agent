@@ -1,7 +1,8 @@
 """Body shape from a depth sensor (layer 3, surface shape; Tier B): an SMPL-X body fitted to depth points.
 
 A front-facing depth sensor (Kinect v1) sees the front of the body. ``fit_shape`` fits an SMPL-X-format body
-model to the person's depth points from one or a few frames. It fits the 16 shape parameters (betas, shared
+model (SMPL-X, or SMPL, whose 24 joints share SMPL-X's first 22) to the person's depth points from one or a few
+frames. It fits the 16 shape parameters (betas, shared
 by all frames) and, per frame, the global orientation, the 21 body joints and the translation. Hands, jaw
 and eyes stay at zero. Each term is divided by its expected error:
 
@@ -57,6 +58,8 @@ KEYPOINTS = {"LHip": 1, "RHip": 2, "LKnee": 4, "RKnee": 5, "LAnkle": 7, "RAnkle"
 SEGMENTS = {"hip-knee": ((1, 4), (2, 5)), "knee-ankle": ((4, 7), (5, 8)), "shoulder-elbow": ((16, 18), (17, 19)),
             "elbow-wrist": ((18, 20), (19, 21))}
 BODY_JOINTS = 21                    # SMPL-X joints 1..21 are fitted; jaw, eyes and fingers stay as given (zero)
+# joint count -> first joint of the hands (SMPL-X: fingers; SMPL: whole hand). Joints 0-21 mean the same in both.
+HAND_JOINTS = {55: 25, 24: 22}
 # Pose prior SD (rad) per SMPL-X joint and local axis (x, y, z), 1.0 when not listed: about twice the SD
 # across BEDLAM2's (AMASS) motion frames, where spine2 and spine3 flex by 9 and 5 deg SD and the spine
 # twists and bends sideways by 3-5 deg. Left loose, the spine of a heavy body (far behind the skin seen from
@@ -368,12 +371,13 @@ class _Fit:
         self.nbj = min(BODY_JOINTS, bm.n_joints - 1)
         self.nq = 3 + 3 * self.nbj + 3
         self.kp_joints = np.asarray(cfg["keypoint_joints"], int)
-        sd = [POSE_SD.get(j, (1.0,) * 3) if bm.n_joints == 55 else (1.0,) * 3 for j in range(1, self.nbj + 1)]
+        sd = [POSE_SD.get(j, (1.0,) * 3) if bm.n_joints in HAND_JOINTS else (1.0,) * 3 for j in range(1, self.nbj + 1)]
         self.pose_sd = np.ravel(sd)
         self.free_betas, self.stage, self.top, self.bot = False, "keypoints", 0, 0
         self.beta_sd = np.full(bm.n_betas, cfg["beta_sd"])
         # fingers are not fitted (zero pose; too small for the sensor): their faces and vertices are left out
-        finger = bm.weights[:, 25:].sum(1) > 0.5 if bm.n_joints == 55 else np.zeros(len(bm.weights), bool)
+        finger = (bm.weights[:, HAND_JOINTS[bm.n_joints]:].sum(1) > 0.5 if bm.n_joints in HAND_JOINTS
+                  else np.zeros(len(bm.weights), bool))
         self.finger_v, self.finger_f = finger, finger[bm.faces].any(1)
 
     def rots(self, fr, Q):
@@ -646,7 +650,7 @@ def fit_shape(model, frames, K, size=(640, 480), height_m=None, height_sd_m=0.00
         fr.pix_used = np.stack([np.clip(np.floor(uv[:, 1]).astype(int), 0, size[1] - 1),
                                 np.clip(np.floor(uv[:, 0]).astype(int), 0, size[0] - 1)], axis=1)
         fr.idx, fr.offsets = np.zeros(0, np.int64), np.zeros((0, 3))
-        if bm.n_joints == 55:
+        if bm.n_joints in HAND_JOINTS:
             for j, r in ARMS_DOWN.items():
                 Qs[f, 3 * j:3 * j + 3] = r
         if init is None:
@@ -715,8 +719,9 @@ def fit_shape(model, frames, K, size=(640, 480), height_m=None, height_sd_m=0.00
            "rest_joints": Jr.tolist(), "frames": out_frames,
            "fit": {"outer_iterations": len(history), "runtime_s": round(time.time() - t_start, 2), "history": history,
                    "height_given_m": height_m, "frames": len(frs), "warnings": warnings},
-           "tier": "B", "joints_note": "SMPL-X joints, regressed from the fitted surface: not anatomical joint centres"}
-    if bm.n_joints == 55:
+           "tier": "B", "joints_note": f"{'SMPL' if bm.n_joints == 24 else 'SMPL-X'} joints, regressed from the fitted "
+                                       "surface: not anatomical joint centres"}
+    if bm.n_joints in HAND_JOINTS:
         out["segment_lengths_m"] = segment_lengths(Jr)
         out["surface_to_centre_m"] = front_offsets(vr, Jr, bm.faces)
     return out

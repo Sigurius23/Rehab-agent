@@ -107,7 +107,10 @@ a whole-body DXA regional table: each leg's muscle, the segment masses of the mu
 if reported, bone density. Without a scan, `person set --age-years --sex` sizes the leg muscles by age, sex,
 height and mass (NHANES DXA reference data). `person bone` adds a DXA or QCT bone-density result, which device
 and correction what-ifs show. `person shape` fits an SMPL-X body
-surface to standing frames of a Kinect recording (the SMPL-X model file is licensed separately).
+surface to standing frames of a Kinect recording (the SMPL-X model file is licensed separately); with
+`--smpl-model` it fits SMPL, and `person bones` then scales the person's bones to SKEL's anatomical joint
+centres for that body, or for their measured height and mass (`adapters/body_model_files.py` converts the
+SMPL/SKEL downloads to plain arrays first).
 
 Several phones (OpenCap-style checkerboard calibration, unsynchronised starts) and OpenCap's LSTM
 anatomical-marker augmenter, which the pelvis needs (validation-results §4):

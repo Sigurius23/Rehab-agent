@@ -402,8 +402,9 @@ def set_surface_shape(person_dir, fit, source):
         if abs(dm) > SHAPE_MASS_TOL:
             raise PersonRefused(f"the fitted body's volume gives {fit['mass_kg']:.1f} kg, {dm:+.0%} from the measured "
                                 f"{a['mass_kg']['value']:g} kg: not stored (loose clothing, segmentation or pose?)")
+    kind = source.get("body_model", {}).get("kind", "SMPL-X")
     rec["surface_shape"] = {
-        "method": "SMPL-X fitted to Kinect v1 depth points (rehabtwin/shape.py)", "source": source, "fitted_at": _now(),
+        "method": f"{kind} fitted to Kinect v1 depth points (rehabtwin/shape.py)", "source": source, "fitted_at": _now(),
         "betas": [round(float(b), 5) for b in fit["betas"]], "height_m": round(fit["height_m"], 4),
         "volume_m3": round(fit["volume_m3"], 5), "mass_kg_from_volume": round(fit["mass_kg"], 2),
         "bmi_from_volume": round(fit["bmi"], 2), "segment_lengths_m": fit.get("segment_lengths_m"),
@@ -413,9 +414,96 @@ def set_surface_shape(person_dir, fit, source):
         "joints_note": fit.get("joints_note")}
     said = "; ".join(f"{k} {v['difference']:+g} vs measured" for k, v in checks.items()) or "no measured height or mass to check"
     rec["layers"]["surface_shape"] = {
-        "status": f"SMPL-X fitted to {len(fit['frames'])} Kinect depth frame(s) ({source.get('recording')}); {said}; "
+        "status": f"{kind} fitted to {len(fit['frames'])} Kinect depth frame(s) ({source.get('recording')}); {said}; "
                   "error measured on synthetic bodies only, not against a scan of this person", "tier": "C"}
     return save(d, rec, f"surface shape from {source.get('recording')}")
+
+
+SKEL_FILES = {"female": ("skel_female.npz", "basicmodel_f_lbs_10_207_0_v1.1.0.npz"),
+              "male": ("skel_male.npz", "basicmodel_m_lbs_10_207_0_v1.1.0.npz")}
+DEFAULT_CONFIG = "mediapipe_lstm_pose2sim"
+
+
+def set_bones(person_dir, skel_dir, smpl_dir, source=None, config=None, replace=False):
+    """Bones from body shape (rehabtwin/skel_bones.py): SKEL's anatomical joint centres for the person's SMPL
+    surface (``source`` "shape", from ``person shape --smpl-model``) or for the SMPL body of their measured height
+    and mass ("height-mass"), as per-body scale factors for the generic model.
+
+    Without a session-built model, or with ``replace``, they become the person's model (generic bones scaled,
+    masses to the measured mass). A model built from a session is otherwise kept, and the SKEL bones are stored next to it with
+    the difference per segment. A personalised (imaging) model is never replaced."""
+    import numpy as np
+
+    from . import skel_bones as sb
+    from .config import load_config, resolve
+    d = Path(person_dir)
+    rec = load(d)
+    sex = rec.get("sex")
+    if sex not in SKEL_FILES:
+        raise PersonRefused("SKEL is male or female: record the person's sex first (person set --sex)")
+    skel_path, smpl_path = Path(skel_dir) / SKEL_FILES[sex][0], Path(smpl_dir) / SKEL_FILES[sex][1]
+    skel, smpl = sb.load_skel(skel_path), sb.load_smpl(smpl_path)
+    surf, a = rec.get("surface_shape"), rec["anthropometrics"]
+    source = source or ("shape" if surf and surf["source"].get("body_model", {}).get("kind") == "SMPL" else "height-mass")
+    if source == "shape":
+        bmodel = (surf or {}).get("source", {}).get("body_model", {})
+        if bmodel.get("kind") != "SMPL":
+            raise PersonRefused("no SMPL body surface: fit one with 'person shape --smpl-model' (SKEL's skin is SMPL), "
+                                "or use --source height-mass")
+        if bmodel.get("sha256") != tiers.sha256(smpl_path):
+            raise PersonRefused(f"the surface was fitted with {bmodel.get('file')}, not {smpl_path.name} (the {sex} "
+                                "SMPL model): refit it with the model of the person's sex")
+        betas, said = np.asarray(surf["betas"], float), f"SMPL surface fitted to {surf['source'].get('recording')}"
+    else:
+        if not (a.get("height_m", {}).get("measured") and a.get("mass_kg", {}).get("measured")):
+            raise PersonRefused("--source height-mass needs a measured height and mass")
+        try:
+            betas, got = sb.betas_for_height_mass(smpl, a["height_m"]["value"], a["mass_kg"]["value"])
+        except ValueError as e:
+            raise PersonRefused(str(e)) from e
+        said = f"SMPL body nearest the mean shape with {got['height_m']:.3f} m and {got['mass_kg']:.1f} kg"
+    m = rec.get("model")
+    if m and m["kind"] == "personalised":
+        raise PersonRefused("the person has an imaging-personalised model: its bones stay")
+    cfg_name = config or (Path(m["config"]).stem if m and m.get("config") else DEFAULT_CONFIG)
+    cfg = load_config(cfg_name)
+    generic = resolve(cfg["model"])
+    P = sb.joints(skel, sb.rest_surface(smpl, betas))
+    mine, gen = sb.measures(P, "smpl"), sb.measures(sb.generic_origins(generic), "opensim")
+    factors = sb.scale_set(mine, gen)
+    segs = sb.segment_lengths(P)
+    rec["skel_bones"] = {
+        "method": "SKEL joint centres regressed from the SMPL rest surface (rehabtwin/skel_bones.py)", "source": source,
+        "surface": said, "sex": sex, "betas": [round(float(b), 5) for b in betas],
+        "skel_model": {"file": skel_path.name, "sha256": tiers.sha256(skel_path)},
+        "smpl_model": {"file": smpl_path.name, "sha256": tiers.sha256(smpl_path)},
+        "measures_m": {k: round(v, 4) for k, v in mine.items()}, "generic_measures_m": {k: round(v, 4) for k, v in gen.items()},
+        "segments_m": {k: round(v, 4) for k, v in segs.items()}, "scale_set": factors, "config": cfg_name,
+        "generic_model_sha256": tiers.sha256(generic), "computed_at": _now()}
+    from_session = bool(m and m.get("built_from", {}).get("session_id"))
+    if from_session and rec.get("segments"):
+        rec["skel_bones"]["vs_model_cm"] = {k: round(100 * (segs[k] - v["length_m"]), 1)
+                                            for k, v in rec["segments"].items() if k in segs}
+    use = not from_session or replace
+    if use:
+        mass = a.get("mass_kg", {})
+        if not mass.get("measured"):
+            raise PersonRefused("the model's segment masses need a measured body mass (person set --mass-kg)")
+        sb.scale_model(generic, factors, mass["value"], d / "model.osim")
+        joints, keys = model_lengths(d / "model.osim")
+        rec["synthetic"] = False
+        rec["model"] = {"kind": "scaled-generic", "file": "model.osim", "sha256": tiers.sha256(d / "model.osim"),
+                        "generic_model": cfg["model"], "generic_model_sha256": tiers.sha256(generic),
+                        "scale_set": factors, "config": f"{cfg_name}.json",
+                        "built_from": {"method": "skel", "source": source, "surface": said}}
+        rec["segments"] = {k: {"length_m": v, "definition": "body origins (joint centres) in the default pose"}
+                           for k, v in joints.items()}
+        rec["keypoint_segments"] = _keypoint_segments(joints, keys, f"{cfg_name}.json")
+        rec["layers"]["bone_geometry"] = {"status": f"generic bones scaled to SKEL's joint centres for this body ({said}); "
+                                                    "a population prior from the body surface, not imaging", "tier": "C"}
+        rec["layers"]["joint_centres"] = {"status": "SKEL joint centres regressed from the body surface; not checked "
+                                                    "against imaging", "tier": "C"}
+    return save(d, rec, f"bones from SKEL ({source})" + ("" if use else ": stored next to the session-built model"))
 
 
 def attach_personalised_model(person_dir, model_path, provenance_path):
@@ -476,7 +564,9 @@ def summary(rec):
         lines.append(f"  {k:9s} {m['value']:g}  {m['source']}{'' if m['measured'] else ' (NOT measured)'}  {m['measured_at']}")
     m = rec.get("model")
     lines.append(f"  model     {m['kind']} {m['file']}" + (f" (Tier {m['tier']})" if m.get("tier") else
-                                                          f" from session {m['built_from']['session_id']}")
+                                                          f" from session {m['built_from']['session_id']}"
+                                                          if m["built_from"].get("session_id") else
+                                                          f" from SKEL ({m['built_from'].get('source')})")
                  if m else "  model     none yet")
     for k, v in rec.get("segments", {}).items():
         lines.append(f"  {k:12s} {v['length_m']:.3f} m")
@@ -496,6 +586,12 @@ def summary(rec):
         sh = rec["surface_shape"]
         lines.append(f"  shape     SMPL-X fit: height {sh['height_m']:.3f} m, volume mass {sh['mass_kg_from_volume']:g} kg, "
                      f"BMI {sh['bmi_from_volume']:g}" + "".join(f"; {k} {v['difference']:+g}" for k, v in sh["checks"].items()))
+    if rec.get("skel_bones"):
+        sk = rec["skel_bones"]
+        lines.append(f"  SKEL      {sk['sex']}, {sk['surface']}: thigh {sk['segments_m']['thigh_r']:.3f}, shank "
+                     f"{sk['segments_m']['shank_r']:.3f}, hip width {sk['segments_m']['hip_width']:.3f} m"
+                     + ("; vs model " + ", ".join(f"{k} {v:+g} cm" for k, v in sk["vs_model_cm"].items())
+                        if sk.get("vs_model_cm") else ""))
     if rec.get("bone_density"):
         c = rec["bone_density"]["classification"]
         lines.append(f"  bone      {c['category']} at {c['site']} ({c['value']}), {c['method']} {c['date']}")

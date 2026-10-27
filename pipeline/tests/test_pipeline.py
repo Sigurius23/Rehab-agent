@@ -440,6 +440,49 @@ def test_person_model_keeps_the_bones_across_sessions(selftest_run, tmp_path):
     assert not (tmp_path / "small_metric" / "opensim" / "markers_dynamic.trc").exists()   # refused before writing
 
 
+def test_person_bones_from_skel_joint_centres(selftest_run, tmp_path):
+    """``person bones``: SKEL joint centres 1.1x the generic model's give 1.1 on every body, a model whose
+    thigh is 1.1x the generic one at the measured mass; a session-built model is kept and compared."""
+    from rehabtwin import person, skel_bones, tiers
+    generic = resolve(CFG["model"])
+    gen = skel_bones.generic_origins(generic)
+    bones = ("pelvis", "femur_r", "tibia_r", "talus_r", "calcn_r", "toes_r", "femur_l", "tibia_l", "talus_l", "calcn_l",
+             "toes_l", "humerus_r", "ulna_r", "radius_r", "hand_r", "humerus_l", "ulna_l", "radius_l", "hand_l")
+    v = np.array([1.1 * np.array([-gen[b][2], gen[b][1], gen[b][0]]) for b in bones])     # OpenSim -> SMPL axes
+    np.savez(tmp_path / "basicmodel_m_lbs_10_207_0_v1.1.0.npz", v_template=v, shapedirs=np.zeros((len(v), 3, 1)),
+             f=np.array([[0, 1, 2]]))
+    np.savez(tmp_path / "skel_male.npz", J_regressor_osim=np.eye(len(v)), bone_names=np.array(bones), skin_template_v=v,
+             skin_template_f=np.array([[0, 1, 2]]), shapedirs=np.zeros((len(v), 3, 1)))
+    d = tmp_path / "P"
+    person.init(d, "P", height_m=1.8, mass_kg=77.0, sex="male")
+    rec = person.load(d)
+    rec["surface_shape"] = {"betas": [], "height_m": 1.8, "mass_kg_from_volume": 77.0, "bmi_from_volume": 23.8,
+                            "checks": {}, "source": {"recording": "toy", "body_model": {
+        "kind": "SMPL", "file": "toy", "sha256": tiers.sha256(tmp_path / "basicmodel_m_lbs_10_207_0_v1.1.0.npz")}}}
+    person.save(d, rec, "toy SMPL surface")
+    rec = person.set_bones(d, tmp_path, tmp_path, config="skel105_pose2sim")
+    assert rec["skel_bones"]["source"] == "shape" and rec["model"]["built_from"]["method"] == "skel"
+    assert {tuple(f) for f in rec["model"]["scale_set"].values()} == {(1.1, 1.1, 1.1)}
+    m = opensim.Model(str(d / "model.osim"))
+    assert m.getTotalMass(m.initSystem()) == pytest.approx(77.0, abs=1e-6)
+    segs, _ = person.model_lengths(generic)
+    assert rec["segments"]["thigh_r"]["length_m"] == pytest.approx(1.1 * segs["thigh_r"], abs=1e-3)
+    assert rec["layers"]["bone_geometry"]["tier"] == "C" and "SKEL" in person.summary(rec)
+    out, _, _ = selftest_run
+    s = tmp_path / "S"
+    ref = json.loads((out / "session.json").read_text())["person_ref"]
+    person.init(s, ref, sex="male")
+    built = person.build_from_session(s, out, allow_synthetic=True)
+    rec2 = person.load(s)
+    rec2["surface_shape"] = rec["surface_shape"]
+    person.save(s, rec2, "toy SMPL surface")
+    kept = person.set_bones(s, tmp_path, tmp_path)
+    assert kept["model"]["sha256"] == built["model"]["sha256"] and kept["person_ref"] == ref
+    assert set(kept["skel_bones"]["vs_model_cm"]) >= {"thigh_r", "hip_width"}
+    replaced = person.set_bones(s, tmp_path, tmp_path, replace=True)
+    assert replaced["model"]["built_from"]["method"] == "skel"
+
+
 def test_personalised_person_model_is_used_as_it_is(selftest_run, tmp_path):
     """An imaging-personalised model (here: the synthetic generator's truth model with a Tier B record) is not
     re-scaled: unit scale factors, only the segment masses follow the person's measured mass."""
