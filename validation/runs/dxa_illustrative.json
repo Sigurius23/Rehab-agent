@@ -1,0 +1,4 @@
+{"method": "DXA (illustrative values, not this person's scan)", "date": "2026-10-20",
+ "regions": {"left_arm": {"lean_kg": 3.3, "fat_kg": 0.9, "bmc_kg": 0.22}, "right_arm": {"lean_kg": 3.5, "fat_kg": 0.9, "bmc_kg": 0.23},
+             "left_leg": {"lean_kg": 10.6, "fat_kg": 2.6, "bmc_kg": 0.62}, "right_leg": {"lean_kg": 11.6, "fat_kg": 2.6, "bmc_kg": 0.64},
+             "trunk": {"lean_kg": 26.5, "fat_kg": 6.8, "bmc_kg": 0.85}, "head": {"lean_kg": 3.2, "fat_kg": 1.0, "bmc_kg": 0.55}}}

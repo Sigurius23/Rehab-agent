@@ -1,0 +1,781 @@
+{
+ "reg": {
+  "muscle_model": {
+   "source": "body-size scaled (Handsfield 2014 regression)",
+   "capacity": {
+    "scaled": true,
+    "method": "Fmax = \u03c3\u00b7V\u00b7q/lopt (Rajagopal et al. 2016, \u03c3 = 60 N/cm\u00b2). V, best source first: MRI/CT volume per muscle; DXA leg lean per leg (leg muscle = 0.78 \u00d7 lean \u2212 1.07 kg for both legs, McCarthy et al. 2023, against MRI); leg lean predicted from age, sex, height and mass (NHANES 1999-2002 DXA); Handsfield et al. 2014 limb volume 47\u00b7m\u00b7h + 1285 cm\u00b3. A leg's volume is shared among its muscles as in the generic model. q: measured fat fraction against healthy young muscle, else 1",
+    "subject": {
+     "mass_kg": 78.2,
+     "height_m": 1.96,
+     "bmi": 20.4
+    },
+    "volume_ratio": 1.1621,
+    "leg_source": "regression",
+    "leg_source_text": "height and mass (Handsfield 2014)",
+    "leg_muscle_cm3": {
+     "right": 8239,
+     "left": 8239
+    },
+    "factor_min": 0.903,
+    "factor_median": 0.965,
+    "factor_max": 1.1,
+    "leg_fmax_N": {
+     "right": {
+      "generic": 49783,
+      "scaled": 48469
+     },
+     "left": {
+      "generic": 49783,
+      "scaled": 48650
+     }
+    },
+    "sources": {
+     "regression": 80
+    },
+    "caveats": [
+     "Muscles without imaging: population regression (young healthy adults), the leg muscle an average person of this height and mass has. Age, sex, training and injury are not in it.",
+     "Trunk and arm muscles keep generic capacities."
+    ]
+   }
+  },
+  "group_activation": {
+   "abdominals_l": {
+    "peak": 0.458,
+    "mean": 0.096,
+    "peak_single_muscle": 1.0
+   },
+   "abdominals_r": {
+    "peak": 0.619,
+    "mean": 0.088,
+    "peak_single_muscle": 1.0
+   },
+   "adductors_l": {
+    "peak": 0.222,
+    "mean": 0.106,
+    "peak_single_muscle": 1.0
+   },
+   "adductors_r": {
+    "peak": 0.203,
+    "mean": 0.098,
+    "peak_single_muscle": 1.0
+   },
+   "erector_spinae_l": {
+    "peak": 0.454,
+    "mean": 0.154,
+    "peak_single_muscle": 1.0
+   },
+   "erector_spinae_r": {
+    "peak": 0.428,
+    "mean": 0.145,
+    "peak_single_muscle": 1.0
+   },
+   "gluteus_maximus_l": {
+    "peak": 0.714,
+    "mean": 0.265,
+    "peak_single_muscle": 1.0
+   },
+   "gluteus_maximus_r": {
+    "peak": 0.442,
+    "mean": 0.202,
+    "peak_single_muscle": 1.0
+   },
+   "gluteus_medius_l": {
+    "peak": 0.399,
+    "mean": 0.035,
+    "peak_single_muscle": 0.535
+   },
+   "gluteus_medius_r": {
+    "peak": 0.282,
+    "mean": 0.041,
+    "peak_single_muscle": 0.436
+   },
+   "gluteus_minimus_l": {
+    "peak": 0.143,
+    "mean": 0.015,
+    "peak_single_muscle": 0.206
+   },
+   "gluteus_minimus_r": {
+    "peak": 0.087,
+    "mean": 0.014,
+    "peak_single_muscle": 0.157
+   },
+   "hamstrings_l": {
+    "peak": 0.485,
+    "mean": 0.155,
+    "peak_single_muscle": 1.0
+   },
+   "hamstrings_r": {
+    "peak": 0.593,
+    "mean": 0.18,
+    "peak_single_muscle": 1.0
+   },
+   "iliopsoas_l": {
+    "peak": 0.581,
+    "mean": 0.112,
+    "peak_single_muscle": 1.0
+   },
+   "iliopsoas_r": {
+    "peak": 0.188,
+    "mean": 0.042,
+    "peak_single_muscle": 0.257
+   },
+   "multifidus_l": {
+    "peak": 0.263,
+    "mean": 0.084,
+    "peak_single_muscle": 0.695
+   },
+   "multifidus_r": {
+    "peak": 0.266,
+    "mean": 0.085,
+    "peak_single_muscle": 0.703
+   },
+   "quadratus_lumborum_l": {
+    "peak": 0.164,
+    "mean": 0.055,
+    "peak_single_muscle": 0.341
+   },
+   "quadratus_lumborum_r": {
+    "peak": 0.151,
+    "mean": 0.053,
+    "peak_single_muscle": 0.302
+   },
+   "quadriceps_l": {
+    "peak": 0.672,
+    "mean": 0.205,
+    "peak_single_muscle": 1.0
+   },
+   "quadriceps_r": {
+    "peak": 0.806,
+    "mean": 0.225,
+    "peak_single_muscle": 1.0
+   },
+   "tensor_fasciae_latae_l": {
+    "peak": 0.099,
+    "mean": 0.013,
+    "peak_single_muscle": 0.099
+   },
+   "tensor_fasciae_latae_r": {
+    "peak": 0.011,
+    "mean": 0.01,
+    "peak_single_muscle": 0.011
+   },
+   "tibialis_anterior_l": {
+    "peak": 0.966,
+    "mean": 0.519,
+    "peak_single_muscle": 0.966
+   },
+   "tibialis_anterior_r": {
+    "peak": 1.0,
+    "mean": 0.572,
+    "peak_single_muscle": 1.0
+   },
+   "triceps_surae_l": {
+    "peak": 0.92,
+    "mean": 0.18,
+    "peak_single_muscle": 1.0
+   },
+   "triceps_surae_r": {
+    "peak": 0.773,
+    "mean": 0.196,
+    "peak_single_muscle": 1.0
+   }
+  },
+  "joint_moments": {
+   "knee_angle_r": {
+    "max_Nm_per_kg": 0.993,
+    "min_Nm_per_kg": -1.463
+   },
+   "knee_angle_l": {
+    "max_Nm_per_kg": 0.811,
+    "min_Nm_per_kg": -1.196
+   },
+   "hip_flexion_r": {
+    "max_Nm_per_kg": 1.11,
+    "min_Nm_per_kg": -2.212
+   },
+   "hip_flexion_l": {
+    "max_Nm_per_kg": 0.862,
+    "min_Nm_per_kg": -1.833
+   },
+   "hip_adduction_r": {
+    "max_Nm_per_kg": 0.822,
+    "min_Nm_per_kg": -0.427
+   },
+   "hip_adduction_l": {
+    "max_Nm_per_kg": 1.032,
+    "min_Nm_per_kg": -0.372
+   },
+   "ankle_angle_r": {
+    "max_Nm_per_kg": 0.379,
+    "min_Nm_per_kg": -0.635
+   },
+   "ankle_angle_l": {
+    "max_Nm_per_kg": 0.294,
+    "min_Nm_per_kg": -0.579
+   },
+   "L5_S1_Flex_Ext": {
+    "max_Nm_per_kg": 3.684,
+    "min_Nm_per_kg": -1.819
+   }
+  },
+  "pelvis_residual_force_N": {
+   "pelvis_tilt_moment": 475.9,
+   "pelvis_list_moment": 148.1,
+   "pelvis_rotation_moment": 64.0,
+   "pelvis_tx_force": 56.0,
+   "pelvis_ty_force": 47.8,
+   "pelvis_tz_force": 21.9
+  }
+ },
+ "age": {
+  "muscle_model": {
+   "source": "body-size scaled by age, sex, height and mass (NHANES DXA model)",
+   "capacity": {
+    "scaled": true,
+    "method": "Fmax = \u03c3\u00b7V\u00b7q/lopt (Rajagopal et al. 2016, \u03c3 = 60 N/cm\u00b2). V, best source first: MRI/CT volume per muscle; DXA leg lean per leg (leg muscle = 0.78 \u00d7 lean \u2212 1.07 kg for both legs, McCarthy et al. 2023, against MRI); leg lean predicted from age, sex, height and mass (NHANES 1999-2002 DXA); Handsfield et al. 2014 limb volume 47\u00b7m\u00b7h + 1285 cm\u00b3. A leg's volume is shared among its muscles as in the generic model. q: measured fat fraction against healthy young muscle, else 1",
+    "subject": {
+     "mass_kg": 78.2,
+     "height_m": 1.96,
+     "bmi": 20.4,
+     "age_years": 27.0,
+     "sex": "male"
+    },
+    "volume_ratio": 1.02,
+    "leg_source": "anthropometry",
+    "leg_source_text": "age, sex, height and mass (NHANES DXA)",
+    "leg_muscle_cm3": {
+     "right": 7231,
+     "left": 7231
+    },
+    "factor_min": 0.792,
+    "factor_median": 0.847,
+    "factor_max": 0.966,
+    "leg_fmax_N": {
+     "right": {
+      "generic": 49783,
+      "scaled": 42542
+     },
+     "left": {
+      "generic": 49783,
+      "scaled": 42700
+     }
+    },
+    "sources": {
+     "anthropometry": 80
+    },
+    "caveats": [
+     "Muscles without imaging: the leg muscle an average person of this age, sex, height and mass has (NHANES DXA, 7.5 % mean error for the leg's lean mass). Training, injury and asymmetry are not in it.",
+     "Trunk and arm muscles keep generic capacities."
+    ]
+   }
+  },
+  "group_activation": {
+   "abdominals_l": {
+    "peak": 0.458,
+    "mean": 0.096,
+    "peak_single_muscle": 1.0
+   },
+   "abdominals_r": {
+    "peak": 0.619,
+    "mean": 0.088,
+    "peak_single_muscle": 1.0
+   },
+   "adductors_l": {
+    "peak": 0.261,
+    "mean": 0.115,
+    "peak_single_muscle": 1.0
+   },
+   "adductors_r": {
+    "peak": 0.266,
+    "mean": 0.113,
+    "peak_single_muscle": 1.0
+   },
+   "erector_spinae_l": {
+    "peak": 0.454,
+    "mean": 0.154,
+    "peak_single_muscle": 1.0
+   },
+   "erector_spinae_r": {
+    "peak": 0.428,
+    "mean": 0.145,
+    "peak_single_muscle": 1.0
+   },
+   "gluteus_maximus_l": {
+    "peak": 0.714,
+    "mean": 0.282,
+    "peak_single_muscle": 1.0
+   },
+   "gluteus_maximus_r": {
+    "peak": 0.5,
+    "mean": 0.213,
+    "peak_single_muscle": 1.0
+   },
+   "gluteus_medius_l": {
+    "peak": 0.448,
+    "mean": 0.037,
+    "peak_single_muscle": 0.596
+   },
+   "gluteus_medius_r": {
+    "peak": 0.321,
+    "mean": 0.045,
+    "peak_single_muscle": 0.493
+   },
+   "gluteus_minimus_l": {
+    "peak": 0.161,
+    "mean": 0.016,
+    "peak_single_muscle": 0.23
+   },
+   "gluteus_minimus_r": {
+    "peak": 0.098,
+    "mean": 0.014,
+    "peak_single_muscle": 0.178
+   },
+   "hamstrings_l": {
+    "peak": 0.572,
+    "mean": 0.18,
+    "peak_single_muscle": 1.0
+   },
+   "hamstrings_r": {
+    "peak": 0.575,
+    "mean": 0.199,
+    "peak_single_muscle": 1.0
+   },
+   "iliopsoas_l": {
+    "peak": 0.581,
+    "mean": 0.13,
+    "peak_single_muscle": 1.0
+   },
+   "iliopsoas_r": {
+    "peak": 0.213,
+    "mean": 0.046,
+    "peak_single_muscle": 0.291
+   },
+   "multifidus_l": {
+    "peak": 0.263,
+    "mean": 0.084,
+    "peak_single_muscle": 0.695
+   },
+   "multifidus_r": {
+    "peak": 0.266,
+    "mean": 0.085,
+    "peak_single_muscle": 0.703
+   },
+   "quadratus_lumborum_l": {
+    "peak": 0.164,
+    "mean": 0.055,
+    "peak_single_muscle": 0.341
+   },
+   "quadratus_lumborum_r": {
+    "peak": 0.151,
+    "mean": 0.053,
+    "peak_single_muscle": 0.302
+   },
+   "quadriceps_l": {
+    "peak": 0.772,
+    "mean": 0.23,
+    "peak_single_muscle": 1.0
+   },
+   "quadriceps_r": {
+    "peak": 0.816,
+    "mean": 0.25,
+    "peak_single_muscle": 1.0
+   },
+   "tensor_fasciae_latae_l": {
+    "peak": 0.108,
+    "mean": 0.013,
+    "peak_single_muscle": 0.108
+   },
+   "tensor_fasciae_latae_r": {
+    "peak": 0.012,
+    "mean": 0.01,
+    "peak_single_muscle": 0.012
+   },
+   "tibialis_anterior_l": {
+    "peak": 1.0,
+    "mean": 0.58,
+    "peak_single_muscle": 1.0
+   },
+   "tibialis_anterior_r": {
+    "peak": 1.0,
+    "mean": 0.622,
+    "peak_single_muscle": 1.0
+   },
+   "triceps_surae_l": {
+    "peak": 0.981,
+    "mean": 0.201,
+    "peak_single_muscle": 1.0
+   },
+   "triceps_surae_r": {
+    "peak": 0.809,
+    "mean": 0.224,
+    "peak_single_muscle": 1.0
+   }
+  },
+  "joint_moments": {
+   "knee_angle_r": {
+    "max_Nm_per_kg": 0.993,
+    "min_Nm_per_kg": -1.463
+   },
+   "knee_angle_l": {
+    "max_Nm_per_kg": 0.811,
+    "min_Nm_per_kg": -1.196
+   },
+   "hip_flexion_r": {
+    "max_Nm_per_kg": 1.11,
+    "min_Nm_per_kg": -2.212
+   },
+   "hip_flexion_l": {
+    "max_Nm_per_kg": 0.862,
+    "min_Nm_per_kg": -1.833
+   },
+   "hip_adduction_r": {
+    "max_Nm_per_kg": 0.822,
+    "min_Nm_per_kg": -0.427
+   },
+   "hip_adduction_l": {
+    "max_Nm_per_kg": 1.032,
+    "min_Nm_per_kg": -0.372
+   },
+   "ankle_angle_r": {
+    "max_Nm_per_kg": 0.379,
+    "min_Nm_per_kg": -0.635
+   },
+   "ankle_angle_l": {
+    "max_Nm_per_kg": 0.294,
+    "min_Nm_per_kg": -0.579
+   },
+   "L5_S1_Flex_Ext": {
+    "max_Nm_per_kg": 3.684,
+    "min_Nm_per_kg": -1.819
+   }
+  },
+  "pelvis_residual_force_N": {
+   "pelvis_tilt_moment": 475.9,
+   "pelvis_list_moment": 148.1,
+   "pelvis_rotation_moment": 64.0,
+   "pelvis_tx_force": 56.0,
+   "pelvis_ty_force": 47.8,
+   "pelvis_tz_force": 21.9
+  }
+ },
+ "dxa": {
+  "muscle_model": {
+   "source": "DXA-calibrated leg muscle (per-leg lean mass)",
+   "capacity": {
+    "scaled": true,
+    "method": "Fmax = \u03c3\u00b7V\u00b7q/lopt (Rajagopal et al. 2016, \u03c3 = 60 N/cm\u00b2). V, best source first: MRI/CT volume per muscle; DXA leg lean per leg (leg muscle = 0.78 \u00d7 lean \u2212 1.07 kg for both legs, McCarthy et al. 2023, against MRI); leg lean predicted from age, sex, height and mass (NHANES 1999-2002 DXA); Handsfield et al. 2014 limb volume 47\u00b7m\u00b7h + 1285 cm\u00b3. A leg's volume is shared among its muscles as in the generic model. q: measured fat fraction against healthy young muscle, else 1",
+    "subject": {
+     "mass_kg": 78.2,
+     "height_m": 1.96,
+     "bmi": 20.4
+    },
+    "volume_ratio": 1.081,
+    "leg_source": "dxa",
+    "leg_source_text": "DXA leg lean (McCarthy 2023)",
+    "leg_muscle_cm3": {
+     "right": 8031,
+     "left": 7295
+    },
+    "factor_min": 0.802,
+    "factor_median": 0.913,
+    "factor_max": 1.053,
+    "leg_fmax_N": {
+     "right": {
+      "generic": 49783,
+      "scaled": 47248
+     },
+     "left": {
+      "generic": 49783,
+      "scaled": 43079
+     }
+    },
+    "sources": {
+     "dxa": 80
+    },
+    "dxa": {
+     "method": "DXA (illustrative values, not this person's scan)",
+     "date": "2026-10-20",
+     "sha256": "b6ace55ea0857f3748c14a83a1c7993a5bf9c502b8be25ed217571128cef58a5"
+    },
+    "mass_distribution": {
+     "method": "each DXA region's share of the scanned mass (lean + fat + BMC); model total kept",
+     "total_mass_kg": 78.2,
+     "regions": {
+      "left_leg": {
+       "bodies": [
+        "femur_l",
+        "patella_l",
+        "tibia_l",
+        "talus_l",
+        "calcn_l",
+        "toes_l"
+       ],
+       "model_share_before": 0.1746,
+       "dxa_share": 0.1804,
+       "factor": 1.0332,
+       "mass_kg": 14.107
+      },
+      "right_leg": {
+       "bodies": [
+        "femur_r",
+        "patella_r",
+        "tibia_r",
+        "talus_r",
+        "calcn_r",
+        "toes_r"
+       ],
+       "model_share_before": 0.1746,
+       "dxa_share": 0.1937,
+       "factor": 1.1095,
+       "mass_kg": 15.148
+      },
+      "left_arm": {
+       "bodies": [
+        "humerus_l",
+        "ulna_l",
+        "radius_l",
+        "hand_l"
+       ],
+       "model_share_before": 0.0441,
+       "dxa_share": 0.0577,
+       "factor": 1.3077,
+       "mass_kg": 4.512
+      },
+      "right_arm": {
+       "bodies": [
+        "humerus_r",
+        "ulna_r",
+        "radius_r",
+        "hand_r"
+       ],
+       "model_share_before": 0.0441,
+       "dxa_share": 0.0604,
+       "factor": 1.3699,
+       "mass_kg": 4.726
+      },
+      "head": {
+       "bodies": [
+        "head"
+       ],
+       "model_share_before": 0.0509,
+       "dxa_share": 0.062,
+       "factor": 1.2172,
+       "mass_kg": 4.849
+      },
+      "trunk": {
+       "bodies": [
+        "pelvis",
+        "sacrum",
+        "lumbar1",
+        "lumbar2",
+        "lumbar3",
+        "lumbar4",
+        "lumbar5",
+        "torso",
+        "Abdomen"
+       ],
+       "model_share_before": 0.5116,
+       "dxa_share": 0.4458,
+       "factor": 0.8712,
+       "mass_kg": 34.859
+      }
+     },
+     "unchanged_bodies": []
+    },
+    "caveats": [
+     "Leg muscles not imaged: each leg's volume from its DXA lean mass with an MRI-calibrated equation (RMSE 0.95 kg for both legs). Within a leg the generic model's share per muscle is kept.",
+     "Trunk and arm muscles keep generic capacities."
+    ]
+   }
+  },
+  "group_activation": {
+   "abdominals_l": {
+    "peak": 0.458,
+    "mean": 0.101,
+    "peak_single_muscle": 1.0
+   },
+   "abdominals_r": {
+    "peak": 0.615,
+    "mean": 0.092,
+    "peak_single_muscle": 1.0
+   },
+   "adductors_l": {
+    "peak": 0.259,
+    "mean": 0.113,
+    "peak_single_muscle": 1.0
+   },
+   "adductors_r": {
+    "peak": 0.227,
+    "mean": 0.099,
+    "peak_single_muscle": 1.0
+   },
+   "erector_spinae_l": {
+    "peak": 0.505,
+    "mean": 0.171,
+    "peak_single_muscle": 1.0
+   },
+   "erector_spinae_r": {
+    "peak": 0.478,
+    "mean": 0.161,
+    "peak_single_muscle": 1.0
+   },
+   "gluteus_maximus_l": {
+    "peak": 0.714,
+    "mean": 0.285,
+    "peak_single_muscle": 1.0
+   },
+   "gluteus_maximus_r": {
+    "peak": 0.413,
+    "mean": 0.203,
+    "peak_single_muscle": 1.0
+   },
+   "gluteus_medius_l": {
+    "peak": 0.46,
+    "mean": 0.04,
+    "peak_single_muscle": 0.619
+   },
+   "gluteus_medius_r": {
+    "peak": 0.265,
+    "mean": 0.04,
+    "peak_single_muscle": 0.407
+   },
+   "gluteus_minimus_l": {
+    "peak": 0.165,
+    "mean": 0.017,
+    "peak_single_muscle": 0.238
+   },
+   "gluteus_minimus_r": {
+    "peak": 0.082,
+    "mean": 0.013,
+    "peak_single_muscle": 0.147
+   },
+   "hamstrings_l": {
+    "peak": 0.607,
+    "mean": 0.186,
+    "peak_single_muscle": 1.0
+   },
+   "hamstrings_r": {
+    "peak": 0.684,
+    "mean": 0.199,
+    "peak_single_muscle": 1.0
+   },
+   "iliopsoas_l": {
+    "peak": 0.581,
+    "mean": 0.128,
+    "peak_single_muscle": 1.0
+   },
+   "iliopsoas_r": {
+    "peak": 0.168,
+    "mean": 0.04,
+    "peak_single_muscle": 0.271
+   },
+   "multifidus_l": {
+    "peak": 0.305,
+    "mean": 0.094,
+    "peak_single_muscle": 0.807
+   },
+   "multifidus_r": {
+    "peak": 0.304,
+    "mean": 0.095,
+    "peak_single_muscle": 0.802
+   },
+   "quadratus_lumborum_l": {
+    "peak": 0.192,
+    "mean": 0.061,
+    "peak_single_muscle": 0.398
+   },
+   "quadratus_lumborum_r": {
+    "peak": 0.171,
+    "mean": 0.059,
+    "peak_single_muscle": 0.342
+   },
+   "quadriceps_l": {
+    "peak": 0.778,
+    "mean": 0.227,
+    "peak_single_muscle": 1.0
+   },
+   "quadriceps_r": {
+    "peak": 0.816,
+    "mean": 0.232,
+    "peak_single_muscle": 1.0
+   },
+   "tensor_fasciae_latae_l": {
+    "peak": 0.114,
+    "mean": 0.014,
+    "peak_single_muscle": 0.114
+   },
+   "tensor_fasciae_latae_r": {
+    "peak": 0.012,
+    "mean": 0.01,
+    "peak_single_muscle": 0.012
+   },
+   "tibialis_anterior_l": {
+    "peak": 1.0,
+    "mean": 0.574,
+    "peak_single_muscle": 1.0
+   },
+   "tibialis_anterior_r": {
+    "peak": 1.0,
+    "mean": 0.594,
+    "peak_single_muscle": 1.0
+   },
+   "triceps_surae_l": {
+    "peak": 0.977,
+    "mean": 0.214,
+    "peak_single_muscle": 1.0
+   },
+   "triceps_surae_r": {
+    "peak": 0.784,
+    "mean": 0.24,
+    "peak_single_muscle": 1.0
+   }
+  },
+  "joint_moments": {
+   "knee_angle_r": {
+    "max_Nm_per_kg": 1.023,
+    "min_Nm_per_kg": -1.285
+   },
+   "knee_angle_l": {
+    "max_Nm_per_kg": 0.798,
+    "min_Nm_per_kg": -1.019
+   },
+   "hip_flexion_r": {
+    "max_Nm_per_kg": 0.923,
+    "min_Nm_per_kg": -2.179
+   },
+   "hip_flexion_l": {
+    "max_Nm_per_kg": 0.685,
+    "min_Nm_per_kg": -1.797
+   },
+   "hip_adduction_r": {
+    "max_Nm_per_kg": 0.864,
+    "min_Nm_per_kg": -0.386
+   },
+   "hip_adduction_l": {
+    "max_Nm_per_kg": 1.05,
+    "min_Nm_per_kg": -0.377
+   },
+   "ankle_angle_r": {
+    "max_Nm_per_kg": 0.282,
+    "min_Nm_per_kg": -0.647
+   },
+   "ankle_angle_l": {
+    "max_Nm_per_kg": 0.22,
+    "min_Nm_per_kg": -0.579
+   },
+   "L5_S1_Flex_Ext": {
+    "max_Nm_per_kg": 4.034,
+    "min_Nm_per_kg": -1.854
+   }
+  },
+  "pelvis_residual_force_N": {
+   "pelvis_tilt_moment": 492.0,
+   "pelvis_list_moment": 145.3,
+   "pelvis_rotation_moment": 64.1,
+   "pelvis_tx_force": 56.9,
+   "pelvis_ty_force": 48.4,
+   "pelvis_tz_force": 21.4
+  }
+ }
+}
