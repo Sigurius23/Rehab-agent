@@ -198,8 +198,8 @@ python -m rehabtwin person bones people/P01 --skel-dir models_npz --smpl-dir mod
   itself.
 
 **What one depth frame gives** (`adapters/bedlam2_skel.py`; synthetic). The test used SMPL bodies with the
-heights and BMIs (17–43) of the 45 BEDLAM2 test bodies, 23 female and 22 male, each with its own
-proportions. Each was rendered standing in a BEDLAM2 motion frame, as a Kinect v1 2.7 m away sees it, and
+heights and BMIs of the 45 BEDLAM2 test bodies (17.7–42.5), 23 female and 22 male, each with its own
+proportions; those changed their mass, so the bodies tested span BMI 17.4–44.3. Each was rendered standing in a BEDLAM2 motion frame, as a Kinect v1 2.7 m away sees it, and
 fitted with SMPL. The table compares SKEL segment lengths from each source with the true body's, in cm:
 bias / mean absolute error / worst.
 

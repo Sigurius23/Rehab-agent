@@ -115,8 +115,8 @@ static class KinectCapture
             rec.Finish();
         }
         Console.WriteLine(string.Format(CultureInfo.InvariantCulture,
-            "wrote {0} frames to {1} ({2} incomplete frame events skipped, {3} sensor frames missed)",
-            rec.Written, outDir, rec.Incomplete, rec.Missed));
+            "wrote {0} frames to {1} ({2} incomplete frame events skipped, {3} sensor frames missed, {4} late frames dropped)",
+            rec.Written, outDir, rec.Incomplete, rec.Missed, rec.Late));
         return 0;
     }
 
@@ -159,7 +159,7 @@ sealed class Recorder
     int lastColourFrame = -1;
     Vector4 accel;
     int accelAge = int.MaxValue;
-    public int Written, Incomplete, Missed;
+    public int Written, Incomplete, Missed, Late;
     public volatile string Status = "waiting for frames";
 
     public Recorder(string dir, KinectSensor sensor, long quality)
@@ -218,6 +218,7 @@ sealed class Recorder
             {
                 if (!recording) return;
                 if (colour == null || depth == null) { Incomplete++; return; }
+                if (lastColourFrame >= 0 && colour.FrameNumber <= lastColourFrame) { Late++; return; }   // out of order
                 if (lastColourFrame >= 0 && colour.FrameNumber > lastColourFrame + 1)
                     Missed += colour.FrameNumber - lastColourFrame - 1;
                 lastColourFrame = colour.FrameNumber;
@@ -322,6 +323,7 @@ sealed class Recorder
         m.Append("  \"frames\": ").Append(I(Written)).Append(",\n");
         m.Append("  \"incomplete_frame_events\": ").Append(I(Incomplete)).Append(",\n");
         m.Append("  \"sensor_frames_missed\": ").Append(I(Missed)).Append(",\n");
+        m.Append("  \"late_frames_dropped\": ").Append(I(Late)).Append(",\n");
         m.Append("  \"elevation_angle_deg\": ").Append(I(elevationDeg)).Append(",\n");
         m.Append("  \"colour\": {\"width\": 640, \"height\": 480, \"format\": \"RgbResolution640x480Fps30\", \"jpeg_quality\": ")
          .Append(quality.ToString(CultureInfo.InvariantCulture))

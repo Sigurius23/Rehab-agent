@@ -75,7 +75,8 @@ writes about 40 MB/s:
 | `meta.json` | format `rehabtwin-kinect-v1/1`, sensor id, nominal intrinsics, tilt, frame counts |
 
 Frames the sensor drops show up as gaps in the frame numbers (`sensor_frames_missed`). They become gaps in
-time, never shifted frames.
+time, never shifted frames. A frame that arrives after a later one is dropped and counted
+(`late_frames_dropped`), so the recording's frame numbers only ever increase.
 
 ## Process (any OS)
 

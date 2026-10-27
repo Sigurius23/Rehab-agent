@@ -166,10 +166,15 @@ namespace Microsoft.Kinect
 
         void Tick(object state)
         {
-            int n = frame++;
-            if (n % 10 == 7) return;                      // the sensor occasionally misses a frame
-            EventHandler<AllFramesReadyEventArgs> h = AllFramesReady;
-            if (h != null) lock (this) h(this, FakeScene.Frames(n));
+            // Timer callbacks overlap when a frame takes longer than 33 ms: number the frame inside the lock, so
+            // frames arrive in order as the SDK delivers them.
+            lock (this)
+            {
+                int n = frame++;
+                if (n % 10 == 7) return;                  // the sensor occasionally misses a frame
+                EventHandler<AllFramesReadyEventArgs> h = AllFramesReady;
+                if (h != null) h(this, FakeScene.Frames(n));
+            }
         }
     }
 

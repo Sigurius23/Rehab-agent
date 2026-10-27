@@ -388,6 +388,7 @@ def test_csharp_recorder_output_reads_back(tmp_path):
     assert (reg[:, :12] == 0).all()
     gaps = np.diff(cap["frames"]["colour_frame_number"])
     assert set(gaps) <= {1, 2} and 2 in gaps and cap["meta"]["sensor_frames_missed"] == int((gaps - 1).sum())
+    assert cap["meta"]["late_frames_dropped"] == 0                     # the fake delivers in order, as the SDK does
     assert (cap["skeleton"]["state"] == 2).all()
     hc = kinect.SDK_JOINTS.index("HipCenter")
     np.testing.assert_allclose(cap["skeleton"]["uv"][0, hc], [round(320 + 531.15 * 0.1 / 2.5), round(240 - 531.15 * 0.8 / 2.5)])

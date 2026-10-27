@@ -73,7 +73,7 @@
   or the SMPL body of their measured height and mass. The groups are the video measurement set's.
   - Without a session-built model they become the person's model; otherwise they are stored next to it with
     the difference per segment.
-  - Synthetic test (`adapters/bedlam2_skel.py`): on 45 bodies with BMI 17–43, SKEL bones from one depth frame
+  - Synthetic test (`adapters/bedlam2_skel.py`): on 45 bodies with BMI 17–44, SKEL bones from one depth frame
     were within 0.2 cm of the true body's on average (worst 1.1 cm; 0.4 cm with the measured height). From
     height and mass alone: 0.4–0.5 cm; from height alone: up to 4.8 cm (hip width). That is the chain's
     error against SKEL, not against bone.
