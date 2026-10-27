@@ -56,6 +56,17 @@
     (16 % → 10 %). The regression gave these adults a third more quadriceps than measured and the patients
     twice theirs. The database's own volume table is wrong (1 mm pixels, overlapping slices counted twice);
     the adapter recomputes the volumes from the masks with the DICOM geometry (`docs/upstream-issues.md`).
+- **Augmenter markers corrected for the Pose2Sim model** (`mediapipe_lstm_pose2sim`; `docs/validation-results.md`
+  §4 point 6, `docs/upstream-issues.md`).
+  - The problem: Pose2Sim's `Markers_LSTM.xml` reuses OpenCap's LaiUhlrich2022 marker locations on a model
+    whose tibia is 3 cm longer and whose hip joints sit 2 cm elsewhere. The malleolus markers sat 4.5 cm above
+    the ankle, and scaling made the shank 10 % too long: 0.54 m on OpenCap subject 2, against 0.49 m from
+    OpenCap, SKEL and Winter's proportions.
+  - The fix: new config options `marker_rescale` (move markers along their body by the bone-length ratio) and
+    `marker_to_joint` (put a joint-centre marker on the joint).
+  - The result against OpenCap's IK, 5 phones: pelvis tilt 6.0° → 2.8°, lumbar 7.1° → 3.9°, hip flexion
+    13.9° → 8.2°, knee 9.3° → 7.4°; ankle 4.9° → 5.4°; IK marker RMS 2.36 → 2.07 cm. 3 phones alike. One
+    phone mixed.
 - **Bones from body shape (SKEL)** (`rehabtwin person bones`, `pipeline/rehabtwin/skel_bones.py`,
   `docs/person-model.md`): SKEL's anatomical joint centres for the person's body become the person's
   per-body scale factors. The body is an SMPL surface fitted to Kinect depth (`person shape --smpl-model`),

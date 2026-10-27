@@ -440,6 +440,24 @@ def test_person_model_keeps_the_bones_across_sessions(selftest_run, tmp_path):
     assert not (tmp_path / "small_metric" / "opensim" / "markers_dynamic.trc").exists()   # refused before writing
 
 
+def test_marker_rescale_and_marker_to_joint(tmp_path):
+    """Markers placed for another model's bones move to the same place on this model's: rescaled along their
+    body, or put on the joint centre they name."""
+    from rehabtwin import opensim_stage
+    cfg = load_config("mediapipe_lstm_pose2sim")
+    cfg["marker_rescale"] = [{"markers": ["r_ankle_study"], "factors": [1.0, 1.075, 1.0], "why": "test"}]
+    cfg["marker_to_joint"] = {"markers": {"RHJC_study": "femur_r"}, "why": "test"}
+    path, names, notes = opensim_stage.prepare_model(cfg, tmp_path, {"r_ankle_study", "RHJC_study", "LHJC_study"})
+    m = opensim.Model(str(path))
+    s = m.initSystem()
+    loc = lambda n: [m.getMarkerSet().get(n).get_location().get(i) for i in range(3)]
+    assert loc("r_ankle_study") == pytest.approx([-0.02, -0.385 * 1.075, 0.053], abs=1e-6)
+    hip = m.getBodySet().get("femur_r").findStationLocationInAnotherFrame(s, opensim.Vec3(0, 0, 0), m.getBodySet().get("pelvis"))
+    assert loc("RHJC_study") == pytest.approx([hip.get(i) for i in range(3)], abs=1e-9)
+    assert loc("LHJC_study") == pytest.approx([-0.056276, -0.07849, -0.07726], abs=1e-6)     # not listed: unchanged
+    assert any("rescaled 1 markers" in n for n in notes) and any("RHJC_study" in n for n in notes)
+
+
 def test_person_bones_from_skel_joint_centres(selftest_run, tmp_path):
     """``person bones``: SKEL joint centres 1.1x the generic model's give 1.1 on every body, a model whose
     thigh is 1.1x the generic one at the measured mass; a session-built model is kept and compared."""

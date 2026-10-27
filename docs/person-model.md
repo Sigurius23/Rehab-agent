@@ -223,13 +223,13 @@ bias / mean absolute error / worst.
 **On a real person: OpenCap subject 2** (1.96 m, 78.2 kg; sex not recorded, taken as male). There is no body
 scan, so SKEL used height and mass. Joint-centre segment lengths, m:
 
-| Segment | our 5 phones | OpenCap's 5 phones | SKEL from height and mass | Winter's proportions |
+| Segment | our 5 phones, before → after the marker correction | OpenCap's 5 phones | SKEL from height and mass | Winter's proportions |
 |---|---|---|---|---|
-| thigh | 0.446 / 0.440 | 0.437 / 0.440 | 0.471 | 0.480 |
-| shank | **0.542 / 0.546** | 0.485 / 0.495 | 0.491 | 0.482 |
+| thigh | 0.446 / 0.440 → 0.444 / 0.438 | 0.437 / 0.440 | 0.471 | 0.480 |
+| shank | **0.542 / 0.546** → 0.493 / 0.497 | 0.485 / 0.495 | 0.491 | 0.482 |
 | upper arm | 0.369 | 0.358 | **0.313** | 0.365 |
 | forearm | 0.289 | 0.299 | 0.297 | 0.286 |
-| hip width | 0.203 | 0.201 | 0.162 | — |
+| hip width | 0.203 → 0.188 | 0.201 | 0.162 | — |
 
 - **None of these is bone.** The two video columns come from the same videos with different keypoint
   detectors.
@@ -530,22 +530,23 @@ LSTM augmenter, measured 1.96 m and 78.2 kg). The same trial's 3-phone, 2-phone 
 then processed with `--person`. The reference is OpenCap's own 5-camera result, so this is agreement with
 another markerless system, not accuracy. It is also optimistic: the bones come from cameras that include
 the three tested ones, whereas a real calibration session is a different recording. RMSE in degrees, both
-runs from the current code:
+runs from the current code (with the augmenter marker correction, `docs/validation-results.md` §4):
 
 | Coordinate | 3 phones, own scaling | 3 phones, person's bones |
 |---|---|---|
-| pelvis tilt | 6.7 | 5.2 |
-| hip flexion R / L | 14.6 / 13.3 | 12.9 / 11.5 |
-| knee flexion R / L | 12.0 / 8.1 | 11.4 / 7.4 |
-| ankle R / L | 6.5 / 4.6 | 7.0 / 4.8 |
-| trunk lean (sagittal) | 3.2 | 2.8 |
-| knee FPPA R / L | 8.9 / 8.6 | 9.0 / 9.0 |
-| IK marker RMS | 2.35 cm | 2.27 cm |
-| gates passed (not approving: markerless reference) | 8 | 9 (+ trunk sagittal ≤ 3°) |
+| pelvis tilt | 3.3 | 2.4 |
+| hip flexion R / L | 9.4 / 8.0 | 7.9 / 6.5 |
+| knee flexion R / L | 10.5 / 6.5 | 9.9 / 5.8 |
+| ankle R / L | 7.3 / 4.4 | 7.7 / 4.8 |
+| trunk lean (sagittal) | 3.5 | 3.2 |
+| knee FPPA R / L | 8.6 / 8.9 | 8.8 / 9.2 |
+| IK marker RMS | 2.08 cm | 2.16 cm |
+| gates passed (not approving: markerless reference) | 8 | 9 (+ pelvis sagittal ≤ 3°) |
 
-99.8 % of the trial was compared. With the person's bones, the sagittal pelvis, hip and trunk angles agree
-0.4–1.8° better and the ankles 0.2–0.5° worse. Part of what changed between camera setups was the bones,
-not the motion.
+99.8 % of the trial was compared. With the person's bones, the sagittal pelvis, hip, knee and trunk angles
+agree 0.3–1.5° better and the ankles 0.4–0.5° worse. Part of what changed between camera setups was the
+bones, not the motion. (Before the marker correction the same comparison read pelvis tilt 6.7 → 5.2° and
+hip flexion R 14.6 → 12.9°.)
 
 **One phone needs its size fixed first.** The first version applied the person's bones to the single-phone
 recording as it was. Knee RMSE went from 20° to 48° and the IK marker RMS from 2.5 to 6.8 cm: MediaPipe's
@@ -561,9 +562,9 @@ recording's own segment scale with the person's (`qc.scaling.recording_scale`):
   measured 1.006 of the person's size, the 3-phone 1.000. A recording more than 10 % off is refused before
   anything is written: either another person's folder or a calibration fault.
 
-With the rescale, the 1-phone session's IK marker RMS is 3.4 cm (2.5 cm with its own scaling, whose bones
-bend to the distorted cloud). Pelvis tilt went from 13.4° to 12.1°, trunk lean from 13.4° to 9.2°, and knees
-from 19.7 / 26.2° to 21.0 / 24.2°. Only 12.5 % of the trial could be compared (2-phone: 1.9 %), so every gate
+With the rescale, the 1-phone session's IK marker RMS is 3.5 cm (2.3 cm with its own scaling, whose bones
+bend to the distorted cloud). Pelvis tilt went from 15.5° to 14.5°, trunk lean from 12.4° to 8.7°, and knees
+from 16.6 / 22.9° to 18.2 / 21.3°. Only 12.3 % of the trial could be compared (2-phone: 1.9 %), so every gate
 there is not-tested. A single phone still fails on depth, not on bone length. The person model fixes the
 bones; it does not make one camera see in depth. That is what the Kinect, or a LiDAR phone, adds.
 

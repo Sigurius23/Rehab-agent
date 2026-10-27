@@ -79,3 +79,32 @@ fat fractions are unaffected.
 
 Workaround here: `pipeline/adapters/myosegmentum.py volumes` recomputes every volume from the masks.
 
+
+---
+
+## perfanalytics/pose2sim — `Markers_LSTM.xml` carries OpenCap's marker locations onto a model with other bones
+
+**Files:** `Pose2Sim/OpenSim_Setup/Markers_LSTM.xml`, `Pose2Sim/OpenSim_Setup/Model_Pose2Sim_muscles_flex.osim`
+(commit `084d822`)
+
+All 43 augmenter markers have exactly the body-frame locations of OpenCap's
+`LaiUhlrich2022_markers_augmenter.xml` (opencap-core). The bones they sit on are not the same size in the two
+models. Joint-centre distances in the default pose, Pose2Sim / LaiUhlrich2022:
+
+| | Pose2Sim | LaiUhlrich2022 |
+|---|---|---|
+| tibia (knee to ankle) | 0.430 m | 0.400 m |
+| femur (hip to knee) | 0.397 m | 0.406 m |
+| hip joint in the pelvis frame | (−0.071, −0.066, ±0.0835) | (−0.056, −0.078, ±0.0773) |
+
+So in Pose2Sim's model the malleolus markers sit 4.5 cm above the ankle joint centre (1.5 cm in
+LaiUhlrich2022), and the `RHJC_study`/`LHJC_study` markers, which the augmenter predicts as hip joint centres,
+sit 2 cm from the model's hip joints. Scaling the tibia by `r_knee_study`–`r_ankle_study` then lengthens it
+about 10 %. On OpenCap's LabValidation subject 2 (5 phones, MediaPipe + augmenter) the scaled shank was
+0.54 m; OpenCap's own result for the same videos gives 0.49 m.
+
+**Suggested fix:** move each marker to the same place on Pose2Sim's bones. Scale the tibia and femur markers
+along the bone by the joint-centre length ratio (×1.075, ×0.979), and put the hip-joint-centre markers on the
+hip joints. On that trial this brought the shank to 0.49 m and agreement with OpenCap's IK from 13.9° to 8.2°
+(hip flexion), from 9.3° to 7.4° (knee) and from 6.0° to 2.8° (pelvis tilt), with the ankle 0.5–0.7° worse.
+(Our workaround: `marker_rescale` and `marker_to_joint` in `pipeline/configs/mediapipe_lstm_pose2sim.json`.)

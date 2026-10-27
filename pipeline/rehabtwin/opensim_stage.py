@@ -83,6 +83,24 @@ def prepare_model(cfg, out_dir: Path, data_names):
             mk.set_location(new)
         notes.append(f"re-expressed {len(fix['markers'])} markers from {fix['expressed_in']} frame: {fix['why']}")
 
+    # Markers placed for another generic model's bones (config "marker_rescale", "marker_to_joint"): moved to the
+    # same anatomical place on this model's bones.
+    for fix in cfg.get("marker_rescale", []):
+        moved = [n for n in fix["markers"] if model.getMarkerSet().contains(n)]
+        for name in moved:
+            mk = model.getMarkerSet().get(name)
+            loc = mk.get_location()
+            mk.set_location(osim.Vec3(*(loc.get(i) * float(f) for i, f in enumerate(fix["factors"]))))
+        notes.append(f"rescaled {len(moved)} markers on their bodies by {fix['factors']}: {fix['why']}")
+    joint_fix = cfg.get("marker_to_joint", {})
+    for name, body in joint_fix.get("markers", {}).items():
+        if model.getMarkerSet().contains(name):
+            mk = model.getMarkerSet().get(name)
+            mk.set_location(model.getBodySet().get(body).findStationLocationInAnotherFrame(
+                state, osim.Vec3(0.0, 0.0, 0.0), mk.getParentFrame()))
+    if joint_fix:
+        notes.append(f"placed {sorted(joint_fix['markers'])} on the joint centres they name: {joint_fix['why']}")
+
     bodies = {model.getBodySet().get(i).getName() for i in range(model.getBodySet().getSize())}
     jc = cfg.get("joint_centre_markers", {})
     for joint_name, spec in jc.items():
