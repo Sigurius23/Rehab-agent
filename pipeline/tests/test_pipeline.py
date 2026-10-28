@@ -812,6 +812,14 @@ def test_joint_load_scenarios_within_one_person(selftest_run, tmp_path):
         assert 1.5 < base[side]["peak_compression_bw"] < 12 and base[side]["knee_flexion_at_peak_deg"] > 60
         lo, hi = jl["baseline_band_over_grf_split"][side]
         assert lo <= base[side]["peak_compression_N"] <= hi and hi > lo
+        d = jl["baseline_diagnostics"][side]               # the sources account for the whole joint reaction
+        assert abs(d["compression_at_peak_N"]["rest (inertia, reserves, constraints)"]) < 0.02 * base[side]["peak_compression_N"]
+        assert d["compression_at_peak_N"]["quadriceps"] > 0.5 * base[side]["peak_compression_N"]
+        assert d["reportable"] == (not d["why_not_reportable"]) and d["quadriceps_moment_arm_cm_at_peak"] > 1.0
+        assert d["above_in_vivo_band"] == (d["peak_resultant_bw"] > joint_load.IN_VIVO_HIGH_BW)
+        for sc in jl["scenarios"].values():                # an untrusted knee states no change
+            v = sc["knee"][side]
+            assert v["reportable"] == (d["reportable"] and not any(w.startswith("scenario") for w in v.get("why_not_reportable", [])))
     fat = jl["scenarios"]["fat -5 kg"]
     mass_pct = fat["mass_change"]["pct"]
     assert fat["mass_change"]["kg"] == pytest.approx(-5.0, abs=0.01)

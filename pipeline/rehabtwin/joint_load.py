@@ -50,9 +50,10 @@ LABELS = {
     "patellar_mechanism": "The quadriceps path runs over the patella to the tibia, so the patellar tendon carries the "
                           "full quadriceps tension; in cadaver knees it carries about 0.7 of it at 90 deg of flexion "
                           "(Huberti et al. 1984). Deep-flexion compression from the quadriceps is likely overestimated.",
-    "reportable": "A knee's numbers are reportable only when no knee-crossing muscle is at its capacity at the peak "
-                  "and reserve torque carries at most 10% of the knee moment there: otherwise static optimisation "
-                  "has inflated the muscle forces, and a change is not stated even within the person.",
+    "reportable": "A knee's numbers are reportable only when, at its peak, the estimated ground forces fit the motion "
+                  "(the muscle stage's pelvis-residual rule), no knee-crossing muscle is at its capacity, and reserve "
+                  "torque carries at most 10% of the knee moment: otherwise the muscle forces are inflated or rest "
+                  "on forces that don't fit, and a change is not stated even within the person.",
 }
 MIN_ROBUST_PCT = 2.0         # a load change smaller than this (% of baseline peak) is not reported as an effect
 FAT_LIMIT = 0.5              # a scenario may change total fat by at most half of it
@@ -159,7 +160,7 @@ def diagnostics(run_dir, joints, loads, motion):
     the peak (each muscle group's pull on the shank and foot along the tibia, the ground force less the shank and
     foot weight, and the rest: inertia, reserves), and the peak against the in-vivo band. ``motion``: the run's
     motion in degrees."""
-    from .muscles import _set_state
+    from .muscles import CONSISTENCY_COP_SHIFT_M, CONSISTENCY_FORCE_BW, _set_state
     from .opensim_stage import _osim
     osim = _osim()
     run_dir = Path(run_dir)
@@ -213,7 +214,15 @@ def diagnostics(run_dir, joints, loads, motion):
         external = float((ground - [0.0, distal_weight, 0.0]) @ y)
         total = loads[s]["peak_compression_N"]
         muscle_total = sum(by_group.values())
+        ki = int(np.argmin(np.abs(idt.time - t_pk)))
+        cop_shift = max((abs(idt.col(c)[ki]) for c in idt.columns if c.startswith("pelvis_") and c.endswith("_moment")),
+                        default=0.0) / weight
+        residual_force = max((abs(idt.col(c)[ki]) for c in idt.columns if c.startswith("pelvis_") and c.endswith("_force")),
+                             default=0.0) / weight
         why = []
+        if cop_shift > CONSISTENCY_COP_SHIFT_M or residual_force > CONSISTENCY_FORCE_BW:
+            why.append(f"the estimated ground forces don't fit the motion at the peak (pelvis residual as a "
+                       f"{cop_shift * 100:.0f} cm centre-of-pressure shift, {residual_force:.2f} BW)")
         if saturated:
             why.append(f"{len(saturated)} knee-crossing muscle(s) at capacity at the peak ({', '.join(saturated)})")
         if share[k] > RESERVE_SHARE_LIMIT and big[k]:
@@ -230,6 +239,8 @@ def diagnostics(run_dir, joints, loads, motion):
                   if muscle_total > 0 else None,
                   "quadriceps_moment_arm_cm_at_peak": round(100 * arm, 2) if arm is not None else None,
                   "knee_moment_Nm_at_peak": round(float(moment[k]), 1),
+                  "ground_forces_fit_at_peak": {"pelvis_residual_as_cop_shift_m": round(cop_shift, 3),
+                                                "pelvis_force_residual_bw": round(residual_force, 3)},
                   "peak_resultant_bw": round(resultant_bw, 2),
                   "above_in_vivo_band": bool(resultant_bw > IN_VIVO_HIGH_BW),
                   "reportable": not why, "why_not_reportable": why}
