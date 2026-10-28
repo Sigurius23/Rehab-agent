@@ -1,5 +1,6 @@
-# Knee joint load on the OpenCap subject 2 squat (docs/joint-load.md): the dxa_squat.sh session with the
+# Knee joint load (docs/joint-load.md) on the OpenCap subject 2 squat: the dxa_squat.sh session with the
 # illustrative DXA record (not this person's scan), rep 2, fat -5 kg, quadriceps at 120 %, both, GRF band +/-0.10.
+# Then the synthetic squat the same way.
 cd $REPO/pipeline
 export REHAB_UPSTREAM=$REPO/upstream
 rm -rf $WORK/joint_load && mkdir -p $WORK/joint_load
@@ -10,3 +11,7 @@ ${BIO_PY:-python} -m rehabtwin joint-load $WORK/joint_load/session --rep 2 --per
 echo "exit $?" >> $WORK/joint_load/run.log
 ${BIO_PY:-python} -I $REPO/validation/runs/joint_load_table.py $WORK/joint_load/session/muscles/study.json \
   > $REPO/validation/results/joint_load_squat.json
+# the synthetic squat, the same way (validation/runs/joint_load_synthetic.py)
+${BIO_PY:-python} -I $REPO/validation/runs/joint_load_synthetic.py $REPO $WORK/joint_load_synthetic > $WORK/joint_load_synthetic.log 2>&1
+${BIO_PY:-python} -I $REPO/validation/runs/joint_load_table.py $WORK/joint_load_synthetic/session/muscles/study.json \
+  > $REPO/validation/results/joint_load_synthetic.json
