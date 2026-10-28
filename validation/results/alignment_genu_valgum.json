@@ -1,0 +1,122 @@
+{
+ "true_knee_frontal_deg": {
+  "r": 10.0,
+  "l": 7.0
+ },
+ "measured_on_standing_frame": {
+  "knee_frontal_deg": {
+   "r": 10.0,
+   "l": 7.0
+  },
+  "knee_sagittal_deg": {
+   "r": -0.02,
+   "l": -0.02
+  },
+  "leg_length_difference_mm": -1.7,
+  "pelvic_obliquity_mm": -1.8
+ },
+ "runs": {
+  "generic knee": {
+   "marker_rms_mm": 14.0,
+   "rmse_deg": {
+    "knee_fppa_r": 6.654,
+    "knee_fppa_l": 4.472,
+    "hip_adduction_r": 1.832,
+    "hip_adduction_l": 1.338,
+    "hip_rotation_r": 3.625,
+    "hip_rotation_l": 3.151,
+    "hip_flexion_r": 1.234,
+    "knee_angle_r": 0.877,
+    "knee_angle_l": 0.716,
+    "ankle_angle_r": 1.859,
+    "subtalar_angle_r": 14.231,
+    "pelvis_list": 0.529
+   },
+   "knee_in_model": null
+  },
+  "alignment measured on the standing frame (markers)": {
+   "marker_rms_mm": 8.3,
+   "rmse_deg": {
+    "knee_fppa_r": 0.866,
+    "knee_fppa_l": 0.657,
+    "hip_adduction_r": 0.472,
+    "hip_adduction_l": 0.452,
+    "hip_rotation_r": 0.798,
+    "hip_rotation_l": 1.195,
+    "hip_flexion_r": 1.28,
+    "knee_angle_r": 0.788,
+    "knee_angle_l": 0.772,
+    "ankle_angle_r": 1.474,
+    "subtalar_angle_r": 0.994,
+    "pelvis_list": 0.687
+   },
+   "knee_in_model": {
+    "r": {
+     "before_deg": 0.19,
+     "after_deg": 9.99,
+     "tilt_deg": -9.56,
+     "joint": "walker_knee_r",
+     "matched_on": "markers"
+    },
+    "l": {
+     "before_deg": 0.19,
+     "after_deg": 7.04,
+     "tilt_deg": 6.68,
+     "joint": "walker_knee_l",
+     "matched_on": "markers"
+    }
+   }
+  },
+  "person's bones, generic knee": {
+   "marker_rms_mm": 14.0,
+   "rmse_deg": {
+    "knee_fppa_r": 6.649,
+    "knee_fppa_l": 4.471,
+    "hip_adduction_r": 1.832,
+    "hip_adduction_l": 1.338,
+    "hip_rotation_r": 3.632,
+    "hip_rotation_l": 3.161,
+    "hip_flexion_r": 1.236,
+    "knee_angle_r": 0.883,
+    "knee_angle_l": 0.705,
+    "ankle_angle_r": 1.76,
+    "subtalar_angle_r": 14.216,
+    "pelvis_list": 0.532
+   },
+   "knee_in_model": null
+  },
+  "true alignment as a radiograph gives it": {
+   "marker_rms_mm": 8.4,
+   "rmse_deg": {
+    "knee_fppa_r": 0.837,
+    "knee_fppa_l": 0.648,
+    "hip_adduction_r": 0.474,
+    "hip_adduction_l": 0.455,
+    "hip_rotation_r": 0.772,
+    "hip_rotation_l": 1.193,
+    "hip_flexion_r": 1.288,
+    "knee_angle_r": 0.786,
+    "knee_angle_l": 0.784,
+    "ankle_angle_r": 1.484,
+    "subtalar_angle_r": 0.994,
+    "pelvis_list": 0.695
+   },
+   "knee_in_model": {
+    "r": {
+     "before_deg": 0.19,
+     "after_deg": 10.0,
+     "tilt_deg": -9.57,
+     "joint": "walker_knee_r",
+     "matched_on": "joint_centres"
+    },
+    "l": {
+     "before_deg": 0.19,
+     "after_deg": 7.0,
+     "tilt_deg": 6.64,
+     "joint": "walker_knee_l",
+     "matched_on": "joint_centres"
+    }
+   }
+  }
+ }
+}

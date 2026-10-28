@@ -104,6 +104,25 @@
         "classification": {"type": "object", "required": ["category", "site", "value", "basis"]}
       }
     },
+    "alignment": {
+      "type": "object",
+      "required": ["method", "tier"],
+      "description": "Skeletal alignment (pipeline/rehabtwin/alignment.py): the person's standing knee angles, leg lengths, pelvis and shoulders, from a clinician's or imaging record or a session's standing frame. knee_frontal_deg is the mechanical axis, + valgus; applied to the knee of every session's model. structural_flags: joint/planes where posture cues wait for a clinician-set target.",
+      "properties": {
+        "method": {"enum": ["long-leg standing radiograph", "EOS", "CT", "MRI", "clinical examination", "standing frame markers"]},
+        "tier": {"enum": ["A", "B", "C"]},
+        "date": {"type": "string"},
+        "approved_by": {"type": "string"},
+        "structural": {"type": "boolean"},
+        "diagnosis": {"type": "string"},
+        "knee_frontal_deg": {"type": "object", "propertyNames": {"enum": ["r", "l"]}, "additionalProperties": {"type": ["number", "null"], "minimum": -30, "maximum": 30}},
+        "knee_sagittal_deg": {"type": "object", "propertyNames": {"enum": ["r", "l"]}},
+        "leg_length_m": {"type": "object", "propertyNames": {"enum": ["r", "l"]}},
+        "femoral_anteversion_deg": {"type": "object", "propertyNames": {"enum": ["r", "l"]}},
+        "tibial_torsion_deg": {"type": "object", "propertyNames": {"enum": ["r", "l"]}},
+        "structural_flags": {"type": "object", "additionalProperties": {"type": "string"}}
+      }
+    },
     "dxa": {
       "type": "object",
       "required": ["method", "date", "regions", "sha256", "checks"],

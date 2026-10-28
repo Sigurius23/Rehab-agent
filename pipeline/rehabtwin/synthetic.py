@@ -75,8 +75,10 @@ def look_at_camera(eye, target):
 
 def generate(cfg, out_dir, fps=30.0, duration_s=12.0, seed=0, noise_m=0.004, drift_m=0.006, marker_offset_m=0.01,
              dropouts=((150, 153), (260, 262)), scales=None, motion=None,
-             camera_eye=(2.6, 1.3, 1.6), camera_target=(0.0, 0.9, 0.0)):
-    """Return (MarkerSequence in camera frame, truth dict with coordinate trajectories)."""
+             camera_eye=(2.6, 1.3, 1.6), camera_target=(0.0, 0.9, 0.0), knee_frontal_deg=None):
+    """Return (MarkerSequence in camera frame, truth dict with coordinate trajectories). ``knee_frontal_deg``
+    {side: deg}: the subject's knees stand at that frontal angle (+ valgus; rehabtwin/alignment.py), in their
+    skeleton, which the generic model does not have."""
     osim = _osim()
     rng = np.random.default_rng(seed)
     out_dir.mkdir(parents=True, exist_ok=True)
@@ -108,6 +110,11 @@ def generate(cfg, out_dir, fps=30.0, duration_s=12.0, seed=0, noise_m=0.004, dri
     state = model.initSystem()
     true_model = out_dir / "truth_model.osim"
     model.printToXML(str(true_model))
+    if knee_frontal_deg:
+        from .alignment import apply_to_model
+        apply_to_model(true_model, true_model, knee_frontal_deg)
+        model = osim.Model(str(true_model))
+        state = model.initSystem()
 
     t, qdeg = motion if motion is not None else squat_motion(fps, duration_s)
     cs = model.getCoordinateSet()
@@ -184,7 +191,8 @@ def generate(cfg, out_dir, fps=30.0, duration_s=12.0, seed=0, noise_m=0.004, dri
         static_markers=static[mk_idx], static_joints=static[jc_idx], skel_poses=skel_poses,
         meta={"source": "synthetic", "synthetic": True, "generator": "rehabtwin.synthetic.generate",
               "seed": seed, "noise_m": noise_m, "drift_m": drift_m, "marker_offset_m": marker_offset_m, "dropouts": [list(d) for d in dropouts],
-              "scales": scales or DEFAULT_SUBJECT_SCALES, "camera_eye": list(camera_eye), "mass_kg": SUBJECT_MASS_KG},
+              "scales": scales or DEFAULT_SUBJECT_SCALES, "camera_eye": list(camera_eye), "mass_kg": SUBJECT_MASS_KG,
+              **({"knee_frontal_deg": knee_frontal_deg} if knee_frontal_deg else {})},
     )
     write_table(out_dir / "truth.mot", coord_names, truth, t, in_degrees=True, name="synthetic_truth")
     return seq, {"time": t, "coord_names": coord_names, "coords": truth, "model": true_model,

@@ -259,13 +259,15 @@ def correct(session_dir, spec, illustrative=False, motion=None, model=None):
     return summary, measured, corrected, out
 
 
-def rule_check(rules, time_m, sig_m, time_c, sig_c):
-    """Posture-rule violations of the measured vs the corrected motion (gating ignored: this is a check)."""
+def rule_check(rules, time_m, sig_m, time_c, sig_c, standing=None):
+    """Posture-rule violations of the measured vs the corrected motion (gating ignored: this is a check).
+    ``standing``: the person's standing values, for rules relative to them (rehabtwin/feedback.py)."""
     from . import feedback
     spec = feedback.load_rules(rules)
     count = {}
     for label, t, sig in (("measured", time_m, sig_m), ("corrected", time_c, sig_c)):
-        log, _ = feedback.replay(spec, t, sig, tier="A", allowed_joint_planes=[r["joint_plane"] for r in spec["rules"]])
+        log, _ = feedback.replay(spec, t, sig, tier="A", allowed_joint_planes=[r["joint_plane"] for r in spec["rules"]],
+                                 baselines=standing)
         for r in spec["rules"]:
             ends = [e for e in log if e.get("rule") == r["id"] and e.get("event") == "violation_end"]
             n = sum(1 for e in log if e.get("rule") == r["id"] and "decision" in e)

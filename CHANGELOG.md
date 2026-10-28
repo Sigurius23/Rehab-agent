@@ -1,6 +1,20 @@
 # Changelog
 
 ## Unreleased
+- **Skeletal alignment: the person's own knees, legs and shoulders** (`docs/person-model.md`,
+  `rehabtwin/alignment.py`, `rehabtwin person alignment`):
+  - Every session measures its standing frame (`qc.json` → `static_alignment`): knee frontal angle (+ valgus),
+    standing knee flexion, leg lengths, pelvic obliquity, shoulder height and reach. Tier C.
+  - Clinical or imaging records (long-leg standing radiograph, EOS, CT, MRI, clinical examination) with tiers;
+    only they can say an alignment is structural. Mechanical axis only; an anatomical angle is refused.
+  - Sessions with `--person` turn each knee joint's frame on the femur so the model stands at the person's knee
+    angle (joint centres for imaging, the model's own markers for a marker measurement).
+  - Synthetic genu valgum (10° / 7°): knee FPPA error 6.7° → 0.9°, hip rotation 3.6° → 0.8°, subtalar 14.2° →
+    1.0°, marker fit 14.0 → 8.3 mm. The person's bone lengths alone changed nothing.
+  - Posture rules can be `"relative_to": "standing"`: the squat template's knee valgus cue is now 10° beyond the
+    person's standing knee angle. A structural record, or a standing knee angle beyond 6°, holds that joint's
+    cues for a clinician-set target. `cues` and `lsl-live` take the standing values from the session's static
+    pose.
 - **Kinect v1 depth viewpoint** (`docs/kinect-v1.md`; not yet run on a real sensor):
   - `pipeline/capture/kinect_v1`: a Windows recorder (Kinect for Windows SDK 1.8, built with Windows' own C#
     compiler). It writes colour, depth registered to the colour grid, raw depth, the SDK skeleton, floor plane

@@ -169,7 +169,9 @@ def run_correction(session_dir, spec_name, illustrative=False):
                 "measured_range": [round(float(np.min(sig_m[k])), 2), round(float(np.max(sig_m[k])), 2)],
                 "corrected_range": [round(float(np.min(sig_c[k])), 2), round(float(np.max(sig_c[k])), 2)]}
     if spec.get("check_rules"):
-        summary["rule_check"] = correction.rule_check(spec["check_rules"], measured.time, sig_m, corrected.time, sig_c)
+        standing, _ = standing_values(session_dir, sess)
+        summary["rule_check"] = correction.rule_check(spec["check_rules"], measured.time, sig_m, corrected.time, sig_c,
+                                                      standing)
     records.write_json(out / "correction.json", records.stamp(sess, summary))
     report.write_correction(out / "correction.html", summary, measured.time, sig_m, sig_c,
                             skeleton_positions(model, measured), skeleton_positions(model, corrected))
@@ -442,8 +444,10 @@ def cue_replay(session_dir, rules, motion=None):
     signals = {c: tab.col(c) for c in tab.columns}
     signals.update(metrics_mod.derived_signals(tab, model))
     _, tier, allowed, gate_closed = _session_gate(session_dir, spec)
-    log, sent = feedback.replay(spec, tab.time, signals, tier=tier, allowed_joint_planes=allowed)
-    summ = feedback.summarise(spec, log, sent, tier, allowed)
+    standing, flags = standing_values(session_dir, sess)
+    log, sent = feedback.replay(spec, tab.time, signals, tier=tier, allowed_joint_planes=allowed, baselines=standing,
+                                flags=flags)
+    summ = feedback.summarise(spec, log, sent, tier, allowed, standing, flags)
     summ["validation_gate"] = gate_closed or "open"
     out = session_dir / "feedback" / (spec["name"] + (f"__{Path(motion).parent.name}" if motion else ""))
     out.mkdir(parents=True, exist_ok=True)
@@ -457,6 +461,23 @@ def cue_replay(session_dir, rules, motion=None):
     report.write_cues(out / "cues.html", result, tab.time, signals)
     report.write_index(session_dir)
     return result, out
+
+
+def standing_values(session_dir, sess):
+    """({signal: the person's standing value}, {joint_plane: why cues there wait for a clinician}) of a processed
+    session: every signal on its static pose (the static IK the scaling used), and the alignment flags in qc.json."""
+    session_dir = Path(session_dir)
+    model = session_dir / sess["pipeline"]["outputs"]["model"]
+    static = model.parent / "static_pose.mot"
+    values = {}
+    if static.exists():
+        tab = to_degrees(read_table(static), model)
+        sig = {c: tab.col(c) for c in tab.columns if c != "time"}
+        sig.update(metrics_mod.derived_signals(tab, model))
+        values = {k: round(float(np.mean(v)), 3) for k, v in sig.items() if np.all(np.isfinite(v))}
+    qc = session_dir / "qc.json"
+    flags = json.loads(qc.read_text()).get("alignment", {}).get("flags", {}) if qc.exists() else {}
+    return values, flags
 
 
 def _session_gate(session_dir, spec=None):
@@ -551,6 +572,8 @@ def person_command(a):
             rec = person_shape(a)
         elif a.person_cmd == "bones":
             rec = person_mod.set_bones(a.folder, a.skel_dir, a.smpl_dir, a.source, a.config, a.replace)
+        elif a.person_cmd == "alignment":
+            rec = person_mod.set_alignment(a.folder, a.record, a.from_session, a.replace)
         else:
             rec = person_mod.load(a.folder)
     except (ValueError, FileNotFoundError) as e:     # includes PersonRefused and records.StaleResult
@@ -697,6 +720,14 @@ def main(argv=None):
                                       "else mediapipe_lstm_pose2sim)")
     pbn.add_argument("--replace", action="store_true",
                      help="replace a model built from a session (default: keep it and record the comparison)")
+    pal = psub.add_parser("alignment", help="skeletal alignment: knee valgus/varus, leg length, pelvis and shoulders "
+                                            "(a clinician's or imaging record, or a session's standing frame)")
+    pal.add_argument("folder")
+    pag = pal.add_mutually_exclusive_group(required=True)
+    pag.add_argument("--record", help="JSON: method, date, approved_by?, structural?, diagnosis?, knee_frontal_deg "
+                                      "{r, l} (mechanical axis, + valgus), ... (docs/person-model.md)")
+    pag.add_argument("--from-session", help="a processed session of this person: its standing-frame measurement (Tier C)")
+    pal.add_argument("--replace", action="store_true", help="replace a higher-tier alignment record")
     psh = psub.add_parser("show", help="what the person model holds, per twin layer")
     psh.add_argument("folder")
     au = sub.add_parser("augment", help="add OpenCap's LSTM anatomical markers to a keypoint sequence (pip install onnxruntime)")
@@ -959,8 +990,10 @@ def main(argv=None):
         sess, tier, allowed, why = _session_gate(a.session, spec)
         if why:
             print(f"feedback gate closed: {why}", file=sys.stderr)
+        standing, flags = standing_values(a.session, sess)
         eng = lsl_bridge.run_live(spec, tier, allowed, a.duration_s, publish_would_cue=a.publish_would_cue,
-                                  expect_session=sess["session_id"], expect_front_end=sess["pipeline"]["front_end"])
+                                  expect_session=sess["session_id"], expect_front_end=sess["pipeline"]["front_end"],
+                                  baselines=standing, flags=flags)
         print(json.dumps([e for e in eng.log if "decision" in e], indent=1))
     elif a.cmd == "lsl-listen":
         from . import lsl_bridge

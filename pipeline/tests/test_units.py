@@ -341,6 +341,106 @@ def test_cue_engine_faded_schedule_and_refractory():
     assert all(b - a >= 5.0 for a, b in zip(times, times[1:]))
 
 
+def test_cue_rule_relative_to_standing_and_alignment_flags():
+    """A knee that stands in 8 deg of valgus is cued for what it adds in the squat, not for how it stands; with no
+    standing value the rule is not evaluated; a structural alignment holds the cue for a clinician-set target."""
+    t = np.arange(0, 4, 0.01)
+    s = np.where((t > 1) & (t < 2), 15.0, 8.0)       # stands at 8, squats to 15: 7 deg more
+    rel = _rule_spec()
+    rel["rules"][0]["relative_to"] = "standing"
+    ok = {"tier": "A", "allowed_joint_planes": ["knee_r.frontal"]}
+    _, sent_abs = feedback.replay(_rule_spec(), t, {"s": s}, **ok)
+    log, sent = feedback.replay(rel, t, {"s": s}, baselines={"s": 8.0}, **ok)
+    assert len(sent_abs) == 1 and not sent and not [e for e in log if "decision" in e]
+    s2 = np.where((t > 1) & (t < 2), 20.0, 8.0)      # 12 deg beyond standing: cued, the standing value logged
+    log, sent = feedback.replay(rel, t, {"s": s2}, baselines={"s": 8.0}, **ok)
+    d = [e for e in log if "decision" in e]
+    assert len(sent) == 1 and d[0]["value"] == 12.0 and d[0]["standing_value"] == 8.0
+    log, sent = feedback.replay(rel, t, {"s": s2}, **ok)
+    summ = feedback.summarise(rel, log, sent, "A", ok["allowed_joint_planes"])
+    assert not sent and summ["per_rule"]["v"]["unevaluated"] and "no standing value" in summ["per_rule"]["v"]["not_evaluated_because"]
+    flags = {"knee_r.frontal": "structural knee alignment recorded (genu valgum)"}
+    log, sent = feedback.replay(rel, t, {"s": s2}, baselines={"s": 8.0}, flags=flags, **ok)
+    d = [e for e in log if "decision" in e]
+    assert not sent and d[0]["decision"] == "would_cue" and "set by the treating clinician" in d[0]["reason"]
+    assert "genu valgum" in feedback.summarise(rel, log, sent, "A", ok["allowed_joint_planes"], {"s": 8.0}, flags)["per_rule"]["v"]["gate"]
+    rel["rules"][0]["clinician_target"] = True
+    _, sent = feedback.replay(rel, t, {"s": s2}, baselines={"s": 8.0}, flags=flags, **ok)
+    assert len(sent) == 1
+    bad = _rule_spec()
+    bad["rules"][0]["relative_to"] = "yesterday"
+    with pytest.raises(ValueError, match="relative_to"):
+        feedback.replay(bad, t, {"s": s})
+
+
+def _legs(valgus_r=0.0, flex_l=0.0, longer_r_mm=0.0, hip_up_r_mm=0.0, names="lstm"):
+    """Standing markers (x forward, y up, z right) with a right knee shifted medially by ``valgus_r`` degrees of
+    thigh-shank angle, a left knee bent forward by ``flex_l`` degrees, and the right leg longer / hip higher."""
+    pts = {}
+    for side, z in (("r", 0.1), ("l", -0.1)):
+        hip_y = 0.9 + (hip_up_r_mm / 1000 if side == "r" else 0.0)
+        ankle_y = 0.08 - (longer_r_mm / 1000 if side == "r" else 0.0)
+        hip, ankle = np.array([0.0, hip_y, z]), np.array([0.0, ankle_y, z])
+        knee = (hip + ankle) / 2
+        half = (hip_y - ankle_y) / 2
+        if side == "r" and valgus_r:
+            knee[2] -= half * np.tan(np.radians(valgus_r / 2))      # medial = towards -z for the right leg
+        if side == "l" and flex_l:
+            knee[0] += half * np.tan(np.radians(flex_l / 2))        # forward
+        pts[side] = (hip, knee, ankle)
+    sh = {"r": np.array([0.0, 1.45, 0.19]), "l": np.array([0.0, 1.45, -0.18])}
+    if names == "lstm":
+        out = {"RHJC_study": pts["r"][0], "LHJC_study": pts["l"][0], "r_shoulder_study": sh["r"], "L_shoulder_study": sh["l"]}
+        for side, pre in (("r", "r_"), ("l", "L_")):
+            for part, k in (("knee", 1), ("ankle", 2)):
+                c = pts[side][k]
+                out[f"{pre}{part}_study"] = c + [0, 0, 0.05 if side == "r" else -0.05]
+                out[f"{pre}m{part}_study"] = c - [0, 0, 0.05 if side == "r" else -0.05]
+    else:      # MediaPipe keypoints
+        out = {"RHip": pts["r"][0], "RKnee": pts["r"][1], "RAnkle": pts["r"][2], "LHip": pts["l"][0], "LKnee": pts["l"][1],
+               "LAnkle": pts["l"][2], "RShoulder": sh["r"], "LShoulder": sh["l"]}
+    return list(out), np.array(list(out.values()))
+
+
+def test_standing_alignment_from_markers():
+    from rehabtwin import alignment
+    a = alignment.measure(*_legs())
+    assert a["knee_frontal_deg"] == {"r": 0.0, "l": 0.0} and a["knee_sagittal_deg"] == {"r": 0.0, "l": 0.0}
+    assert a["markers"]["knee_r"] == ["r_knee_study", "r_mknee_study"] and a["leg_length_difference_mm"] == 0.0
+    a = alignment.measure(*_legs(valgus_r=8.0, flex_l=5.0, longer_r_mm=12.0, hip_up_r_mm=12.0, names="mediapipe"))
+    assert a["knee_frontal_deg"]["r"] == pytest.approx(8.0, abs=0.01) and a["knee_frontal_deg"]["l"] == 0.0
+    assert a["knee_sagittal_deg"]["l"] == pytest.approx(5.0, abs=0.01) and a["markers"]["knee_r"] == ["RKnee"]
+    assert a["leg_length_difference_mm"] == pytest.approx(24.0, abs=0.2)      # 12 mm higher hip + 12 mm lower ankle
+    assert a["pelvic_obliquity_mm"] == pytest.approx(12.0, abs=0.01)
+    assert a["shoulder_reach_m"] == {"r": 0.19, "l": 0.18} and a["shoulder_height_difference_mm"] == 0.0
+    # the same body turned and lifted: the same alignment
+    names, pts = _legs(valgus_r=8.0)
+    turned = pts @ rot_y(35).T + [1.0, 0.3, -2.0]
+    assert alignment.measure(names, turned)["knee_frontal_deg"]["r"] == pytest.approx(8.0, abs=0.01)
+    with pytest.raises(ValueError, match="ankle_l"):
+        alignment.measure(names[:-6], pts[:-6])
+
+
+def test_alignment_records_tier_and_flags():
+    from rehabtwin import alignment
+    xray = {"method": "long-leg standing radiograph", "date": "2026-09-01", "knee_frontal_deg": {"r": 9.0, "l": 7.5},
+            "structural": True, "diagnosis": "genu valgum"}
+    assert alignment.check_record(xray) == "B" and alignment.check_record({**xray, "approved_by": "Dr. X"}) == "A"
+    assert alignment.check_record({"method": "clinical examination", "date": "2026-09-01", "knee_frontal_deg": {"r": 4}}) == "C"
+    for bad, msg in (({**xray, "method": "photo"}, "method"), ({**xray, "knee_frontal_deg": {"r": 45}}, "outside"),
+                     ({**xray, "knee_frontal_axis": "anatomical"}, "mechanical axis"),
+                     ({"method": "standing frame markers", "knee_frontal_deg": {"r": 9}, "structural": True}, "posture"),
+                     ({"method": "EOS", "date": "2026-09-01"}, "no alignment values"),
+                     ({"method": "EOS", "knee_frontal_deg": {"r": 3}}, "date")):
+        with pytest.raises(ValueError, match=msg):
+            alignment.check_record(bad)
+    f = alignment.structural_flags(xray)
+    assert set(f) == {"knee_r.frontal", "knee_l.frontal"} and "genu valgum" in f["knee_r.frontal"]
+    measured = {"method": "standing frame markers", "knee_frontal_deg": {"r": 7.0, "l": 2.0}}
+    assert set(alignment.structural_flags(measured)) == {"knee_r.frontal"}          # screening only beyond 6 deg
+    assert alignment.structural_flags(None) == {}
+
+
 def test_feedback_rules_template_loads():
     spec = feedback.load_rules("squat_posture")
     assert "TEMPLATE" in spec["author"] and all("joint_plane" in r for r in spec["rules"])
@@ -474,8 +574,8 @@ def test_live_chain_posture_to_suit_payloads(tmp_path):
     res = {}
     transport = suit.DryRunTransport()
     threads = [
-        threading.Thread(target=lambda: res.update(eng=lsl_bridge.run_live(
-            spec, "A", ["knee_r.frontal"], duration_s=15, source="rt_chain_posture"))),
+        threading.Thread(target=lambda: res.update(eng=lsl_bridge.run_live(      # stands at 2 deg (lsl-live: --session's)
+            spec, "A", ["knee_r.frontal"], duration_s=15, source="rt_chain_posture", baselines={"knee_fppa_r": 2.0}))),
         threading.Thread(target=lambda: suit.run_bridge(suit.SuitDriver("suit_bhaptics", header=hdr), transport,
                                                         duration_s=4.0, rate_hz=50)),
     ]

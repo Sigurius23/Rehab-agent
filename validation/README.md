@@ -6,9 +6,9 @@ a working folder that goes away. Everything in this folder can be rerun.
 | Folder | What it holds |
 |---|---|
 | `audit/` | The claims audit of 2026-10-27, with code written only for it (no `rehabtwin` imports). |
-| `runs/` | The run scripts of the experiments: SKEL bones on synthetic bodies, the OpenCap marker fix, person bones after the fix, the DXA squat. |
+| `runs/` | The run scripts of the experiments: SKEL bones on synthetic bodies, the OpenCap marker fix, person bones after the fix, the DXA squat, synthetic genu valgum. |
 | `results/` | Result summaries: aggregate numbers only, as the docs quote them. |
-| `tests/` | Full test-suite logs: the run with one failure, and the run after the fix. |
+| `tests/` | Full test-suite logs: the run with one failure, the run after the fix, and the run with skeletal alignment (174 passed). |
 | `visuals/` | The audit page's 3D views: data preparation, the browser code, and a check of the browser's SKEL code against the Python reference. |
 
 ## The audit
@@ -49,6 +49,7 @@ repository.
 | `nhanes_strength.json`, `nhanes_fit_default.json` | `adapters/nhanes_strength.py analyse / fit-default` | `docs/person-model.md`, DXA and age-sex |
 | `myosegmentum_summary.json` | `adapters/myosegmentum.py analyse`, summary only | `docs/person-model.md`, MyoSegmenTUM |
 | `dxa_squat.json` | the OpenCap squat with leg muscle from height and mass, age and sex, and an illustrative DXA record | `docs/person-model.md`, on a real squat |
+| `alignment_genu_valgum.json` | `runs/alignment_genu_valgum.py`: a synthetic subject with 10° / 7° knee valgus, processed on the generic knee and with the person's alignment | `docs/person-model.md`, skeletal alignment |
 
 ## 3D views
 

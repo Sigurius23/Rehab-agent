@@ -440,6 +440,42 @@ def test_person_model_keeps_the_bones_across_sessions(selftest_run, tmp_path):
     assert not (tmp_path / "small_metric" / "opensim" / "markers_dynamic.trc").exists()   # refused before writing
 
 
+def test_person_alignment_goes_into_the_knee_and_holds_cues(selftest_run, tmp_path):
+    """Genu valgum on a radiograph: every session's model stands with the person's knee angles, valgus cues wait
+    for a clinician-set target, and a lower-tier measurement does not replace the radiograph."""
+    from rehabtwin import alignment, person
+    out, res, _ = selftest_run
+    assert "knee_frontal_deg" in res["qc"]["static_alignment"]        # every session measures its standing frame
+    assert res["qc"]["alignment"]["source"].startswith("this session's standing frame")
+    d = tmp_path / "person"
+    person.init(d, "SYNTHETIC-NOT-A-PATIENT")
+    person.build_from_session(d, out, allow_synthetic=True)
+    rec = person.set_alignment(d, session_dir=out)
+    assert rec["alignment"]["tier"] == "C" and rec["layers"]["joint_alignment"]["tier"] == "C"
+    xray = tmp_path / "xray.json"
+    xray.write_text(json.dumps({"method": "long-leg standing radiograph", "date": "2026-09-01", "structural": True,
+                                "diagnosis": "genu valgum", "knee_frontal_deg": {"r": 9.0, "l": 7.0}}))
+    rec = person.set_alignment(d, record_path=xray)
+    assert rec["alignment"]["tier"] == "B" and set(rec["alignment"]["structural_flags"]) == {"knee_r.frontal", "knee_l.frontal"}
+    assert "genu valgum" in person.summary(rec)
+    with pytest.raises(person.PersonRefused, match="Tier B alignment"):
+        person.set_alignment(d, session_dir=out)
+
+    seq2, truth2, truth_model2 = cli._synth(tmp_path / "s2", seed=1)
+    used = cli.process(seq2, tmp_path / "with", reference=truth2, reference_model=truth_model2,
+                       reference_system="synthetic truth", person=d)
+    al = used["qc"]["alignment"]
+    assert al["tier"] == "B" and al["knee"]["r"]["matched_on"] == "joint_centres"
+    assert al["knee"]["r"]["after_deg"] == pytest.approx(9.0, abs=0.05) and al["knee"]["l"]["after_deg"] == pytest.approx(7.0, abs=0.05)
+    m = opensim.Model(str(tmp_path / "with" / used["session"]["pipeline"]["outputs"]["model"]))
+    st = m.initSystem()
+    assert alignment.model_knee_frontal(m, st, "r") == pytest.approx(9.0, abs=0.1)
+    result, _ = cli.cue_replay(tmp_path / "with", "squat_posture")
+    pr = result["summary"]["per_rule"]
+    assert "genu valgum" in pr["knee_valgus_r"]["gate"] and pr["knee_valgus_r"]["standing_value"] == pytest.approx(9.0, abs=1.0)
+    assert "genu valgum" not in (pr["trunk_forward"]["gate"] or "")          # the knee holds only knee cues
+
+
 def test_marker_rescale_and_marker_to_joint(tmp_path):
     """Markers placed for another model's bones move to the same place on this model's: rescaled along their
     body, or put on the joint centre they name."""

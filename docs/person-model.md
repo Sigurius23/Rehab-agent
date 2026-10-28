@@ -240,6 +240,119 @@ scan, so SKEL used height and mass. Joint-centre segment lengths, m:
   and 0.19 in Winter's tables), so its arm lengths should not replace measured ones.
 - **The layer stays Tier C:** a population prior from the body surface, not imaging.
 
+## Skeletal alignment: the person's own knees, legs and shoulders
+
+Segment lengths make every person a scaled copy of the generic skeleton. People also differ in how their bones
+sit: knock knees (genu valgum) or bow legs (genu varum), a knee that stands bent or hyperextended, one leg
+longer, one hip or shoulder higher. The generic OpenSim knee bends about one axis and has no sideways angle of
+its own. So inverse kinematics of a valgus knee has to put the difference somewhere else (hip adduction and
+rotation), and a posture rule with a fixed valgus threshold would coach the person against their own skeleton.
+`rehabtwin/alignment.py` adds this layer (`joint_alignment`).
+
+### Measured in every session
+
+`process` measures the static frame and writes it to `qc.json` → `static_alignment`:
+
+| Value | Definition |
+|---|---|
+| `knee_frontal_deg` {r, l} | angle between thigh and shank in the frontal plane, from the hip, knee and ankle centres; + valgus. The same definition as the `knee_fppa` signal |
+| `knee_sagittal_deg` {r, l} | standing knee flexion; − hyperextension |
+| `leg_length_m` {r, l}, `leg_length_difference_mm` | hip centre to ankle centre |
+| `pelvic_obliquity_mm` | right hip centre minus left, + right higher |
+| `shoulder_height_difference_mm`, `shoulder_reach_m` {r, l} | acromion markers; reach is sideways from the mid-hip line |
+
+The centres come from SKEL's joint centres when the front end gives them. Otherwise they come from the LSTM
+augmenter's markers (midpoints of the epicondyle and malleolus markers, the hip joint centre), then SKEL skin
+markers, then MediaPipe keypoints. This is Tier C: markers on a standing person can't tell a structural
+deformity from a habitual posture.
+
+### Records from a clinician or imaging
+
+`rehabtwin person alignment PERSON --record alignment.json`:
+
+```json
+{"method": "long-leg standing radiograph", "date": "2026-09-01", "approved_by": "Dr. X",
+ "structural": true, "diagnosis": "genu valgum",
+ "knee_frontal_deg": {"r": 9.0, "l": 7.0},
+ "leg_length_m": {"r": 0.861, "l": 0.852},
+ "femoral_anteversion_deg": {"r": 18, "l": 15}, "tibial_torsion_deg": {"r": 25, "l": 22}}
+```
+
+| Method | Tier |
+|---|---|
+| long-leg standing radiograph, EOS, CT, MRI | B; A with `approved_by` |
+| clinical examination | C; B with `approved_by` |
+| standing frame markers (`--from-session SESSION`: a processed session's measurement) | C |
+
+- `knee_frontal_deg` is the mechanical axis (hip, knee and ankle joint centres). An anatomical tibiofemoral angle
+  (femoral and tibial shafts, as a goniometer reads it) is refused. It differs by several degrees, so it has to
+  be converted first.
+- Only a clinical or imaging record can say the alignment is `structural`.
+- A record of a lower tier doesn't replace a higher one unless `--replace` is given.
+- Torsion values are stored but not applied yet (see below).
+
+### Into the model
+
+Every session processed with `--person` turns each knee joint's frame on the femur about the femur's forward axis.
+It stops when the model's knee frontal angle in the default pose is the person's. The tibia, its markers, muscles
+and the foot follow. How the target is matched depends on the source:
+
+- **Imaging and clinical values** are matched on the model's joint centres.
+- **A value measured on markers** is matched on the model's own markers, measured the same way. Skin markers sit
+  off the joint centres: on the Pose2Sim model they read about 0.7° more valgus, and 94 % of a tilt.
+
+`qc.json` → `alignment.knee` records each knee's angle before and after, and the tilt. An imaging-personalised
+model is left as it is, since its bones are already the person's. Leg-length differences come from the
+per-side scale factors (femur and tibia scale separately on each side).
+
+### Posture cues against the person's own standing
+
+A rule with `"relative_to": "standing"` compares the signal's change from the person's standing value with its
+threshold. The standing value is the signal on the session's static pose.
+
+- The squat template's knee valgus rules use this: a cue comes at 10° of valgus beyond the person's standing knee
+  angle, not at 10° absolute.
+- Without a standing value such a rule isn't evaluated, and the cue summary says why.
+
+Some joints are flagged, and no cue is sent there until the treating clinician sets the rule's target (and marks
+it `"clinician_target": true`):
+
+- a joint with a structural alignment on record;
+- a knee whose standing frontal angle is beyond 6°. That is a screening threshold of ours, not a diagnostic
+  cut-off.
+
+The flags are in `qc.json` → `alignment.flags` and in each cue summary.
+
+### Tested (synthetic)
+
+A synthetic subject whose skeleton stands with 10° (right) and 7° (left) of knee valgus, squatting
+(`synthetic.generate(..., knee_frontal_deg=...)`, `validation/runs/alignment_genu_valgum.py`). One calibration
+session builds the person model; another session of the same body is processed four ways. RMSE against the
+synthetic truth:
+
+| Model | Knee FPPA R / L | Hip adduction R / L | Hip rotation R / L | Subtalar R | Marker fit |
+|---|---|---|---|---|---|
+| Generic knee | 6.7° / 4.5° | 1.8° / 1.3° | 3.6° / 3.2° | 14.2° | 14.0 mm |
+| The person's bones, generic knee | 6.6° / 4.5° | 1.8° / 1.3° | 3.6° / 3.2° | 14.2° | 14.0 mm |
+| Alignment measured on the standing frame | 0.9° / 0.7° | 0.5° / 0.5° | 0.8° / 1.2° | 1.0° | 8.3 mm |
+| True alignment, as a radiograph gives it | 0.8° / 0.6° | 0.5° / 0.5° | 0.8° / 1.2° | 1.0° | 8.4 mm |
+
+- The generic knee puts knock knees into the hips and the feet: hip rotation off by 3–4° and the subtalar joint
+  by 14°. Knee flexion is unaffected (under 1° either way).
+- The person's bone lengths alone change nothing. The knee's angle does.
+- The standing-frame measurement matches the truth here because this synthetic front end gives exact joint
+  centres. Markers predicted from video won't; how close they come on real people is untested.
+
+### Not yet
+
+- **Bone torsion** (femoral anteversion, tibial torsion): stored, not applied. The Torsion Tool approach
+  (Veerkamp et al. 2021) would twist the femur and tibia with their muscle attachments.
+- **Shoulder girdle:** the model has no clavicle or scapula. Shoulder height and reach are measured and stored
+  only. Shoulder work needs a model with a moving scapula (Seth et al. 2016).
+- **Spine:** curvature and scoliosis are not measured.
+- **Foot:** foot posture is not measured.
+- **Real validation:** needs long-leg radiographs of people who are also recorded with the cameras.
+
 ## Muscle size, muscle quality and bone density from imaging
 
 The regression above gives every person of one height and mass the same muscles. Imaging measures them:

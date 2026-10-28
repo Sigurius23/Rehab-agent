@@ -29,7 +29,8 @@ from pathlib import Path
 from . import tiers
 
 FORMAT = "rehabtwin-person/1"
-LAYERS = ("bone_geometry", "joint_centres", "surface_shape", "kinematics", "muscle", "soft_tissue", "bone_density")
+LAYERS = ("bone_geometry", "joint_centres", "joint_alignment", "surface_shape", "kinematics", "muscle", "soft_tissue",
+          "bone_density")
 # joint-centre distances read from the model in its default pose: name -> (body, body), body origins
 JOINT_SEGMENTS = {"thigh_r": ("femur_r", "tibia_r"), "thigh_l": ("femur_l", "tibia_l"),
                   "shank_r": ("tibia_r", "talus_r"), "shank_l": ("tibia_l", "talus_l"),
@@ -373,6 +374,52 @@ def set_dxa(person_dir, record_path):
     return save(d, rec, event)
 
 
+def set_alignment(person_dir, record_path=None, session_dir=None, replace=False):
+    """The person's skeletal alignment (rehabtwin/alignment.py): a clinician's or imaging record (``record_path``:
+    {"method", "date", "approved_by"?, "structural"?, "diagnosis"?, "knee_frontal_deg": {"r", "l"}, ...}) or the
+    standing alignment a processed session measured on its static frame (``session_dir``). A record of a lower
+    tier does not replace a higher one unless ``replace``. Sessions processed with this person then carry the
+    knee's frontal angle in the model, and posture cues at a joint with a structural record wait for a clinician."""
+    from . import alignment
+    d = Path(person_dir)
+    rec = load(d)
+    if (record_path is None) == (session_dir is None):
+        raise PersonRefused("give an alignment record or a session, not both")
+    if record_path is not None:
+        a = _imaging_record(record_path, required=("method",))
+        source = f"{a['method']} {a.get('date', '')}".strip()
+    else:
+        s = Path(session_dir)
+        sess = json.loads((s / "session.json").read_text())
+        if sess.get("person_ref") != rec["person_ref"]:
+            raise PersonRefused(f"session {s} is of {sess.get('person_ref')!r}, the person model of {rec['person_ref']!r}")
+        if bool(sess.get("synthetic")) != bool(rec.get("synthetic")):
+            raise PersonRefused("a synthetic session can't describe a real person, nor a real one a synthetic person")
+        st = json.loads((s / "qc.json").read_text()).get("static_alignment") or {}
+        if "knee_frontal_deg" not in st:
+            raise PersonRefused(f"session {s} has no standing alignment ({st.get('error', 'processed before it was measured')})")
+        a = {**st, "date": sess.get("started_at", "")[:10], "session_id": sess["session_id"], "recorded_at": _now()}
+        source = f"standing frame of session {sess['session_id']}"
+    try:
+        a["tier"] = alignment.check_record(a)
+    except ValueError as e:
+        raise PersonRefused(f"{record_path or session_dir}: {e}") from e
+    old = rec.get("alignment")
+    if old and not replace and tiers.TIERS.index(a["tier"]) < tiers.TIERS.index(old["tier"]):
+        raise PersonRefused(f"the person has a Tier {old['tier']} alignment ({old['method']}); this one is Tier "
+                            f"{a['tier']}: pass replace to use it anyway")
+    a["structural_flags"] = alignment.structural_flags(a)
+    rec["alignment"] = a
+    kf = a.get("knee_frontal_deg") or {}
+    rec["layers"]["joint_alignment"] = {
+        "status": f"{source}: knee frontal " + ", ".join(f"{k} {v:+g} deg" for k, v in kf.items() if v is not None)
+                  + (f"; structural ({a.get('diagnosis') or 'no diagnosis given'})" if a.get("structural") else "")
+                  + "; applied to the knee in every session" + ("" if a.get("approved_by") or a["tier"] == "C"
+                                                                 else "; record not reviewed"),
+        "tier": a["tier"]}
+    return save(d, rec, f"alignment: {source} (Tier {a['tier']})")
+
+
 SHAPE_HEIGHT_TOL_M, SHAPE_MASS_TOL = 0.03, 0.10      # beyond these the fit disagrees with the person's measurements
 
 
@@ -549,8 +596,11 @@ def for_session(person_dir, person_ref=None, synthetic=False):
     if m["kind"] == "personalised":
         m["provenance_path"] = str((d / m["provenance"]).resolve())
     a = rec["anthropometrics"]
+    al = rec.get("alignment")
     return {"person_ref": rec["person_ref"], "version": rec["version"], "sha256": tiers.sha256(d / "person.json"),
             "model": m, "height_m": a.get("height_m", {}).get("value"),
+            "alignment": {k: al[k] for k in ("method", "date", "tier", "knee_frontal_deg", "structural", "diagnosis",
+                                             "structural_flags") if k in al} if al else None,
             "mass_kg": a["mass_kg"]["value"] if a.get("mass_kg", {}).get("measured") else None,
             "keypoint_segments": {k: v["length_m"] for k, v in rec.get("keypoint_segments", {}).items()}}
 
@@ -592,6 +642,12 @@ def summary(rec):
                      f"{sk['segments_m']['shank_r']:.3f}, hip width {sk['segments_m']['hip_width']:.3f} m"
                      + ("; vs model " + ", ".join(f"{k} {v:+g} cm" for k, v in sk["vs_model_cm"].items())
                         if sk.get("vs_model_cm") else ""))
+    if rec.get("alignment"):
+        al = rec["alignment"]
+        lines.append(f"  alignment {al['method']} {al.get('date', '')}: knee frontal " + ", ".join(
+            f"{k} {v:+g}" for k, v in (al.get("knee_frontal_deg") or {}).items() if v is not None) + " deg (+ valgus)"
+            + (f", leg length difference {al['leg_length_difference_mm']:+g} mm" if al.get("leg_length_difference_mm") is not None else "")
+            + (f"; STRUCTURAL: {al.get('diagnosis') or 'no diagnosis given'}" if al.get("structural") else ""))
     if rec.get("bone_density"):
         c = rec["bone_density"]["classification"]
         lines.append(f"  bone      {c['category']} at {c['site']} ({c['value']}), {c['method']} {c['date']}")

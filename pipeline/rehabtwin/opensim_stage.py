@@ -26,7 +26,7 @@ from xml.sax.saxutils import escape
 
 import numpy as np
 
-from . import filtering, frames
+from . import alignment, filtering, frames
 from .config import resolve
 from .io_formats import read_table, write_table, write_trc
 from .sequence import MarkerSequence
@@ -606,6 +606,10 @@ def run(seq: MarkerSequence, cfg: dict, out_dir, mass_kg=None, height_m=None, on
             static_g = frames.apply(R, static, t)
             person_scale["rescaled_by"] = round(1.0 / ratio, 4)
     qc["static"] = {"source": static_desc, "registration_rms_m": round(rms, 4), "registration_markers": len(reg)}
+    try:          # the person's standing alignment, on the static frame (Tier C: markers)
+        qc["static_alignment"] = alignment.measure(names, static_g)
+    except ValueError as e:
+        qc["static_alignment"] = {"error": str(e)}
     if on_commit:      # every refusal is behind us: the folder's model, motion and markers change from here
         on_commit()
     write_trc(od / "markers_dynamic.trc", names, clean, times)
@@ -640,6 +644,7 @@ def run(seq: MarkerSequence, cfg: dict, out_dir, mass_kg=None, height_m=None, on
         qc["scaling"]["max_scale_factor_difference"] = round(diff, 5)
         if diff > 1e-3:
             raise RuntimeError(f"manual scaling reproduced the person's scale factors only to {diff:.4f}")
+    qc["alignment"] = _apply_alignment(od / "model_scaled_only.osim", person, qc["static_alignment"])
     scfg = cfg.get("static", {})
     pins = scfg.get("coordinate_pins", {}) if seq.static_markers is not None else scfg.get("coordinate_pins_measured", {})
     static_xml = od / "static_ik_setup.xml"
@@ -688,6 +693,23 @@ def run(seq: MarkerSequence, cfg: dict, out_dir, mass_kg=None, height_m=None, on
         qc["skel_vs_ik"] = compare_skel_q(seq, motions)
     (out_dir / "qc.json").write_text(json.dumps(qc, indent=2))
     return StageResult(out_dir=out_dir, scaled_model=scaled, motions=motions, marker_errors=errors, qc=qc)
+
+
+def _apply_alignment(model_path, person, measured):
+    """The person model's knee alignment, put into this session's scaled model; and the joints where posture cues
+    wait for a clinician (the person's record, else this session's standing frame screened)."""
+    al = (person or {}).get("alignment")
+    if not al:
+        return {"source": "this session's standing frame (not applied to the model)",
+                "flags": alignment.structural_flags(measured if "knee_frontal_deg" in measured else None)}
+    out = {"source": f"person model: {al['method']} {al.get('date', '')}".strip(), "tier": al["tier"],
+           "flags": al.get("structural_flags", {})}
+    if person["model"]["kind"] == "personalised":
+        out["knee"] = "not applied: the personalised model has its own bone geometry"
+    elif al.get("knee_frontal_deg"):
+        match = "markers" if al["method"] == "standing frame markers" else "joint_centres"
+        out["knee"] = alignment.apply_to_model(model_path, model_path, al["knee_frontal_deg"], match)
+    return out
 
 
 @contextlib.contextmanager
