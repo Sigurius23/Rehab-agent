@@ -94,7 +94,7 @@ Each scenario is a variant of the muscle study, compared with the measured basel
 
 | Scenario | What changes in the model | How it is reported |
 |---|---|---|
-| `--fat-change-kg` | The person's DXA regional fat with that much fat added or removed, each region in proportion to its fat (an assumption: where a person loses fat first varies). Each region's segments lose that share of their mass; inertia scales with mass, segment shape and centre of mass stay. | Model-computed change in knee load and body mass. The published walking evidence (Messier et al. 2005: about 4:1) is quoted beside it, never as output. |
+| `--fat-change-kg` | The person's DXA regional fat with that much fat added or removed, each region in proportion to its fat (an assumption: where a person loses fat first varies). Each region's segments lose (or gain) that many kg, so the model's mass changes by exactly the scenario's kg; inertia scales with mass, segment shape and centre of mass stay. | Model-computed change in knee load and body mass. The published walking evidence (Messier et al. 2005: about 4:1) is quoted beside it, never as output. |
 | `--strengthen GROUP=F` | That group's maximum isometric forces × F (1 < F ≤ 2). | Effort (fraction of the group's capacity used), with the load change shown as it comes out: stronger muscles can raise compression while easing effort. |
 | both | Fat model and stronger groups together. | Both readings. |
 

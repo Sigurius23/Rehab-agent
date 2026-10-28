@@ -15,7 +15,7 @@ Scenarios (each a variant of the muscle study, compared with the measured baseli
 
 - **Fat change** (``fat_change_model``): the person's DXA regional fat with ``fat_kg`` added or removed, each
   region in proportion to its fat (an assumption: where a person loses fat first varies). Each region's bodies
-  lose that share of their mass; inertia scales with mass. Replaying the same motion with less mass gives a
+  lose that many kg; inertia scales with mass. Replaying the same motion with less mass gives a
   roughly proportional change. Published cohort evidence of a larger change in walking (Messier et al. 2005,
   ``MESSIER``) is quoted beside it, never as model output.
 - **Strength** (the muscle study's group factors): reported as effort (fraction of capacity), with the load
@@ -189,7 +189,7 @@ def diagnostics(run_dir, joints, loads, motion):
         k = int(np.argmin(np.abs(force.time - t_pk)))
         knee = [n for n, (_, b) in paths.items() if n.endswith(f"_{s}") and _crosses_knee(b, s)]
         saturated = sorted(n for n in knee if act.has(n) and act.col(n)[k] >= SATURATED)
-        window = np.column_stack([act.col(n) for n in knee if act.has(n)])
+        window = np.column_stack([act.col(n) for n in knee if act.has(n)] or [np.zeros_like(act.time)])
         moment = np.interp(force.time, idt.time, idt.col(f"knee_angle_{s}_moment"))
         reserve = force.col(f"reserve_knee_angle_{s}") if force.has(f"reserve_knee_angle_{s}") else np.zeros_like(moment)
         big = np.abs(moment) >= 0.1 * np.abs(moment).max()
@@ -285,12 +285,11 @@ def fat_change_regions(record, fat_kg):
 
 def fat_change_model(model_path, record, fat_kg, out_path):
     """Copy of ``model_path`` with ``fat_kg`` of fat added or removed (``fat_change_regions``): each DXA region's
-    bodies scaled by its scanned mass after the change over before (inertia scales with mass; segment shape and
-    centre of mass stay). Returns the record of what changed."""
+    bodies scaled so the region gains or loses that many kg (inertia scales with mass; segment shape and centre of
+    mass stay), so the model's mass changes by ``fat_kg``. Returns the record of what changed."""
     from . import dxa
     from .opensim_stage import _osim
     change = fat_change_regions(record, fat_kg)
-    scanned = dxa.region_masses(record)
     osim = _osim()
     model = osim.Model(str(model_path))
     bodies = model.updBodySet()
@@ -298,12 +297,14 @@ def fat_change_model(model_path, record, fat_kg, out_path):
     regions = {r: [b for b in bs if b in names] for r, bs in dxa.BODIES.items()}
     if not regions["head"]:                       # Rajagopal 2016: the torso body carries the head
         regions.pop("head")
-        scanned["trunk"] += scanned.pop("head")
         change["trunk"] += change.pop("head")
     before = sum(bodies.get(i).getMass() for i in range(bodies.getSize()))
     applied = {}
     for r, bs in regions.items():
-        factor = (scanned[r] + change[r]) / scanned[r]
+        mass = sum(bodies.get(b).getMass() for b in bs)
+        if mass + change[r] <= 0.5 * mass:
+            raise ValueError(f"fat change {fat_kg:+g} kg would take {r} below half its model mass")
+        factor = (mass + change[r]) / mass
         for b in bs:
             if bodies.get(b).getMass() > 0:
                 bodies.get(b).scaleMass(factor)
@@ -313,7 +314,7 @@ def fat_change_model(model_path, record, fat_kg, out_path):
     after = sum(bodies.get(i).getMass() for i in range(bodies.getSize()))
     model.printToXML(str(out_path))
     return {"fat_change_kg": fat_kg, "method": "DXA regional fat changed in proportion to each region's fat "
-                                               "(assumption); each region's bodies scaled by its mass after/before",
+                                               "(assumption); each region's bodies lose or gain that many kg",
             "dxa": {k: record[k] for k in ("method", "date", "approved_by") if record.get(k)},
             "model_mass_kg": {"before": round(before, 2), "after": round(after, 2)}, "regions": applied}
 
