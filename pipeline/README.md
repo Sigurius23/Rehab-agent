@@ -182,6 +182,9 @@ python -m rehabtwin muscles  SESSION --rep 1 --correction squat_knee_valgus_righ
 # need 60 Hz static optimisation, and each variant is an independent problem
 # double-stance exercises first re-solve IK with both feet held where they stood (--no-plant to skip): video
 # kinematics let planted feet wander several cm, which the force estimate would differentiate twice
+# knee joint load (OpenSim Joint Reaction) and what-ifs within the person: fat change from the DXA regional
+# table, stronger groups, both; every scenario also under a ±0.10 ground-force split (docs/joint-load.md)
+python -m rehabtwin joint-load SESSION --rep 2 --fat-change-kg -5 --strengthen quadriceps_r=1.2
 # haptic posture cues (suit Track 1): offline replay of a rule set, also over a corrected motion
 python -m rehabtwin cues     SESSION --rules squat_posture [--motion SESSION/correction/<spec>/corrected.mot]
 ```

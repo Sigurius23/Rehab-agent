@@ -341,10 +341,13 @@ def strength_calibration(session_dir, tests_file, allow_assumed_mass=False, capa
 
 def muscle_study(session_dir, rep=1, start=None, stop=None, correction=None, weaken=(), assist=(), view_3d=True,
                  grf_sensitivity=0.0, use_strength=False, passive=(), workers=None, max_fps=30.0, plant=True,
-                 illustrative=False, allow_assumed_mass=False, capacity=True, person=None):
+                 illustrative=False, allow_assumed_mass=False, capacity=True, person=None, joint_load=False,
+                 fat_change_kg=None, strengthen=()):
     """Measured motion (+ corrected motion, + weakened variants) through GRF estimate → ID → SO.
 
-    ``capacity``: scale leg muscle capacity to the measured height and mass (rehabtwin/capacity.py)."""
+    ``capacity``: scale leg muscle capacity to the measured height and mass (rehabtwin/capacity.py).
+    ``joint_load``: knee loads of every variant (rehabtwin/joint_load.py), with the scenarios ``fat_change_kg``
+    (from the person's DXA regional fat), ``strengthen`` ("quadriceps_r=1.2") and both combined."""
     from . import muscles
     session_dir = Path(session_dir)
     sess = json.loads((session_dir / "session.json").read_text())
@@ -397,6 +400,36 @@ def muscle_study(session_dir, rep=1, start=None, stop=None, correction=None, wea
         group, factor = spec.split("=")
         variants.append((f"{group} at {float(factor) * 100:.0f}%", f"weak_{group}_{factor}", motion,
                          {"weaken": {group: float(factor)}}))
+    kinds, fat = {}, None
+    if (fat_change_kg or strengthen) and not joint_load:
+        raise SystemExit("fat-change and strength scenarios are joint-load scenarios: use 'rehabtwin joint-load'")
+    stronger = {}
+    for spec in strengthen:
+        group, factor = spec.split("=")
+        if not 1.0 < float(factor) <= 2.0:
+            raise SystemExit(f"--strengthen {spec}: a factor above 1 and at most 2 (weaker: --weaken)")
+        stronger[group] = float(factor)
+        lab = f"{group} at {float(factor) * 100:.0f}%"
+        variants.append((lab, f"strong_{group}_{factor}", motion, {"weaken": {group: float(factor)}}))
+        kinds[lab] = "strength"
+    if fat_change_kg:
+        from . import joint_load as jl
+        scan = (person_rec or {}).get("dxa")
+        if not scan:
+            raise SystemExit("a fat-change scenario needs the person's DXA regional table (rehabtwin person dxa)")
+        (out / "scenarios").mkdir(parents=True, exist_ok=True)
+        fat_model = out / "scenarios" / f"model_fat_{fat_change_kg:+g}kg.osim"
+        try:
+            fat = jl.fat_change_model(model, scan, fat_change_kg, fat_model)
+        except ValueError as e:
+            raise SystemExit(str(e)) from e
+        lab = f"fat {fat_change_kg:+g} kg"
+        variants.append((lab, f"fat_{fat_change_kg:+g}kg", motion, {"model_path": fat_model}))
+        kinds[lab] = "fat"
+        if stronger:
+            lab = f"fat {fat_change_kg:+g} kg + " + ", ".join(f"{g} at {f * 100:.0f}%" for g, f in stronger.items())
+            variants.append((lab, "combined", motion, {"model_path": fat_model, "weaken": stronger}))
+            kinds[lab] = "combined"
     for spec in assist:
         coord, torque, lo, hi = muscles.parse_assist(spec)
         variants.append((f"ideal exo {coord} <= {torque:g} N·m" + ("" if (lo, hi) == (-1.0, 1.0) else f" ({spec.split(':')[1]})"),
@@ -418,9 +451,10 @@ def muscle_study(session_dir, rep=1, start=None, stop=None, correction=None, wea
     used = {lab: mot for lab, _, mot, _ in variants}     # motion each variant moved with (3D muscle view)
 
     biases = [0.0] + ([grf_sensitivity, -grf_sensitivity] if grf_sensitivity else [])
-    jobs = [(b, lab, dict(model_path=model, motion_path=mot, out_dir=out, label=folder + (f"_grf{b:+.2f}" if b else ""),
-                          exercise=exercise, start=start, stop=stop, grf_share_bias=b, max_fps=max_fps,
-                          muscle_model=muscle_model, **kw))
+    jobs = [(b, lab, {"model_path": model, "motion_path": mot, "out_dir": out,
+                      "label": folder + (f"_grf{b:+.2f}" if b else ""), "exercise": exercise, "start": start,
+                      "stop": stop, "grf_share_bias": b, "max_fps": max_fps, "muscle_model": muscle_model,
+                      "joint_load": joint_load, **kw})      # a scenario's kw may replace the model
             for b in biases for lab, folder, mot, kw in variants]
     workers = min(len(jobs), workers or max(1, min(4, os.cpu_count() or 1)))
     if workers > 1:
@@ -460,6 +494,13 @@ def muscle_study(session_dir, rep=1, start=None, stop=None, correction=None, wea
                 changes = [v["change"]] + [a[g]["change"] for a in alt if g in a]
                 v["change_range_over_grf_split"] = [min(changes), max(changes)]
                 v["robust_to_grf_split"] = muscles.robust_to_grf(changes)
+    if joint_load:
+        from . import joint_load as jl
+        from . import safety
+        knee_holds = safety.holds((person_rec or {}).get("safety_flags"), ["knee_r", "knee_l"])
+        study["joint_load"] = jl.summarise(
+            runs, kinds, study["comparisons"], {b: by_bias[b] for b in biases if b} or None,
+            {lab: r["grf"]["body_mass_kg"] for lab, r in runs.items()}, knee_holds, fat, grf_sensitivity)
     records.write_json(out / "study.json", records.stamp(sess, study, stale_inputs))
     view = muscles.view_data(model, {lab: out / r["label"] for lab, r in runs.items()},
                              {lab: used.get(lab, motion) for lab in runs}, start, stop) if view_3d else None
@@ -845,6 +886,21 @@ def main(argv=None):
     mu.add_argument("--grf-sensitivity", type=float, default=0.0, metavar="SHARE",
                     help="also re-run with the right foot's load share shifted by +/-SHARE (e.g. 0.15) and flag "
                          "which changes are larger than the band that GRF split alone causes")
+    jlp = sub.add_parser("joint-load", help="knee joint load (OpenSim Joint Reaction on the muscle stage) and what-if "
+                                            "scenarios compared within the person: fat change, strength, both")
+    jlp.add_argument("session")
+    jlp.add_argument("--rep", type=int, default=1, help="rep from metrics.json to analyse (default 1)")
+    jlp.add_argument("--fat-change-kg", type=float, metavar="KG",
+                     help="e.g. -5: the person's DXA regional fat less 5 kg, spread in proportion to each region's fat")
+    jlp.add_argument("--strengthen", action="append", default=[], metavar="GROUP=FACTOR",
+                     help="what-if stronger group, e.g. quadriceps_r=1.2 (repeatable); with --fat-change-kg also combined")
+    jlp.add_argument("--grf-sensitivity", type=float, default=0.10, metavar="SHARE",
+                     help="ground-force split band: every scenario re-run with the right foot's share shifted by "
+                          "+/-SHARE (default 0.10; 0 to skip)")
+    jlp.add_argument("--person", help="person folder (default: the one the session was processed with)")
+    jlp.add_argument("--workers", type=int, help="parallel static-optimisation processes (default: up to 4)")
+    jlp.add_argument("--allow-assumed-mass", action="store_true",
+                     help="run although the session's body mass is assumed, not measured (labelled)")
     stp = sub.add_parser("strength", help="calibrate muscle capacities from dynamometer joint torques")
     stp.add_argument("session")
     stp.add_argument("--tests", required=True, help="JSON with measured isometric torques (see configs/strength/)")
@@ -1004,6 +1060,26 @@ def main(argv=None):
         for lab, cmp in study["comparisons"].items():
             top = sorted(cmp.items(), key=lambda kv: -abs(kv[1]["change"]))[:5]
             print(lab + ": " + ", ".join(f"{g} {v['base']:.2f}->{v['other']:.2f}" for g, v in top))
+        print(f"report: {out / 'muscles.html'}")
+    elif a.cmd == "joint-load":
+        from .correction import CorrectionRefused
+        try:
+            study, out = muscle_study(a.session, a.rep, view_3d=False, grf_sensitivity=a.grf_sensitivity,
+                                      workers=a.workers, allow_assumed_mass=a.allow_assumed_mass, person=a.person,
+                                      joint_load=True, fat_change_kg=a.fat_change_kg, strengthen=a.strengthen)
+        except (CorrectionRefused, AssumedMassRefused, records.StaleResult, PersonRefused) as e:
+            print(f"refused: {e}", file=sys.stderr)
+            return 2
+        jl = study["joint_load"]
+        for s, v in jl["baseline"].items():
+            band = jl.get("baseline_band_over_grf_split", {}).get(s)
+            d = jl["baseline_diagnostics"].get(s, {})
+            print(f"knee_{s} peak compression {v['peak_compression_N']:.0f} N ({v['peak_compression_bw']:.2f} BW) at "
+                  f"{v['knee_flexion_at_peak_deg']}° flexion" + (f"; GRF-split band {band[0]:.0f}-{band[1]:.0f} N" if band else "")
+                  + ("" if d.get("reportable", True) else f"; NOT REPORTABLE: {'; '.join(d['why_not_reportable'])}")
+                  + ("; above the in-vivo band (model-limited)" if d.get("above_in_vivo_band") else ""))
+        for lab, sc in jl["scenarios"].items():
+            print(f"{lab}: {sc['reading']}")
         print(f"report: {out / 'muscles.html'}")
     elif a.cmd == "strength":
         try:
