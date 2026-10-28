@@ -9,6 +9,7 @@ a working folder that goes away. Everything in this folder can be rerun.
 | `runs/` | The run scripts of the experiments: SKEL bones on synthetic bodies, the OpenCap marker fix, person bones after the fix, the DXA squat. |
 | `results/` | Result summaries: aggregate numbers only, as the docs quote them. |
 | `tests/` | Full test-suite logs: the run with one failure, and the run after the fix. |
+| `visuals/` | The audit page's 3D views: data preparation, the browser code, and a check of the browser's SKEL code against the Python reference. |
 
 ## The audit
 
@@ -48,3 +49,17 @@ repository.
 | `nhanes_strength.json`, `nhanes_fit_default.json` | `adapters/nhanes_strength.py analyse / fit-default` | `docs/person-model.md`, DXA and age-sex |
 | `myosegmentum_summary.json` | `adapters/myosegmentum.py analyse`, summary only | `docs/person-model.md`, MyoSegmenTUM |
 | `dxa_squat.json` | the OpenCap squat with leg muscle from height and mass, age and sex, and an illustrative DXA record | `docs/person-model.md`, on a real squat |
+
+## 3D views
+
+`visuals/` builds the data for the audit page's 3D section:
+
+- `prep_bodies.py` (OpenSim environment): SKEL bodies and bone meshes for the line-up, the height-and-BMI grid of
+  shape parameters, and the two synthetic depth frames regenerated exactly as `adapters/bedlam2_skel.py` made them
+  (it checks that the fit comes out the same as in the run).
+- `prep_squat.py`: the OpenCap squat. Bone poses of our model after the marker fix, joint centres of ours before and
+  after the fix and of OpenCap's result, joint angles, and camera 2's clip with its MediaPipe keypoints.
+- `skelmath.js` is SKEL's rest-pose forward pass in JavaScript; `node test_skelmath.js OUT skelmath.js` compares it
+  with the Python version (agreement to 0.03 mm on joints, bones and skin). `viz.js` draws the views with three.js.
+
+The data they write contains SMPL and SKEL meshes, so it stays out of this repository.
