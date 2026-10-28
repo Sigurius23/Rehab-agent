@@ -87,7 +87,7 @@ twin manifest (mass distribution, limb_alignment, muscle_parameters,
 
 | Scenario | Parameter change | Expected honest output |
 |---|---|---|
-| Fat change | Segment fat masses ± (from fat-distribution pipeline; re-run gait or scaled kinetics) | Joint loads ↓/↑ (Messier-anchored at knee), effort ↓/↑ |
+| Fat change | Segment fat masses ± (from fat-distribution pipeline) | **Model-computed** load change: replaying the same motion with less mass gives a roughly *proportional* reduction. The Messier 4:1 figure is published cohort evidence (their gait adapted as they lost weight) — quote it alongside, **never present it as model output**. Capturing gait adaptation requires predictive re-simulation, not replay |
 | Muscle training | `force_scale` per muscle group in `muscle_parameters` | Effort ↓, stability ↑, total compression ≈/↑ (shown, not hidden) |
 | Combined | Both | Load ↓ *and* effort ↓ — the actual rehabilitation story |
 | Assistive torque | AFO/exo torque profile (Batches 2/7 design loops) | Joint moment offloaded; muscle effort ↓; device torque shown as its own load path |
