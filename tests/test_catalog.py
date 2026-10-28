@@ -53,6 +53,40 @@ class TestCatalog(unittest.TestCase):
         self.assertIn("TransPose", out.stdout)
         self.assertNotIn("SMPLSim", out.stdout)
 
+    def test_every_repo_fully_documented(self):
+        # Documentation standard: see catalog/repos.json `documentation_standard`
+        for r in DATA["repos"]:
+            self.assertGreaterEqual(len(r["description"]), 40, r["slug"])
+            self.assertGreaterEqual(len(r["notes"]), 30, r["slug"])
+            self.assertGreaterEqual(len(r["tags"]), 2, r["slug"])
+            self.assertTrue(r["pipeline_stages"], r["slug"])
+            self.assertTrue(r["license"], r["slug"])
+            self.assertTrue(r["license_source"], r["slug"])
+            self.assertTrue(r["updated_snapshot"], r["slug"])
+            self.assertTrue(r["upstream_path"], r["slug"])
+            if not r["private"]:
+                self.assertIsNotNone(r["stars_snapshot"], r["slug"])
+                self.assertIsNotNone(r["forks_snapshot"], r["slug"])
+
+    def test_generated_catalog_details_every_repo(self):
+        md = (ROOT / "docs" / "catalog.md").read_text()
+        for r in DATA["repos"]:
+            self.assertIn(f"### {r['id']}. [{r['slug']}]", md, r["slug"])
+            self.assertIn(r["license"], md, r["slug"])
+
+    def test_schemas_parse_and_audit_blocks_present(self):
+        man = json.loads((ROOT / "schemas" / "twin-manifest.schema.json").read_text())
+        for block in ["spinopelvic_parameters", "limb_alignment", "muscle_parameters",
+                      "bone_quality", "devices_and_prostheses", "safety_flags", "body_state"]:
+            self.assertIn(block, man["properties"], block)
+        # Safety flags are clinician-set only, by construction
+        flag_items = man["properties"]["safety_flags"]["items"]
+        self.assertEqual(flag_items["properties"]["set_by"], {"const": "clinician"})
+        sess = json.loads((ROOT / "schemas" / "session.schema.json").read_text())
+        self.assertIn("breathing", sess["properties"])
+        example = json.loads((ROOT / "examples" / "synthetic-session" / "session.json").read_text())
+        self.assertIn(example["breathing"]["diaphragm_status"], ["inferred", "ultrasound-measured"])
+
     def test_example_session_has_required_keys(self):
         s = json.loads((ROOT / "examples" / "synthetic-session" / "session.json").read_text())
         for k in ["session_id", "twin_tier", "hardware", "streams", "calibration", "sync", "accuracy_layers"]:

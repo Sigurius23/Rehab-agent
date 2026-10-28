@@ -96,6 +96,28 @@
           "error": {"type": "string", "description": "Measured error with units, e.g. 'joint-centre <= 4 mm vs MRI'"}
         }
       }
+    },
+    "breathing": {
+      "type": "object",
+      "description": "(audit, breathing programme) Per docs/research-breathing-tracking.md. Diaphragm motion is INFERRED from surface/compartment signals unless directly measured by ultrasound - the label must travel with the data. Asynchrony values are screening flags for clinician review (D-03), never diagnoses.",
+      "properties": {
+        "signal_source": {"enum": ["dual-belt-rip", "depth-camera", "oep-lite-markerless", "spirometry-calibration", "ultrasound", "none"]},
+        "respiratory_rate_bpm": {"type": "number"},
+        "ie_ratio": {"type": "number", "description": "Inspiratory:expiratory time ratio"},
+        "compartment_volume_share_pct": {
+          "type": "object",
+          "description": "Relative contribution to tidal volume by compartment (sums to ~100)",
+          "properties": {
+            "pulmonary_ribcage": {"type": "number"},
+            "abdominal_ribcage": {"type": "number"},
+            "abdomen": {"type": "number"}
+          }
+        },
+        "thoracoabdominal_phase_angle_deg": {"type": "number", "description": "Rib-cage vs abdomen phase angle; 0 = synchronous, 180 = paradoxical"},
+        "end_expiratory_volume_drift_ml": {"type": "number", "description": "Drift of end-expiratory level over the recording (air-trapping / relaxation marker); only if calibrated"},
+        "diaphragm_status": {"enum": ["inferred", "ultrasound-measured"], "description": "inferred = rendered from surface signal; ultrasound-measured = excursion/thickening directly observed"},
+        "screening_flags": {"type": "array", "items": {"type": "string"}, "description": "e.g. 'thoracoabdominal asynchrony - clinician review'. Screening only."}
+      }
     }
   }
 }

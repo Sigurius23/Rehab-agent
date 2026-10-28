@@ -1,6 +1,6 @@
 # Rehab Agent — Meta-Repository
 
-> A curated meta-repo that organises **110 upstream GitHub repositories** into one
+> A curated meta-repo that organises **115 upstream GitHub repositories** into one
 > rehabilitation-technology pipeline: capture → pose → body/skeleton model →
 > biomechanics → muscle simulation → feedback & visualisation.
 >
@@ -9,7 +9,7 @@
 > working pipeline slice (`pipeline/`: video → SKEL → OpenSim). Each upstream
 > project stays in its own repo, under its own license.
 
-[![Catalog](https://img.shields.io/badge/catalog-110_repos-blue)](#catalog)
+[![Catalog](https://img.shields.io/badge/catalog-115_repos-blue)](#catalog)
 ![Status](https://img.shields.io/badge/status-research__prototype-orange)
 
 ## ⚠️ Not a medical device
@@ -58,12 +58,22 @@ marker mocap. A person model keeps one person's bones and measurements across se
 ([`docs/person-model.md`](docs/person-model.md)). Details: [`pipeline/README.md`](pipeline/README.md) ·
 [`stacks/video-skel-opensim.md`](stacks/video-skel-opensim.md).
 
+## 🧈 Fat distribution (separate folder)
+
+Models of the patient's **fat/adipose distribution** — a layer the surface
+scan alone cannot see (fat + muscle + bone are summed in SMPL/LiDAR shape).
+Kept separate from the main catalog as requested: measured models from
+MRI/CT (TotalSegmentator tissue subtasks, vatsatseg, whole-body compartment
+quantification → Tier A) vs shape/silhouette-predicted depots (Pseudo-DXA,
+UK-Biobank silhouette model → Tier B, **estimate only**), plus paper-only and
+closed reference models: [`fat-distribution/README.md`](fat-distribution/README.md).
+
 ## Quick start
 
 ```bash
 git clone <this-repo> rehab-agent && cd rehab-agent
 
-python3 scripts/validate_catalog.py     # check the catalog (110 repos)
+python3 scripts/validate_catalog.py     # check the catalog (115 repos)
 python3 scripts/list.py --tier core     # see the recommended first wave
 python3 scripts/clone.py --tier core --dry-run
 python3 scripts/clone.py --tier core    # shallow-clone core repos into upstream/
@@ -185,7 +195,7 @@ rehab-agent/
 │   ├── repos.json             ← SOURCE OF TRUTH (edit this)
 │   ├── repos.csv / repos.yaml ← generated
 ├── docs/
-│   ├── catalog.md             ← generated full tables (all 110)
+│   ├── catalog.md             ← generated full tables (all 115)
 │   ├── architecture.md        ← pipeline, data formats, contracts
 │   ├── roadmap.md             ← phased build plan
 │   ├── evaluation.md          ← scoring rubric for picking repos

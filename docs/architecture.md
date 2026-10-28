@@ -26,12 +26,28 @@ clinician (or a test) can inspect what the system believed at each step.
   integration failures in this stack are frame/unit mismatches (SMPL vs OpenSim).
 - **No stage silently imputes missing joints.** Missing/occluded data is flagged;
   rehab feedback on fabricated motion is a safety bug, not a feature.
+- **The twin manifest is the contract for personalisation.** Audit-derived
+  blocks (`spinopelvic_parameters`, `limb_alignment`, `muscle_parameters`,
+  `bone_quality`, `devices_and_prostheses`, `safety_flags`, `body_state` in
+  `schemas/twin-manifest.schema.json`; `breathing` in the session schema) are
+  populated only from imaging/clinical sources listed in `docs/accuracy.md`.
+  Safety flags restrict downstream stages; stages must check them, not just
+  record them.
 
 ## Two front-ends, one back-end
 Camera (FreeMoCap/OpenCap/Pose2Sim) and IMU (TransPose/PIP/PNP/OpenSimLive) paths
 converge at Stage 4–5: once you have a skeleton moving in OpenSim, assessment,
 simulation and visualisation are shared. Pick the front-end per setting
 (clinic = cameras, home = IMU) without rebuilding the back-end.
+
+## Scenario / what-if simulation (design stage)
+Stage 5–6 outputs feed a clinician-facing scenario model
+(`docs/design-joint-load-stress-model.md`): baseline vs fat-change /
+muscle-training / assistive-torque scenarios reporting per-joint load,
+muscle effort, distribution and stability — with fat effects anchored
+to measured body composition and muscle effects reported honestly
+(effort/stability, not promised load reduction). Illustrative demo:
+`examples/joint-load-demo/index.html`.
 
 ## Where an LLM/agent layer belongs
 Only *after* Stage 5 outputs exist: summarising measured ROM/gait/torque trends,

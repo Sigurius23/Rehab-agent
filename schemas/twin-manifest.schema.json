@@ -1,6 +1,7 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "title": "Digital twin manifest (one per person)",
+  "description": "Blocks marked (audit) were added 2026-10-28 from the anatomy audit (docs/anatomy-audit-batch1..8). All are optional so pre-audit manifests stay valid; Tier-A manifests SHOULD populate them from imaging/clinical assessment, never from camera/LiDAR inference.",
   "type": "object",
   "required": ["person_ref", "twin_tier", "created_at", "anatomy_source", "models", "accuracy_layers"],
   "properties": {
@@ -38,6 +39,131 @@
         }
       }
     },
-    "validation_report": {"type": "string", "description": "Path to a validation-report (docs/validation-protocol.md)"}
+    "validation_report": {"type": "string", "description": "Path to a validation-report (docs/validation-protocol.md)"},
+    "spinopelvic_parameters": {
+      "type": "object",
+      "description": "(audit, Batch 1) Spinopelvic parameter layer - parameters, not models. Imaging-sourced only (EOS/CT/MRI/radiograph); never surface-inferred.",
+      "properties": {
+        "pelvic_incidence_deg": {"type": "number"},
+        "pelvic_tilt_deg": {"type": "number"},
+        "sacral_slope_deg": {"type": "number"},
+        "lumbar_lordosis_deg": {"type": "number"},
+        "thoracic_kyphosis_deg": {"type": "number"},
+        "sagittal_vertical_axis_mm": {"type": "number"},
+        "pi_minus_ll_deg": {"type": "number"},
+        "source": {"enum": ["eos", "ct", "mri", "radiograph"]},
+        "measured_at": {"type": "string", "format": "date"}
+      }
+    },
+    "limb_alignment": {
+      "type": "object",
+      "description": "(audit, Batches 2/6) Per-side bony alignment and segment lengths, imaging-measured (e.g. Torsion Tool). Drives personalised joint axes; camera estimates must not populate this block.",
+      "properties": {
+        "left": {"$ref": "#/$defs/limb_side"},
+        "right": {"$ref": "#/$defs/limb_side"}
+      }
+    },
+    "muscle_parameters": {
+      "type": "object",
+      "description": "(audit, Batches 4/7) Per-muscle parameter groups, fitted as three SEPARATE groups - weakness (force), contracture (passive), spasticity (reflex gain). Reflex gains only from instrumented clinical assessment (controlled-velocity stretch + EMG/force), never from video.",
+      "properties": {
+        "source": {"enum": ["mri-segmentation", "dxa", "ultrasound", "strength-testing", "instrumented-spasticity-assessment", "generic-scaled"]},
+        "measured_at": {"type": "string", "format": "date"},
+        "muscles": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["name"],
+            "properties": {
+              "name": {"type": "string"},
+              "side": {"enum": ["left", "right", "midline"]},
+              "volume_cm3": {"type": "number", "description": "MRI-segmented muscle volume (Tier A)"},
+              "fat_fraction_pct": {"type": "number", "description": "MRI Dixon PDFF fat fraction (MS-03 pipeline)"},
+              "max_isometric_force_n": {"type": "number"},
+              "force_scale": {"type": "number", "description": "Weakness group: multiplier vs generic model (1.0 = generic)"},
+              "passive_stiffness_scale": {"type": "number", "description": "Contracture group: multiplier vs generic passive stiffness"},
+              "optimal_fiber_length_scale": {"type": "number", "description": "Contracture group: multiplier vs generic optimal fibre length"},
+              "reflex_gain": {"type": "number", "description": "Spasticity group: velocity-dependent reflex feedback gain; only from instrumented assessment"}
+            }
+          }
+        }
+      }
+    },
+    "bone_quality": {
+      "type": "object",
+      "description": "(audit, Batch 6) Bone-quality inputs are exo SAFETY inputs: they derate assistance torque. Imaging/clinical-sourced only.",
+      "properties": {
+        "dxa_t_score": {"type": "number"},
+        "dxa_site": {"type": "string"},
+        "diagnosed_conditions": {"type": "array", "items": {"type": "string"}, "description": "e.g. osteoporosis, osteogenesis imperfecta, Paget disease - clinician-recorded"},
+        "exo_torque_derating_factor": {"type": "number", "minimum": 0, "maximum": 1, "description": "Multiplier applied to assistance-torque limits; set by clinician/safety owner (D-05)"},
+        "source": {"enum": ["dxa", "qct", "clinical-record"]},
+        "assessed_at": {"type": "string", "format": "date"}
+      }
+    },
+    "devices_and_prostheses": {
+      "type": "array",
+      "description": "(audit, Batches 2/4/6/8) Implant, prosthesis and orthosis device blocks. The twin models the device as body segments/joints with these parameters.",
+      "items": {
+        "type": "object",
+        "required": ["type", "body_region"],
+        "properties": {
+          "type": {"enum": ["joint-implant", "limb-prosthesis", "endoprosthesis", "orthosis", "exoskeleton", "other"]},
+          "body_region": {"type": "string"},
+          "side": {"enum": ["left", "right", "midline"]},
+          "name_or_model": {"type": "string"},
+          "fitted_or_implanted_at": {"type": "string", "format": "date"},
+          "rom_envelope_deg": {"type": "object", "properties": {"min": {"type": "number"}, "max": {"type": "number"}}},
+          "notes": {"type": "string"}
+        }
+      }
+    },
+    "safety_flags": {
+      "type": "array",
+      "description": "(audit, Batches 6/8) Clinician-set flags that RESTRICT twin behaviour (protocol ROM limits, prohibited actuation, exo derating). The twin never sets or clears these itself.",
+      "items": {
+        "type": "object",
+        "required": ["flag", "status", "set_by"],
+        "properties": {
+          "flag": {"enum": ["atlantoaxial-instability", "bone-fragility", "joint-instability", "post-surgical-restriction", "unrepresentable-anatomy", "other"]},
+          "body_region": {"type": "string"},
+          "status": {"enum": ["confirmed", "suspected", "cleared", "not-assessed"]},
+          "set_by": {"const": "clinician"},
+          "set_at": {"type": "string", "format": "date"},
+          "restrictions": {"type": "array", "items": {"type": "string"}, "description": "e.g. 'no end-range neck flexion/rotation', 'no neck actuation', 'exo torque derated 50%'"},
+          "note": {"type": "string", "description": "unrepresentable-anatomy covers e.g. syndactyly/polydactyly hands the parametric model cannot draw (Batch 6 honesty rule)"}
+        }
+      }
+    },
+    "body_state": {
+      "type": "object",
+      "description": "(audit, Batch 4) Time-varying or population body-parameter sets layered over the base twin.",
+      "properties": {
+        "age_parameter_set": {"enum": ["paediatric", "adult", "older-adult"], "description": "Older-adult applies age-adjusted muscle parameters (reduced force, slowed activation)"},
+        "pregnancy": {
+          "type": "object",
+          "properties": {
+            "active": {"type": "boolean"},
+            "gestational_week": {"type": "number"},
+            "parameter_set_at": {"type": "string", "format": "date", "description": "Segment mass/CoM/inertia set follows the pregnant-woman model by trimester"}
+          }
+        }
+      }
+    }
+  },
+  "$defs": {
+    "limb_side": {
+      "type": "object",
+      "properties": {
+        "femoral_anteversion_deg": {"type": "number"},
+        "neck_shaft_angle_deg": {"type": "number"},
+        "tibial_torsion_deg": {"type": "number"},
+        "femur_length_mm": {"type": "number"},
+        "tibia_length_mm": {"type": "number"},
+        "mechanical_axis_hka_deg": {"type": "number", "description": "Hip-knee-ankle angle; varus/valgus alignment"},
+        "carrying_angle_deg": {"type": "number", "description": "Elbow carrying angle (normal ~5-15 deg)"},
+        "source": {"enum": ["eos", "ct", "mri", "radiograph", "clinical-measurement"]}
+      }
+    }
   }
 }

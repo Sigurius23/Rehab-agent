@@ -97,6 +97,31 @@ Repos: [TotalSegmentator](https://github.com/wasserth/TotalSegmentator) ·
 [Scalismo](https://github.com/unibas-gravis/scalismo) — a library for statistical shape modelling and model-based image analysis [1](https://github.com/unibas-gravis/scalismo) ·
 [msk-PIPE](https://github.com/PatrikMrnka/msk-PIPE) — an automated pipeline that converts CT/MRI scans into parameterised OpenSim models through segmentation, meshing and muscle-attachment extraction [6](https://github.com/PatrikMrnka/msk-PIPE)
 
+## Anatomy-audit integration (2026-10-28, Batches 1–8 → schema)
+
+The 202-issue anatomy audit (`anatomy-issues-checklist.md`,
+`anatomy-audit-batch1..8`) is now folded into the twin manifest
+(`schemas/twin-manifest.schema.json`). Each mechanism below names the
+manifest block that carries it; all blocks are imaging- or
+clinician-sourced — none may be populated from camera/LiDAR inference.
+
+| Mechanism (audit batches) | Manifest block | Rule |
+|---|---|---|
+| Spinopelvic parameter layer (Batch 1) | `spinopelvic_parameters` | PI/PT/SS/LL/TK/SVA from EOS/CT/MRI only |
+| Bony torsion & alignment — femoral anteversion, neck-shaft, tibial torsion, HKA, segment lengths, carrying angle (Batches 2/6) | `limb_alignment` | Imaging-measured (Torsion-Tool class); personalises joint axes |
+| Muscle-parameter pipeline — weakness / contracture / reflex-gain as three separately fitted groups (Batches 4/7) | `muscle_parameters` | MRI volumes + fat fraction + strength; reflex gains only from instrumented spasticity assessment, never video |
+| Bone quality (Batch 6) | `bone_quality` | DXA/QCT/clinical; `exo_torque_derating_factor` is a safety input (D-05) |
+| Implants, limb prostheses, orthoses (Batches 2/4/6/8) | `devices_and_prostheses` | Device modelled as body segments with ROM envelope |
+| Safety flags & representability (Batches 6/8) | `safety_flags` | Clinician-set only (atlantoaxial instability, bone fragility, unrepresentable anatomy e.g. syndactyly); the twin never sets/clears them |
+| Time-varying body state (Batch 4) | `body_state` | Pregnancy trimester parameter sets; older-adult muscle parameters |
+| Breathing layer (breathing programme) | `breathing` in `schemas/session.schema.json` | Diaphragm labelled `inferred` unless ultrasound-measured; asynchrony = screening flag (D-03) |
+
+Audit honesty labels that bind all tiers: scapula pose is
+**model-inferred, never measured** (Batch 3); hands the parametric
+model cannot represent must be flagged, not silently drawn (Batch 6);
+Janda-type patterns are **labels over measured metrics, not
+diagnoses** (Batch 4).
+
 ## Where `pipeline/` stands per layer
 
 The person model (`docs/person-model.md`) records this per person; `person show` prints it.
@@ -125,5 +150,11 @@ The person model (`docs/person-model.md`) records this per person; `person show`
   below Tier A only runs with `--illustrative` and is labelled a design-space bound).
 - The tier is granted by evidence, not by a flag: Tier B/A needs a model-provenance record bound to
   the session's person and model (`rehabtwin/tiers.py`); only marker-mocap validations open feedback.
+- No powered assistance at a joint covered by an active `safety_flags`
+  entry beyond its recorded restrictions; bone-quality derating
+  (`bone_quality.exo_torque_derating_factor`) always applies.
+- No internal anatomy (bone shape, joint space, muscle quality,
+  ligament state, neural drive, spasticity grade) inferred from
+  camera/LiDAR — the anatomy audit's standing negative result.
 - If a layer has not been validated for a given person, the twin must *display
   that gap* ("muscle layer: generic, not yet personalised") instead of hiding it.
