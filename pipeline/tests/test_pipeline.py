@@ -829,8 +829,12 @@ def test_joint_load_scenarios_within_one_person(selftest_run, tmp_path):
         assert p["robust_to_grf_split"] and p["change_pct_range_over_grf_split"][1] < 0
     assert fat["published_evidence"] == joint_load.MESSIER and "4:1" not in fat["reading"]
     strong = jl["scenarios"]["quadriceps_r at 120%"]
-    q = strong["effort"]["quadriceps_r"]
-    assert q["other"] < q["base"] and joint_load.STRENGTH_READING in strong["reading"]
+    assert joint_load.STRENGTH_READING in strong["reading"]
+    if strong["knee"]["r"]["reportable"]:
+        q = strong["effort"]["quadriceps_r"]
+        assert q["other"] < q["base"]                                    # a stronger group works less hard
+    else:                                                                # same solution, so no effort stated either
+        assert "quadriceps_r" not in strong["effort"] and "right-side effort not reportable" in strong["reading"]
     assert "published_evidence" not in strong
     assert jl["scenarios"]["fat -5 kg + quadriceps_r at 120%"]["kind"] == "combined"
     assert "assumption" in jl["labels"]["fat_provenance"] and "safety" not in jl["labels"]
