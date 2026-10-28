@@ -695,20 +695,22 @@ def run(seq: MarkerSequence, cfg: dict, out_dir, mass_kg=None, height_m=None, on
     return StageResult(out_dir=out_dir, scaled_model=scaled, motions=motions, marker_errors=errors, qc=qc)
 
 
-def _apply_alignment(model_path, person, measured):
-    """The person model's knee alignment, put into this session's scaled model; and the joints where posture cues
-    wait for a clinician (the person's record, else this session's standing frame screened)."""
-    al = (person or {}).get("alignment")
-    if not al:
-        return {"source": "this session's standing frame (not applied to the model)",
-                "flags": alignment.structural_flags(measured if "knee_frontal_deg" in measured else None)}
-    out = {"source": f"person model: {al['method']} {al.get('date', '')}".strip(), "tier": al["tier"],
-           "flags": al.get("structural_flags", {})}
+def _apply_alignment(model_path, person, estimate):
+    """The person's limb alignment (imaging or clinical record) put into this session's scaled model, and the
+    knees whose posture cues are held: structural on record, or this session's camera estimate beyond the
+    screening threshold where no record exists. The camera estimate never changes the model."""
+    la = (person or {}).get("limb_alignment")
+    est = estimate if "knee_frontal_deg" in estimate else None
+    out = {"camera_estimate": "qc.json static_alignment: estimated, screening only, not applied to the model",
+           "limb_alignment": None, "holds": {**alignment.screening_holds(est, la), **((la or {}).get("holds") or {})}}
+    if not la:
+        return out
+    out["limb_alignment"] = {"source": la["source_summary"], "measured_at": la["measured_at"], "tier": la["tier"]}
+    hka = alignment.knee_hka(la)
     if person["model"]["kind"] == "personalised":
-        out["knee"] = "not applied: the personalised model has its own bone geometry"
-    elif al.get("knee_frontal_deg"):
-        match = "markers" if al["method"] == "standing frame markers" else "joint_centres"
-        out["knee"] = alignment.apply_to_model(model_path, model_path, al["knee_frontal_deg"], match)
+        out["limb_alignment"]["knee"] = "not applied: the personalised model has its own bone geometry"
+    elif hka:
+        out["limb_alignment"]["knee"] = alignment.apply_to_model(model_path, model_path, hka)
     return out
 
 

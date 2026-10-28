@@ -40,6 +40,8 @@ what fills it and its tier:
 | muscle | Rajagopal leg muscles; force from measured volume and fat fraction where imaged (`person muscles`), else each leg's volume from a DXA scan (`person dxa`), from age, sex, height and mass, or from height and mass; trunk generic | C; B/A when all leg muscles are imaged |
 | soft tissue | regional fat and lean mass from a DXA scan (`person dxa`), which also sets the segment masses; tissue deformation not modelled | B; A with a reviewed report |
 | bone density | DXA or QCT result with its screening category (`person bone`) | B; A with a reviewed report |
+| joint alignment | knee HKA, torsion and segment lengths from imaging or a clinician (`person alignment`); the camera's standing estimate is kept for screening only (`person screening`) | B; A with `approved_by`; clinical C/B. The camera estimate is never a tier of this layer |
+| safety flags | a clinician's list (`person safety-flags`), recorded as given | not a tier: the clinician's record |
 
 Measured height and body mass are stored with their dates. A mass entered as assumed is kept, marked
 `measured: false`, and never used where a measured mass is required. Age (`--age-years`) is stored with the
@@ -62,6 +64,11 @@ python -m rehabtwin kinect C:\rec\s03 C:\rec\s03\mediapipe.npz s03_seq.npz --per
 
 python -m rehabtwin person set people/P01 --mass-kg 73.5     # mass changes during rehab
 python -m rehabtwin person show people/P01
+
+# records from imaging and the clinician (see "Skeletal alignment" below)
+python -m rehabtwin person alignment people/P01 P01_limb_alignment.json
+python -m rehabtwin person safety-flags people/P01 P01_safety_flags.json
+python -m rehabtwin person manifest people/P01 --out P01_manifest.json   # the twin manifest
 ```
 
 `person build` refuses:
@@ -249,9 +256,21 @@ its own. So inverse kinematics of a valgus knee has to put the difference somewh
 rotation), and a posture rule with a fixed valgus threshold would coach the person against their own skeleton.
 `rehabtwin/alignment.py` adds this layer (`joint_alignment`).
 
-### Measured in every session
+Two kinds of evidence, kept apart (the anatomy audit's red line, `docs/accuracy.md`: nothing internal is
+inferred from cameras):
 
-`process` measures the static frame and writes it to `qc.json` → `static_alignment`:
+| | Camera estimate | Limb alignment |
+|---|---|---|
+| From | every session's standing frame | imaging or a clinician's measurement |
+| Stored as | `qc.json` → `static_alignment`; `person.json` → `alignment_screening` | `person.json` → `limb_alignment` (twin manifest block) |
+| Status | estimated; uncertainty not yet measured | measured, with its source and tier |
+| Changes the model | never | yes: the knee's HKA angle in every session |
+| Used for | the person's standing baseline for posture cues; a screening hold beyond 6° | the model; a structural record holds that knee's cues |
+
+### The camera estimate (every session, screening only)
+
+`process` measures the static frame and writes it to `qc.json` → `static_alignment`, marked
+`"status": "estimated"` and `"uncertainty": "not yet measured ..."`:
 
 | Value | Definition |
 |---|---|
@@ -263,49 +282,52 @@ rotation), and a posture rule with a fixed valgus threshold would coach the pers
 
 The centres come from SKEL's joint centres when the front end gives them. Otherwise they come from the LSTM
 augmenter's markers (midpoints of the epicondyle and malleolus markers, the hip joint centre), then SKEL skin
-markers, then MediaPipe keypoints. This is Tier C: markers on a standing person can't tell a structural
-deformity from a habitual posture.
+markers, then MediaPipe keypoints. Each of these is itself an estimate, and markers on a standing person can't
+tell a bone shape from a habitual posture. Its uncertainty needs repeat sessions of the same person
+(`rehabtwin progress`); until then it says "not yet measured". Change against the person's own baseline is what
+it is used for.
 
-### Records from a clinician or imaging
+`rehabtwin person screening PERSON --from-session SESSION` keeps a session's estimate in the person folder. The
+`joint_alignment` layer stays "generic knee" with it: the estimate screens, it doesn't personalise.
 
-`rehabtwin person alignment PERSON --record alignment.json`:
+### Limb alignment from imaging or a clinician
+
+`rehabtwin person alignment PERSON alignment.json` takes the twin manifest's `limb_alignment` block
+(`schemas/twin-manifest.schema.json`, `limb_side`), plus when and by whom:
 
 ```json
-{"method": "long-leg standing radiograph", "date": "2026-09-01", "approved_by": "Dr. X",
- "structural": true, "diagnosis": "genu valgum",
- "knee_frontal_deg": {"r": 9.0, "l": 7.0},
- "leg_length_m": {"r": 0.861, "l": 0.852},
- "femoral_anteversion_deg": {"r": 18, "l": 15}, "tibial_torsion_deg": {"r": 25, "l": 22}}
+{"measured_at": "2026-09-01", "approved_by": "Dr. X", "structural": true, "diagnosis": "genu valgum",
+ "right": {"source": "radiograph", "mechanical_axis_hka_deg": 9.0, "femoral_anteversion_deg": 18,
+           "tibial_torsion_deg": 25, "femur_length_mm": 452},
+ "left":  {"source": "radiograph", "mechanical_axis_hka_deg": 7.0}}
 ```
 
-| Method | Tier |
+| `source` (per side) | Tier |
 |---|---|
-| long-leg standing radiograph, EOS, CT, MRI | B; A with `approved_by` |
-| clinical examination | C; B with `approved_by` |
-| standing frame markers (`--from-session SESSION`: a processed session's measurement) | C |
+| `eos`, `ct`, `mri`, `radiograph` | B; A with `approved_by` |
+| `clinical-measurement` | C; B with `approved_by` |
+| a camera or marker estimate | refused: "screening only" |
 
-- `knee_frontal_deg` is the mechanical axis (hip, knee and ankle joint centres). An anatomical tibiofemoral angle
-  (femoral and tibial shafts, as a goniometer reads it) is refused. It differs by several degrees, so it has to
-  be converted first.
-- Only a clinical or imaging record can say the alignment is `structural`.
-- A record of a lower tier doesn't replace a higher one unless `--replace` is given.
-- Torsion values are stored but not applied yet (see below).
+- `mechanical_axis_hka_deg` is the deviation of the hip-knee-ankle axis from a straight leg, + valgus, −
+  varus. A report that gives the angle around 180° (174°, say) is converted to the deviation (6°) with the
+  direction the report states; a value outside ±30° is refused with that hint. An anatomical tibiofemoral angle
+  (shafts, as a goniometer reads it) differs by several degrees and has to be converted first.
+- Fields outside the manifest's `limb_side` are refused, as are values outside plausible ranges.
+- The record's tier is its least-evidenced side. A record of a lower tier doesn't replace a higher one unless
+  `--replace` is given.
+- Only this record can say the alignment is `structural`.
+- Torsion and segment lengths are stored and exported, not applied yet (see below).
 
 ### Into the model
 
-Every session processed with `--person` turns each knee joint's frame on the femur about the femur's forward axis.
-It stops when the model's knee frontal angle in the default pose is the person's. The tibia, its markers, muscles
-and the foot follow. How the target is matched depends on the source:
+Every session processed with `--person` turns each knee joint's frame on the femur about the femur's forward
+axis. It stops when the model's hip-knee-ankle angle on its joint centres, in the default pose, is the
+recorded HKA. The tibia, its markers, muscles and the foot follow. `qc.json` → `alignment.limb_alignment.knee`
+records each knee's angle before and after, and the tilt. An imaging-personalised model is left as it is,
+since its bones are already the person's. Leg-length differences come from the per-side scale factors (femur
+and tibia scale separately on each side).
 
-- **Imaging and clinical values** are matched on the model's joint centres.
-- **A value measured on markers** is matched on the model's own markers, measured the same way. Skin markers sit
-  off the joint centres: on the Pose2Sim model they read about 0.7° more valgus, and 94 % of a tilt.
-
-`qc.json` → `alignment.knee` records each knee's angle before and after, and the tilt. An imaging-personalised
-model is left as it is, since its bones are already the person's. Leg-length differences come from the
-per-side scale factors (femur and tibia scale separately on each side).
-
-### Posture cues against the person's own standing
+### Posture cues: the person's own standing, screening holds and safety flags
 
 A rule with `"relative_to": "standing"` compares the signal's change from the person's standing value with its
 threshold. The standing value is the signal on the session's static pose.
@@ -314,44 +336,80 @@ threshold. The standing value is the signal on the session's static pose.
   angle, not at 10° absolute.
 - Without a standing value such a rule isn't evaluated, and the cue summary says why.
 
-Some joints are flagged, and no cue is sent there until the treating clinician sets the rule's target (and marks
-it `"clinician_target": true`):
+Three things hold cues, each named in the cue summary (`screening_holds`, `safety_holds`, each rule's `gate`):
 
-- a joint with a structural alignment on record;
-- a knee whose standing frontal angle is beyond 6°. That is a screening threshold of ours, not a diagnostic
-  cut-off.
+| Hold | When | Lifted by |
+|---|---|---|
+| Screening hold | the camera estimates a standing knee angle beyond 6° and no limb alignment is on record for that side. The reason ends "worth getting checked by a professional"; it never names an imaging test. 6° is our screening threshold, not a diagnostic cut-off | the treating clinician setting the rule's target (`"clinician_target": true`) |
+| Structural alignment | a limb-alignment record says `structural` | the same |
+| Clinician safety flag | an active flag in `person.json` → `safety_flags` covers the joint | only the clinician, by clearing the flag |
 
-The flags are in `qc.json` → `alignment.flags` and in each cue summary.
+The screening and structural holds are in `qc.json` → `alignment.holds`; the safety holds are read from the
+person folder each time cues are evaluated, so a flag recorded after a session already applies to its replay.
+
+### Clinician safety flags
+
+`rehabtwin person safety-flags PERSON flags.json` records the clinician's current list (the twin manifest's
+`safety_flags`); the previous list stays in `history/`:
+
+```json
+[{"flag": "joint-instability", "body_region": "right knee", "status": "suspected",
+  "set_by": "clinician", "set_at": "2026-10-20", "restrictions": ["no valgus loading"]}]
+```
+
+- `set_by` must be `clinician`. The twin never sets, infers or clears a flag.
+- A flag is active unless its status is `cleared`: `suspected` and `not-assessed` restrict like `confirmed`
+  (fail closed).
+- `body_region` is free text matched by keyword and side ("right knee" → `knee_r`; "cervical spine" → neck and
+  head; "whole body" → everything). A region nothing matches holds every joint, and the reason says so.
+- The `restrictions` are text for people. The pipeline doesn't interpret them, so it holds the whole region:
+  no posture cues there, and no assistance what-if (`muscles --assist/--passive`) at a joint in it.
+
+Assistance what-ifs also follow bone quality (`person bone`): a clinician's `exo_torque_derating_factor`
+(0 to 1, with `approved_by`) scales the assist torque and passive stiffness, and low bone density without such a
+factor refuses them.
+
+### The twin manifest
+
+`rehabtwin person manifest PERSON --out manifest.json` writes the person model in the shared twin-manifest
+format and checks it against `schemas/twin-manifest.schema.json`: each layer as personalised, unvalidated or
+generic, with its tier; the `limb_alignment`, `muscle_parameters`, `bone_quality`, `safety_flags` and
+`body_state` blocks; and `provenance` (person.json version and hash, and per block when and by whom). The camera
+estimate is not a block in it (the layer's note says it is screening only). `person.json` stays the
+record, with its full history.
 
 ### Tested (synthetic)
 
 A synthetic subject whose skeleton stands with 10° (right) and 7° (left) of knee valgus, squatting
 (`synthetic.generate(..., knee_frontal_deg=...)`, `validation/runs/alignment_genu_valgum.py`). One calibration
-session builds the person model; another session of the same body is processed four ways. RMSE against the
-synthetic truth:
+session builds the person model; another session of the same body is processed three ways. RMSE against the
+synthetic truth (synthetic truth only, no clinical validation):
 
 | Model | Knee FPPA R / L | Hip adduction R / L | Hip rotation R / L | Subtalar R | Marker fit |
 |---|---|---|---|---|---|
 | Generic knee | 6.7° / 4.5° | 1.8° / 1.3° | 3.6° / 3.2° | 14.2° | 14.0 mm |
 | The person's bones, generic knee | 6.6° / 4.5° | 1.8° / 1.3° | 3.6° / 3.2° | 14.2° | 14.0 mm |
-| Alignment measured on the standing frame | 0.9° / 0.7° | 0.5° / 0.5° | 0.8° / 1.2° | 1.0° | 8.3 mm |
-| True alignment, as a radiograph gives it | 0.8° / 0.6° | 0.5° / 0.5° | 0.8° / 1.2° | 1.0° | 8.4 mm |
+| Limb alignment on record (the true angles, as imaging would give them) | 0.8° / 0.6° | 0.5° / 0.5° | 0.8° / 1.2° | 1.0° | 8.4 mm |
 
 - The generic knee puts knock knees into the hips and the feet: hip rotation off by 3–4° and the subtalar joint
   by 14°. Knee flexion is unaffected (under 1° either way).
 - The person's bone lengths alone change nothing. The knee's angle does.
-- The standing-frame measurement matches the truth here because this synthetic front end gives exact joint
-  centres. Markers predicted from video won't; how close they come on real people is untested.
+- Without a record, both knees get a screening hold (camera estimate +10° and +7°, beyond 6°); with the record,
+  none (it isn't marked structural).
+- The camera estimate equals the truth here (+10.0° / +7.0°) only because this synthetic front end gives exact
+  joint centres. Video keypoints and augmented markers won't; that is why it stays screening only until repeat
+  sessions measure its uncertainty.
 
 ### Not yet
 
-- **Bone torsion** (femoral anteversion, tibial torsion): stored, not applied. The Torsion Tool approach
-  (Veerkamp et al. 2021) would twist the femur and tibia with their muscle attachments.
-- **Shoulder girdle:** the model has no clavicle or scapula. Shoulder height and reach are measured and stored
+- **Bone torsion** (femoral anteversion, tibial torsion): stored and exported, not applied. The Torsion Tool
+  approach (Veerkamp et al. 2021) would twist the femur and tibia with their muscle attachments.
+- **Shoulder girdle:** the model has no clavicle or scapula. Shoulder height and reach are estimated and stored
   only. Shoulder work needs a model with a moving scapula (Seth et al. 2016).
-- **Spine:** curvature and scoliosis are not measured.
+- **Spine:** curvature and scoliosis are not measured (manifest `spinopelvic_parameters` is imaging-only).
 - **Foot:** foot posture is not measured.
-- **Real validation:** needs long-leg radiographs of people who are also recorded with the cameras.
+- **The camera estimate's uncertainty:** needs repeat sessions of the same people.
+- **Real validation:** needs people with long-leg imaging who are also recorded with the cameras.
 
 ## Muscle size, muscle quality and bone density from imaging
 

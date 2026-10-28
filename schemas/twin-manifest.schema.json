@@ -160,7 +160,7 @@
         "tibial_torsion_deg": {"type": "number"},
         "femur_length_mm": {"type": "number"},
         "tibia_length_mm": {"type": "number"},
-        "mechanical_axis_hka_deg": {"type": "number", "description": "Hip-knee-ankle angle; varus/valgus alignment"},
+        "mechanical_axis_hka_deg": {"type": "number", "minimum": -30, "maximum": 30, "description": "Hip-knee-ankle angle; varus/valgus alignment. Convention: deviation of the mechanical axis (hip, knee and ankle joint centres) from a straight leg, degrees, + valgus / - varus (not the 180-degree angle; pipeline/rehabtwin/alignment.py)"},
         "carrying_angle_deg": {"type": "number", "description": "Elbow carrying angle (normal ~5-15 deg)"},
         "source": {"enum": ["eos", "ct", "mri", "radiograph", "clinical-measurement"]}
       }

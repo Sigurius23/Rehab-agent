@@ -7,6 +7,7 @@ import json
 import pytest
 
 from rehabtwin import bone, capacity, person
+from rehabtwin.correction import CorrectionRefused
 
 
 def _dxa(**over):
@@ -130,7 +131,15 @@ def test_muscle_study_uses_the_persons_imaging_and_shows_bone_density(tmp_path, 
     person.set_muscle_imaging(p, tmp_path / "mri.json")
     (tmp_path / "dxa.json").write_text(json.dumps(_dxa()))
     person.set_bone_density(p, tmp_path / "dxa.json")
+    with pytest.raises(CorrectionRefused, match="exo_torque_derating_factor"):     # low density, no clinician factor
+        cli.muscle_study(d, plant=False, view_3d=False, assist=["knee_angle_r=40"], illustrative=True, workers=1)
+    (tmp_path / "dxa.json").write_text(json.dumps(_dxa(exo_torque_derating_factor=0.5)))
+    with pytest.raises(person.PersonRefused, match="approved_by"):
+        person.set_bone_density(p, tmp_path / "dxa.json")
+    (tmp_path / "dxa.json").write_text(json.dumps(_dxa(exo_torque_derating_factor=0.5, approved_by="Dr. T")))
+    person.set_bone_density(p, tmp_path / "dxa.json")
     study, mdir = cli.muscle_study(d, plant=False, view_3d=False, assist=["knee_angle_r=40"], illustrative=True, workers=1)
+    assert study["device_limits"]["applied"] == ["knee_angle_r=20"] and study["device_limits"]["set_by"] == "Dr. T"
     assert scaled[-1][1]["imaging"]["muscles"] == {"quadriceps_r": {"volume_cm3": 1900}}
     assert scaled[-1][0][2:4] == (70.0, 1.75)                                  # the rest by height and mass
     assert study["muscle_model"]["source"].startswith("measured muscle imaging")

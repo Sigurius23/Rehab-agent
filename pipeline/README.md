@@ -106,7 +106,11 @@ fractions, which `muscles` and `strength` use instead of the height-and-mass reg
 a whole-body DXA regional table: each leg's muscle, the segment masses of the muscle model, regional fat and,
 if reported, bone density. Without a scan, `person set --age-years --sex` sizes the leg muscles by age, sex,
 height and mass (NHANES DXA reference data). `person bone` adds a DXA or QCT bone-density result, which device
-and correction what-ifs show. `person shape` fits an SMPL-X body
+and correction what-ifs show; with low density an assistance what-if needs a clinician's torque derating factor.
+`person alignment` adds limb alignment from imaging or a clinician (knee HKA, torsion), which every session's
+knee then carries; the camera's standing estimate is screening only and never changes the model.
+`person safety-flags` records a clinician's safety flags, which hold cues and assistance what-ifs in the flagged
+region, and `person manifest` exports the person model as a twin manifest. `person shape` fits an SMPL-X body
 surface to standing frames of a Kinect recording (the SMPL-X model file is licensed separately); with
 `--smpl-model` it fits SMPL, and `person bones` then scales the person's bones to SKEL's anatomical joint
 centres for that body, or for their measured height and mass (`adapters/body_model_files.py` converts the

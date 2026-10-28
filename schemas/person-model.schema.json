@@ -104,24 +104,36 @@
         "classification": {"type": "object", "required": ["category", "site", "value", "basis"]}
       }
     },
-    "alignment": {
+    "limb_alignment": {
       "type": "object",
-      "required": ["method", "tier"],
-      "description": "Skeletal alignment (pipeline/rehabtwin/alignment.py): the person's standing knee angles, leg lengths, pelvis and shoulders, from a clinician's or imaging record or a session's standing frame. knee_frontal_deg is the mechanical axis, + valgus; applied to the knee of every session's model. structural_flags: joint/planes where posture cues wait for a clinician-set target.",
+      "required": ["measured_at", "tier", "source_summary"],
+      "description": "Limb alignment from imaging or a clinician (pipeline/rehabtwin/alignment.py): the twin manifest's limb_alignment block (right/left limb_side, each with its source) with its provenance. Camera estimates can't be recorded here. mechanical_axis_hka_deg (+ valgus) personalises the knee of every session's model; holds: knees whose posture cues wait for a clinician-set target (structural alignment).",
       "properties": {
-        "method": {"enum": ["long-leg standing radiograph", "EOS", "CT", "MRI", "clinical examination", "standing frame markers"]},
-        "tier": {"enum": ["A", "B", "C"]},
-        "date": {"type": "string"},
+        "right": {"type": "object", "properties": {"source": {"enum": ["eos", "ct", "mri", "radiograph", "clinical-measurement"]}, "mechanical_axis_hka_deg": {"type": "number", "minimum": -30, "maximum": 30}}},
+        "left": {"type": "object", "properties": {"source": {"enum": ["eos", "ct", "mri", "radiograph", "clinical-measurement"]}, "mechanical_axis_hka_deg": {"type": "number", "minimum": -30, "maximum": 30}}},
+        "measured_at": {"type": "string"},
         "approved_by": {"type": "string"},
+        "tier": {"enum": ["A", "B", "C"]},
         "structural": {"type": "boolean"},
         "diagnosis": {"type": "string"},
-        "knee_frontal_deg": {"type": "object", "propertyNames": {"enum": ["r", "l"]}, "additionalProperties": {"type": ["number", "null"], "minimum": -30, "maximum": 30}},
-        "knee_sagittal_deg": {"type": "object", "propertyNames": {"enum": ["r", "l"]}},
-        "leg_length_m": {"type": "object", "propertyNames": {"enum": ["r", "l"]}},
-        "femoral_anteversion_deg": {"type": "object", "propertyNames": {"enum": ["r", "l"]}},
-        "tibial_torsion_deg": {"type": "object", "propertyNames": {"enum": ["r", "l"]}},
-        "structural_flags": {"type": "object", "additionalProperties": {"type": "string"}}
+        "holds": {"type": "object", "additionalProperties": {"type": "string"}}
       }
+    },
+    "alignment_screening": {
+      "type": "object",
+      "required": ["status", "uncertainty", "knee_frontal_deg", "session_id"],
+      "description": "Standing alignment estimated from a session's camera frame (qc.json static_alignment): screening only, never applied to the model; its uncertainty is not yet measured until repeat sessions give the smallest detectable change.",
+      "properties": {
+        "status": {"const": "estimated"},
+        "uncertainty": {"type": "string"},
+        "session_id": {"type": "string"},
+        "knee_frontal_deg": {"type": "object", "propertyNames": {"enum": ["r", "l"]}}
+      }
+    },
+    "safety_flags": {
+      "type": "array",
+      "description": "A clinician's safety flags as given (twin manifest safety_flags; pipeline/rehabtwin/safety.py). The twin never sets or clears them; active flags (any status but cleared) hold posture cues and assistance what-ifs at their region.",
+      "items": {"type": "object", "required": ["flag", "status", "set_by", "set_at", "body_region"], "properties": {"set_by": {"const": "clinician"}, "status": {"enum": ["confirmed", "suspected", "cleared", "not-assessed"]}}}
     },
     "dxa": {
       "type": "object",

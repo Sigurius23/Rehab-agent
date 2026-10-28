@@ -1,30 +1,29 @@
 """Skeletal alignment: the person's own standing geometry (twin layer ``joint_alignment``).
 
 Lengths alone make every person a scaled copy of the generic skeleton. People differ in how their bones sit:
-knock knees (genu valgum) or bow legs (genu varum), a knee that stands bent or hyperextended, one leg longer,
-one hip or shoulder higher. The generic OpenSim knee bends about one axis and has no frontal-plane freedom of
-its own, so inverse kinematics of a valgus knee has to put the difference somewhere else (hip adduction and
-rotation), and a posture rule with a fixed valgus threshold coaches the person against their own skeleton.
+knock knees (genu valgum) or bow legs (genu varum), twisted femurs or shins, one leg longer. The generic
+OpenSim knee bends about one axis and has no frontal-plane freedom of its own, so inverse kinematics of a valgus
+knee has to put the difference somewhere else (hip adduction and rotation).
 
-This module:
+What the twin may do with each kind of evidence follows the anatomy audit (docs/accuracy.md): nothing internal
+is inferred from cameras.
 
-- **measures** the standing alignment from a session's static frame (``measure``): per side the knee's
-  frontal-plane angle between thigh and shank (+ valgus, the same definition as the ``knee_fppa`` signal), the
-  standing knee flexion (- hyperextension), leg length (hip to ankle centre), pelvic obliquity, shoulder height
-  difference and each shoulder's reach from the midline. From markers on the skin or predicted from video, so
-  Tier C: it can't tell a structural deformity from a habitual posture.
-- **checks** alignment records from a clinician or imaging (``check_record``): long-leg standing radiograph,
-  EOS, CT or MRI (Tier B, A when approved), clinical examination (Tier C, B when approved). They may also say
-  whether the alignment is structural and give torsion values, which are stored but not yet applied.
-- **applies** the knee's frontal angle to a model (``apply_to_model``): the knee joint's frame on the femur is
-  turned about the femur's forward axis until the model's thigh-shank angle in its default pose is the
-  person's. The tibia, its markers, muscles and the foot follow. An imaging or clinical value is the
-  mechanical axis (hip, knee and ankle joint centres) and is matched on the model's joint centres; a value
-  measured on markers is matched on the model's own markers measured the same way, because skin markers sit
-  off the joint centres (on the Pose2Sim model: about 0.7 deg more valgus, and 94 % of a tilt).
-- **flags** joints where a posture cue must wait for a clinician (``structural_flags``): a record that says the
-  alignment is structural, or a standing knee angle beyond ``SCREEN_KNEE_FRONTAL_DEG`` (a screening threshold of
-  ours, not a diagnostic cut-off).
+- **Camera estimate, screening only** (``measure``): every session's static frame gives, per side, the knee's
+  frontal-plane angle between thigh and shank (+ valgus, the ``knee_fppa`` definition), the standing knee flexion
+  (- hyperextension), leg length (hip to ankle centre), pelvic obliquity, shoulder height difference and each
+  shoulder's reach from the midline. The joint centres behind it are themselves estimates (video keypoints, a
+  marker augmenter), so the result is an **estimate**: it can't tell a bone shape from a habitual posture, and
+  its uncertainty is not yet measured (it needs repeat sessions, ``rehabtwin progress``). It is used as the
+  person's standing baseline for posture cues, and beyond ``SCREEN_KNEE_FRONTAL_DEG`` it holds that knee's cues
+  with a prompt to get it checked by a professional (``screening_holds``). It never changes the model.
+- **Limb alignment from imaging or a clinician** (``check_limb_alignment``), the twin manifest's
+  ``limb_alignment`` block: per side ``mechanical_axis_hka_deg`` (deviation of the hip-knee-ankle axis from
+  straight, + valgus), femoral anteversion, neck-shaft angle, tibial torsion, femur and tibia length, carrying
+  angle, each with its ``source`` (EOS, CT, MRI, radiograph: Tier B, A when approved; clinical measurement: Tier
+  C, B when approved). Only this personalises the model (``apply_to_model``): the knee joint's frame on the femur
+  is turned about the femur's forward axis until the model's hip-knee-ankle angle in its default pose is the
+  person's; the tibia, its markers, muscles and the foot follow. Torsion values are stored, not yet applied.
+  A record that says the alignment is structural holds that knee's posture cues for a clinician-set target.
 """
 from __future__ import annotations
 
@@ -43,12 +42,16 @@ CENTRES = {
               "l": [["JC_talus_l"], ["L_ankle_study", "L_mankle_study"], ["LANK", "LAKI"], ["LAnkle"]]},
     "shoulder": {"r": [["r_shoulder_study"], ["RSHO"], ["RShoulder"]], "l": [["L_shoulder_study"], ["LSHO"], ["LShoulder"]]},
 }
-SCREEN_KNEE_FRONTAL_DEG = 6.0     # standing knee angle beyond which valgus cues wait for a clinician (ours, not a norm)
-IMAGING = ("long-leg standing radiograph", "EOS", "CT", "MRI")
-METHODS = IMAGING + ("clinical examination", "standing frame markers")
-RANGES = {"knee_frontal_deg": (-30.0, 30.0), "knee_sagittal_deg": (-25.0, 40.0), "leg_length_m": (0.5, 1.3),
-          "femoral_anteversion_deg": (-30.0, 60.0), "tibial_torsion_deg": (-30.0, 60.0)}
-PER_SIDE = tuple(RANGES)
+SCREEN_KNEE_FRONTAL_DEG = 6.0     # estimated standing knee angle beyond which cues are held (ours, not a norm)
+UNCERTAINTY = "not yet measured (needs repeat sessions of the same person: rehabtwin progress)"
+CHECK_PROMPT = "worth getting checked by a professional"
+IMAGING = ("eos", "ct", "mri", "radiograph")
+SOURCES = IMAGING + ("clinical-measurement",)          # twin manifest limb_side.source
+# twin manifest limb_side fields and the values we accept (signs: + valgus, + anteversion, + external torsion)
+LIMB_RANGES = {"mechanical_axis_hka_deg": (-30.0, 30.0), "femoral_anteversion_deg": (-30.0, 60.0),
+               "neck_shaft_angle_deg": (90.0, 170.0), "tibial_torsion_deg": (-30.0, 60.0),
+               "femur_length_mm": (250.0, 650.0), "tibia_length_mm": (200.0, 550.0), "carrying_angle_deg": (-20.0, 40.0)}
+MANIFEST_SIDES = {"right": "r", "left": "l"}
 KNEE_JOINT_CHILD = "tibia"         # the knee is the joint whose child is tibia_<side>
 
 
@@ -78,7 +81,8 @@ def measure(names, pts, up=(0.0, 1.0, 0.0)):
     right = across - (across @ up) * up
     right /= np.linalg.norm(right)
     fwd = np.cross(up, right)          # kinematics: right = fwd x up
-    out = {"method": "standing frame markers", "markers": {k: v for k, v in used.items() if v},
+    out = {"method": "standing frame markers", "status": "estimated", "uncertainty": UNCERTAINTY,
+           "markers": {k: v for k, v in used.items() if v},
            "knee_frontal_deg": {}, "knee_sagittal_deg": {}, "leg_length_m": {}}
     for s in SIDES:
         hip, knee, ankle = c["hip", s], c["knee", s], c["ankle", s]
@@ -104,61 +108,80 @@ def _knee_sagittal(hip, knee, ankle, fwd, up):
     return -float(np.degrees(np.arctan2(thigh[0] * shank[1] - thigh[1] * shank[0], thigh @ shank)))
 
 
-def tier_of(rec):
-    m = rec["method"]
-    if m in IMAGING:
-        return "A" if rec.get("approved_by") else "B"
-    if m == "clinical examination":
-        return "B" if rec.get("approved_by") else "C"
-    return "C"
+def _side_tier(source, approved):
+    if source in IMAGING:
+        return "A" if approved else "B"
+    return "B" if approved else "C"
 
 
-def check_record(rec):
-    """Refuse an alignment record with an unknown method, values out of range, or nothing to use. Returns the
-    record's tier. Per-side values are {"r": .., "l": ..}; ``structural`` (bool) and ``diagnosis`` optional."""
-    if rec.get("method") not in METHODS:
-        raise ValueError(f"method {rec.get('method')!r}: one of {list(METHODS)}")
-    if rec["method"] != "standing frame markers" and not rec.get("date"):
-        raise ValueError("a clinical or imaging record needs its date")
-    found = 0
-    for key, (lo, hi) in RANGES.items():
-        v = rec.get(key)
-        if v is None:
-            continue
-        if not isinstance(v, dict) or not set(v) <= set(SIDES):
-            raise ValueError(f"{key}: give {{'r': value, 'l': value}}")
-        for s, x in v.items():
+def check_limb_alignment(rec):
+    """Refuse a limb-alignment record that isn't imaging or clinical, has values out of range, or has nothing to
+    use. Format: the twin manifest's ``limb_alignment`` ({"right": {...}, "left": {...}}, each side with its
+    ``source``), plus ``measured_at``, and optionally ``approved_by``, ``structural``, ``diagnosis``. Returns the
+    record's tier (its least-evidenced side)."""
+    if not rec.get("measured_at"):
+        raise ValueError("measured_at: the date of the imaging or examination")
+    sides = [k for k in MANIFEST_SIDES if k in rec]
+    if not sides:
+        raise ValueError("give 'right' and/or 'left' (twin manifest limb_side)")
+    found, ranks = 0, []
+    for side in sides:
+        v = rec[side]
+        source = v.get("source", rec.get("source"))
+        if source not in SOURCES:
+            raise ValueError(f"{side}.source {source!r}: one of {list(SOURCES)} - camera estimates are screening only "
+                             "and never limb alignment")
+        unknown = set(v) - set(LIMB_RANGES) - {"source"}
+        if unknown:
+            raise ValueError(f"{side}: unknown fields {sorted(unknown)} (twin manifest limb_side: {sorted(LIMB_RANGES)})")
+        for key, (lo, hi) in LIMB_RANGES.items():
+            x = v.get(key)
             if x is None:
                 continue
             if not lo <= float(x) <= hi:
-                raise ValueError(f"{key}.{s} = {x}: outside {lo} to {hi} (signs: + valgus, + flexion, + external)")
+                hint = (" (give the deviation from a straight leg, + valgus, not the 180-degree angle)"
+                        if key == "mechanical_axis_hka_deg" else "")
+                raise ValueError(f"{side}.{key} = {x}: outside {lo:g} to {hi:g}{hint}")
             found += 1
+        ranks.append(_side_tier(source, rec.get("approved_by")))
     if not found:
-        raise ValueError(f"no alignment values: give at least one of {list(RANGES)}")
-    if rec.get("knee_frontal_axis", "mechanical") != "mechanical":
-        raise ValueError("knee_frontal_deg must be the mechanical axis (hip, knee and ankle joint centres); "
-                         "convert an anatomical tibiofemoral angle before recording it")
+        raise ValueError(f"no alignment values: give at least one of {list(LIMB_RANGES)}")
     if "structural" in rec and not isinstance(rec["structural"], bool):
         raise ValueError("structural: true or false")
-    if rec.get("structural") and rec["method"] == "standing frame markers":
-        raise ValueError("markers on a standing person can't tell a structural deformity from a posture")
-    return tier_of(rec)
+    return min(ranks, key="CBA".index)
 
 
-def structural_flags(rec):
-    """{joint_plane: reason} where posture cues must wait for a clinician-set target."""
-    if not rec:
+def knee_hka(rec):
+    """{side: mechanical-axis HKA deviation (deg, + valgus)} of a limb-alignment record."""
+    return {s: rec[k]["mechanical_axis_hka_deg"] for k, s in MANIFEST_SIDES.items()
+            if k in rec and rec[k].get("mechanical_axis_hka_deg") is not None}
+
+
+def structural_holds(rec):
+    """{joint_plane: reason}: knees whose recorded alignment a clinician or imaging calls structural."""
+    if not rec or not rec.get("structural"):
         return {}
     out = {}
-    for s in SIDES:
-        v = (rec.get("knee_frontal_deg") or {}).get(s)
-        if rec.get("structural") and v is not None:
-            out[f"knee_{s}.frontal"] = (f"structural knee alignment recorded ({rec.get('diagnosis') or 'no diagnosis given'}, "
-                                        f"{v:+g} deg, {rec['method']} {rec.get('date', '')})".replace(" )", ")"))
-        elif v is not None and abs(v) > SCREEN_KNEE_FRONTAL_DEG:
-            out[f"knee_{s}.frontal"] = (f"standing knee angle {v:+g} deg ({rec['method']}) is beyond the "
-                                        f"{SCREEN_KNEE_FRONTAL_DEG:g} deg screening threshold: may be structural")
+    for side, s in MANIFEST_SIDES.items():
+        v = (rec.get(side) or {}).get("mechanical_axis_hka_deg")
+        if v is not None:
+            source = rec[side].get("source", rec.get("source"))
+            diagnosis = rec.get("diagnosis") or "no diagnosis given"
+            out[f"knee_{s}.frontal"] = (f"structural knee alignment on record ({diagnosis}, {v:+g} deg, {source} "
+                                        f"{rec['measured_at']})")
     return out
+
+
+def screening_holds(estimate, recorded=None):
+    """{joint_plane: reason}: knees whose camera-estimated standing angle is beyond the screening threshold and
+    that have no imaging or clinical value on record (that record knows better than the camera)."""
+    if not estimate or "knee_frontal_deg" not in estimate:
+        return {}
+    known = knee_hka(recorded or {})
+    return {f"knee_{s}.frontal": (f"standing knee angle estimated at {v:+g} deg from the camera (uncertainty "
+                                  f"{UNCERTAINTY.split(' (')[0]}), beyond the {SCREEN_KNEE_FRONTAL_DEG:g} deg screening "
+                                  f"threshold: {CHECK_PROMPT}")
+            for s, v in estimate["knee_frontal_deg"].items() if abs(v) > SCREEN_KNEE_FRONTAL_DEG and s not in known}
 
 
 # ---------------------------------------------------------------- the model
@@ -212,29 +235,15 @@ def _rot_xyz(a):
     return rx @ ry @ rz
 
 
-def model_marker_knee_frontal(model, state, side):
-    """The model's knee frontal angle measured on its own markers as ``measure`` measures a person."""
-    ms = model.getMarkerSet()
-    names = [ms.get(i).getName() for i in range(ms.getSize())]
-    pts = []
-    for n in names:
-        p = ms.get(n).getLocationInGround(state)
-        pts.append([p.get(i) for i in range(3)])
-    return measure(names, pts)["knee_frontal_deg"][side]
-
-
-def apply_to_model(model_path, out_path, knee_frontal_deg, match="joint_centres", tol_deg=0.05):
+def apply_to_model(model_path, out_path, hka_deg, tol_deg=0.05):
     """Turn each knee's frame on the femur about the femur's forward (x) axis until the model's default-pose
-    knee frontal angle is ``knee_frontal_deg`` {side: deg}, on its joint centres (``match="joint_centres"``:
-    imaging, clinical) or on its markers (``"markers"``: a value measured on markers). Returns {side:
-    {"before_deg", "after_deg", "tilt_deg", "joint", "matched_on"}}."""
-    if match not in ("joint_centres", "markers"):
-        raise ValueError(f"match: 'joint_centres' or 'markers', not {match!r}")
+    hip-knee-ankle angle on its joint centres is ``hka_deg`` {side: deg, + valgus} (from a limb-alignment record).
+    Returns {side: {"before_deg", "after_deg", "tilt_deg", "joint"}}."""
     osim = _osim()
     model = osim.Model(str(model_path))
-    angle = model_knee_frontal if match == "joint_centres" else model_marker_knee_frontal
+    angle = model_knee_frontal
     done = {}
-    for s, target in knee_frontal_deg.items():
+    for s, target in hka_deg.items():
         if target is None:
             continue
         frame = osim.PhysicalOffsetFrame.safeDownCast(_knee_joint(model, s).getParentFrame())
@@ -255,7 +264,7 @@ def apply_to_model(model_path, out_path, knee_frontal_deg, match="joint_centres"
         else:
             raise RuntimeError(f"knee_{s}: reached {now:.2f} deg, not {target:g}")
         done[s] = {"before_deg": round(before, 2), "after_deg": round(now, 2), "tilt_deg": round(float(np.degrees(tilt)), 2),
-                   "joint": _knee_joint(model, s).getName(), "matched_on": match}
+                   "joint": _knee_joint(model, s).getName()}
     model.finalizeConnections()
     model.printToXML(str(out_path))
     return done

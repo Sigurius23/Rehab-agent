@@ -3,18 +3,35 @@
 ## Unreleased
 - **Skeletal alignment: the person's own knees, legs and shoulders** (`docs/person-model.md`,
   `rehabtwin/alignment.py`, `rehabtwin person alignment`):
-  - Every session measures its standing frame (`qc.json` → `static_alignment`): knee frontal angle (+ valgus),
-    standing knee flexion, leg lengths, pelvic obliquity, shoulder height and reach. Tier C.
-  - Clinical or imaging records (long-leg standing radiograph, EOS, CT, MRI, clinical examination) with tiers;
-    only they can say an alignment is structural. Mechanical axis only; an anatomical angle is refused.
-  - Sessions with `--person` turn each knee joint's frame on the femur so the model stands at the person's knee
-    angle (joint centres for imaging, the model's own markers for a marker measurement).
-  - Synthetic genu valgum (10° / 7°): knee FPPA error 6.7° → 0.9°, hip rotation 3.6° → 0.8°, subtalar 14.2° →
-    1.0°, marker fit 14.0 → 8.3 mm. The person's bone lengths alone changed nothing.
+  - Every session estimates its standing frame from the camera (`qc.json` → `static_alignment`): knee frontal
+    angle (+ valgus), standing knee flexion, leg lengths, pelvic obliquity, shoulder height and reach. Labelled
+    estimated, uncertainty not yet measured; screening only, never applied to the model
+    (`person screening` keeps it).
+  - Limb alignment from imaging or a clinician in the twin manifest's `limb_alignment` format (`person
+    alignment`): per side `mechanical_axis_hka_deg` (deviation from straight, + valgus), torsion, neck-shaft,
+    segment lengths, carrying angle, each with its `source` (EOS/CT/MRI/radiograph: B, A approved; clinical
+    measurement: C, B approved). A camera source is refused. Only this record can say the alignment is
+    structural.
+  - Sessions with `--person` turn each knee joint's frame on the femur so the model's hip-knee-ankle angle on its
+    joint centres is the recorded one.
+  - Synthetic genu valgum (10° / 7°; synthetic truth only, no clinical validation): with a limb-alignment record
+    of the true angles, knee FPPA error 6.7° → 0.8°, hip rotation 3.6° → 0.8°, subtalar 14.2° → 1.0°, marker fit
+    14.0 → 8.4 mm. The person's bone lengths alone changed nothing.
   - Posture rules can be `"relative_to": "standing"`: the squat template's knee valgus cue is now 10° beyond the
-    person's standing knee angle. A structural record, or a standing knee angle beyond 6°, holds that joint's
-    cues for a clinician-set target. `cues` and `lsl-live` take the standing values from the session's static
+    person's standing knee angle. `cues` and `lsl-live` take the standing values from the session's static
     pose.
+- **One contract with the anatomy audit** (`docs/accuracy.md` red lines, `docs/person-model.md`):
+  - Screening holds: a camera-estimated standing knee angle beyond 6° (where no limb alignment is on record)
+    holds that knee's cues for a clinician-set target, with the prompt "worth getting checked by a
+    professional". Prompts never name an imaging test. A structural record holds the same way.
+  - Clinician safety flags (`person safety-flags`, `rehabtwin/safety.py`): recorded only with `set_by:
+    clinician`; active unless cleared (suspected and not-assessed hold too); the whole flagged region gets no
+    posture cues and no assistance what-ifs. An unrecognised region holds every joint.
+  - Assistance what-ifs follow bone quality: a clinician's `exo_torque_derating_factor` scales assist torque and
+    passive stiffness; low bone density without one refuses them.
+  - `person manifest` exports the person model as a twin manifest, checked against the schema, with provenance
+    per block. The person schema's `alignment` block is replaced by `limb_alignment`, `alignment_screening` and
+    `safety_flags`.
 - **Kinect v1 depth viewpoint** (`docs/kinect-v1.md`; not yet run on a real sensor):
   - `pipeline/capture/kinect_v1`: a Windows recorder (Kinect for Windows SDK 1.8, built with Windows' own C#
     compiler). It writes colour, depth registered to the colour grid, raw depth, the SDK skeleton, floor plane

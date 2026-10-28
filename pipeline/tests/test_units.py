@@ -341,9 +341,10 @@ def test_cue_engine_faded_schedule_and_refractory():
     assert all(b - a >= 5.0 for a, b in zip(times, times[1:]))
 
 
-def test_cue_rule_relative_to_standing_and_alignment_flags():
+def test_cue_rule_relative_to_standing_holds_and_safety_flags():
     """A knee that stands in 8 deg of valgus is cued for what it adds in the squat, not for how it stands; with no
-    standing value the rule is not evaluated; a structural alignment holds the cue for a clinician-set target."""
+    standing value the rule is not evaluated; a screening hold waits for a clinician-set target; a clinician safety
+    flag holds the region whatever the rule says."""
     t = np.arange(0, 4, 0.01)
     s = np.where((t > 1) & (t < 2), 15.0, 8.0)       # stands at 8, squats to 15: 7 deg more
     rel = _rule_spec()
@@ -359,14 +360,19 @@ def test_cue_rule_relative_to_standing_and_alignment_flags():
     log, sent = feedback.replay(rel, t, {"s": s2}, **ok)
     summ = feedback.summarise(rel, log, sent, "A", ok["allowed_joint_planes"])
     assert not sent and summ["per_rule"]["v"]["unevaluated"] and "no standing value" in summ["per_rule"]["v"]["not_evaluated_because"]
-    flags = {"knee_r.frontal": "structural knee alignment recorded (genu valgum)"}
-    log, sent = feedback.replay(rel, t, {"s": s2}, baselines={"s": 8.0}, flags=flags, **ok)
+    holds = {"knee_r.frontal": "structural knee alignment on record (genu valgum)"}
+    log, sent = feedback.replay(rel, t, {"s": s2}, baselines={"s": 8.0}, holds=holds, **ok)
     d = [e for e in log if "decision" in e]
     assert not sent and d[0]["decision"] == "would_cue" and "set by the treating clinician" in d[0]["reason"]
-    assert "genu valgum" in feedback.summarise(rel, log, sent, "A", ok["allowed_joint_planes"], {"s": 8.0}, flags)["per_rule"]["v"]["gate"]
+    summ = feedback.summarise(rel, log, sent, "A", ok["allowed_joint_planes"], {"s": 8.0}, holds)
+    assert "genu valgum" in summ["per_rule"]["v"]["gate"] and summ["screening_holds"] == holds
     rel["rules"][0]["clinician_target"] = True
-    _, sent = feedback.replay(rel, t, {"s": s2}, baselines={"s": 8.0}, flags=flags, **ok)
-    assert len(sent) == 1
+    _, sent = feedback.replay(rel, t, {"s": s2}, baselines={"s": 8.0}, holds=holds, **ok)
+    assert len(sent) == 1                                       # the clinician set this person's target
+    safe = {"knee_r": "clinician safety flag 'joint-instability' (confirmed, set 2026-10-01) at right knee"}
+    log, sent = feedback.replay(rel, t, {"s": s2}, baselines={"s": 8.0}, holds=holds, safety=safe, **ok)
+    d = [e for e in log if "decision" in e]
+    assert not sent and "no cues at this region" in d[0]["reason"]          # nothing overrides a safety flag
     bad = _rule_spec()
     bad["rules"][0]["relative_to"] = "yesterday"
     with pytest.raises(ValueError, match="relative_to"):
@@ -421,24 +427,59 @@ def test_standing_alignment_from_markers():
         alignment.measure(names[:-6], pts[:-6])
 
 
-def test_alignment_records_tier_and_flags():
+def test_limb_alignment_records_tiers_and_holds():
     from rehabtwin import alignment
-    xray = {"method": "long-leg standing radiograph", "date": "2026-09-01", "knee_frontal_deg": {"r": 9.0, "l": 7.5},
-            "structural": True, "diagnosis": "genu valgum"}
-    assert alignment.check_record(xray) == "B" and alignment.check_record({**xray, "approved_by": "Dr. X"}) == "A"
-    assert alignment.check_record({"method": "clinical examination", "date": "2026-09-01", "knee_frontal_deg": {"r": 4}}) == "C"
-    for bad, msg in (({**xray, "method": "photo"}, "method"), ({**xray, "knee_frontal_deg": {"r": 45}}, "outside"),
-                     ({**xray, "knee_frontal_axis": "anatomical"}, "mechanical axis"),
-                     ({"method": "standing frame markers", "knee_frontal_deg": {"r": 9}, "structural": True}, "posture"),
-                     ({"method": "EOS", "date": "2026-09-01"}, "no alignment values"),
-                     ({"method": "EOS", "knee_frontal_deg": {"r": 3}}, "date")):
+    xray = {"measured_at": "2026-09-01", "structural": True, "diagnosis": "genu valgum",
+            "right": {"mechanical_axis_hka_deg": 9.0, "tibial_torsion_deg": 30.0, "source": "radiograph"},
+            "left": {"mechanical_axis_hka_deg": 7.5, "source": "radiograph"}}
+    assert alignment.check_limb_alignment(xray) == "B" and alignment.check_limb_alignment({**xray, "approved_by": "Dr. X"}) == "A"
+    exam = {"measured_at": "2026-09-01", "right": {"mechanical_axis_hka_deg": 4.0, "source": "clinical-measurement"}}
+    assert alignment.check_limb_alignment(exam) == "C" and alignment.check_limb_alignment({**exam, "approved_by": "Dr. X"}) == "B"
+    mixed = {"measured_at": "2026-09-01", "right": {"mechanical_axis_hka_deg": 4.0, "source": "eos"},
+             "left": {"mechanical_axis_hka_deg": 3.0, "source": "clinical-measurement"}}
+    assert alignment.check_limb_alignment(mixed) == "C"                     # the least-evidenced side
+    for bad, msg in (({**xray, "right": {"mechanical_axis_hka_deg": 9.0, "source": "standing frame markers"}}, "screening only"),
+                     ({**xray, "right": {"mechanical_axis_hka_deg": 178.0, "source": "radiograph"}}, "not the 180-degree"),
+                     ({**xray, "right": {"knee_frontal_deg": 9.0, "source": "radiograph"}}, "unknown fields"),
+                     ({k: v for k, v in xray.items() if k != "measured_at"}, "measured_at"),
+                     ({"measured_at": "2026-09-01", "right": {"source": "ct"}}, "no alignment values"),
+                     ({"measured_at": "2026-09-01"}, "right")):
         with pytest.raises(ValueError, match=msg):
-            alignment.check_record(bad)
-    f = alignment.structural_flags(xray)
-    assert set(f) == {"knee_r.frontal", "knee_l.frontal"} and "genu valgum" in f["knee_r.frontal"]
-    measured = {"method": "standing frame markers", "knee_frontal_deg": {"r": 7.0, "l": 2.0}}
-    assert set(alignment.structural_flags(measured)) == {"knee_r.frontal"}          # screening only beyond 6 deg
-    assert alignment.structural_flags(None) == {}
+            alignment.check_limb_alignment(bad)
+    assert alignment.knee_hka(xray) == {"r": 9.0, "l": 7.5}
+    h = alignment.structural_holds(xray)
+    assert set(h) == {"knee_r.frontal", "knee_l.frontal"} and "genu valgum" in h["knee_r.frontal"]
+    assert alignment.structural_holds({**xray, "structural": False}) == {}
+    estimate = {"method": "standing frame markers", "knee_frontal_deg": {"r": 7.0, "l": 2.0}}
+    s = alignment.screening_holds(estimate)
+    assert set(s) == {"knee_r.frontal"} and alignment.CHECK_PROMPT in s["knee_r.frontal"]   # beyond 6 deg only
+    assert not any(w in s["knee_r.frontal"].lower() for w in ("x-ray", "radiograph", "scan", "mri", "ct "))
+    assert alignment.screening_holds(estimate, recorded=xray) == {}          # the record knows better than the camera
+    assert alignment.screening_holds(None) == {}
+
+
+def test_safety_flags_are_the_clinicians_and_fail_closed():
+    from rehabtwin import safety
+    knee = {"flag": "joint-instability", "body_region": "right knee", "status": "suspected", "set_by": "clinician",
+            "set_at": "2026-10-01", "restrictions": ["no valgus loading"]}
+    neck = {"flag": "atlantoaxial-instability", "body_region": "cervical spine", "status": "not-assessed",
+            "set_by": "clinician", "set_at": "2026-10-01"}
+    odd = {"flag": "other", "body_region": "sacroiliac region", "status": "confirmed", "set_by": "clinician",
+           "set_at": "2026-10-01"}
+    assert safety.check_flags([knee, neck]) == [knee, neck] and safety.check_flags({"safety_flags": [knee]}) == [knee]
+    for bad, msg in (({**knee, "set_by": "physio"}, "never sets or clears"), ({**knee, "status": "gone"}, "status"),
+                     ({**knee, "flag": "weak"}, "flag"), ({k: v for k, v in knee.items() if k != "set_at"}, "set_at"),
+                     ({**knee, "restrictions": "none"}, "list of strings")):
+        with pytest.raises(ValueError, match=msg):
+            safety.check_flags([bad])
+    joints = ["knee_r", "knee_l", "hip_r", "neck", "head_segment", "torso_segment", "lumbar"]
+    h = safety.holds([knee, neck], joints)
+    assert set(h) == {"knee_r", "neck", "head_segment"} and "no valgus loading" in h["knee_r"]
+    assert safety.holds([{**knee, "status": "cleared"}], joints) == {}
+    h = safety.holds([odd], joints)
+    assert set(h) == set(joints) and "every joint is held" in h["knee_l"]     # unknown region: everything held
+    both = {**knee, "body_region": "both knees (bilateral)"}
+    assert set(safety.holds([both], joints)) == {"knee_r", "knee_l"}
 
 
 def test_feedback_rules_template_loads():

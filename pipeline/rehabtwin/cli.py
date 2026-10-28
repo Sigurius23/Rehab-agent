@@ -215,6 +215,43 @@ def _person_record(session_dir, sess, person=None):
     return rec, Path(folder)
 
 
+def _device_limits(person_rec, bone_status, assist, passive):
+    """Assistance what-ifs within the person's safety limits (docs/accuracy.md red lines): refused at a joint an
+    active clinician safety flag covers; torque and stiffness scaled by the clinician's bone-quality derating
+    factor; refused when bone density is low and no clinician has set that factor. Returns (assist, passive,
+    record of what was applied)."""
+    from . import bone, muscles, safety
+    from .correction import CorrectionRefused
+    from .kinematics import classify
+    if not (assist or passive):
+        return assist, passive, None
+    flags = (person_rec or {}).get("safety_flags")
+    for spec in (*assist, *passive):
+        joint = classify(spec.split("=", 1)[0])[0]
+        held = safety.holds(flags, [joint])
+        if held:
+            raise CorrectionRefused(f"{spec}: {held[joint]} - no assistance what-if at this joint")
+    factor = ((person_rec or {}).get("bone_density") or {}).get("exo_torque_derating_factor")
+    if factor is None and bone_status and bone.ORDER[bone_status["category"]] < 2:
+        raise CorrectionRefused(f"bone density: {bone_status['category']} at {bone_status['site'].replace('_', ' ')}: an "
+                                "assistance what-if needs the clinician's exo_torque_derating_factor in the bone record "
+                                "(rehabtwin person bone)")
+    if factor is None:
+        return assist, passive, {"derating_factor": None, "why": "bone density gives no reason to derate"
+                                 if bone_status else "bone density not measured"}
+    f = float(factor)
+    out_a = []
+    for spec in assist:
+        coord, torque, _, _ = muscles.parse_assist(spec)
+        out_a.append(f"{coord}={torque * f:g}" + (f":{spec.split(':', 1)[1]}" if ":" in spec else ""))
+    out_p = []
+    for spec in passive:
+        coord, k, q0, direction = muscles.parse_passive(spec)
+        out_p.append(f"{coord}={k * f:g}@{q0:g}:{direction}")
+    return out_a, out_p, {"derating_factor": f, "set_by": person_rec["bone_density"].get("approved_by"),
+                          "requested": [*assist, *passive], "applied": [*out_a, *out_p]}
+
+
 def _capacity_model(session_dir, sess, body_mass, use=True, person_rec=None):
     """(model, record): the session model with leg muscle capacity for this person (rehabtwin/capacity.py).
 
@@ -324,6 +361,7 @@ def muscle_study(session_dir, rep=1, start=None, stop=None, correction=None, wea
     model, cap = _capacity_model(session_dir, sess, body_mass, capacity and not use_strength, person_rec)
     muscle_model = {"source": _muscle_source(cap), "capacity": _capacity_summary(cap)}
     bone_status = ((person_rec or {}).get("bone_density") or {}).get("classification")
+    assist, passive, device_limits = _device_limits(person_rec, bone_status, assist, passive)
     if use_strength:
         model = session_dir / "strength" / "model_strength.osim"
         if not model.exists():
@@ -401,6 +439,7 @@ def muscle_study(session_dir, rep=1, start=None, stop=None, correction=None, wea
     study = {"twin_tier": sess["twin_tier"], "muscle_model": muscle_model, "body_mass": body_mass,
              "kinematics_prior": prior, "runs": runs, "bone_density": bone_status,
              "bone_caveat": bone.caveat(bone_status) if (assist or passive) else None,
+             "device_limits": device_limits,
              "devices_status": (None if not (assist or passive)
                                 else "ILLUSTRATION ONLY - design-space bound on a generic body, not an assistance profile"
                                 if sess["twin_tier"] != "A" else
@@ -444,10 +483,10 @@ def cue_replay(session_dir, rules, motion=None):
     signals = {c: tab.col(c) for c in tab.columns}
     signals.update(metrics_mod.derived_signals(tab, model))
     _, tier, allowed, gate_closed = _session_gate(session_dir, spec)
-    standing, flags = standing_values(session_dir, sess)
+    standing, holds, safe = cue_context(session_dir, sess, spec)
     log, sent = feedback.replay(spec, tab.time, signals, tier=tier, allowed_joint_planes=allowed, baselines=standing,
-                                flags=flags)
-    summ = feedback.summarise(spec, log, sent, tier, allowed, standing, flags)
+                                holds=holds, safety=safe)
+    summ = feedback.summarise(spec, log, sent, tier, allowed, standing, holds, safe)
     summ["validation_gate"] = gate_closed or "open"
     out = session_dir / "feedback" / (spec["name"] + (f"__{Path(motion).parent.name}" if motion else ""))
     out.mkdir(parents=True, exist_ok=True)
@@ -464,8 +503,8 @@ def cue_replay(session_dir, rules, motion=None):
 
 
 def standing_values(session_dir, sess):
-    """({signal: the person's standing value}, {joint_plane: why cues there wait for a clinician}) of a processed
-    session: every signal on its static pose (the static IK the scaling used), and the alignment flags in qc.json."""
+    """({signal: the person's standing value}, {joint_plane: screening hold}) of a processed session: every signal
+    on its static pose (the static IK the scaling used), and the holds in qc.json."""
     session_dir = Path(session_dir)
     model = session_dir / sess["pipeline"]["outputs"]["model"]
     static = model.parent / "static_pose.mot"
@@ -476,8 +515,18 @@ def standing_values(session_dir, sess):
         sig.update(metrics_mod.derived_signals(tab, model))
         values = {k: round(float(np.mean(v)), 3) for k, v in sig.items() if np.all(np.isfinite(v))}
     qc = session_dir / "qc.json"
-    flags = json.loads(qc.read_text()).get("alignment", {}).get("flags", {}) if qc.exists() else {}
-    return values, flags
+    holds = json.loads(qc.read_text()).get("alignment", {}).get("holds", {}) if qc.exists() else {}
+    return values, holds
+
+
+def cue_context(session_dir, sess, spec):
+    """(standing values, screening holds, safety holds) for a rule set on a session: the clinician safety flags
+    are read from the session's person folder now, so a flag set after the session still applies."""
+    from . import safety
+    standing, holds = standing_values(session_dir, sess)
+    person_rec, _ = _person_record(Path(session_dir), sess)
+    joints = {r["joint_plane"].split(".")[0] for r in spec["rules"]}
+    return standing, holds, safety.holds((person_rec or {}).get("safety_flags"), joints)
 
 
 def _session_gate(session_dir, spec=None):
@@ -573,7 +622,16 @@ def person_command(a):
         elif a.person_cmd == "bones":
             rec = person_mod.set_bones(a.folder, a.skel_dir, a.smpl_dir, a.source, a.config, a.replace)
         elif a.person_cmd == "alignment":
-            rec = person_mod.set_alignment(a.folder, a.record, a.from_session, a.replace)
+            rec = person_mod.set_limb_alignment(a.folder, a.record, a.replace)
+        elif a.person_cmd == "screening":
+            rec = person_mod.set_alignment_screening(a.folder, a.from_session)
+        elif a.person_cmd == "safety-flags":
+            rec = person_mod.set_safety_flags(a.folder, a.record)
+        elif a.person_cmd == "manifest":
+            rec = person_mod.load(a.folder)
+            man = person_mod.manifest(a.folder)
+            Path(a.out).write_text(json.dumps(man, indent=1))
+            print(f"twin manifest: {a.out}")
         else:
             rec = person_mod.load(a.folder)
     except (ValueError, FileNotFoundError) as e:     # includes PersonRefused and records.StaleResult
@@ -720,14 +778,24 @@ def main(argv=None):
                                       "else mediapipe_lstm_pose2sim)")
     pbn.add_argument("--replace", action="store_true",
                      help="replace a model built from a session (default: keep it and record the comparison)")
-    pal = psub.add_parser("alignment", help="skeletal alignment: knee valgus/varus, leg length, pelvis and shoulders "
-                                            "(a clinician's or imaging record, or a session's standing frame)")
+    pal = psub.add_parser("alignment", help="limb alignment from imaging or a clinician (twin manifest limb_alignment): "
+                                            "knee HKA, torsion, segment lengths; personalises the knee in every session")
     pal.add_argument("folder")
-    pag = pal.add_mutually_exclusive_group(required=True)
-    pag.add_argument("--record", help="JSON: method, date, approved_by?, structural?, diagnosis?, knee_frontal_deg "
-                                      "{r, l} (mechanical axis, + valgus), ... (docs/person-model.md)")
-    pag.add_argument("--from-session", help="a processed session of this person: its standing-frame measurement (Tier C)")
-    pal.add_argument("--replace", action="store_true", help="replace a higher-tier alignment record")
+    pal.add_argument("record", help="JSON: right/left {mechanical_axis_hka_deg (+ valgus), femoral_anteversion_deg, ..., "
+                                    "source: eos|ct|mri|radiograph|clinical-measurement}, measured_at, approved_by?, "
+                                    "structural?, diagnosis? (docs/person-model.md)")
+    pal.add_argument("--replace", action="store_true", help="replace a higher-tier limb-alignment record")
+    pscr = psub.add_parser("screening", help="keep a session's camera estimate of standing alignment (screening only; "
+                                             "never applied to the model)")
+    pscr.add_argument("folder")
+    pscr.add_argument("--from-session", required=True, help="a processed session of this person")
+    psf = psub.add_parser("safety-flags", help="a clinician's safety flags (twin manifest safety_flags): hold cues and "
+                                               "assistance what-ifs at the flagged regions")
+    psf.add_argument("folder")
+    psf.add_argument("record", help="JSON list: flag, body_region, status, set_by: clinician, set_at, restrictions?")
+    pmf = psub.add_parser("manifest", help="write the person model as a twin manifest (schemas/twin-manifest.schema.json)")
+    pmf.add_argument("folder")
+    pmf.add_argument("--out", required=True)
     psh = psub.add_parser("show", help="what the person model holds, per twin layer")
     psh.add_argument("folder")
     au = sub.add_parser("augment", help="add OpenCap's LSTM anatomical markers to a keypoint sequence (pip install onnxruntime)")
@@ -990,10 +1058,10 @@ def main(argv=None):
         sess, tier, allowed, why = _session_gate(a.session, spec)
         if why:
             print(f"feedback gate closed: {why}", file=sys.stderr)
-        standing, flags = standing_values(a.session, sess)
+        standing, holds, safe = cue_context(a.session, sess, spec)
         eng = lsl_bridge.run_live(spec, tier, allowed, a.duration_s, publish_would_cue=a.publish_would_cue,
                                   expect_session=sess["session_id"], expect_front_end=sess["pipeline"]["front_end"],
-                                  baselines=standing, flags=flags)
+                                  baselines=standing, holds=holds, safety=safe)
         print(json.dumps([e for e in eng.log if "decision" in e], indent=1))
     elif a.cmd == "lsl-listen":
         from . import lsl_bridge

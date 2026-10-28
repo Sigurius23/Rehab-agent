@@ -134,7 +134,9 @@ The person model (`docs/person-model.md`) records this per person; `person show`
 | 4 | Kinematics | per session, validated per joint × plane against a reference | per validation | marker mocap for the person and exercise |
 | 5 | Muscle | Rajagopal leg muscles: force from MRI/CT volume and fat fraction where imaged (`person muscles`), else each leg's volume from a DXA scan (`person dxa`), from age, sex, height and mass, or from height and mass (`capacity.py`); dynamometry for tested groups (`strength`) | C (B/A once all leg muscles are imaged) | imaged muscle geometry (attachments, paths); EMG calibration (CEINMS). Tested on 15 adults' thigh MRI + dynamometry: measured volume r = 0.86 with strength, the regression 0.44 (`docs/person-model.md`) |
 | 6 | Soft tissue | regional fat and lean mass from a whole-body DXA (`person dxa`, `dxa.py`); sets the segment masses of the muscle model | B with a DXA scan (A reviewed); — without | tissue deformation (research-grade only) |
-| — | Bone density | DXA/QCT result and screening category (`person bone`, `bone.py`); shown on device and correction what-ifs | measured | not in the OpenSim model; bone strength and fracture risk are not modelled |
+| — | Bone density | DXA/QCT result and screening category (`person bone`, `bone.py`); shown on device and correction what-ifs; a clinician's `exo_torque_derating_factor` scales assistance what-ifs, and low density without one refuses them | measured | not in the OpenSim model; bone strength and fracture risk are not modelled |
+| — | Joint alignment | manifest `limb_alignment` from imaging or a clinician (`person alignment`, `alignment.py`): knee HKA put into every session's model (synthetic genu valgum, synthetic truth only, no clinical validation: knee FPPA RMSE 6.7° → 0.8°); torsion and lengths stored. Standing frame estimated from the camera every session: screening only, never written to `limb_alignment` or the model | B/A from imaging; C clinical; camera estimate: estimated, uncertainty not yet measured | Torsion Tool (femur/tibia twist with muscle attachments); repeat sessions to measure the camera estimate's uncertainty; a real imaging comparison |
+| — | Safety flags | manifest `safety_flags` recorded as the clinician gives them (`person safety-flags`, `safety.py`); active unless cleared; hold posture cues and assistance what-ifs over the whole flagged region | clinician record | — (the twin never sets, infers or clears one) |
 
 ## Red lines
 
@@ -152,7 +154,17 @@ The person model (`docs/person-model.md`) records this per person; `person show`
   the session's person and model (`rehabtwin/tiers.py`); only marker-mocap validations open feedback.
 - No powered assistance at a joint covered by an active `safety_flags`
   entry beyond its recorded restrictions; bone-quality derating
-  (`bone_quality.exo_torque_derating_factor`) always applies.
+  (`bone_quality.exo_torque_derating_factor`) always applies. The pipeline
+  doesn't interpret the restrictions text: it holds every posture cue and
+  assistance what-if in the flagged region, and treats `suspected` and
+  `not-assessed` like `confirmed` (fail closed).
+- A camera estimate of standing alignment is labelled *estimated*, with
+  "uncertainty not yet measured" until repeat sessions of the same person
+  measure it; change against the person's own baseline is the primary signal.
+  Beyond the screening threshold the prompt is "worth getting checked by a
+  professional": a prompt never names an imaging test.
+- A number from a synthetic test carries its caveat wherever it is quoted
+  (synthetic truth, no clinical validation).
 - No internal anatomy (bone shape, joint space, muscle quality,
   ligament state, neural drive, spasticity grade) inferred from
   camera/LiDAR — the anatomy audit's standing negative result.

@@ -440,40 +440,74 @@ def test_person_model_keeps_the_bones_across_sessions(selftest_run, tmp_path):
     assert not (tmp_path / "small_metric" / "opensim" / "markers_dynamic.trc").exists()   # refused before writing
 
 
-def test_person_alignment_goes_into_the_knee_and_holds_cues(selftest_run, tmp_path):
-    """Genu valgum on a radiograph: every session's model stands with the person's knee angles, valgus cues wait
-    for a clinician-set target, and a lower-tier measurement does not replace the radiograph."""
+def test_limb_alignment_contract_and_safety_flags(selftest_run, tmp_path):
+    """Genu valgum on a radiograph personalises the knee of every session; the camera's standing estimate is
+    screening only; structural alignment holds valgus cues for a clinician-set target; a clinician safety flag
+    holds cues and assistance what-ifs at its region; the person model exports a valid twin manifest."""
     from rehabtwin import alignment, person
+    from rehabtwin.correction import CorrectionRefused
     out, res, _ = selftest_run
-    assert "knee_frontal_deg" in res["qc"]["static_alignment"]        # every session measures its standing frame
-    assert res["qc"]["alignment"]["source"].startswith("this session's standing frame")
+    est = res["qc"]["static_alignment"]
+    assert est["status"] == "estimated" and est["uncertainty"].startswith("not yet measured")
+    assert res["qc"]["alignment"]["limb_alignment"] is None              # the camera never changes the model
     d = tmp_path / "person"
-    person.init(d, "SYNTHETIC-NOT-A-PATIENT")
+    person.init(d, "SYNTHETIC-NOT-A-PATIENT", age_years=70, sex="female")
     person.build_from_session(d, out, allow_synthetic=True)
-    rec = person.set_alignment(d, session_dir=out)
-    assert rec["alignment"]["tier"] == "C" and rec["layers"]["joint_alignment"]["tier"] == "C"
+    rec = person.set_alignment_screening(d, out)
+    assert "limb_alignment" not in rec and rec["alignment_screening"]["status"] == "estimated"
+    lay = rec["layers"]["joint_alignment"]
+    assert "screening only" in lay["status"] and lay["tier"] is None    # the estimate doesn't fill the layer
+    assert person.manifest(d)["accuracy_layers"]["joint_alignment"]["status"] == "generic"
     xray = tmp_path / "xray.json"
-    xray.write_text(json.dumps({"method": "long-leg standing radiograph", "date": "2026-09-01", "structural": True,
-                                "diagnosis": "genu valgum", "knee_frontal_deg": {"r": 9.0, "l": 7.0}}))
-    rec = person.set_alignment(d, record_path=xray)
-    assert rec["alignment"]["tier"] == "B" and set(rec["alignment"]["structural_flags"]) == {"knee_r.frontal", "knee_l.frontal"}
-    assert "genu valgum" in person.summary(rec)
-    with pytest.raises(person.PersonRefused, match="Tier B alignment"):
-        person.set_alignment(d, session_dir=out)
+    xray.write_text(json.dumps({"measured_at": "2026-09-01", "structural": True, "diagnosis": "genu valgum",
+                                "right": {"mechanical_axis_hka_deg": 9.0, "source": "radiograph"},
+                                "left": {"mechanical_axis_hka_deg": 7.0, "source": "radiograph"}}))
+    rec = person.set_limb_alignment(d, xray)
+    assert rec["limb_alignment"]["tier"] == "B" and set(rec["limb_alignment"]["holds"]) == {"knee_r.frontal", "knee_l.frontal"}
+    assert rec["layers"]["joint_alignment"]["tier"] == "B" and "genu valgum" in person.summary(rec)
+    exam = tmp_path / "exam.json"
+    exam.write_text(json.dumps({"measured_at": "2026-10-01", "right": {"mechanical_axis_hka_deg": 2.0,
+                                                                       "source": "clinical-measurement"}}))
+    with pytest.raises(person.PersonRefused, match="Tier B limb alignment"):
+        person.set_limb_alignment(d, exam)
+    camera = tmp_path / "camera.json"
+    camera.write_text(json.dumps({"measured_at": "2026-10-01", "right": {"mechanical_axis_hka_deg": 9.0,
+                                                                         "source": "standing frame markers"}}))
+    with pytest.raises(person.PersonRefused, match="screening only"):
+        person.set_limb_alignment(d, camera)
 
     seq2, truth2, truth_model2 = cli._synth(tmp_path / "s2", seed=1)
     used = cli.process(seq2, tmp_path / "with", reference=truth2, reference_model=truth_model2,
                        reference_system="synthetic truth", person=d)
-    al = used["qc"]["alignment"]
-    assert al["tier"] == "B" and al["knee"]["r"]["matched_on"] == "joint_centres"
-    assert al["knee"]["r"]["after_deg"] == pytest.approx(9.0, abs=0.05) and al["knee"]["l"]["after_deg"] == pytest.approx(7.0, abs=0.05)
+    knee = used["qc"]["alignment"]["limb_alignment"]["knee"]
+    assert knee["r"]["after_deg"] == pytest.approx(9.0, abs=0.05) and knee["l"]["after_deg"] == pytest.approx(7.0, abs=0.05)
     m = opensim.Model(str(tmp_path / "with" / used["session"]["pipeline"]["outputs"]["model"]))
-    st = m.initSystem()
-    assert alignment.model_knee_frontal(m, st, "r") == pytest.approx(9.0, abs=0.1)
+    assert alignment.model_knee_frontal(m, m.initSystem(), "r") == pytest.approx(9.0, abs=0.1)
     result, _ = cli.cue_replay(tmp_path / "with", "squat_posture")
     pr = result["summary"]["per_rule"]
     assert "genu valgum" in pr["knee_valgus_r"]["gate"] and pr["knee_valgus_r"]["standing_value"] == pytest.approx(9.0, abs=1.0)
     assert "genu valgum" not in (pr["trunk_forward"]["gate"] or "")          # the knee holds only knee cues
+
+    flags = tmp_path / "flags.json"
+    flags.write_text(json.dumps([{"flag": "joint-instability", "body_region": "right knee", "status": "suspected",
+                                  "set_by": "clinician", "set_at": "2026-10-20", "restrictions": ["no valgus loading"]}]))
+    person.set_safety_flags(d, flags)
+    result, _ = cli.cue_replay(tmp_path / "with", "squat_posture")          # read from the person folder, now
+    pr = result["summary"]["per_rule"]
+    assert "clinician safety flag" in pr["knee_valgus_r"]["gate"] and "clinician safety flag" not in pr["knee_valgus_l"]["gate"]
+    assert set(result["summary"]["safety_holds"]) == {"knee_r"}
+    with pytest.raises(CorrectionRefused, match="no assistance what-if at this joint"):
+        cli.muscle_study(tmp_path / "with", assist=["knee_angle_r=40"], illustrative=True, view_3d=False)
+    flags.write_text(json.dumps([{"flag": "joint-instability", "body_region": "right knee", "status": "suspected",
+                                  "set_by": "physio", "set_at": "2026-10-20"}]))
+    with pytest.raises(person.PersonRefused, match="never sets or clears"):
+        person.set_safety_flags(d, flags)
+
+    man = person.manifest(d)                       # checked against schemas/twin-manifest.schema.json inside
+    assert man["limb_alignment"]["right"] == {"mechanical_axis_hka_deg": 9.0, "source": "radiograph"}
+    assert man["accuracy_layers"]["joint_alignment"]["status"] == "personalised" and man["twin_tier"] == "C"
+    assert man["safety_flags"][0]["body_region"] == "right knee" and man["body_state"]["age_parameter_set"] == "older-adult"
+    assert man["muscle_parameters"]["source"] == "generic-scaled" and man["provenance"]["limb_alignment"]["tier"] == "B"
 
 
 def test_marker_rescale_and_marker_to_joint(tmp_path):

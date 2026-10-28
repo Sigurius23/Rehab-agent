@@ -3,7 +3,9 @@
   "r": 10.0,
   "l": 7.0
  },
- "measured_on_standing_frame": {
+ "camera_estimate_screening_only": {
+  "status": "estimated",
+  "uncertainty": "not yet measured (needs repeat sessions of the same person: rehabtwin progress)",
   "knee_frontal_deg": {
    "r": 10.0,
    "l": 7.0
@@ -32,39 +34,10 @@
     "subtalar_angle_r": 14.231,
     "pelvis_list": 0.529
    },
-   "knee_in_model": null
-  },
-  "alignment measured on the standing frame (markers)": {
-   "marker_rms_mm": 8.3,
-   "rmse_deg": {
-    "knee_fppa_r": 0.866,
-    "knee_fppa_l": 0.657,
-    "hip_adduction_r": 0.472,
-    "hip_adduction_l": 0.452,
-    "hip_rotation_r": 0.798,
-    "hip_rotation_l": 1.195,
-    "hip_flexion_r": 1.28,
-    "knee_angle_r": 0.788,
-    "knee_angle_l": 0.772,
-    "ankle_angle_r": 1.474,
-    "subtalar_angle_r": 0.994,
-    "pelvis_list": 0.687
-   },
-   "knee_in_model": {
-    "r": {
-     "before_deg": 0.19,
-     "after_deg": 9.99,
-     "tilt_deg": -9.56,
-     "joint": "walker_knee_r",
-     "matched_on": "markers"
-    },
-    "l": {
-     "before_deg": 0.19,
-     "after_deg": 7.04,
-     "tilt_deg": 6.68,
-     "joint": "walker_knee_l",
-     "matched_on": "markers"
-    }
+   "knee_in_model": null,
+   "cue_holds": {
+    "knee_r.frontal": "standing knee angle estimated at +10 deg from the camera (uncertainty not yet measured), beyond the 6 deg screening threshold: worth getting checked by a professional",
+    "knee_l.frontal": "standing knee angle estimated at +7 deg from the camera (uncertainty not yet measured), beyond the 6 deg screening threshold: worth getting checked by a professional"
    }
   },
   "person's bones, generic knee": {
@@ -83,9 +56,13 @@
     "subtalar_angle_r": 14.216,
     "pelvis_list": 0.532
    },
-   "knee_in_model": null
+   "knee_in_model": null,
+   "cue_holds": {
+    "knee_r.frontal": "standing knee angle estimated at +10 deg from the camera (uncertainty not yet measured), beyond the 6 deg screening threshold: worth getting checked by a professional",
+    "knee_l.frontal": "standing knee angle estimated at +7 deg from the camera (uncertainty not yet measured), beyond the 6 deg screening threshold: worth getting checked by a professional"
+   }
   },
-  "true alignment as a radiograph gives it": {
+  "limb alignment on record (true values, as imaging)": {
    "marker_rms_mm": 8.4,
    "rmse_deg": {
     "knee_fppa_r": 0.837,
@@ -106,17 +83,16 @@
      "before_deg": 0.19,
      "after_deg": 10.0,
      "tilt_deg": -9.57,
-     "joint": "walker_knee_r",
-     "matched_on": "joint_centres"
+     "joint": "walker_knee_r"
     },
     "l": {
      "before_deg": 0.19,
      "after_deg": 7.0,
      "tilt_deg": 6.64,
-     "joint": "walker_knee_l",
-     "matched_on": "joint_centres"
+     "joint": "walker_knee_l"
     }
-   }
+   },
+   "cue_holds": {}
   }
  }
 }
