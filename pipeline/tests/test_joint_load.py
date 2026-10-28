@@ -58,6 +58,10 @@ def test_readings_keep_published_evidence_and_effort_apart_from_model_output():
     assert "load" not in strong.get("published_evidence", "")
     assert "ground_forces" in out["labels"] and "assumption" in out["labels"]["fat_provenance"]
     assert "baseline_band_over_grf_split" not in out                        # no split runs, no band claimed
+    illus = jl.summarise(runs, {"fat -5 kg": "fat"}, comparisons, mass={"measured": 71.4, "fat -5 kg": 66.4,
+                                                                        "quadriceps_r at 120%": 71.4},
+                         fat={"dxa": {"method": "DXA (illustrative values)"}})
+    assert illus["labels"]["fat_provenance"].startswith("ILLUSTRATIVE regional fat, not measured")
 
 
 def test_a_saturated_knee_states_no_change_even_within_the_person():

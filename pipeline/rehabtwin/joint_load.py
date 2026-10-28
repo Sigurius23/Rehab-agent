@@ -50,6 +50,9 @@ LABELS = {
     "patellar_mechanism": "The quadriceps path runs over the patella to the tibia, so the patellar tendon carries the "
                           "full quadriceps tension; in cadaver knees it carries about 0.7 of it at 90 deg of flexion "
                           "(Huberti et al. 1984). Deep-flexion compression from the quadriceps is likely overestimated.",
+    "quadriceps_moment_arm": "The model's quadriceps moment arm falls from about 4.5 cm near extension to about 2.1 cm "
+                             "at 90 deg (gastrocnemius keeps 3.3 cm): the generic model's geometry, not the person's. "
+                             "The quadriceps force for a knee moment scales with 1 / moment arm.",
     "reportable": "A knee's numbers are reportable only when, at its peak, the estimated ground forces fit the motion "
                   "(the muscle stage's pelvis-residual rule), no knee-crossing muscle is at its capacity, and reserve "
                   "torque carries at most 10% of the knee moment: otherwise the muscle forces are inflated or rest "
@@ -387,9 +390,10 @@ def summarise(runs, kinds, comparisons, shifted=None, mass=None, safety_holds=No
     else:
         out["labels"]["ground_forces"] = "Estimated, not measured; no ground-force split band computed for this run."
     if fat:
-        out["labels"]["fat_provenance"] = (f"Regional fat measured by {fat['dxa'].get('method', 'DXA')} "
-                                           f"{fat['dxa'].get('date', '')}; the change is spread in proportion to "
-                                           "each region's fat (an assumption).")
+        method = fat["dxa"].get("method", "DXA")
+        source = (f"ILLUSTRATIVE regional fat, not measured on this person ({method} {fat['dxa'].get('date', '')})"
+                  if "illustrative" in method.lower() else f"Regional fat measured by {method} {fat['dxa'].get('date', '')}")
+        out["labels"]["fat_provenance"] = f"{source}; the change is spread in proportion to each region's fat (an assumption)."
         out["fat_model"] = fat
     if safety_holds:
         out["labels"]["safety"] = "; ".join(f"{j}: {r}" for j, r in safety_holds.items())

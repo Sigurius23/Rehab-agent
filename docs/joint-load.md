@@ -54,15 +54,39 @@ estimates. Every knee's peak therefore carries its diagnostics (`baseline_diagno
 | quadriceps moment arm at the peak | a small moment arm in deep flexion means a large quadriceps force for the same knee moment |
 | peak resultant against the in-vivo band | instrumented knee implants (Bergmann et al. 2014, 8 subjects, 'High 100' standard loads): peak resultant 3.4–4.3 BW in daily activities other than jogging, knee bends included. A plausibility band, not a limit: they are implant patients |
 
-A knee is **reportable** only when no knee-crossing muscle is at capacity at the peak and reserve torque carries
-at most 10 % of the knee moment there. Otherwise its change is not stated, not even within the person. A peak
-above the in-vivo band is shown as model-limited.
+Two separate questions, answered separately:
 
-A known bias of this model: the quadriceps path runs over the patella to the tibia, so the patellar tendon
-carries the full quadriceps tension. In cadaver knees it carries about 0.7 of it at 90° of flexion (Huberti et
-al. 1984). Deep-flexion compression from the quadriceps is therefore likely overestimated, and the model's
-quadriceps moment arm falls from about 4.5 cm near extension to about 2.1 cm at 90° (gastrocnemius at 90°:
-3.3 cm).
+1. **Is the solution trustworthy enough to state a change?** (`reportable`) At the knee's peak frame, the
+   estimated ground forces must fit the motion (the muscle stage's rule: pelvis residual within a 10 cm
+   centre-of-pressure shift and 0.1 BW). No knee-crossing muscle may be at capacity. Reserve torque may carry at
+   most 10 % of the knee moment. Otherwise the change at that knee is not stated, not even within the person. The
+   check is at the peak frame because the peak is what is reported; the worst frame of the rep can be elsewhere
+   (in the synthetic squat: 3 cm at the peak, 24 cm in the rise).
+2. **Is the absolute level plausible?** (`above_in_vivo_band`) The ceiling comes from Bergmann et al. 2014:
+   instrumented knee implants in 8 patients, standardised 'High 100' loads (the highest average loads to expect
+   in a heavy patient, scaled to 100 kg). It is 4.3 BW, the highest peak resultant in daily activities other
+   than jogging (knee bends included). It is a plausibility band, not a limit for this task. Implant patients
+   bend less deeply and less forcefully than a person doing a deep bodyweight squat, and normalising heavy
+   patients to body weight shifts the comparison. A peak above it is labelled **model-limited**: its change can
+   still be stated if it is reportable, but its absolute value is not to be read as the person's knee force.
+
+So a left knee at 5.5 BW in a deep synthetic squat can be reportable (the solution holds) and model-limited (the
+level is above what implants have shown) at the same time.
+
+The **impulse** integrates the whole rep, so it needs question 1 to hold over every frame of the rep: forces that
+fit everywhere, no muscle at capacity in any frame, reserves at most 10 % throughout
+(`impulse_reportable`). Otherwise the impulse and its change are not stated, even when the peak is. Cumulative
+load per distance needs walking with measured ground forces and is not computed.
+
+Known biases of this model, printed with every result:
+
+- The quadriceps path runs over the patella to the tibia, so the patellar tendon carries the full quadriceps
+  tension. In cadaver knees it carries about 0.7 of it at 90° of flexion (Huberti et al. 1984). Deep-flexion
+  compression from the quadriceps is therefore likely overestimated.
+- The model's quadriceps moment arm falls from about 4.5 cm near extension to about 2.1 cm at 90°, while the
+  gastrocnemius keeps 3.3 cm. The quadriceps force for a given knee moment scales with 1 / moment arm, and
+  every newton of gastrocnemius force needs about 1.5 N more quadriceps. This is the generic model's geometry,
+  not the person's, and we have not found an in-vivo value at 90° to check it against.
 
 ## Scenarios
 
