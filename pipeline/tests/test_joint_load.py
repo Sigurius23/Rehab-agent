@@ -63,7 +63,8 @@ def test_readings_keep_published_evidence_and_effort_apart_from_model_output():
 def test_a_saturated_knee_states_no_change_even_within_the_person():
     diag = {"r": {"why_not_reportable": ["1 knee-crossing muscle(s) at capacity at the peak (vaslat_r)"],
                   "above_in_vivo_band": True},
-            "l": {"why_not_reportable": [], "above_in_vivo_band": True}}
+            "l": {"why_not_reportable": [], "above_in_vivo_band": True,
+                  "why_impulse_not_reportable": ["the estimated ground forces don't fit the motion everywhere in the rep"]}}
     runs = {"measured": {"knee_load": {**_load(7500.0, 4200.0), "body_weight_N": 700.0, "series": {"t": [0.0]},
                                        "diagnostics": diag}},
             "fat -5 kg": {"knee_load": {**_load(7000.0, 3900.0), "body_weight_N": 651.0, "series": {"t": [0.0]},
@@ -75,3 +76,5 @@ def test_a_saturated_knee_states_no_change_even_within_the_person():
     assert "right knee peak compression" not in sc["reading"]
     assert "left knee peak compression -7.1% (baseline above the in-vivo band: model-limited)" in sc["reading"]
     assert out["baseline_diagnostics"] == diag and "Bergmann" in out["labels"]["in_vivo_band"]
+    assert sc["knee"]["l"]["impulse_pct"] is None and sc["knee"]["l"]["why_impulse_not_reportable"][0].startswith("baseline")
+    assert sc["knee"]["r"]["impulse_pct"] is not None     # the peak's verdict and the impulse's are separate

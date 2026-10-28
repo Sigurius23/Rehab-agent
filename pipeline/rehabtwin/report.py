@@ -576,11 +576,12 @@ def _knee_load_html(jl):
     e = html.escape
     labels = "".join(f"<li><b>{e(k.replace('_', ' '))}:</b> {e(v)}</li>" for k, v in jl["labels"].items())
     band = jl.get("baseline_band_over_grf_split", {})
+    dg = jl.get("baseline_diagnostics") or {}
     base = "".join(
         f"<tr><td>{'right' if s == 'r' else 'left'}</td><td>{v['peak_compression_N']:.0f} N ({v['peak_compression_bw']:.2f} BW)</td>"
         f"<td>{e(f'{band[s][0]:.0f}–{band[s][1]:.0f} N') if s in band else '—'}</td><td>{v['knee_flexion_at_peak_deg']}°</td>"
-        f"<td>{v['impulse_Ns']:.0f} N·s</td><td>{v.get('patellofemoral_peak_N', '—')}</td></tr>" for s, v in jl["baseline"].items())
-    dg = jl.get("baseline_diagnostics") or {}
+        f"<td>{v['impulse_Ns']:.0f} N·s{'' if dg.get(s, {}).get('impulse_reportable', True) else ' (not reportable)'}</td>"
+        f"<td>{v.get('patellofemoral_peak_N', '—')}</td></tr>" for s, v in jl["baseline"].items())
     diag = "".join(
         f"<tr><td>{'right' if s == 'r' else 'left'}</td><td>{'yes' if d['reportable'] else 'NO: ' + e('; '.join(d['why_not_reportable']))}</td>"
         f"<td>{d['peak_resultant_bw']} BW{' (above)' if d['above_in_vivo_band'] else ''}</td>"
@@ -609,7 +610,7 @@ def _knee_load_html(jl):
                             f"not reportable: {e('; '.join(v['why_not_reportable']))}</td></tr>")
                 continue
             rows.append(f"<tr><td>{e(lab)}</td><td>{'right' if s == 'r' else 'left'}</td><td>{p['change_N']:+.0f} N</td>"
-                        f"<td>{p['change_pct']:+.1f}%</td>{rob}<td>{v['impulse_pct']:+.1f}%</td></tr>")
+                        f"<td>{p['change_pct']:+.1f}%</td>{rob}<td>{'—' if v['impulse_pct'] is None else format(v['impulse_pct'], '+.1f') + '%'}</td></tr>")
         rows.append(f"<tr><td colspan='6' class='muted'>{e(sc['reading'])}</td></tr>")
         if sc.get("published_evidence"):
             evidence.append(sc["published_evidence"])

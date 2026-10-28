@@ -53,7 +53,8 @@ LABELS = {
     "reportable": "A knee's numbers are reportable only when, at its peak, the estimated ground forces fit the motion "
                   "(the muscle stage's pelvis-residual rule), no knee-crossing muscle is at its capacity, and reserve "
                   "torque carries at most 10% of the knee moment: otherwise the muscle forces are inflated or rest "
-                  "on forces that don't fit, and a change is not stated even within the person.",
+                  "on forces that don't fit, and a change is not stated even within the person. The impulse (the "
+                  "whole rep) needs the same over every frame of the rep, not only at the peak.",
 }
 MIN_ROBUST_PCT = 2.0         # a load change smaller than this (% of baseline peak) is not reported as an effect
 FAT_LIMIT = 0.5              # a scenario may change total fat by at most half of it
@@ -244,6 +245,21 @@ def diagnostics(run_dir, joints, loads, motion):
                   "peak_resultant_bw": round(resultant_bw, 2),
                   "above_in_vivo_band": bool(resultant_bw > IN_VIVO_HIGH_BW),
                   "reportable": not why, "why_not_reportable": why}
+        # the impulse integrates the whole rep, so it needs the whole rep to hold, not just the peak frame
+        pelvis = [c for c in idt.columns if c.startswith("pelvis_")]
+        rep_cop = np.max([np.abs(idt.col(c)) for c in pelvis if c.endswith("_moment")], axis=0) / weight
+        rep_force = max((float(np.abs(idt.col(c)).max()) for c in pelvis if c.endswith("_force")), default=0.0) / weight
+        why_impulse = []
+        if rep_cop.max() > CONSISTENCY_COP_SHIFT_M or rep_force > CONSISTENCY_FORCE_BW:
+            why_impulse.append(f"the estimated ground forces don't fit the motion everywhere in the rep (worst pelvis "
+                               f"residual as a {rep_cop.max() * 100:.0f} cm centre-of-pressure shift at "
+                               f"{idt.time[int(rep_cop.argmax())]:.2f} s)")
+        if out[s]["frames_with_a_saturated_knee_muscle"] > 0:
+            why_impulse.append(f"a knee-crossing muscle is at capacity in "
+                               f"{out[s]['frames_with_a_saturated_knee_muscle']:.0%} of the frames")
+        if out[s]["knee_reserve_share_max"] > RESERVE_SHARE_LIMIT:
+            why_impulse.append(f"reserve torque carries up to {out[s]['knee_reserve_share_max']:.0%} of the knee moment")
+        out[s].update({"impulse_reportable": not why_impulse, "why_impulse_not_reportable": why_impulse})
     return out
 
 
@@ -389,6 +405,11 @@ def summarise(runs, kinds, comparisons, shifted=None, mass=None, safety_holds=No
             if why:
                 v["why_not_reportable"] = why
             v["above_in_vivo_band"] = bool(diag["measured"].get(s, {}).get("above_in_vivo_band"))
+            why_i = ([f"baseline: {w}" for w in diag["measured"].get(s, {}).get("why_impulse_not_reportable", [])]
+                     + [f"scenario: {w}" for w in diag[lab].get(s, {}).get("why_impulse_not_reportable", [])])
+            if why_i:                     # the change in impulse is not stated: the rep doesn't hold throughout
+                v["impulse_pct"] = None
+                v["why_impulse_not_reportable"] = why_i
             if shifted and v["peak"]:
                 alt = [compare(sh["measured"]["knee_load"], sh[lab]["knee_load"]).get(s, {}).get("peak")
                        for sh in shifted.values() if lab in sh]
