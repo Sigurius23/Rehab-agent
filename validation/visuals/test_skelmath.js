@@ -31,3 +31,15 @@ for (const sex of ["female", "male"]) {
   console.log(`${sex} grid, off-grid points: height within ${(eh * 100).toFixed(2)} cm, mass within ${(em * 100).toFixed(2)} %`);
 }
 console.log(worst < 5e-4 ? "PORT MATCHES (all within 0.5 mm)" : "PORT DIFFERS");
+// the depth fits (16 shape parameters): segments against the values stored by the validation run
+for (const d of meta.depth) {
+  const M = S.sexModel(meta, arr, d.sex);
+  for (const [src, betas] of [["true", d.betas_true], ["depth fit", d.betas_fit]]) {
+    const seg = S.segments(S.body(M, betas, 0).Jrest), run = d.segments_run[src];
+    const names = { thigh: "thigh_r", shank: "shank_r", upper_arm: "upper_arm_r", forearm: "forearm_r", hip_width: "hip_width" };
+    const diff = Math.max(...Object.entries(names).map(([k, r]) => Math.abs(seg[k] - run[r])));
+    console.log(`${d.id} ${src} (${betas.length} parameters): segments within ${(diff * 1e3).toFixed(3)} mm of the run`);
+    worst = Math.max(worst, diff);
+  }
+}
+console.log(worst < 5e-4 ? "DEPTH FITS MATCH THE RUN" : "DEPTH FITS DIFFER");

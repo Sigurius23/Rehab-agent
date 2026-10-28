@@ -25,7 +25,7 @@
     const m = meta.sexes[sex], g = (k) => arr[`${sex}.${k}`];
     return { sex, ...m, v0: g("v0"), sd: g("sd"), J0: g("J0"), Jd: g("Jd"), osim: g("osim"), pjr: g("pjr"),
              boneV: g("bone_v"), boneB: g("bone_b"), boneF: g("bone_f"), arm: g("arm"), grid: g("grid"),
-             faces: arr.faces, nv: g("v0").length / 3 };
+             faces: arr.faces, nv: g("v0").length / 3, nb: g("sd").shape[2] };
   }
 
   const sub = (a, b) => [a[0] - b[0], a[1] - b[1], a[2] - b[2]];
@@ -49,12 +49,13 @@
     return I.map((x, i) => x + K[i] + KK[i] * f);
   }
 
-  // Skin vertices and joint centres for shape parameters (10).
+  // Skin vertices and joint centres for shape parameters (up to M.nb; the depth fits use 16, SKEL itself 10).
   function shape(M, betas) {
-    const nv = M.nv, vs = new Float32Array(nv * 3), nb = 10;
+    const nv = M.nv, vs = new Float32Array(nv * 3), nb = M.nb, n = Math.min(betas.length, nb);
+    if (betas.length > nb) throw new Error(`${betas.length} shape parameters, the model has ${nb}`);
     for (let i = 0; i < nv * 3; i++) {
       let x = M.v0[i];
-      for (let b = 0; b < nb; b++) x += M.sd[i * nb + b] * betas[b];
+      for (let b = 0; b < n; b++) x += M.sd[i * nb + b] * betas[b];
       vs[i] = x;
     }
     const J = [];
@@ -62,7 +63,7 @@
       const p = [0, 0, 0];
       for (let c = 0; c < 3; c++) {
         let x = M.J0[j * 3 + c];
-        for (let b = 0; b < nb; b++) x += M.Jd[(j * 3 + c) * nb + b] * betas[b];
+        for (let b = 0; b < n; b++) x += M.Jd[(j * 3 + c) * nb + b] * betas[b];
         p[c] = x;
       }
       J.push(p);

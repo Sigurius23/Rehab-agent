@@ -26,6 +26,7 @@ FIXED = [0, 5, 10, 13, 18, 23]               # SKEL joint_idx_fixed_beta
 KEYPOINTS = [(13, 0, 2, 410, 384), (13, 1, 1, 414, 384), (13, 2, 0, 196, 3708),
              (18, 0, 1, 6179, 6137), (18, 1, 0, 5670, 5906), (23, 0, 1, 6179, 6137), (23, 1, 0, 5670, 5906)]
 THORAX = (3027, 3495, 3506)                  # back, front, sternum
+NB = 16                                      # shape parameters: the depth fits use 16 (SKEL's own forward uses 10)
 
 
 class Pack:
@@ -80,7 +81,8 @@ def skel_rest(skel, betas):
     scale and the translation that place the template bone mesh (SKEL forward with zero pose, skelmesh=True)."""
     parent, child = kintree(skel)
     v0 = skel["skin_template_v"]
-    vs = v0 + skel["shapedirs"][:, :, :10] @ np.asarray(betas, float)
+    b = np.asarray(betas, float)
+    vs = v0 + skel["shapedirs"][:, :, :len(b)] @ b
     J = skel["J_regressor_osim"] @ vs
     Jl = J.copy()
     Jl[1:] = J[1:] - J[parent[1:]]
@@ -154,10 +156,10 @@ def main():
     for s in SEXES:
         k = skel[s]
         assert np.allclose(k["skin_template_v"], smpl[s]["v_template"]) and np.allclose(
-            k["shapedirs"][:, :, :10], smpl[s]["shapedirs"][:, :, :10]), "SKEL skin is not this SMPL"
+            k["shapedirs"][:, :, :NB], smpl[s]["shapedirs"][:, :, :NB]), "SKEL skin is not this SMPL"
         parent, child = kintree(k)
         lv, lb, lf, full = decimate(k)
-        sd = k["shapedirs"][:, :, :10]
+        sd = k["shapedirs"][:, :, :NB]
         pack.add(f"{s}.v0", k["skin_template_v"], np.int16, 5e-5)
         pack.add(f"{s}.sd", sd, np.int16, float(np.abs(sd).max()) / 32000)
         pack.add(f"{s}.J0", k["J_regressor_osim"] @ k["skin_template_v"], np.float32)
@@ -251,6 +253,8 @@ def main():
                               "betas_fit": [round(x, 5) for x in res["betas"]],
                               "fit_height_m": round(res["height_m"], 3), "fit_mass_kg": round(res["mass_kg"], 1),
                               "warnings": res["fit"]["warnings"], "floor_up": list(map(float, up)),
+                              "segments_run": {src: {kk: r["segments"][src][kk] for kk in ("thigh_r", "shank_r", "upper_arm_r", "forearm_r", "hip_width")}
+                                               for src in ("true", "depth fit")},
                               "floor_offset": float(offset), "sensor": "Kinect v1, 2.7 m in front, 1.0 m high",
                               "motion_frame": f"{r['motion']} frame {fi}"})
     meta["arrays"] = pack.write(OUT / "bodies.bin")
