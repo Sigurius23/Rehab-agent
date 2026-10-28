@@ -82,3 +82,13 @@ def test_a_saturated_knee_states_no_change_even_within_the_person():
     assert out["baseline_diagnostics"] == diag and "Bergmann" in out["labels"]["in_vivo_band"]
     assert sc["knee"]["l"]["impulse_pct"] is None and sc["knee"]["l"]["why_impulse_not_reportable"][0].startswith("baseline")
     assert sc["knee"]["r"]["impulse_pct"] is not None     # the peak's verdict and the impulse's are separate
+    held = jl.summarise({**runs, "quadriceps_r at 120%": runs["fat -5 kg"]}, {"quadriceps_r at 120%": "strength"},
+                        {"quadriceps_r at 120%": {"quadriceps_r": {"base": 0.8, "other": 0.7, "change": -0.1},
+                                                  "quadriceps_l": {"base": 0.5, "other": 0.45, "change": -0.05}}},
+                        mass={"measured": 71.4, "quadriceps_r at 120%": 71.4})["scenarios"]["quadriceps_r at 120%"]
+    assert set(held["effort"]) == {"quadriceps_l"} and "right-side effort not reportable either" in held["reading"]
+    both = {s: {"why_not_reportable": ["the estimated ground forces don't fit the motion at the peak"]} for s in "rl"}
+    none = jl.summarise({"measured": {"knee_load": {**runs["measured"]["knee_load"], "diagnostics": both}},
+                         "fat -5 kg": runs["fat -5 kg"]}, {"fat -5 kg": "fat"}, {},
+                        mass={"measured": 71.4, "fat -5 kg": 66.4})["scenarios"]["fat -5 kg"]
+    assert "About proportional" in sc["reading"] and "About proportional" not in none["reading"]   # nothing stated

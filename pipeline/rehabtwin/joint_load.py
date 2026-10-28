@@ -359,9 +359,14 @@ def scenario_reading(kind, cmp, effort, mass_change=None):
                      + [f"{side[s]} knee not reportable ({v['why_not_reportable'][0]})"
                         for s, v in cmp.items() if not v.get("reportable", True)])
     eff = ", ".join(f"{g} {v['base'] * 100:.0f}% → {v['other'] * 100:.0f}% of capacity" for g, v in effort.items())
+    held = [side[s] for s, v in cmp.items() if not v.get("reportable", True)]
+    if held:
+        eff = (eff + "; " if eff else "") + f"{' and '.join(held)}-side effort not reportable either"
+    stated = any(v.get("reportable", True) for v in cmp.values())
     if kind == "fat":
         return (f"Model-computed on the replayed motion: body mass {mass_change['pct']:+.1f}% "
-                f"({mass_change['kg']:+.1f} kg), {load}. About proportional: the same motion with less mass.")
+                f"({mass_change['kg']:+.1f} kg), {load}."
+                + (" About proportional: the same motion with less mass." if stated else ""))
     if kind == "strength":
         return f"Effort: {eff or 'no group changed'}. Load as computed: {load}. {STRENGTH_READING}"
     if kind == "combined":
@@ -420,8 +425,10 @@ def summarise(runs, kinds, comparisons, shifted=None, mass=None, safety_holds=No
                 pcts = [v["peak"]["change_pct"]] + [a["change_pct"] for a in alt if a]
                 v["peak"]["change_pct_range_over_grf_split"] = [min(pcts), max(pcts)]
                 v["peak"]["robust_to_grf_split"] = robust(pcts)
+        # effort comes from the same muscle solution: not stated on a side whose knee is not reportable
         effort = {g: c for g, c in (comparisons.get(lab) or {}).items()
-                  if g.rsplit("_", 1)[0] in EFFORT_GROUPS and abs(c["change"]) >= 0.01}
+                  if g.rsplit("_", 1)[0] in EFFORT_GROUPS and abs(c["change"]) >= 0.01
+                  and cmp.get(g.rsplit("_", 1)[1], {}).get("reportable", True)}
         item = {"kind": kind, "knee": cmp, "effort": effort}
         if mass and lab in mass:
             dm = mass[lab] - mass["measured"]
