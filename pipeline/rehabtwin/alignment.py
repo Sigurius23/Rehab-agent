@@ -44,7 +44,7 @@ CENTRES = {
 }
 SCREEN_KNEE_FRONTAL_DEG = 6.0     # estimated standing knee angle beyond which cues are held (ours, not a norm)
 UNCERTAINTY = "not yet measured (needs repeat sessions of the same person: rehabtwin progress)"
-CHECK_PROMPT = "worth getting checked by a professional"
+CHECK_PROMPT = "worth getting checked by a professional"    # the only text a patient sees: no modality named
 IMAGING = ("eos", "ct", "mri", "radiograph")
 SOURCES = IMAGING + ("clinical-measurement",)          # twin manifest limb_side.source
 # twin manifest limb_side fields and the values we accept (signs: + valgus, + anteversion, + external torsion)

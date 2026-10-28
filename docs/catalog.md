@@ -1,4 +1,4 @@
-# Full catalog — all 115 repositories
+# Full catalog — all 117 repositories
 
 Generated from `catalog/repos.json` by `scripts/generate_catalog.py`. Do not hand-edit this file; edit the JSON and regenerate.
 
@@ -37,7 +37,7 @@ Stars/forks/updated are dated snapshots, **not live data** (see the `snapshot_no
 | 114 | [MicheleConconi/Synergy-Based-Foot-Model](https://github.com/MicheleConconi/Synergy-Based-Foot-Model) | specialized | skeleton, biomechanics | MATLAB | none found in repo root | 0 | Multi-body foot model tracking the spatial kinematics of all foot bones with only 5 DOF, exploiting experimentally derived bone-motion coupling (synergies) measured from weight-bearing CT |
 | 115 | [OllieBoyne/Foot3D](https://github.com/OllieBoyne/Foot3D) | specialized | body-model, dataset | — | MIT | 47 | Foot3D - dataset of scanned 3D feet behind the FIND articulated foot model; external foot-shape/scan data for fitting the digital twin's foot surface |
 
-## pose-mocap — Pose estimation & motion capture (video, markerless, IMU) (21)
+## pose-mocap — Pose estimation & motion capture (video, markerless, IMU) (23)
 
 | # | Repository | Tier | Stages | Lang | License | ★ snapshot | Description |
 |---:|---|---|---|---|---|---:|---|
@@ -62,6 +62,8 @@ Stars/forks/updated are dated snapshots, **not live data** (see the `snapshot_no
 | 79 | [facebookresearch/sapiens2](https://github.com/facebookresearch/sapiens2) | experimental | capture, pose | Python | NOASSERTION | 998 | Sapiens2 — 1K-resolution human vision transformers pretrained on 1B human images; pose, segmentation, normals, pointmaps, matting |
 | 83 | [DeepLabCut/DeepLabCut](https://github.com/DeepLabCut/DeepLabCut) | specialized | pose, tooling | Python | LGPL | 5795 | DeepLabCut — markerless pose estimation of user-defined features with deep learning (animals incl. humans) |
 | 84 | [DeepLabCut/DeepLabCut-live](https://github.com/DeepLabCut/DeepLabCut-live) | specialized | capture, pose | Python | AGPL-3.0 | 239 | DeepLabCut-Live — SDK for running DeepLabCut models on a live video stream |
+| 116 | [utahmobl/opencap-monocular](https://github.com/utahmobl/opencap-monocular) | experimental | capture, pose, biomechanics | Python | PolyForm-Noncommercial-1.0.0 | 243 | OpenCap Monocular: 3D kinematics and dynamics from a single smartphone video (WHAM 3D pose, then OpenSim inverse kinematics), validated against marker mocap |
+| 117 | [davidpagnon/Sports2D](https://github.com/davidpagnon/Sports2D) | extended | pose, biomechanics | Python | BSD-3-Clause | 336 | Sports2D: 2D keypoint trajectories and joint and segment angles from a single video or webcam, by the author of Pose2Sim; can export OpenSim kinematics |
 
 ## biomechanics — Biomechanics engines & OpenSim pipeline (13)
 
@@ -1569,3 +1571,27 @@ Stars/forks/updated are dated snapshots, **not live data** (see the `snapshot_no
 - **License:** MIT _(source: GitHub API (live 2026-10-28))_
 - **Snapshot:** ★ 47 · forks 2 · upstream updated 2026-09-20 (live API 2026-10-28)
 - **Clone target when vendored:** `upstream/OllieBoyne/Foot3D` (never commit upstream code to this repo)
+
+### 116. [utahmobl/opencap-monocular](https://github.com/utahmobl/opencap-monocular)
+
+- **What it is:** OpenCap Monocular: 3D kinematics and dynamics from a single smartphone video (WHAM 3D pose, then OpenSim inverse kinematics), validated against marker mocap
+- **Why it's in this catalog:** Everyday-mode front-end candidate (one phone); its walking, squat and sit-to-stand validation is the comparison in docs/validation-results.md. Non-commercial only, and it needs SMPL model files (MPI licence, non-commercial). Not wired into pipeline/ yet: needs an evaluation slot.
+- **Category / tier:** pose-mocap / experimental
+- **Pipeline stages:** capture, pose, biomechanics
+- **Tags:** opencap, monocular, smartphone, wham, smpl
+- **Primary language (GitHub):** Python
+- **License:** PolyForm-Noncommercial-1.0.0 _(source: repo-root LICENSE file at e2d0b14 (checked 2026-10-28); the GitHub API says NOASSERTION, and the paper's Apache-2.0 does not match the file)_
+- **Snapshot:** ★ 243 · forks 33 · upstream updated 2026-10-28 (GitHub API, fetched by the HarmannBitte session 2026-10-28)
+- **Clone target when vendored:** `upstream/utahmobl/opencap-monocular` (never commit upstream code to this repo)
+
+### 117. [davidpagnon/Sports2D](https://github.com/davidpagnon/Sports2D)
+
+- **What it is:** Sports2D: 2D keypoint trajectories and joint and segment angles from a single video or webcam, by the author of Pose2Sim; can export OpenSim kinematics
+- **Why it's in this catalog:** Monocular companion to Pose2Sim, cloned under upstream/ for reference; not called by pipeline/. Angles in the camera plane from one view, so Tier C screening at best.
+- **Category / tier:** pose-mocap / extended
+- **Pipeline stages:** pose, biomechanics
+- **Tags:** sports2d, pose2sim, monocular, 2d-angles
+- **Primary language (GitHub):** Python
+- **License:** BSD-3-Clause _(source: GitHub API, fetched by the HarmannBitte session 2026-10-28; matches the repo-root LICENSE file)_
+- **Snapshot:** ★ 336 · forks 46 · upstream updated 2026-10-28 (GitHub API, fetched by the HarmannBitte session 2026-10-28)
+- **Clone target when vendored:** `upstream/davidpagnon/Sports2D` (never commit upstream code to this repo)

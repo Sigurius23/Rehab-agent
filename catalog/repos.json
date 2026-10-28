@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "generated_for": "Rehab Agent meta-repo",
-  "snapshot_note": "Live GitHub API metadata: repos 71-108 fetched 2026-10-21; repos 1-52 plus 62/66 refreshed 2026-10-28 (licenses for all public repos verified from GitHub API or the repo-root license file on 2026-10-28). Stars/forks/updated are snapshots, not live data. Refresh with scripts/enrich_metadata.py.",
+  "snapshot_note": "Live GitHub API metadata: repos 71-108 fetched 2026-10-21; repos 1-52 plus 62/66 refreshed 2026-10-28; repos 116-117 fetched 2026-10-28 by the HarmannBitte session (licenses for all public repos verified from GitHub API or the repo-root license file on 2026-10-28). Stars/forks/updated are snapshots, not live data. Refresh with scripts/enrich_metadata.py.",
   "categories": {
     "body-models": "Parametric body & skeleton models (SMPL/SMPL-X, SKEL, OSSO, tissues)",
     "anatomy-models": "Anatomy & personalised model generation",
@@ -38,7 +38,7 @@
     "needs-review": "Needs review — source list gave no usable description",
     "private": "Private — listed but not publicly cloneable"
   },
-  "count": 115,
+  "count": 117,
   "repos": [
     {
       "id": 1,
@@ -3331,6 +3331,66 @@
       ],
       "notes": "Surface-shape foot data only - silent about arch mechanics and fascia strain; pair with the synergy-based or four-segment models for dynamics. GitHub reports no primary language (checked 2026-10-28).",
       "upstream_path": "upstream/OllieBoyne/Foot3D"
+    },
+    {
+      "id": 116,
+      "slug": "utahmobl/opencap-monocular",
+      "owner": "utahmobl",
+      "name": "opencap-monocular",
+      "url": "https://github.com/utahmobl/opencap-monocular",
+      "description": "OpenCap Monocular: 3D kinematics and dynamics from a single smartphone video (WHAM 3D pose, then OpenSim inverse kinematics), validated against marker mocap",
+      "language": "Python",
+      "license": "PolyForm-Noncommercial-1.0.0",
+      "license_source": "repo-root LICENSE file at e2d0b14 (checked 2026-10-28); the GitHub API says NOASSERTION, and the paper's Apache-2.0 does not match the file",
+      "stars_snapshot": 243,
+      "forks_snapshot": 33,
+      "updated_snapshot": "2026-10-28 (GitHub API, fetched by the HarmannBitte session 2026-10-28)",
+      "private": false,
+      "category": "pose-mocap",
+      "pipeline_stages": [
+        "capture",
+        "pose",
+        "biomechanics"
+      ],
+      "tier": "experimental",
+      "tags": [
+        "opencap",
+        "monocular",
+        "smartphone",
+        "wham",
+        "smpl"
+      ],
+      "notes": "Everyday-mode front-end candidate (one phone); its walking, squat and sit-to-stand validation is the comparison in docs/validation-results.md. Non-commercial only, and it needs SMPL model files (MPI licence, non-commercial). Not wired into pipeline/ yet: needs an evaluation slot.",
+      "upstream_path": "upstream/utahmobl/opencap-monocular"
+    },
+    {
+      "id": 117,
+      "slug": "davidpagnon/Sports2D",
+      "owner": "davidpagnon",
+      "name": "Sports2D",
+      "url": "https://github.com/davidpagnon/Sports2D",
+      "description": "Sports2D: 2D keypoint trajectories and joint and segment angles from a single video or webcam, by the author of Pose2Sim; can export OpenSim kinematics",
+      "language": "Python",
+      "license": "BSD-3-Clause",
+      "license_source": "GitHub API, fetched by the HarmannBitte session 2026-10-28; matches the repo-root LICENSE file",
+      "stars_snapshot": 336,
+      "forks_snapshot": 46,
+      "updated_snapshot": "2026-10-28 (GitHub API, fetched by the HarmannBitte session 2026-10-28)",
+      "private": false,
+      "category": "pose-mocap",
+      "pipeline_stages": [
+        "pose",
+        "biomechanics"
+      ],
+      "tier": "extended",
+      "tags": [
+        "sports2d",
+        "pose2sim",
+        "monocular",
+        "2d-angles"
+      ],
+      "notes": "Monocular companion to Pose2Sim, cloned under upstream/ for reference; not called by pipeline/. Angles in the camera plane from one view, so Tier C screening at best.",
+      "upstream_path": "upstream/davidpagnon/Sports2D"
     }
   ],
   "documentation_standard": "Every repo entry MUST document: slug, url, description (>=40 chars, factual), category, tier, pipeline_stages (>=1), tags (>=2), language (or an explicit no-primary-language note), license + license_source, stars/forks/updated snapshots (private repo exempt), notes (>=30 chars: role in this project + caveats), upstream_path. Enforced by scripts/validate_catalog.py and tests/test_catalog.py.",

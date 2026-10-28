@@ -162,7 +162,10 @@ The person model (`docs/person-model.md`) records this per person; `person show`
   "uncertainty not yet measured" until repeat sessions of the same person
   measure it; change against the person's own baseline is the primary signal.
   Beyond the screening threshold the prompt is "worth getting checked by a
-  professional": a prompt never names an imaging test.
+  professional": a prompt never names an imaging test. Provenance (modality
+  and date, e.g. "radiograph 2026-09-01") belongs in clinician-facing outputs
+  (`qc.json`, cue summaries, reports); patient-facing text shows only the
+  constant prompt (`alignment.CHECK_PROMPT`).
 - A number from a synthetic test carries its caveat wherever it is quoted
   (synthetic truth, no clinical validation).
 - No internal anatomy (bone shape, joint space, muscle quality,

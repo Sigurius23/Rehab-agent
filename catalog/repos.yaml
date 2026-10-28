@@ -1725,3 +1725,33 @@ repos:
     private: false
     pipeline_stages: ["body-model", "dataset"]
     tags: ["foot3d", "foot-scans", "statistical-shape", "find"]
+  - slug: "utahmobl/opencap-monocular"
+    url: "https://github.com/utahmobl/opencap-monocular"
+    category: "pose-mocap"
+    tier: "experimental"
+    language: "Python"
+    license: "PolyForm-Noncommercial-1.0.0"
+    updated_snapshot: "2026-10-28 (GitHub API, fetched by the HarmannBitte session 2026-10-28)"
+    description: "OpenCap Monocular: 3D kinematics and dynamics from a single smartphone video (WHAM 3D pose, then OpenSim inverse kinematics), validated against marker mocap"
+    notes: "Everyday-mode front-end candidate (one phone); its walking, squat and sit-to-stand validation is the comparison in docs/validation-results.md. Non-commercial only, and it needs SMPL model files (MPI licence, non-commercial). Not wired into pipeline/ yet: needs an evaluation slot."
+    upstream_path: "upstream/utahmobl/opencap-monocular"
+    stars_snapshot: 243
+    forks_snapshot: 33
+    private: false
+    pipeline_stages: ["capture", "pose", "biomechanics"]
+    tags: ["opencap", "monocular", "smartphone", "wham", "smpl"]
+  - slug: "davidpagnon/Sports2D"
+    url: "https://github.com/davidpagnon/Sports2D"
+    category: "pose-mocap"
+    tier: "extended"
+    language: "Python"
+    license: "BSD-3-Clause"
+    updated_snapshot: "2026-10-28 (GitHub API, fetched by the HarmannBitte session 2026-10-28)"
+    description: "Sports2D: 2D keypoint trajectories and joint and segment angles from a single video or webcam, by the author of Pose2Sim; can export OpenSim kinematics"
+    notes: "Monocular companion to Pose2Sim, cloned under upstream/ for reference; not called by pipeline/. Angles in the camera plane from one view, so Tier C screening at best."
+    upstream_path: "upstream/davidpagnon/Sports2D"
+    stars_snapshot: 336
+    forks_snapshot: 46
+    private: false
+    pipeline_stages: ["pose", "biomechanics"]
+    tags: ["sports2d", "pose2sim", "monocular", "2d-angles"]

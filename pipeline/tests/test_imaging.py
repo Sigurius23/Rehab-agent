@@ -93,6 +93,22 @@ def test_person_records_imaging_and_bone_density(tmp_path):
     assert person.load(d)["version"] == 3                                     # refusals changed nothing
 
 
+def test_manifest_emits_only_recorded_blocks(tmp_path):
+    """Safety flags hold every status but 'cleared', so a placeholder 'not-assessed' entry would hold everyone's
+    cues: the manifest carries flags and anatomy blocks only when a record put them there."""
+    d = tmp_path / "P1"
+    person.init(d, "P1", height_m=1.75, mass_kg=70)
+    man = person.manifest(d)
+    for block in ("safety_flags", "limb_alignment", "bone_quality", "spinopelvic_parameters", "devices_and_prostheses"):
+        assert block not in man and block not in person.load(d)
+    assert man["muscle_parameters"] == {"source": "generic-scaled", "muscles": []}    # what the model uses, said plainly
+    flags = [{"flag": "bone-fragility", "body_region": "whole body", "status": "cleared", "set_by": "clinician",
+              "set_at": "2026-10-20"}]
+    (tmp_path / "flags.json").write_text(json.dumps(flags))
+    person.set_safety_flags(d, tmp_path / "flags.json")
+    assert person.manifest(d)["safety_flags"] == flags                         # as the clinician gave them
+
+
 def test_muscle_study_uses_the_persons_imaging_and_shows_bone_density(tmp_path, monkeypatch):
     from rehabtwin import cli, muscles, strength
     calls, scaled = [], []

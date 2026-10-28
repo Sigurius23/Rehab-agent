@@ -72,7 +72,7 @@
 | G-03 | No Tier-A subject | Corrections and cues stay illustrations | D-02 imaging pathway; personalised `.osim` drops into `pipeline/configs` |
 | G-04 | Physical BLE write to SenseShift untested | Suit Track 1 | One ESP32 + vibration motors bench test with `suit-bridge --ble` |
 | G-05 | SlimeVR posture signals unvalidated | Live cues | Same validation protocol as video (per joint × plane), IMU vs mocap |
-| G-06 | `utahmobl/opencap-monocular` and `davidpagnon/Sports2D` are used by `pipeline/` but not catalogued | The catalog's documentation standard needs live stars/forks, which the pipeline session's network could not fetch | Add both with `scripts/enrich_metadata.py`; licences already verified from the repo-root LICENSE files: PolyForm Noncommercial 1.0.0 (OpenCap Monocular, also needs SMPL weights) and BSD-3-Clause (Sports2D) |
+| G-06 | `utahmobl/opencap-monocular` and `davidpagnon/Sports2D` were used by `pipeline/` but not catalogued | The catalog's documentation standard needs live stars/forks, which the pipeline session's network could not fetch | **Done 2026-10-28**: catalog IDs 116–117, stars/forks fetched by the HarmannBitte session. Licences from the repo-root LICENSE files: PolyForm Noncommercial 1.0.0 for OpenCap Monocular (re-checked at e2d0b14; the API says NOASSERTION and the paper Apache-2.0, neither matches the file; it also needs SMPL weights) and BSD-3-Clause for Sports2D |
 
 ## Known catalog limitations (accepted, recorded)
 - Star/fork counts are orientation only and go stale; upstream READMEs win.

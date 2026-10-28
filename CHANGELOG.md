@@ -1,6 +1,11 @@
 # Changelog
 
 ## Unreleased
+- **Review follow-ups:** catalog now 117 repos (G-06 closed: `utahmobl/opencap-monocular`, PolyForm Noncommercial
+  1.0.0 per its LICENSE file; `davidpagnon/Sports2D`, BSD-3-Clause). `docs/validation-results.md` opens with the
+  "synthetic results, no clinical validation" caveat. A test pins that the twin manifest carries safety flags and
+  anatomy blocks only from records (no placeholder `not-assessed` entries). Provenance is for clinician-facing
+  outputs; patient-facing text shows only the constant check prompt. Merged HarmannBitte `b69f6d8`.
 - **Skeletal alignment: the person's own knees, legs and shoulders** (`docs/person-model.md`,
   `rehabtwin/alignment.py`, `rehabtwin person alignment`):
   - Every session estimates its standing frame from the camera (`qc.json` → `static_alignment`): knee frontal

@@ -1,5 +1,9 @@
 # Validation results — what has actually been measured
 
+> **Synthetic results, no clinical validation.** A figure from a synthetic test is measured against a simulated
+> body; a real-video figure is measured against another markerless system (OpenCap), not marker mocap or a
+> clinical outcome. Quote any number from this file with its caveat.
+
 Results from `pipeline/` (rehabtwin 0.1.0, OpenSim 4.6, Pose2Sim model
 `Model_Pose2Sim_muscles_flex.osim`). Each block says what was compared with what.
 **None of these is a clinical validation**: no marker-mocap reference has been run yet

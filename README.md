@@ -1,6 +1,6 @@
 # Rehab Agent — Meta-Repository
 
-> A curated meta-repo that organises **115 upstream GitHub repositories** into one
+> A curated meta-repo that organises **117 upstream GitHub repositories** into one
 > rehabilitation-technology pipeline: capture → pose → body/skeleton model →
 > biomechanics → muscle simulation → feedback & visualisation.
 >
@@ -9,7 +9,7 @@
 > working pipeline slice (`pipeline/`: video → SKEL → OpenSim). Each upstream
 > project stays in its own repo, under its own license.
 
-[![Catalog](https://img.shields.io/badge/catalog-115_repos-blue)](#catalog)
+[![Catalog](https://img.shields.io/badge/catalog-117_repos-blue)](#catalog)
 ![Status](https://img.shields.io/badge/status-research__prototype-orange)
 
 ## ⚠️ Not a medical device
@@ -73,7 +73,7 @@ closed reference models: [`fat-distribution/README.md`](fat-distribution/README.
 ```bash
 git clone <this-repo> rehab-agent && cd rehab-agent
 
-python3 scripts/validate_catalog.py     # check the catalog (115 repos)
+python3 scripts/validate_catalog.py     # check the catalog (117 repos)
 python3 scripts/list.py --tier core     # see the recommended first wave
 python3 scripts/clone.py --tier core --dry-run
 python3 scripts/clone.py --tier core    # shallow-clone core repos into upstream/
@@ -195,7 +195,7 @@ rehab-agent/
 │   ├── repos.json             ← SOURCE OF TRUTH (edit this)
 │   ├── repos.csv / repos.yaml ← generated
 ├── docs/
-│   ├── catalog.md             ← generated full tables (all 115)
+│   ├── catalog.md             ← generated full tables (all 117)
 │   ├── architecture.md        ← pipeline, data formats, contracts
 │   ├── roadmap.md             ← phased build plan
 │   ├── evaluation.md          ← scoring rubric for picking repos
