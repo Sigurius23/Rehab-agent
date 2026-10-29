@@ -6,7 +6,7 @@ a working folder that goes away. Everything in this folder can be rerun.
 | Folder | What it holds |
 |---|---|
 | `audit/` | The claims audit of 2026-10-27, with code written only for it (no `rehabtwin` imports). |
-| `runs/` | The run scripts of the experiments: SKEL bones on synthetic bodies, the OpenCap marker fix, person bones after the fix, the DXA squat, synthetic genu valgum, knee joint load. |
+| `runs/` | The run scripts of the experiments: SKEL bones on synthetic bodies, the OpenCap marker fix, person bones after the fix, the DXA squat, synthetic genu valgum, knee joint load, skin-only skeletons against MRI bones (`mri_bones_3dbones/`, with its own README). |
 | `results/` | Result summaries: aggregate numbers only, as the docs quote them. |
 | `tests/` | Full test-suite logs: the run with one failure, the run after the fix, the run with skeletal alignment (174 passed), and the run with knee joint load (182 passed). |
 | `visuals/` | The audit page's 3D views: data preparation, the browser code, and a check of the browser's SKEL code against the Python reference. |
@@ -34,6 +34,7 @@ repository) and `$OPENCAP_CORE` (a clone of `opencap-org/opencap-core` for the g
 | MyoSegmenTUM thigh MRI | `python adapters/myosegmentum.py download` | open, see the paper |
 | BEDLAM2 bodies and motions | your account on bedlam2.is.tue.mpg.de | non-commercial, no redistribution |
 | SMPL 1.1.0, SKEL 1.1, STAR, OSSO | your accounts on the MPI sites (kept in your Drive) | non-commercial, no redistribution |
+| 3DBones release v2 (MRI bones, skin, skin-only predictions) | registration on 3dbones.is.tue.mpg.de | no licence file in the release; reported non-commercial research use |
 
 Convert the model downloads once with `python -I pipeline/adapters/body_model_files.py convert DOWNLOADS/ models_npz/`.
 The licensed files and the large session folders (OpenSim models, motions, muscle studies) are not in this
@@ -51,6 +52,7 @@ repository.
 | `dxa_squat.json` | the OpenCap squat with leg muscle from height and mass, age and sex, and an illustrative DXA record | `docs/person-model.md`, on a real squat |
 | `alignment_genu_valgum.json` | `runs/alignment_genu_valgum.py`: a synthetic subject with 10° / 7° knee valgus, processed on the generic knee, with the person's bones, and with a limb-alignment record of the true angles; the camera's standing estimate reported as screening only | `docs/person-model.md`, skeletal alignment |
 | `joint_load_synthetic.json`, `joint_load_squat.json` | `runs/joint_load_squat.sh`: knee joint load and the fat, strength and combined scenarios on the synthetic squat and the OpenCap squat (illustrative DXA tables), with per-knee diagnostics | `docs/joint-load.md`, results |
+| `mri_bones_3dbones.json` | `runs/mri_bones_3dbones/`: SKEL, SKEL-J, OSSO and HIT skeletons predicted from the skin, against MRI bones on the 36 3DBones test subjects, with the floor (SKEL-J fitted to the bones); aggregates and paired tests only, no subject ids | `docs/person-model.md`, bones from body shape |
 
 ## 3D views
 

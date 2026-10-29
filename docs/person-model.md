@@ -225,7 +225,32 @@ bias / mean absolute error / worst.
 - **Lower bound.** The truth bodies come from the model that fits them, unclothed, and their proportions
   vary only as much as SMPL's shape space allows. Real bodies, clothes and the sensor will add error.
 - **Not checked against bone.** This measures the chain from sensor to SKEL, not whether SKEL's joint
-  centres are where a person's are. That needs imaging.
+  centres are where a person's are. That needs imaging (next).
+
+**Against MRI bones: the 3DBones test subjects** (`validation/runs/mri_bones_3dbones/`). 36 adults (22 female,
+14 male) with MRI-segmented bones. Each method's skeleton was predicted from the skin alone and shipped with the
+release; we scored it, without re-running the method. The metric is the mean distance from the MRI bone points to the
+predicted bone of the same name, in mm, over femur, tibia–fibula, pelvis, humerus and radius–ulna. The floor is SKEL-J
+fitted to the MRI bones themselves (any bone, as it has no bone labels).
+
+| | SKEL | SKEL-J | OSSO | floor |
+|---|---|---|---|---|
+| all five bones, female / male | 10.0 / 10.7 | 9.3 / 9.7 | 9.8 / 11.4 | 3.9 / 4.2 |
+| femur / tibia–fibula / pelvis | 11.6 / 9.6 / 11.3 | 11.2 / 9.4 / 10.3 | 11.2 / 7.6 / 10.7 | 4.0 / 4.1 / 4.9 |
+| worst single bone (pelvis for all three) | 22.7 | 21.8 | 19.6 | |
+
+- **SKEL is what `person bones` uses, and this is its best case.** These SKEL bodies were fitted to the MRI skin,
+  so the column assumes a perfect body surface; a depth or phone surface adds its own error.
+- **Skin-only prediction is about twice the floor.** Inferring bones from the skin costs about 5 mm on average over
+  what the model reaches when it sees the bones.
+- **For the leg, OSSO is the strongest.** Its tibia is closer than SKEL's in 33 of 36 subjects and SKEL-J's in 34
+  (p < 0.001); femur and pelvis are level with both. It is worse on the arm, which levels it with SKEL overall.
+  SKEL-J is closer than SKEL on every bone (35 of 36 subjects overall), but it was trained on this cohort, and SKEL
+  and OSSO were not.
+- **Error grows with soft tissue.** Femur error rises with thigh depth below the skin (Spearman 0.66).
+- **Not joint centres, not lengths.** Surface distance does not give joint-centre error. The MRI slices are 20 mm
+  apart, so this data cannot check segment lengths: every method reads the tibia 30–39 mm longer than the MRI cloud,
+  in the same direction. The cohort was scanned lying down with the arms overhead.
 
 **On a real person: OpenCap subject 2** (1.96 m, 78.2 kg; sex not recorded, taken as male). There is no body
 scan, so SKEL used height and mass. Joint-centre segment lengths, m:
@@ -749,10 +774,12 @@ Reproduce: `examples/person_model_opencap.sh` after `examples/opencap_agreement.
 - **A real calibration session and repeat sessions of one person.** These measure how much a person
   model built in one session differs from one built in another, and whether a phone-only session with the
   person's bones agrees better with a reference.
-- **Bone imaging to check SKEL.** `person bones` (above) gives bones from body shape. Whether SKEL's joint
-  centres are within centimetres of a person's needs MRI or CT of the same people. OSSO, which infers the
-  whole skeleton shape from the body, needs an old toolchain (Python 3.8, chumpy, the MPI mesh package); its
-  model files are loaded and converted, but it is not run yet.
+- **Bone imaging to check SKEL's joint centres and lengths.** `person bones` (above) gives bones from body
+  shape. The 3DBones bench (above) checks SKEL's bone surfaces against MRI, but not its joint centres, and its
+  20 mm slices cannot check segment lengths. Lengths need DXA or radiograph lengths, or functional joint centres
+  from marker motion capture (what OpenSim scaling uses); joint centres need imaging of the same people. OSSO, which
+  infers the whole skeleton shape from the body, needs an old toolchain (Python 3.8, chumpy, the MPI mesh package);
+  its model files are loaded and converted, but it is not run yet.
 - **Muscle MRI and strength of people in rehab.** The MyoSegmenTUM test covers 15 healthy adults (above); the
   regression is furthest off for patients, and only 4 patients' scans, without strength, were available.
 - **Imaging for Tier A.** `person attach` takes an MRI- or CT-personalised OpenSim model (e.g. from

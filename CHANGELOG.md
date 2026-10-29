@@ -1,6 +1,15 @@
 # Changelog
 
 ## Unreleased
+- **Skin-only skeletons against MRI bones** (`validation/runs/mri_bones_3dbones/`, `docs/person-model.md`):
+  - The skin-only predictions shipped with the 3DBones release (SKEL, SKEL-J, OSSO, HIT) scored against MRI-segmented
+    bones on its 36 test subjects, with SKEL-J fitted to the bones as the floor. Same-bone distance, female / male:
+    SKEL 10.0 / 10.7 mm, SKEL-J 9.3 / 9.7 mm (the paper's figure, which checks the frames and the metric), OSSO
+    9.8 / 11.4 mm; floor 3.9 / 4.2 mm. OSSO's tibia is the closest of the three (p < 0.001); femur and pelvis level.
+  - The SKEL column is `person bones`' best case (a perfect body surface). Surface distance is not joint-centre
+    error, and the MRI's 20 mm slices cannot check segment lengths: both still need other ground truth.
+  - The release's data, meshes and subject ids stay out of the repository; the scripts say where to get the data
+    and stop without a traceback when it is missing (`--selftest` runs without it).
 - **Knee joint load, the first slice of the load model** (`docs/joint-load.md`, `rehabtwin/joint_load.py`,
   `rehabtwin joint-load`):
   - OpenSim Joint Reaction on the muscle stage: tibiofemoral compression per knee (peak in N and ×BW, flexion
