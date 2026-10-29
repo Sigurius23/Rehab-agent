@@ -571,6 +571,60 @@ def _consistency_span(base, study):
     return "".join(out)
 
 
+def _knee_load_html(jl):
+    """The joint-load block of a muscle study (rehabtwin/joint_load.py): labels first, then baseline, scenarios."""
+    e = html.escape
+    labels = "".join(f"<li><b>{e(k.replace('_', ' '))}:</b> {e(v)}</li>" for k, v in jl["labels"].items())
+    band = jl.get("baseline_band_over_grf_split", {})
+    dg = jl.get("baseline_diagnostics") or {}
+    base = "".join(
+        f"<tr><td>{'right' if s == 'r' else 'left'}</td><td>{v['peak_compression_N']:.0f} N ({v['peak_compression_bw']:.2f} BW)</td>"
+        f"<td>{e(f'{band[s][0]:.0f}–{band[s][1]:.0f} N') if s in band else '—'}</td><td>{v['knee_flexion_at_peak_deg']}°</td>"
+        f"<td>{v['impulse_Ns']:.0f} N·s{'' if dg.get(s, {}).get('impulse_reportable', True) else ' (not reportable)'}</td>"
+        f"<td>{v.get('patellofemoral_peak_N', '—')}</td></tr>" for s, v in jl["baseline"].items())
+    diag = "".join(
+        f"<tr><td>{'right' if s == 'r' else 'left'}</td><td>{'yes' if d['reportable'] else 'NO: ' + e('; '.join(d['why_not_reportable']))}</td>"
+        f"<td>{d['peak_resultant_bw']} BW{' (above)' if d['above_in_vivo_band'] else ''}</td>"
+        f"<td>{e(', '.join(d['saturated_knee_muscles_at_peak']) or 'none')}</td><td>{d['knee_reserve_share_at_peak'] * 100:.0f}%</td>"
+        f"<td>{d['quadriceps_moment_arm_cm_at_peak']} cm</td>"
+        f"<td>{e(', '.join(f'{k} {v:.0f} N' for k, v in d['compression_at_peak_N'].items() if abs(v) >= 1))}</td></tr>"
+        for s, d in dg.items())
+    diag = (f"<h3>Can the peak be trusted?</h3><table><tr><th>knee</th><th>reportable</th><th>peak resultant vs "
+            f"in-vivo band</th><th>muscles at capacity</th><th>reserve share of knee moment</th><th>quadriceps moment arm"
+            f"</th><th>compression at the peak, by source</th></tr>{diag}</table>" if diag else "")
+    charts = ""
+    for s in jl["baseline"]:
+        series = {lab: sr[s] for lab, sr in jl["series"].items() if s in sr}
+        t = jl["series"]["measured"]["t"]
+        charts += _svg_chart(np.asarray(t), {k: v[:len(t)] for k, v in series.items()}, [],
+                             f"{'Right' if s == 'r' else 'Left'} knee: tibiofemoral compression", unit="N")
+    rows, evidence = [], []
+    for lab, sc in jl["scenarios"].items():
+        for s, v in sc["knee"].items():
+            p = v["peak"]
+            rng = p.get("change_pct_range_over_grf_split")
+            rob = ("" if "robust_to_grf_split" not in p else
+                   f"<td>{'yes' if p['robust_to_grf_split'] else 'no'} ({rng[0]:+.1f} to {rng[1]:+.1f}%)</td>")
+            if not v.get("reportable", True):
+                rows.append(f"<tr><td>{e(lab)}</td><td>{'right' if s == 'r' else 'left'}</td><td colspan='4' class='muted'>"
+                            f"not reportable: {e('; '.join(v['why_not_reportable']))}</td></tr>")
+                continue
+            rows.append(f"<tr><td>{e(lab)}</td><td>{'right' if s == 'r' else 'left'}</td><td>{p['change_N']:+.0f} N</td>"
+                        f"<td>{p['change_pct']:+.1f}%</td>{rob}<td>{'—' if v['impulse_pct'] is None else format(v['impulse_pct'], '+.1f') + '%'}</td></tr>")
+        rows.append(f"<tr><td colspan='6' class='muted'>{e(sc['reading'])}</td></tr>")
+        if sc.get("published_evidence"):
+            evidence.append(sc["published_evidence"])
+    robust_th = "<th>robust to GRF split</th>" if any("robust_to_grf_split" in v["peak"] for sc in jl["scenarios"].values()
+                                                      for v in sc["knee"].values()) else ""
+    scen = (f"<h3>Scenarios: change from the measured baseline, same person, same motion</h3><table><tr><th>scenario</th>"
+            f"<th>knee</th><th>peak compression</th><th>change</th>{robust_th}<th>impulse</th></tr>{''.join(rows)}</table>"
+            if rows else "")
+    ev = "".join(f"<p class='banner'>{e(x)}</p>" for x in dict.fromkeys(evidence))
+    return (f"<h2>Knee joint load</h2><ul>{labels}</ul>{charts}<table><tr><th>knee</th><th>peak compression</th>"
+            f"<th>GRF-split band</th><th>flexion at peak</th><th>impulse (rep)</th><th>patellofemoral peak (N)</th></tr>"
+            f"{base}</table>{diag}{scen}{ev}")
+
+
 def write_muscles(path, study, view=None):
     """HTML for a muscle-effects study (rehabtwin muscles); ``view`` from ``muscles.view_data``."""
     e = html.escape
@@ -637,6 +691,7 @@ def write_muscles(path, study, view=None):
 {_consistency_span(base, study)}</div>
 {_svg_bars(groups, variants, "Peak muscle-group activation (fraction of group capacity)")}
 {_muscle_view(view) if view else ""}
+{_knee_load_html(study["joint_load"]) if study.get("joint_load") else ""}
 <h2>Biggest changes</h2>{sens_html}
 <table><tr><th>variant</th><th>group</th><th>measured</th><th>variant</th><th>change</th>{"<th>robust to GRF split</th>" if sens else ""}</tr>{''.join(rows)}</table>
 {exo_html}

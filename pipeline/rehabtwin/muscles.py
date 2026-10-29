@@ -321,11 +321,12 @@ def reserves_xml(model_path, path, residual_force=10.0, reserve_force=1.0, ideal
 
 
 def run(model_path, motion_path, out_dir, weaken=None, label="measured", exercise="squat", start=None, stop=None,
-        assist=(), grf_share_bias=0.0, passive=(), max_fps=None, muscle_model=None):
+        assist=(), grf_share_bias=0.0, passive=(), max_fps=None, muscle_model=None, joint_load=False):
     """GRF estimate → ID → SO for one motion. Returns a summary dict (also written to muscles.json).
 
     ``muscle_model``: the study's record of where muscle capacities came from (generic or dynamometry),
-    so the caveats describe the model actually used."""
+    so the caveats describe the model actually used. ``joint_load``: also the knees' Joint Reaction loads
+    (rehabtwin/joint_load.py) as ``knee_load``."""
     osim = _osim()
     out = Path(out_dir) / label
     out.mkdir(parents=True, exist_ok=True)
@@ -377,6 +378,16 @@ def run(model_path, motion_path, out_dir, weaken=None, label="measured", exercis
         if not osim.AnalyzeTool(str(out / "so_setup.xml")).run():
             raise RuntimeError(f"static optimisation failed ({out})")
     summary = summarise(out, model_path, grf_qc, exercise, assist, muscle_model)
+    if joint_load:
+        from . import joint_load as jl
+        joints = jl.knee_joints(osim.Model(str(out / "model_dynamics.osim")))
+        names = [j for side in joints.values() for j in side.values() if j]
+        (out / "jr_setup.xml").write_text(jl.reaction_setup_xml(t0, t1, names))
+        with _cwd(out):
+            if not osim.AnalyzeTool(str(out / "jr_setup.xml")).run():
+                raise RuntimeError(f"joint reaction analysis failed ({out})")
+        summary["knee_load"] = jl.knee_loads(out, joints, grf_qc["body_mass_kg"], tab)
+        summary["knee_load"]["diagnostics"] = jl.diagnostics(out, joints, summary["knee_load"], tab)
     window = (tab.time >= t0 - 1e-9) & (tab.time <= t1 + 1e-9)
     summary["passive_devices"] = {}
     for dev in model_info["passive"]:

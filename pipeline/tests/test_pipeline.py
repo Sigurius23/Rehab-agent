@@ -735,3 +735,108 @@ def test_dxa_scan_sets_segment_masses_in_the_muscle_model(selftest_run, tmp_path
     bad = {**scan, "regions": {**scan["regions"], "head": {"lean_kg": 30.0, "fat_kg": 5.0, "bmc_kg": 0.5}}}
     with pytest.raises(ValueError, match="more than"):
         dxa.apply_mass_distribution(opensim.Model(str(s / sess["pipeline"]["outputs"]["model"])), bad)
+
+
+def test_knee_reaction_is_the_legs_ground_force_without_muscles(selftest_run, tmp_path, monkeypatch):
+    """Frames and signs of the knee load (rehabtwin/joint_load.py): with ideal torque actuators instead of muscles,
+    the femur pushes on the tibia with the leg's ground force less the shank and foot weight (slow squat:
+    quasi-static), so tibiofemoral compression is -y in the tibia frame."""
+    from rehabtwin import muscles
+    from rehabtwin.io_formats import to_degrees
+    out, res, _ = selftest_run
+    rep = res["metrics"]["reps"][0]
+    m = opensim.Model(str(out / res["session"]["pipeline"]["outputs"]["model"]))
+    fs = m.updForceSet()
+    for i in reversed(range(fs.getSize())):
+        if fs.get(i).getConcreteClassName().endswith("Muscle"):
+            fs.remove(i)
+    m.finalizeConnections()
+    m.initSystem()
+    m.printToXML(str(tmp_path / "torques.osim"))
+    reserves = muscles.reserves_xml          # ideal torque actuators carry the joints instead of the muscles
+    monkeypatch.setattr(muscles, "reserves_xml", lambda *a, **k: reserves(*a, **{**k, "reserve_force": 500.0}))
+    r = muscles.run(tmp_path / "torques.osim", out / res["session"]["pipeline"]["outputs"]["motion"], tmp_path,
+                    start=rep["peak_s"] - 0.3, stop=rep["peak_s"] + 0.3, joint_load=True)
+    run = tmp_path / "measured"
+    jr, grf = read_table(run / "jr_JointReaction_ReactionLoads.sto"), read_table(run / "grf.mot")
+    model = opensim.Model(str(run / "model_dynamics.osim"))
+    state = model.initSystem()
+    tab = to_degrees(read_table(run / "motion.mot"), model)
+    cs = model.getCoordinateSet()
+    bodies = model.getBodySet()
+    for k in (0, len(jr.time) // 2, len(jr.time) - 1):
+        muscles._set_state(model, state, tab, int(np.argmin(np.abs(tab.time - jr.time[k]))), cs,
+                           [c for c in tab.columns if cs.contains(c)])
+        for s in "rl":
+            R = bodies.get(f"tibia_{s}").getTransformInGround(state).R()
+            R = np.array([[R.get(i, j) for j in range(3)] for i in range(3)])
+            ground = np.array([np.interp(jr.time[k], grf.time, grf.col(f"ground_force_{s}_v{a}")) for a in "xyz"])
+            weight = 9.81 * sum(bodies.get(f"{b}_{s}").getMass() for b in ("tibia", "talus", "calcn", "toes"))
+            expect = R.T @ -(ground - [0.0, weight, 0.0])
+            got = np.array([jr.col(f"walker_knee_{s}_on_tibia_{s}_in_tibia_{s}_f{a}")[k] for a in "xyz"])
+            assert np.abs(got - expect).max() < 0.02 * np.linalg.norm(ground), (s, k, got, expect)
+    assert r["knee_load"]["r"]["peak_compression_N"] == pytest.approx(-min(jr.col("walker_knee_r_on_tibia_r_in_tibia_r_fy")),
+                                                                      abs=0.1)
+
+
+def test_joint_load_scenarios_within_one_person(selftest_run, tmp_path):
+    """Knee load with the person's DXA: less fat lowers the load about in proportion on the replayed motion (the
+    published 4:1 is quoted, never output); a stronger quadriceps eases effort, and its load change is shown as it
+    comes out; every change carries its ground-force band; no DXA table, no fat scenario."""
+    import shutil
+
+    from rehabtwin import joint_load, person
+    out, res, _ = selftest_run
+    s = tmp_path / "s"
+    shutil.copytree(out, s, ignore=shutil.ignore_patterns("muscles", "correction", "strength", "capacity", "feedback"))
+    rep = res["metrics"]["reps"][0]
+    d = tmp_path / "person"
+    person.init(d, res["session"]["person_ref"], mass_kg=res["qc"]["subject"]["mass_kg"])
+    window = {"start": rep["peak_s"] - 0.25, "stop": rep["peak_s"] + 0.25, "view_3d": False, "person": d}
+    with pytest.raises(SystemExit, match="DXA regional table"):
+        cli.muscle_study(s, joint_load=True, fat_change_kg=-5.0, **window)
+    with pytest.raises(SystemExit, match="joint-load"):
+        cli.muscle_study(s, strengthen=["quadriceps_r=1.2"], **window)
+    with pytest.raises(SystemExit, match="above 1"):
+        cli.muscle_study(s, joint_load=True, strengthen=["quadriceps_r=0.8"], **window)
+    regions = {"left_arm": (3.0, 1.0, 0.17), "right_arm": (3.1, 1.0, 0.18), "left_leg": (9.5, 3.2, 0.5),
+               "right_leg": (9.6, 3.2, 0.5), "trunk": (25.0, 7.0, 0.8), "head": (3.3, 0.9, 0.55)}
+    (tmp_path / "dxa.json").write_text(json.dumps({"method": "DXA (test)", "date": "2026-10-28", "regions": {
+        r: {"lean_kg": a, "fat_kg": b, "bmc_kg": c} for r, (a, b, c) in regions.items()}}))
+    person.set_dxa(d, tmp_path / "dxa.json")
+    study, mdir = cli.muscle_study(s, joint_load=True, fat_change_kg=-5.0, strengthen=["quadriceps_r=1.2"],
+                                   grf_sensitivity=0.1, **window)
+    jl = study["joint_load"]
+    base = jl["baseline"]
+    for side in "rl":
+        assert 1.5 < base[side]["peak_compression_bw"] < 12 and base[side]["knee_flexion_at_peak_deg"] > 60
+        lo, hi = jl["baseline_band_over_grf_split"][side]
+        assert lo <= base[side]["peak_compression_N"] <= hi and hi > lo
+        d = jl["baseline_diagnostics"][side]               # the sources account for the whole joint reaction
+        assert abs(d["compression_at_peak_N"]["rest (inertia, reserves, constraints)"]) < 0.02 * base[side]["peak_compression_N"]
+        assert d["compression_at_peak_N"]["quadriceps"] > 0.5 * base[side]["peak_compression_N"]
+        assert d["reportable"] == (not d["why_not_reportable"]) and d["quadriceps_moment_arm_cm_at_peak"] > 1.0
+        assert d["above_in_vivo_band"] == (d["peak_resultant_bw"] > joint_load.IN_VIVO_HIGH_BW)
+        for sc in jl["scenarios"].values():                # an untrusted knee states no change
+            v = sc["knee"][side]
+            assert v["reportable"] == (d["reportable"] and not any(w.startswith("scenario") for w in v.get("why_not_reportable", [])))
+    fat = jl["scenarios"]["fat -5 kg"]
+    mass_pct = fat["mass_change"]["pct"]
+    assert fat["mass_change"]["kg"] == pytest.approx(-5.0, abs=0.01)
+    for side in "rl":
+        p = fat["knee"][side]["peak"]
+        assert p["change_N"] < 0 and 0.5 < p["change_pct"] / mass_pct < 2.0      # about proportional
+        assert p["robust_to_grf_split"] and p["change_pct_range_over_grf_split"][1] < 0
+    assert fat["published_evidence"] == joint_load.MESSIER and "4:1" not in fat["reading"]
+    strong = jl["scenarios"]["quadriceps_r at 120%"]
+    assert joint_load.STRENGTH_READING in strong["reading"]
+    if strong["knee"]["r"]["reportable"]:
+        q = strong["effort"]["quadriceps_r"]
+        assert q["other"] < q["base"]                                    # a stronger group works less hard
+    else:                                                                # same solution, so no effort stated either
+        assert "quadriceps_r" not in strong["effort"] and "right-side effort not reportable" in strong["reading"]
+    assert "published_evidence" not in strong
+    assert jl["scenarios"]["fat -5 kg + quadriceps_r at 120%"]["kind"] == "combined"
+    assert "assumption" in jl["labels"]["fat_provenance"] and "safety" not in jl["labels"]
+    page = (mdir / "muscles.html").read_text()
+    assert "Knee joint load" in page and "not model output" in page and page.count("<svg") >= 3

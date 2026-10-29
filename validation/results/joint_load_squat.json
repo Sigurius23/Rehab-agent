@@ -1,0 +1,546 @@
+{
+ "twin_tier": "C",
+ "body_mass": {
+  "kg": 78.2,
+  "source": "measured",
+  "assumed": false
+ },
+ "muscle_model": "DXA-calibrated leg muscle (per-leg lean mass)",
+ "labels": {
+  "output": "Within-person changes on the same replayed motion. Model estimates for clinician discussion, never a weight-loss or exercise prescription, and no claim about disease progression.",
+  "absolute_values": "Absolute knee forces are not validated for this person (no instrumented implant or contact model): read them as the baseline the changes are taken from.",
+  "contact": "Total tibiofemoral force from OpenSim's Joint Reaction analysis: no ligaments, no cartilage contact model, no medial/lateral split.",
+  "patellofemoral": "Patellofemoral force: the force holding the patella to the femur in a model whose patella moves with the knee angle; unvalidated.",
+  "patellar_mechanism": "The quadriceps path runs over the patella to the tibia, so the patellar tendon carries the full quadriceps tension; in cadaver knees it carries about 0.7 of it at 90 deg of flexion (Huberti et al. 1984). Deep-flexion compression from the quadriceps is likely overestimated.",
+  "quadriceps_moment_arm": "The model's quadriceps moment arm falls from about 4.5 cm near extension to about 2.1 cm at 90 deg (gastrocnemius keeps 3.3 cm): the generic model's geometry, not the person's. The quadriceps force for a knee moment scales with 1 / moment arm.",
+  "reportable": "A knee's numbers are reportable only when, at its peak, the estimated ground forces fit the motion (the muscle stage's pelvis-residual rule), no knee-crossing muscle is at its capacity, and reserve torque carries at most 10% of the knee moment: otherwise the muscle forces are inflated or rest on forces that don't fit, and a change is not stated even within the person. The impulse (the whole rep) needs the same over every frame of the rep, not only at the peak.",
+  "in_vivo_band": "Instrumented knee implants (Bergmann et al. 2014, 8 subjects, 'High 100' standard loads): peak resultant 3.4-4.3 BW in daily activities other than jogging, knee bends included. They are implant patients, so this is a plausibility band, not a limit for other knees.",
+  "ground_forces": "Estimated, not measured; bands re-run every scenario with the right foot's share of the load shifted by ±0.10.",
+  "fat_provenance": "ILLUSTRATIVE regional fat, not measured on this person (DXA (illustrative values, not this person's scan) 2026-10-20); the change is spread in proportion to each region's fat (an assumption)."
+ },
+ "baseline": {
+  "r": {
+   "peak_compression_N": 8504.9,
+   "peak_compression_bw": 11.086,
+   "time_of_peak_s": 3.017,
+   "knee_flexion_at_peak_deg": 83.2,
+   "mean_compression_N": 3139.5,
+   "impulse_Ns": 4662.4,
+   "peak_resultant_N": 8876.4,
+   "peak_shear_ap_N": 2705.5,
+   "peak_shear_ml_N": 1042.0,
+   "patellofemoral_peak_N": 9239.8
+  },
+  "l": {
+   "peak_compression_N": 7845.0,
+   "peak_compression_bw": 10.226,
+   "time_of_peak_s": 3.017,
+   "knee_flexion_at_peak_deg": 80.5,
+   "mean_compression_N": 2617.4,
+   "impulse_Ns": 3885.7,
+   "peak_resultant_N": 8166.7,
+   "peak_shear_ap_N": 2105.1,
+   "peak_shear_ml_N": 848.3,
+   "patellofemoral_peak_N": 7936.5
+  }
+ },
+ "baseline_band_over_grf_split": {
+  "r": [
+   7176.4,
+   8632.2
+  ],
+  "l": [
+   5960.0,
+   8137.7
+  ]
+ },
+ "fat_model": {
+  "fat_change_kg": -5.0,
+  "method": "DXA regional fat changed in proportion to each region's fat (assumption); each region's bodies lose or gain that many kg",
+  "dxa": {
+   "method": "DXA (illustrative values, not this person's scan)",
+   "date": "2026-10-20"
+  },
+  "model_mass_kg": {
+   "before": 78.2,
+   "after": 73.2
+  }
+ },
+ "scenarios": {
+  "quadriceps_r at 120%": {
+   "kind": "strength",
+   "knee": {
+    "r": {
+     "peak": {
+      "base_N": 8504.9,
+      "scenario_N": 9338.5,
+      "change_N": 833.6,
+      "change_pct": 9.8,
+      "change_pct_range_over_grf_split": [
+       3.62,
+       17.22
+      ],
+      "robust_to_grf_split": true
+     },
+     "impulse_pct": null,
+     "patellofemoral_peak": {
+      "base_N": 9239.8,
+      "scenario_N": 9654.3,
+      "change_N": 414.5,
+      "change_pct": 4.49
+     },
+     "reportable": false,
+     "why_not_reportable": [
+      "baseline: the estimated ground forces don't fit the motion at the peak (pelvis residual as a 17 cm centre-of-pressure shift, 0.06 BW)",
+      "baseline: 5 knee-crossing muscle(s) at capacity at the peak (bflh_r, sart_r, vasint_r, vaslat_r, vasmed_r)",
+      "scenario: the estimated ground forces don't fit the motion at the peak (pelvis residual as a 23 cm centre-of-pressure shift, 0.06 BW)",
+      "scenario: 3 knee-crossing muscle(s) at capacity at the peak (bflh_r, sart_r, vaslat_r)"
+     ],
+     "above_in_vivo_band": true,
+     "why_impulse_not_reportable": [
+      "baseline: the estimated ground forces don't fit the motion everywhere in the rep (worst pelvis residual as a 58 cm centre-of-pressure shift at 2.38 s)",
+      "baseline: a knee-crossing muscle is at capacity in 36% of the frames",
+      "scenario: the estimated ground forces don't fit the motion everywhere in the rep (worst pelvis residual as a 58 cm centre-of-pressure shift at 2.38 s)",
+      "scenario: a knee-crossing muscle is at capacity in 36% of the frames"
+     ]
+    },
+    "l": {
+     "peak": {
+      "base_N": 7845.0,
+      "scenario_N": 7845.0,
+      "change_N": 0.0,
+      "change_pct": 0.0,
+      "change_pct_range_over_grf_split": [
+       0.0,
+       0.0
+      ],
+      "robust_to_grf_split": false
+     },
+     "impulse_pct": null,
+     "patellofemoral_peak": {
+      "base_N": 7936.5,
+      "scenario_N": 7936.5,
+      "change_N": 0.0,
+      "change_pct": 0.0
+     },
+     "reportable": false,
+     "why_not_reportable": [
+      "baseline: the estimated ground forces don't fit the motion at the peak (pelvis residual as a 17 cm centre-of-pressure shift, 0.06 BW)",
+      "baseline: 4 knee-crossing muscle(s) at capacity at the peak (bflh_l, sart_l, vaslat_l, vasmed_l)",
+      "scenario: the estimated ground forces don't fit the motion at the peak (pelvis residual as a 17 cm centre-of-pressure shift, 0.06 BW)",
+      "scenario: 4 knee-crossing muscle(s) at capacity at the peak (bflh_l, sart_l, vaslat_l, vasmed_l)"
+     ],
+     "above_in_vivo_band": true,
+     "why_impulse_not_reportable": [
+      "baseline: the estimated ground forces don't fit the motion everywhere in the rep (worst pelvis residual as a 58 cm centre-of-pressure shift at 2.38 s)",
+      "baseline: a knee-crossing muscle is at capacity in 56% of the frames",
+      "scenario: the estimated ground forces don't fit the motion everywhere in the rep (worst pelvis residual as a 58 cm centre-of-pressure shift at 2.38 s)",
+      "scenario: a knee-crossing muscle is at capacity in 56% of the frames"
+     ]
+    }
+   },
+   "effort": {},
+   "mass_change": {
+    "kg": 0.0,
+    "pct": 0.0
+   },
+   "reading": "Effort: right and left-side effort not reportable either. Load as computed: right knee not reportable (baseline: the estimated ground forces don't fit the motion at the peak (pelvis residual as a 17 cm centre-of-pressure shift, 0.06 BW)); left knee not reportable (baseline: the estimated ground forces don't fit the motion at the peak (pelvis residual as a 17 cm centre-of-pressure shift, 0.06 BW)). Stronger muscles change effort (fraction of capacity used) more than load: compression can stay the same or rise while effort falls. Load distribution (medial/lateral) and stability are not modelled in this slice."
+  },
+  "quadriceps_l at 120%": {
+   "kind": "strength",
+   "knee": {
+    "r": {
+     "peak": {
+      "base_N": 8504.9,
+      "scenario_N": 8505.1,
+      "change_N": 0.2,
+      "change_pct": 0.0,
+      "change_pct_range_over_grf_split": [
+       0.0,
+       0.0
+      ],
+      "robust_to_grf_split": false
+     },
+     "impulse_pct": null,
+     "patellofemoral_peak": {
+      "base_N": 9239.8,
+      "scenario_N": 9239.9,
+      "change_N": 0.1,
+      "change_pct": 0.0
+     },
+     "reportable": false,
+     "why_not_reportable": [
+      "baseline: the estimated ground forces don't fit the motion at the peak (pelvis residual as a 17 cm centre-of-pressure shift, 0.06 BW)",
+      "baseline: 5 knee-crossing muscle(s) at capacity at the peak (bflh_r, sart_r, vasint_r, vaslat_r, vasmed_r)",
+      "scenario: the estimated ground forces don't fit the motion at the peak (pelvis residual as a 17 cm centre-of-pressure shift, 0.06 BW)",
+      "scenario: 5 knee-crossing muscle(s) at capacity at the peak (bflh_r, sart_r, vasint_r, vaslat_r, vasmed_r)"
+     ],
+     "above_in_vivo_band": true,
+     "why_impulse_not_reportable": [
+      "baseline: the estimated ground forces don't fit the motion everywhere in the rep (worst pelvis residual as a 58 cm centre-of-pressure shift at 2.38 s)",
+      "baseline: a knee-crossing muscle is at capacity in 36% of the frames",
+      "scenario: the estimated ground forces don't fit the motion everywhere in the rep (worst pelvis residual as a 58 cm centre-of-pressure shift at 2.38 s)",
+      "scenario: a knee-crossing muscle is at capacity in 36% of the frames"
+     ]
+    },
+    "l": {
+     "peak": {
+      "base_N": 7845.0,
+      "scenario_N": 8150.1,
+      "change_N": 305.1,
+      "change_pct": 3.89,
+      "change_pct_range_over_grf_split": [
+       1.33,
+       20.42
+      ],
+      "robust_to_grf_split": false
+     },
+     "impulse_pct": null,
+     "patellofemoral_peak": {
+      "base_N": 7936.5,
+      "scenario_N": 8196.4,
+      "change_N": 259.9,
+      "change_pct": 3.27
+     },
+     "reportable": false,
+     "why_not_reportable": [
+      "baseline: the estimated ground forces don't fit the motion at the peak (pelvis residual as a 17 cm centre-of-pressure shift, 0.06 BW)",
+      "baseline: 4 knee-crossing muscle(s) at capacity at the peak (bflh_l, sart_l, vaslat_l, vasmed_l)",
+      "scenario: the estimated ground forces don't fit the motion at the peak (pelvis residual as a 17 cm centre-of-pressure shift, 0.06 BW)",
+      "scenario: 3 knee-crossing muscle(s) at capacity at the peak (bflh_l, sart_l, vaslat_l)"
+     ],
+     "above_in_vivo_band": true,
+     "why_impulse_not_reportable": [
+      "baseline: the estimated ground forces don't fit the motion everywhere in the rep (worst pelvis residual as a 58 cm centre-of-pressure shift at 2.38 s)",
+      "baseline: a knee-crossing muscle is at capacity in 56% of the frames",
+      "scenario: the estimated ground forces don't fit the motion everywhere in the rep (worst pelvis residual as a 58 cm centre-of-pressure shift at 2.38 s)",
+      "scenario: a knee-crossing muscle is at capacity in 56% of the frames"
+     ]
+    }
+   },
+   "effort": {},
+   "mass_change": {
+    "kg": 0.0,
+    "pct": 0.0
+   },
+   "reading": "Effort: right and left-side effort not reportable either. Load as computed: right knee not reportable (baseline: the estimated ground forces don't fit the motion at the peak (pelvis residual as a 17 cm centre-of-pressure shift, 0.06 BW)); left knee not reportable (baseline: the estimated ground forces don't fit the motion at the peak (pelvis residual as a 17 cm centre-of-pressure shift, 0.06 BW)). Stronger muscles change effort (fraction of capacity used) more than load: compression can stay the same or rise while effort falls. Load distribution (medial/lateral) and stability are not modelled in this slice."
+  },
+  "fat -5 kg": {
+   "kind": "fat",
+   "knee": {
+    "r": {
+     "peak": {
+      "base_N": 8504.9,
+      "scenario_N": 8310.5,
+      "change_N": -194.4,
+      "change_pct": -2.29,
+      "change_pct_range_over_grf_split": [
+       -6.08,
+       -0.23
+      ],
+      "robust_to_grf_split": false
+     },
+     "impulse_pct": null,
+     "patellofemoral_peak": {
+      "base_N": 9239.8,
+      "scenario_N": 8821.7,
+      "change_N": -418.1,
+      "change_pct": -4.52
+     },
+     "reportable": false,
+     "why_not_reportable": [
+      "baseline: the estimated ground forces don't fit the motion at the peak (pelvis residual as a 17 cm centre-of-pressure shift, 0.06 BW)",
+      "baseline: 5 knee-crossing muscle(s) at capacity at the peak (bflh_r, sart_r, vasint_r, vaslat_r, vasmed_r)",
+      "scenario: the estimated ground forces don't fit the motion at the peak (pelvis residual as a 23 cm centre-of-pressure shift, 0.06 BW)",
+      "scenario: 4 knee-crossing muscle(s) at capacity at the peak (bflh_r, sart_r, vaslat_r, vasmed_r)"
+     ],
+     "above_in_vivo_band": true,
+     "why_impulse_not_reportable": [
+      "baseline: the estimated ground forces don't fit the motion everywhere in the rep (worst pelvis residual as a 58 cm centre-of-pressure shift at 2.38 s)",
+      "baseline: a knee-crossing muscle is at capacity in 36% of the frames",
+      "scenario: the estimated ground forces don't fit the motion everywhere in the rep (worst pelvis residual as a 58 cm centre-of-pressure shift at 2.38 s)",
+      "scenario: a knee-crossing muscle is at capacity in 36% of the frames"
+     ]
+    },
+    "l": {
+     "peak": {
+      "base_N": 7845.0,
+      "scenario_N": 7368.2,
+      "change_N": -476.8,
+      "change_pct": -6.08,
+      "change_pct_range_over_grf_split": [
+       -7.48,
+       0.55
+      ],
+      "robust_to_grf_split": false
+     },
+     "impulse_pct": null,
+     "patellofemoral_peak": {
+      "base_N": 7936.5,
+      "scenario_N": 7426.4,
+      "change_N": -510.1,
+      "change_pct": -6.43
+     },
+     "reportable": false,
+     "why_not_reportable": [
+      "baseline: the estimated ground forces don't fit the motion at the peak (pelvis residual as a 17 cm centre-of-pressure shift, 0.06 BW)",
+      "baseline: 4 knee-crossing muscle(s) at capacity at the peak (bflh_l, sart_l, vaslat_l, vasmed_l)",
+      "scenario: the estimated ground forces don't fit the motion at the peak (pelvis residual as a 17 cm centre-of-pressure shift, 0.06 BW)",
+      "scenario: 3 knee-crossing muscle(s) at capacity at the peak (bflh_l, sart_l, vaslat_l)"
+     ],
+     "above_in_vivo_band": true,
+     "why_impulse_not_reportable": [
+      "baseline: the estimated ground forces don't fit the motion everywhere in the rep (worst pelvis residual as a 58 cm centre-of-pressure shift at 2.38 s)",
+      "baseline: a knee-crossing muscle is at capacity in 56% of the frames",
+      "scenario: the estimated ground forces don't fit the motion everywhere in the rep (worst pelvis residual as a 58 cm centre-of-pressure shift at 2.38 s)",
+      "scenario: a knee-crossing muscle is at capacity in 53% of the frames"
+     ]
+    }
+   },
+   "effort": {},
+   "mass_change": {
+    "kg": -5.0,
+    "pct": -6.39
+   },
+   "reading": "Model-computed on the replayed motion: body mass -6.4% (-5.0 kg), right knee not reportable (baseline: the estimated ground forces don't fit the motion at the peak (pelvis residual as a 17 cm centre-of-pressure shift, 0.06 BW)); left knee not reportable (baseline: the estimated ground forces don't fit the motion at the peak (pelvis residual as a 17 cm centre-of-pressure shift, 0.06 BW)).",
+   "published_evidence": "Published evidence, not model output: in 142 overweight and obese older adults with knee osteoarthritis, each 9.8 N (1 kg) of weight lost went with 40.6 N less knee compressive force per step in walking, about 4:1 (Messier et al. 2005, Arthritis & Rheumatism 52:2026-2032). Their gait adapted as they lost weight; this model replays the same motion, so it cannot show that adaptation (that needs predictive simulation)."
+  },
+  "fat -5 kg + quadriceps_r at 120%, quadriceps_l at 120%": {
+   "kind": "combined",
+   "knee": {
+    "r": {
+     "peak": {
+      "base_N": 8504.9,
+      "scenario_N": 8753.9,
+      "change_N": 249.0,
+      "change_pct": 2.93,
+      "change_pct_range_over_grf_split": [
+       -3.69,
+       14.95
+      ],
+      "robust_to_grf_split": false
+     },
+     "impulse_pct": null,
+     "patellofemoral_peak": {
+      "base_N": 9239.8,
+      "scenario_N": 9129.7,
+      "change_N": -110.1,
+      "change_pct": -1.19
+     },
+     "reportable": false,
+     "why_not_reportable": [
+      "baseline: the estimated ground forces don't fit the motion at the peak (pelvis residual as a 17 cm centre-of-pressure shift, 0.06 BW)",
+      "baseline: 5 knee-crossing muscle(s) at capacity at the peak (bflh_r, sart_r, vasint_r, vaslat_r, vasmed_r)",
+      "scenario: the estimated ground forces don't fit the motion at the peak (pelvis residual as a 23 cm centre-of-pressure shift, 0.06 BW)",
+      "scenario: 3 knee-crossing muscle(s) at capacity at the peak (bflh_r, sart_r, vaslat_r)"
+     ],
+     "above_in_vivo_band": true,
+     "why_impulse_not_reportable": [
+      "baseline: the estimated ground forces don't fit the motion everywhere in the rep (worst pelvis residual as a 58 cm centre-of-pressure shift at 2.38 s)",
+      "baseline: a knee-crossing muscle is at capacity in 36% of the frames",
+      "scenario: the estimated ground forces don't fit the motion everywhere in the rep (worst pelvis residual as a 58 cm centre-of-pressure shift at 2.38 s)",
+      "scenario: a knee-crossing muscle is at capacity in 36% of the frames"
+     ]
+    },
+    "l": {
+     "peak": {
+      "base_N": 7845.0,
+      "scenario_N": 7614.0,
+      "change_N": -231.0,
+      "change_pct": -2.94,
+      "change_pct_range_over_grf_split": [
+       -6.25,
+       15.49
+      ],
+      "robust_to_grf_split": false
+     },
+     "impulse_pct": null,
+     "patellofemoral_peak": {
+      "base_N": 7936.5,
+      "scenario_N": 7636.8,
+      "change_N": -299.7,
+      "change_pct": -3.78
+     },
+     "reportable": false,
+     "why_not_reportable": [
+      "baseline: the estimated ground forces don't fit the motion at the peak (pelvis residual as a 17 cm centre-of-pressure shift, 0.06 BW)",
+      "baseline: 4 knee-crossing muscle(s) at capacity at the peak (bflh_l, sart_l, vaslat_l, vasmed_l)",
+      "scenario: the estimated ground forces don't fit the motion at the peak (pelvis residual as a 17 cm centre-of-pressure shift, 0.06 BW)",
+      "scenario: 3 knee-crossing muscle(s) at capacity at the peak (bflh_l, sart_l, vaslat_l)"
+     ],
+     "above_in_vivo_band": true,
+     "why_impulse_not_reportable": [
+      "baseline: the estimated ground forces don't fit the motion everywhere in the rep (worst pelvis residual as a 58 cm centre-of-pressure shift at 2.38 s)",
+      "baseline: a knee-crossing muscle is at capacity in 56% of the frames",
+      "scenario: the estimated ground forces don't fit the motion everywhere in the rep (worst pelvis residual as a 58 cm centre-of-pressure shift at 2.38 s)",
+      "scenario: a knee-crossing muscle is at capacity in 53% of the frames"
+     ]
+    }
+   },
+   "effort": {},
+   "mass_change": {
+    "kg": -5.0,
+    "pct": -6.39
+   },
+   "reading": "Body mass -6.4% and stronger muscles: right knee not reportable (baseline: the estimated ground forces don't fit the motion at the peak (pelvis residual as a 17 cm centre-of-pressure shift, 0.06 BW)); left knee not reportable (baseline: the estimated ground forces don't fit the motion at the peak (pelvis residual as a 17 cm centre-of-pressure shift, 0.06 BW)); effort: right and left-side effort not reportable either. Stronger muscles change effort (fraction of capacity used) more than load: compression can stay the same or rise while effort falls. Load distribution (medial/lateral) and stability are not modelled in this slice.",
+   "published_evidence": "Published evidence, not model output: in 142 overweight and obese older adults with knee osteoarthritis, each 9.8 N (1 kg) of weight lost went with 40.6 N less knee compressive force per step in walking, about 4:1 (Messier et al. 2005, Arthritis & Rheumatism 52:2026-2032). Their gait adapted as they lost weight; this model replays the same motion, so it cannot show that adaptation (that needs predictive simulation)."
+  }
+ },
+ "baseline_diagnostics": {
+  "r": {
+   "saturated_knee_muscles_at_peak": [
+    "bflh_r",
+    "sart_r",
+    "vasint_r",
+    "vaslat_r",
+    "vasmed_r"
+   ],
+   "frames_with_a_saturated_knee_muscle": 0.356,
+   "knee_reserve_share_at_peak": 0.0,
+   "knee_reserve_share_max": 0.002,
+   "compression_at_peak_N": {
+    "quadriceps": 7081.5,
+    "gastrocnemius": 528.6,
+    "other knee-crossing muscles": 174.7,
+    "hamstrings": 132.4,
+    "tensor_fasciae_latae": 0.3,
+    "adductors": 0.0,
+    "ground force less shank and foot weight": 582.3,
+    "rest (inertia, reserves, constraints)": 5.1
+   },
+   "gastrocnemius_share_of_muscle_compression": 0.067,
+   "quadriceps_moment_arm_cm_at_peak": 2.6,
+   "knee_moment_Nm_at_peak": -100.8,
+   "ground_forces_fit_at_peak": {
+    "pelvis_residual_as_cop_shift_m": 0.17,
+    "pelvis_force_residual_bw": 0.06
+   },
+   "peak_resultant_bw": 11.57,
+   "above_in_vivo_band": true,
+   "reportable": false,
+   "why_not_reportable": [
+    "the estimated ground forces don't fit the motion at the peak (pelvis residual as a 17 cm centre-of-pressure shift, 0.06 BW)",
+    "5 knee-crossing muscle(s) at capacity at the peak (bflh_r, sart_r, vasint_r, vaslat_r, vasmed_r)"
+   ],
+   "impulse_reportable": false,
+   "why_impulse_not_reportable": [
+    "the estimated ground forces don't fit the motion everywhere in the rep (worst pelvis residual as a 58 cm centre-of-pressure shift at 2.38 s)",
+    "a knee-crossing muscle is at capacity in 36% of the frames"
+   ]
+  },
+  "l": {
+   "saturated_knee_muscles_at_peak": [
+    "bflh_l",
+    "sart_l",
+    "vaslat_l",
+    "vasmed_l"
+   ],
+   "frames_with_a_saturated_knee_muscle": 0.556,
+   "knee_reserve_share_at_peak": 0.0,
+   "knee_reserve_share_max": 0.0,
+   "compression_at_peak_N": {
+    "quadriceps": 6269.4,
+    "gastrocnemius": 687.2,
+    "hamstrings": 206.1,
+    "other knee-crossing muscles": 166.4,
+    "tensor_fasciae_latae": 0.4,
+    "adductors": 0.2,
+    "ground force less shank and foot weight": 512.7,
+    "rest (inertia, reserves, constraints)": 2.7
+   },
+   "gastrocnemius_share_of_muscle_compression": 0.094,
+   "quadriceps_moment_arm_cm_at_peak": 2.71,
+   "knee_moment_Nm_at_peak": -79.7,
+   "ground_forces_fit_at_peak": {
+    "pelvis_residual_as_cop_shift_m": 0.17,
+    "pelvis_force_residual_bw": 0.06
+   },
+   "peak_resultant_bw": 10.65,
+   "above_in_vivo_band": true,
+   "reportable": false,
+   "why_not_reportable": [
+    "the estimated ground forces don't fit the motion at the peak (pelvis residual as a 17 cm centre-of-pressure shift, 0.06 BW)",
+    "4 knee-crossing muscle(s) at capacity at the peak (bflh_l, sart_l, vaslat_l, vasmed_l)"
+   ],
+   "impulse_reportable": false,
+   "why_impulse_not_reportable": [
+    "the estimated ground forces don't fit the motion everywhere in the rep (worst pelvis residual as a 58 cm centre-of-pressure shift at 2.38 s)",
+    "a knee-crossing muscle is at capacity in 56% of the frames"
+   ]
+  }
+ },
+ "dynamic_consistency": {
+  "measured": {
+   "pelvis_moment_residual_as_cop_shift_m": 0.58,
+   "pelvis_force_residual_bw": 0.066,
+   "consistent": false,
+   "rule": "pelvis residual moment / body weight <= 0.1 m and residual force <= 0.1 BW"
+  },
+  "quadriceps_r at 120%": {
+   "pelvis_moment_residual_as_cop_shift_m": 0.58,
+   "pelvis_force_residual_bw": 0.066,
+   "consistent": false,
+   "rule": "pelvis residual moment / body weight <= 0.1 m and residual force <= 0.1 BW"
+  },
+  "quadriceps_l at 120%": {
+   "pelvis_moment_residual_as_cop_shift_m": 0.58,
+   "pelvis_force_residual_bw": 0.066,
+   "consistent": false,
+   "rule": "pelvis residual moment / body weight <= 0.1 m and residual force <= 0.1 BW"
+  },
+  "fat -5 kg": {
+   "pelvis_moment_residual_as_cop_shift_m": 0.578,
+   "pelvis_force_residual_bw": 0.066,
+   "consistent": false,
+   "rule": "pelvis residual moment / body weight <= 0.1 m and residual force <= 0.1 BW"
+  },
+  "fat -5 kg + quadriceps_r at 120%, quadriceps_l at 120%": {
+   "pelvis_moment_residual_as_cop_shift_m": 0.578,
+   "pelvis_force_residual_bw": 0.066,
+   "consistent": false,
+   "rule": "pelvis residual moment / body weight <= 0.1 m and residual force <= 0.1 BW"
+  }
+ },
+ "reserve_torque_peaks_Nm": {
+  "measured": {
+   "hip_flexion_r": 3.36,
+   "hip_adduction_r": 10.08,
+   "hip_rotation_r": 32.18,
+   "hip_flexion_l": 3.21,
+   "hip_adduction_l": 9.19,
+   "hip_rotation_l": 31.34
+  },
+  "quadriceps_r at 120%": {
+   "hip_flexion_r": 3.35,
+   "hip_adduction_r": 10.08,
+   "hip_rotation_r": 32.18,
+   "hip_flexion_l": 3.21,
+   "hip_adduction_l": 9.19,
+   "hip_rotation_l": 31.34
+  },
+  "quadriceps_l at 120%": {
+   "hip_flexion_r": 3.36,
+   "hip_adduction_r": 10.08,
+   "hip_rotation_r": 32.18,
+   "hip_flexion_l": 3.2,
+   "hip_adduction_l": 9.19,
+   "hip_rotation_l": 31.34
+  },
+  "fat -5 kg": {
+   "hip_flexion_r": 3.04,
+   "hip_adduction_r": 9.17,
+   "hip_rotation_r": 29.16,
+   "hip_flexion_l": 2.92,
+   "hip_adduction_l": 8.37,
+   "hip_rotation_l": 28.53
+  },
+  "fat -5 kg + quadriceps_r at 120%, quadriceps_l at 120%": {
+   "hip_flexion_r": 3.04,
+   "hip_adduction_r": 9.17,
+   "hip_rotation_r": 29.17,
+   "hip_flexion_l": 2.92,
+   "hip_adduction_l": 8.36,
+   "hip_rotation_l": 28.53
+  }
+ }
+}

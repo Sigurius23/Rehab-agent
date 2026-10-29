@@ -2,8 +2,9 @@
 
 > Filed 2026-10-28. Design spec for a scenario/what-if load model:
 > body composition and muscle parameters in → per-joint forces,
-> load distribution and (Tier-A) tissue stress out. Status: **design,
-> not built, not validated**. An illustrative demo with deliberately
+> load distribution and (Tier-A) tissue stress out. Status: **build
+> step 1 (knee slice) built, Tier C, not validated**: `docs/joint-load.md`.
+> The rest is design. An illustrative demo with deliberately
 > simplified arithmetic lives in `examples/joint-load-demo/`.
 
 ## The bridge analogy, made precise

@@ -6,9 +6,9 @@ a working folder that goes away. Everything in this folder can be rerun.
 | Folder | What it holds |
 |---|---|
 | `audit/` | The claims audit of 2026-10-27, with code written only for it (no `rehabtwin` imports). |
-| `runs/` | The run scripts of the experiments: SKEL bones on synthetic bodies, the OpenCap marker fix, person bones after the fix, the DXA squat, synthetic genu valgum. |
+| `runs/` | The run scripts of the experiments: SKEL bones on synthetic bodies, the OpenCap marker fix, person bones after the fix, the DXA squat, synthetic genu valgum, knee joint load. |
 | `results/` | Result summaries: aggregate numbers only, as the docs quote them. |
-| `tests/` | Full test-suite logs: the run with one failure, the run after the fix, and the run with skeletal alignment (174 passed). |
+| `tests/` | Full test-suite logs: the run with one failure, the run after the fix, the run with skeletal alignment (174 passed), and the run with knee joint load (182 passed). |
 | `visuals/` | The audit page's 3D views: data preparation, the browser code, and a check of the browser's SKEL code against the Python reference. |
 
 ## The audit
@@ -50,6 +50,7 @@ repository.
 | `myosegmentum_summary.json` | `adapters/myosegmentum.py analyse`, summary only | `docs/person-model.md`, MyoSegmenTUM |
 | `dxa_squat.json` | the OpenCap squat with leg muscle from height and mass, age and sex, and an illustrative DXA record | `docs/person-model.md`, on a real squat |
 | `alignment_genu_valgum.json` | `runs/alignment_genu_valgum.py`: a synthetic subject with 10° / 7° knee valgus, processed on the generic knee, with the person's bones, and with a limb-alignment record of the true angles; the camera's standing estimate reported as screening only | `docs/person-model.md`, skeletal alignment |
+| `joint_load_synthetic.json`, `joint_load_squat.json` | `runs/joint_load_squat.sh`: knee joint load and the fat, strength and combined scenarios on the synthetic squat and the OpenCap squat (illustrative DXA tables), with per-knee diagnostics | `docs/joint-load.md`, results |
 
 ## 3D views
 

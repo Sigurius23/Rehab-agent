@@ -1,6 +1,23 @@
 # Changelog
 
 ## Unreleased
+- **Knee joint load, the first slice of the load model** (`docs/joint-load.md`, `rehabtwin/joint_load.py`,
+  `rehabtwin joint-load`):
+  - OpenSim Joint Reaction on the muscle stage: tibiofemoral compression per knee (peak in N and ×BW, flexion
+    at the peak, impulse), shear, patellofemoral force. A test pins frames and signs: with ideal torque
+    actuators instead of muscles the reaction is the leg's ground force less the shank and foot weight.
+  - Scenarios within one person on the same motion: fat change from the DXA regional table (no body-weight
+    slider; spread by each region's fat, labelled as an assumption), stronger muscle groups (reported as effort,
+    with the load change shown as it comes out), both. Every scenario re-run under a ±0.10 ground-force split.
+    Messier et al. 2005 (about 4:1 in walking) quoted beside the fat scenario, never as output.
+  - Per-knee diagnostics: muscles at capacity, reserve share, ground-force fit at the peak, compression by source
+    (closes to < 1 N on the synthetic squat), quadriceps moment arm, peak against the instrumented-implant band
+    (Bergmann et al. 2014: 4.3 BW). A knee's change, and its effort, are stated only when it is reportable; the
+    impulse only when the whole rep holds.
+  - Synthetic squat (synthetic truth only, no clinical validation; illustrative DXA): left knee reportable, fat
+    −5 kg −6.9 % (body mass −6.9 %), left quadriceps at 120 % +3.9 % with effort 44 → 38 %; right knee not
+    reportable (vastus lateralis at capacity). Real OpenCap squat: neither knee reportable (ground forces don't
+    fit at the peak, 4–5 muscles at capacity), so no change is stated.
 - **Review follow-ups:** catalog now 117 repos (G-06 closed: `utahmobl/opencap-monocular`, PolyForm Noncommercial
   1.0.0 per its LICENSE file; `davidpagnon/Sports2D`, BSD-3-Clause). `docs/validation-results.md` opens with the
   "synthetic results, no clinical validation" caveat. A test pins that the twin manifest carries safety flags and
