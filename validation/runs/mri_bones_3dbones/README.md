@@ -51,10 +51,53 @@ the per-subject pickles are never loaded.
   this cohort.
 - **The SKEL column is the best case for `person bones`**, which fits SKEL to the person's body surface: it assumes a
   perfect surface. A phone or depth-camera surface will do worse, by an amount this bench does not measure.
-- **Surface distance is not joint-centre error.** The bench does not say whether any method meets the joint-centre
-  target in `docs/accuracy.md`.
-- **Lengths cannot be validated here.** The MRI point clouds are 2.1 mm apart in-plane but 20 mm apart between slices.
-  Every labelled method reads the tibia 30–39 mm longer than the MRI cloud and the femur 11–24 mm longer, all in the
-  same direction, which points at the slicing and where the segmentation stops at least as much as at the methods.
-- **The predictions are the release's.** The methods were not re-run here. SKEL-J's same-bone distance (9.3 mm female,
+- **Surface distance is not joint-centre error.** See the hip bench below.
+- **Lengths cannot be validated here.** The MRI point clouds are 2.1 mm apart in-plane but 20 mm apart between slices,
+  and the segmentations often stop short of the bone ends. The femoral head keeps its top in only 9 of 72 femurs.
+  The skeleton fitted to the bones reaches a median 16 mm beyond the MRI tibia–fibula at the top and 25 mm at the
+  bottom, while slicing alone accounts for about 10 mm. Every labelled method reads the tibia 30–39 mm longer
+  than the MRI cloud and the femur 11–24 mm longer, all in the same direction. That is mostly the ground truth.
+- **The predictions are the release's (both benches).** The methods were not re-run here. SKEL-J's same-bone distance (9.3 mm female,
   9.7 mm male) matches the figure the 3DBones paper reports, which checks the frames and the metric.
+
+## Hip joint centres (`hip_centres.py`)
+
+Surface distance does not say where a joint centre is, and OpenSim scaling runs on joint centres. This bench fits a
+sphere to the femoral head and compares centres. Knee and ankle centres are not defined well enough on 20 mm slices,
+so this is the hip only.
+
+```bash
+python -I hip_centres.py run            # same paths as run_bench.py; about 30 min; $WORK/mri_bones_3dbones/hip_subjects.json
+python -I hip_centres.py summarize $WORK/mri_bones_3dbones/hip_subjects.json ../../results/mri_bones_3dbones_hip.json
+```
+
+- **One extraction everywhere.** The same code fits the MRI femur, each prediction (SKEL, SKEL-J, OSSO; HIT has no
+  bone labels) and the floor. Predicted femurs are first cut at the MRI's own slice planes and sampled on its pixel
+  grid, so every centre comes from the same kind of points. Each mesh is also fitted unsliced: the slicing alone moves
+  a centre by 0.6–0.7 mm on average (90th percentile 1.3 mm), so it is not what limits this bench. Fit residuals are
+  reported per side.
+- **Complete heads only.** A side is scored only if its MRI femur keeps the top of the head: a top slice at most
+  25 mm across, with the fitted sphere reaching it. That holds for 9 of 72 sides (9 subjects). Elsewhere the top slice
+  is a full cross-section (median 39 mm), and a centre fitted to what is left sits too low.
+- **The floor decides what this data can test.** On the 9 complete heads the skeleton fitted to the MRI bones lands
+  10.2 mm from the MRI hip centre (90th percentile 13.5 mm), so this dataset cannot test the 5 mm joint-centre target.
+- **Errors are split into anterior, medial and superior components**, and set against the floor femur's length (mean
+  472 mm, not quantised by slices). The summary separates the mean bias, which calibration could remove, from the
+  scatter around it, which it could not.
+
+Results on the 9 complete heads, prediction minus MRI, mm:
+
+| | distance, mean (90th pct) | % of femur length | anterior bias | medial bias | superior bias ± SD | scatter after bias |
+|---|---|---|---|---|---|---|
+| SKEL | 22.6 (35.9) | 4.8 | +4.7 | +6.9 | +4.3 ± 23.2 | 23.8 |
+| SKEL-J | 21.8 (35.1) | 4.6 | +4.6 | +6.6 | +4.3 ± 22.7 | 22.8 |
+| OSSO | 33.8 (43.3) | 7.2 | **+20.7** | +4.8 | +10.1 ± 24.6 | 25.1 |
+| floor | 10.2 (13.5) | 2.2 | −3.4 | +6.1 | +5.1 ± 4.2 | 6.1 |
+
+- **The vertical error is scatter, not bias, and it belongs to the person.** All three predictors miss the hip in the
+  same vertical direction by a similar amount in each subject (from 30 mm too low to 41 mm too high). The floor stays
+  within about 11 mm vertically. Calibration would not remove this.
+- **OSSO adds a consistent anterior offset** (+21 mm, SD 7), which could be calibrated out. Even so, OSSO's hip is
+  worse than SKEL's in all 9 heads (p = 0.004) and worse than SKEL-J's in 8 (p = 0.008). SKEL-J and SKEL cannot be told
+  apart (p = 0.36).
+- **Nine hips from one cohort, lying down.** Read these as the size of the problem, not as a predictor's accuracy.

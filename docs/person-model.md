@@ -248,9 +248,31 @@ fitted to the MRI bones themselves (any bone, as it has no bone labels).
   SKEL-J is closer than SKEL on every bone (35 of 36 subjects overall), but it was trained on this cohort, and SKEL
   and OSSO were not.
 - **Error grows with soft tissue.** Femur error rises with thigh depth below the skin (Spearman 0.66).
-- **Not joint centres, not lengths.** Surface distance does not give joint-centre error. The MRI slices are 20 mm
-  apart, so this data cannot check segment lengths: every method reads the tibia 30–39 mm longer than the MRI cloud,
-  in the same direction. The cohort was scanned lying down with the arms overhead.
+- **Not lengths.** The MRI slices are 20 mm apart, and the segmentations often stop short of the bone ends. Only
+  9 of 72 femoral heads keep their top, and the tibia–fibula ends fall a median 16 and 25 mm short of the skeleton
+  fitted to the bones. So this data cannot check segment lengths: every method reads the tibia 30–39 mm longer
+  than the MRI cloud. The cohort was scanned lying down with the arms overhead.
+
+**Hip joint centres against MRI** (`hip_centres.py`, same folder). Surface distance is not joint-centre error, so a
+sphere is fitted to the femoral head the same way everywhere. Predicted femurs are first cut at the MRI's slice
+planes so that every centre comes from the same kind of points. Only the 9 sides (9 subjects) whose MRI femoral head
+keeps its top are scored. Distance from the MRI hip centre, mm: mean (90th percentile), then the vertical component
+as mean ± SD:
+
+| | SKEL | SKEL-J | OSSO | floor |
+|---|---|---|---|---|
+| distance | 22.6 (35.9) | 21.8 (35.1) | 33.8 (43.3) | 10.2 (13.5) |
+| superior | +4.3 ± 23.2 | +4.3 ± 22.7 | +10.1 ± 24.6 | +5.1 ± 4.2 |
+
+- **This data cannot test the 5 mm joint-centre target** (`docs/accuracy.md`). Even the skeleton fitted to the MRI
+  bones lands 10 mm from the MRI centre. The slicing itself moves a centre by under 1.3 mm.
+- **From the skin, the hip is about 2 cm off, mostly vertically, and it varies from person to person.** All three
+  predictors err together in each subject, from about 30 mm too low to 41 mm too high. Calibration would not remove
+  that. OSSO adds a consistent 21 mm anterior offset and is worse than SKEL in all 9 hips. SKEL-J and SKEL cannot be
+  told apart.
+- **For `person bones`:** SKEL's hip centre from a perfect skin surface is off by about 5 % of femur length on
+  average, which matters for thigh length in OpenSim scaling. Nine hips from one lying-down cohort give the size of
+  the problem, not an accuracy figure.
 
 **On a real person: OpenCap subject 2** (1.96 m, 78.2 kg; sex not recorded, taken as male). There is no body
 scan, so SKEL used height and mass. Joint-centre segment lengths, m:
@@ -775,9 +797,10 @@ Reproduce: `examples/person_model_opencap.sh` after `examples/opencap_agreement.
   model built in one session differs from one built in another, and whether a phone-only session with the
   person's bones agrees better with a reference.
 - **Bone imaging to check SKEL's joint centres and lengths.** `person bones` (above) gives bones from body
-  shape. The 3DBones bench (above) checks SKEL's bone surfaces against MRI, but not its joint centres, and its
-  20 mm slices cannot check segment lengths. Lengths need DXA or radiograph lengths, or functional joint centres
-  from marker motion capture (what OpenSim scaling uses); joint centres need imaging of the same people. OSSO, which
+  shape. The 3DBones benches (above) check SKEL's bone surfaces and, on 9 hips, its hip centres against MRI. That
+  data cannot check segment lengths, nor a joint centre to 5 mm (its own floor is 10 mm at the hip). Lengths need DXA
+  or radiograph lengths, or functional joint centres from marker motion capture (what OpenSim scaling uses); joint
+  centres need complete imaging of the same people. OSSO, which
   infers the whole skeleton shape from the body, needs an old toolchain (Python 3.8, chumpy, the MPI mesh package);
   its model files are loaded and converted, but it is not run yet.
 - **Muscle MRI and strength of people in rehab.** The MyoSegmenTUM test covers 15 healthy adults (above); the

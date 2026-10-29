@@ -53,6 +53,7 @@ repository.
 | `alignment_genu_valgum.json` | `runs/alignment_genu_valgum.py`: a synthetic subject with 10° / 7° knee valgus, processed on the generic knee, with the person's bones, and with a limb-alignment record of the true angles; the camera's standing estimate reported as screening only | `docs/person-model.md`, skeletal alignment |
 | `joint_load_synthetic.json`, `joint_load_squat.json` | `runs/joint_load_squat.sh`: knee joint load and the fat, strength and combined scenarios on the synthetic squat and the OpenCap squat (illustrative DXA tables), with per-knee diagnostics | `docs/joint-load.md`, results |
 | `mri_bones_3dbones.json` | `runs/mri_bones_3dbones/`: SKEL, SKEL-J, OSSO and HIT skeletons predicted from the skin, against MRI bones on the 36 3DBones test subjects, with the floor (SKEL-J fitted to the bones); aggregates and paired tests only, no subject ids | `docs/person-model.md`, bones from body shape |
+| `mri_bones_3dbones_hip.json` | `runs/mri_bones_3dbones/hip_centres.py`: hip centres (femoral-head spheres) of the same predictions and the floor against MRI, on the 9 sides whose head is completely segmented; bias components, scatter, % of femur length, the segmentation-completeness evidence | `docs/person-model.md`, bones from body shape |
 
 ## 3D views
 

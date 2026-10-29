@@ -1,6 +1,16 @@
 # Changelog
 
 ## Unreleased
+- **Hip joint centres from the skin against MRI** (`validation/runs/mri_bones_3dbones/hip_centres.py`,
+  `docs/person-model.md`):
+  - A sphere fitted to the femoral head the same way for the MRI femur, SKEL, SKEL-J, OSSO and the floor. Predicted
+    femurs are cut at the MRI's slice planes first; the slicing alone moves a centre by under 1.3 mm.
+  - The 3DBones segmentations are incomplete at the bone ends. Only 9 of 72 femoral heads keep their top, and the
+    tibia–fibula ends fall a median 16 and 25 mm short of the skeleton fitted to the bones. That, more than the
+    20 mm slicing, is why every method read the tibia 30–39 mm long. Only the 9 complete heads are scored.
+  - Floor 10.2 mm, so this data cannot test the 5 mm joint-centre target. SKEL 22.6 mm, SKEL-J 21.8 mm, OSSO 33.8 mm
+    (worse than SKEL in all 9, with a +21 mm anterior offset). The skin-only error is mostly vertical scatter that all
+    three predictors share per person (SD about 23 mm), not a bias that calibration would remove.
 - **Skin-only skeletons against MRI bones** (`validation/runs/mri_bones_3dbones/`, `docs/person-model.md`):
   - The skin-only predictions shipped with the 3DBones release (SKEL, SKEL-J, OSSO, HIT) scored against MRI-segmented
     bones on its 36 test subjects, with SKEL-J fitted to the bones as the floor. Same-bone distance, female / male:
