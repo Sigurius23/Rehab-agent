@@ -8,7 +8,7 @@ a working folder that goes away. Everything in this folder can be rerun.
 | `audit/` | The claims audit of 2026-10-27, with code written only for it (no `rehabtwin` imports). |
 | `runs/` | The run scripts of the experiments: SKEL bones on synthetic bodies, the OpenCap marker fix, person bones after the fix, the DXA squat, synthetic genu valgum, knee joint load. |
 | `results/` | Result summaries: aggregate numbers only, as the docs quote them. |
-| `tests/` | Full test-suite logs: the run with one failure, the run after the fix, and the run with skeletal alignment (174 passed). |
+| `tests/` | Full test-suite logs: the run with one failure, the run after the fix, the run with skeletal alignment (174 passed), and the run with knee joint load (182 passed). |
 | `visuals/` | The audit page's 3D views: data preparation, the browser code, and a check of the browser's SKEL code against the Python reference. |
 
 ## The audit
