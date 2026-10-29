@@ -11,7 +11,9 @@
   "slicing_shift = sliced minus unsliced centre on the same mesh: what the 20 mm slicing alone moves.",
   "Relative error uses the floor femur's length (fitted to the person's bones, not quantised by slices).",
   "Hip only: knee and ankle centres are not defined well enough on 20 mm slices.",
-  "One cohort, lying down, arms overhead; SKEL-J was trained on this cohort, SKEL and OSSO were not."
+  "One cohort, lying down, arms overhead; SKEL-J was trained on this cohort, SKEL and OSSO were not.",
+  "Selection: the subjects with a complete head against the rest on body volume, bone depth and sex (selection block). With nine subjects only a large difference would show; if the complete heads skew small, the predictor errors here are optimistic, since skin-only error grows with soft tissue.",
+  "Any calibration of a predictor's offset (e.g. OSSO's anterior bias) must be fitted on separate data and only then scored here; fitting it on these hips would fit the test set. Nothing about these hips may enter the training or calibration of a predictor this bench later checks."
  ],
  "segmentation": {
   "complete_heads": "9/72 sides, 9 subjects",
@@ -303,6 +305,52 @@
    "mean_mm": 11.99,
    "first_better_in": "1/9",
    "wilcoxon_p": 0.0078
+  }
+ },
+ "selection": {
+  "body_volume_l": {
+   "complete_median_range": [
+    72.0,
+    52.4,
+    111.5
+   ],
+   "others_median_range": [
+    78.0,
+    49.3,
+    130.6
+   ],
+   "mann_whitney_p": 0.58
+  },
+  "bone_depth_mm": {
+   "complete_median_range": [
+    36.4,
+    30.8,
+    45.6
+   ],
+   "others_median_range": [
+    38.8,
+    29.2,
+    55.1
+   ],
+   "mann_whitney_p": 0.55
+  },
+  "thigh_depth_mm": {
+   "complete_median_range": [
+    51.6,
+    44.0,
+    60.1
+   ],
+   "others_median_range": [
+    50.6,
+    39.7,
+    69.8
+   ],
+   "mann_whitney_p": 0.83
+  },
+  "female": {
+   "complete": "6/9",
+   "others": "16/27",
+   "fisher_p": 1.0
   }
  },
  "dataset_verdict": "On the 9 complete heads the floor (SKEL-J fitted to the MRI bones) lands 10.21 mm from the MRI hip centre on average (90th percentile 13.53 mm). That is above the 5 mm target, so this dataset cannot test it: predictors are ranked only at the precision the floor supports."

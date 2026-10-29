@@ -10,7 +10,7 @@ components and set against the femur's length (the floor femur's, which is not q
     python -I hip_centres.py run --release mri_bones_release_v2.zip --skel-dir models_npz --osso-dir models_npz \
         --out $WORK/mri_bones_3dbones/hip_subjects.json
     python -I hip_centres.py summarize $WORK/mri_bones_3dbones/hip_subjects.json \
-        ../../results/mri_bones_3dbones_hip.json
+        ../../results/mri_bones_3dbones_hip.json --surface $WORK/mri_bones_3dbones/subjects.json
 
 Paths default to $BONES3D_ZIP, $MODELS_NPZ and $WORK as in run_bench.py. Per-subject output stays in $WORK."""
 import argparse
@@ -24,7 +24,7 @@ import numpy as np
 from scipy.sparse import coo_matrix
 from scipy.sparse.csgraph import connected_components
 from scipy.spatial import cKDTree
-from scipy.stats import wilcoxon
+from scipy.stats import fisher_exact, mannwhitneyu, wilcoxon
 
 sys.path.insert(0, str(Path(__file__).parent))
 from run_bench import inputs, osso_layout, read_ply, split_sides  # noqa: E402
@@ -283,7 +283,25 @@ def _stats(x):
             "median": round(float(np.median(x)), 2), "p90": round(float(np.percentile(x, 90)), 2)}
 
 
-def summarize(path, out_path):
+def selection(b, surface_path):
+    """Are the subjects with a complete head a fair sample? Body size, soft tissue and sex against the rest, from
+    run_bench.py's per-subject output (joined by subject id; no ids leave this function)."""
+    surf = {r["subject"]: r for r in json.load(open(surface_path))["subjects"]}
+    comp = {r["subject"]: any(s["head_complete"] for s in r["sides"].values()) for r in b["subjects"]}
+    yes, no = [surf[k] for k, c in comp.items() if c], [surf[k] for k, c in comp.items() if not c]
+    out = {}
+    for k in ("body_volume_l", "bone_depth_mm", "thigh_depth_mm"):
+        a, c = [r[k] for r in yes], [r[k] for r in no]
+        out[k] = {"complete_median_range": [float(np.median(a)), min(a), max(a)],
+                  "others_median_range": [float(np.median(c)), min(c), max(c)],
+                  "mann_whitney_p": float(f"{mannwhitneyu(a, c).pvalue:.2g}")}
+    fa, fb = sum(r["sex"] == "female" for r in yes), sum(r["sex"] == "female" for r in no)
+    out["female"] = {"complete": f"{fa}/{len(yes)}", "others": f"{fb}/{len(no)}",
+                     "fisher_p": float(f"{fisher_exact([[fa, len(yes) - fa], [fb, len(no) - fb]])[1]:.2g}")}
+    return out
+
+
+def summarize(path, out_path, surface_path=None):
     b = json.load(open(path))
     every = [s for r in b["subjects"] for s in r["sides"].values()]
     sides = [s for s in every if s["head_complete"]]
@@ -336,6 +354,16 @@ def summarize(path, out_path):
         out["paired_per_side"][f"{a} - {c}"] = {"mean_mm": round(float(d.mean()), 2),
                                                 "first_better_in": f"{int((d < 0).sum())}/{len(d)}",
                                                 "wilcoxon_p": float(f"{wilcoxon(d).pvalue:.2g}")}
+    if surface_path:
+        out["selection"] = selection(b, surface_path)
+        out["notes"].append(
+            "Selection: the subjects with a complete head against the rest on body volume, bone depth and sex "
+            "(selection block). With nine subjects only a large difference would show; if the complete heads skew "
+            "small, the predictor errors here are optimistic, since skin-only error grows with soft tissue.")
+    out["notes"].append(
+        "Any calibration of a predictor's offset (e.g. OSSO's anterior bias) must be fitted on separate data and "
+        "only then scored here; fitting it on these hips would fit the test set. Nothing about these hips may enter "
+        "the training or calibration of a predictor this bench later checks.")
     fl = out["methods"]["skel_mri"]["distance_mm"]
     out["dataset_verdict"] = (
         f"On the {len(sides)} complete heads the floor (SKEL-J fitted to the MRI bones) lands {fl['mean']} mm from the "
@@ -361,11 +389,12 @@ def main():
     s = sub.add_parser("summarize")
     s.add_argument("subjects")
     s.add_argument("out")
+    s.add_argument("--surface", help="run_bench.py's per-subject output, for the selection check")
     args = ap.parse_args()
     if args.cmd == "run":
         run(args)
     else:
-        summarize(args.subjects, args.out)
+        summarize(args.subjects, args.out, args.surface)
 
 
 if __name__ == "__main__":

@@ -68,7 +68,8 @@ so this is the hip only.
 
 ```bash
 python -I hip_centres.py run            # same paths as run_bench.py; about 30 min; $WORK/mri_bones_3dbones/hip_subjects.json
-python -I hip_centres.py summarize $WORK/mri_bones_3dbones/hip_subjects.json ../../results/mri_bones_3dbones_hip.json
+python -I hip_centres.py summarize $WORK/mri_bones_3dbones/hip_subjects.json ../../results/mri_bones_3dbones_hip.json \
+    --surface $WORK/mri_bones_3dbones/subjects.json      # adds the selection check
 ```
 
 - **One extraction everywhere.** The same code fits the MRI femur, each prediction (SKEL, SKEL-J, OSSO; HIT has no
@@ -79,11 +80,16 @@ python -I hip_centres.py summarize $WORK/mri_bones_3dbones/hip_subjects.json ../
 - **Complete heads only.** A side is scored only if its MRI femur keeps the top of the head: a top slice at most
   25 mm across, with the fitted sphere reaching it. That holds for 9 of 72 sides (9 subjects). Elsewhere the top slice
   is a full cross-section (median 39 mm), and a centre fitted to what is left sits too low.
+- **Are the 9 a fair sample?** Against the other 27 subjects, their body volume (median 72 L, range 52–112, against
+  78 L, 49–131; p = 0.58), bone depth below the skin (p = 0.55) and share of women (6 of 9 against 16 of 27) do not
+  differ detectably. Only the largest body (131 L) lies outside their range. Nine subjects would show only a large
+  difference, though. If the complete heads do skew small, the predictor errors below are optimistic, since skin-only
+  error grows with soft tissue.
 - **The floor decides what this data can test.** On the 9 complete heads the skeleton fitted to the MRI bones lands
   10.2 mm from the MRI hip centre (90th percentile 13.5 mm), so this dataset cannot test the 5 mm joint-centre target.
 - **Errors are split into anterior, medial and superior components**, and set against the floor femur's length (mean
-  472 mm, not quantised by slices). The summary separates the mean bias, which calibration could remove, from the
-  scatter around it, which it could not.
+  472 mm, not quantised by slices). The summary separates the mean bias, which a calibration fitted on separate data
+  could remove, from the scatter around it, which no calibration could.
 
 Results on the 9 complete heads, prediction minus MRI, mm:
 
@@ -97,7 +103,11 @@ Results on the 9 complete heads, prediction minus MRI, mm:
 - **The vertical error is scatter, not bias, and it belongs to the person.** All three predictors miss the hip in the
   same vertical direction by a similar amount in each subject (from 30 mm too low to 41 mm too high). The floor stays
   within about 11 mm vertically. Calibration would not remove this.
-- **OSSO adds a consistent anterior offset** (+21 mm, SD 7), which could be calibrated out. Even so, OSSO's hip is
+- **OSSO adds a consistent anterior offset** (+21 mm, SD 7). A calibration could remove it only if fitted on
+  separate data and then scored here: fitting it on these 9 hips would fit the test set, and with SD 7 the result
+  would look deceptively good. Even uncalibrated, the comparison is plain: OSSO's hip is
   worse than SKEL's in all 9 heads (p = 0.004) and worse than SKEL-J's in 8 (p = 0.008). SKEL-J and SKEL cannot be told
   apart (p = 0.36).
 - **Nine hips from one cohort, lying down.** Read these as the size of the problem, not as a predictor's accuracy.
+- **These hips stay held out.** They can check the joint centres of a predictor trained later on the 317 training
+  subjects (with the 10 mm floor attached), provided nothing about them enters its training or calibration.

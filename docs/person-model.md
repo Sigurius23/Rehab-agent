@@ -268,8 +268,10 @@ as mean ± SD:
   bones lands 10 mm from the MRI centre. The slicing itself moves a centre by under 1.3 mm.
 - **From the skin, the hip is about 2 cm off, mostly vertically, and it varies from person to person.** All three
   predictors err together in each subject, from about 30 mm too low to 41 mm too high. Calibration would not remove
-  that. OSSO adds a consistent 21 mm anterior offset and is worse than SKEL in all 9 hips. SKEL-J and SKEL cannot be
-  told apart.
+  that. OSSO adds a consistent 21 mm anterior offset and is worse than SKEL in all 9 hips. A calibration of that
+  offset would count only if fitted on separate data, never on these hips. SKEL-J and SKEL cannot be told apart.
+- **The 9 look like the rest.** Their body volume, bone depth and share of women do not differ detectably from the
+  other 27 subjects (body volume p = 0.58), though nine subjects would show only a large difference.
 - **For `person bones`:** SKEL's hip centre from a perfect skin surface is off by about 5 % of femur length on
   average, which matters for thigh length in OpenSim scaling. Nine hips from one lying-down cohort give the size of
   the problem, not an accuracy figure.

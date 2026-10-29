@@ -11,6 +11,10 @@
   - Floor 10.2 mm, so this data cannot test the 5 mm joint-centre target. SKEL 22.6 mm, SKEL-J 21.8 mm, OSSO 33.8 mm
     (worse than SKEL in all 9, with a +21 mm anterior offset). The skin-only error is mostly vertical scatter that all
     three predictors share per person (SD about 23 mm), not a bias that calibration would remove.
+  - The 9 complete-head subjects do not differ detectably from the other 27 in body volume, bone depth or sex.
+    Any calibration of OSSO's anterior offset must be fitted on separate data; these hips stay held out.
+  - `validation/README.md`: ground truth first. A bench states its floor, the reference's completeness per case,
+    whether the cases kept are a fair sample, and what the data can test, before it ranks predictors.
 - **Skin-only skeletons against MRI bones** (`validation/runs/mri_bones_3dbones/`, `docs/person-model.md`):
   - The skin-only predictions shipped with the 3DBones release (SKEL, SKEL-J, OSSO, HIT) scored against MRI-segmented
     bones on its 36 test subjects, with SKEL-J fitted to the bones as the floor. Same-bone distance, female / male:
