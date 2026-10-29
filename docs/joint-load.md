@@ -107,7 +107,58 @@ Each scenario is a variant of the muscle study, compared with the measured basel
 
 ## Results
 
-RESULTS
+Both runs: `validation/runs/joint_load_squat.sh`; summaries in `validation/results/joint_load_synthetic.json` and
+`joint_load_squat.json`. Both use an **illustrative DXA table, not a scan of the person**, and every output says
+so ("ILLUSTRATIVE regional fat, not measured on this person"). Tier C.
+
+### Synthetic squat (synthetic truth only, no clinical validation)
+
+The selftest squat (rep 1, deep: 94–95° of knee flexion at the peak), a 72 kg synthetic person.
+
+| | Right knee | Left knee |
+|---|---|---|
+| Peak compression | 6,729 N (9.5 BW) at 95° | 4,019 N (5.7 BW) at 94° |
+| Band over the ground-force split (±0.10) | 5,542–7,962 N | 2,966–5,084 N |
+| Reportable | **no**: vastus lateralis at capacity at the peak | yes |
+| Peak resultant vs the in-vivo band (4.3 BW) | 9.7 BW: model-limited | 5.8 BW: model-limited |
+| Compression at the peak by source | quadriceps 5,608 N, gastrocnemius 866 N, ground force less shank and foot 361 N, hamstrings −113 N; rest 0.7 N | quadriceps 3,400 N, gastrocnemius 406 N, ground force 243 N, hamstrings −31 N; rest 0.1 N |
+| Quadriceps moment arm at the peak | 2.0 cm | 2.0 cm |
+| Impulse | not reportable: the ground forces don't fit the motion in the rise (24 cm centre-of-pressure shift at 3.97 s), and a muscle is at capacity in some frames | not reportable: the same misfit |
+
+Scenarios at the left knee, the reportable one (changes from the baseline, same motion):
+
+| Scenario | Peak compression | Over the ground-force split | Effort |
+|---|---|---|---|
+| fat −5 kg (body mass −6.9 %) | −6.9 % | −6.9 to −6.7 %, robust | quadriceps 44 → 41 % of capacity |
+| left quadriceps at 120 % | **+3.9 %** | +2.8 to +4.6 %, robust | quadriceps 44 → 38 % |
+| both | −3.3 % | −4.2 to −2.7 %, robust | quadriceps 44 → 35 % |
+
+- The fat change is proportional to the mass change, as a replay of the same motion has to be. It says nothing
+  about how a person's squat changes after losing weight. The walking cohort's 4:1 (Messier et al. 2005) is
+  quoted beside it, not compared with it.
+- The stronger quadriceps lowers effort and raises compression, the pattern the design expected. Static
+  optimisation hands the stronger group more of the moment.
+- The right knee's numbers exist in the JSON but are not stated.
+
+### Real squat: OpenCap subject 2 (public test data)
+
+Rep 2, 78.2 kg measured: the session of the DXA squat demo (`validation/runs/dxa_squat.sh`), processed with the
+`mediapipe_lstm_pose2sim` configuration (MediaPipe keypoints, the LSTM marker augmenter, the Pose2Sim model).
+
+| | Right knee | Left knee |
+|---|---|---|
+| Peak compression | 8,505 N (11.1 BW) at 83° | 7,845 N (10.2 BW) at 81° |
+| Reportable | **no** | **no** |
+| Why | at the peak the estimated ground forces don't fit the motion (pelvis residual as a 17 cm centre-of-pressure shift, limit 10 cm); 5 knee-crossing muscles at capacity | the same misfit; 4 muscles at capacity |
+| Quadriceps share of the compression | 83 % | 80 % |
+
+No knee-load change is stated for this squat, and none of the scenarios is either. This is the slice working as
+intended on the one real recording available: the estimated ground forces do not fit this person's squat at its
+deepest point, and the muscles needed more than their modelled capacity. The capacities come from the
+illustrative DXA table, not his scan.
+
+What it would take to state numbers for a real person: measured ground forces (force plates or insoles), the
+person's own DXA scan, and a squat the muscle model can carry.
 
 ## Red lines (from the design, applied)
 
