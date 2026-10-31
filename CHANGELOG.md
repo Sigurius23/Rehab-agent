@@ -1,6 +1,15 @@
 # Changelog
 
 ## Unreleased
+- **Leg-bone models compared** (`validation/runs/mri_bones_3dbones/leg_priors.py`, `validation/runs/leg_prior_downstream.py`,
+  `docs/joint-load.md`):
+  - SKEL, SKEL-J and OSSO on the same 72 MRI legs, with the same geometry on every mesh. SKEL and SKEL-J agree
+    within about 1 %. SKEL against OSSO: about 3 % per segment (OSSO's shank 12 mm longer and pelvis 9 mm wider,
+    consistently; thighs up to 29 mm apart either way). Neither is closer to the skeleton fitted to the bones.
+  - Put into the synthetic squat: the OSSO-typical differences move the absolute peak knee compression by 12–14 %.
+    The within-person changes (fat −5 kg, quadriceps at 120 %) move by at most 1 percentage point and keep their sign.
+    Knee angle error rises by at most 0.2°; pelvis tilt and hip flexion take the error (up to 2.5°). Marker fit
+    notices a wrong thigh (up to +2 mm RMS) but not a wrong hip width.
 - **Hip joint centres from the skin against MRI** (`validation/runs/mri_bones_3dbones/hip_centres.py`,
   `docs/person-model.md`):
   - A sphere fitted to the femoral head the same way for the MRI femur, SKEL, SKEL-J, OSSO and the floor. Predicted

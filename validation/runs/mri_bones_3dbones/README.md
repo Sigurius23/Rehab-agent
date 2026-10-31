@@ -146,3 +146,6 @@ Segment lengths on 72 legs, absolute difference, mean (90th percentile):
   agree within 6 mm on average: each method poses its skeleton inside the lying body its own way. The world-frame
   disagreement is 24 mm at the hip, 31 mm at the knee and 24 mm at the ankle on average. Lengths and widths are what
   scaling uses.
+- **Downstream** (`../leg_prior_downstream.py`, synthetic squat): the OSSO-typical differences move the absolute peak
+  knee compression by 12–14 %. The within-person changes the twin reports (fat −5 kg, quadriceps at 120 %) move by at
+  most 1 percentage point. See `docs/joint-load.md`.

@@ -276,6 +276,13 @@ as mean ± SD:
   average, which matters for thigh length in OpenSim scaling. Nine hips from one lying-down cohort give the size of
   the problem, not an accuracy figure.
 
+**Leg-bone models side by side** (`leg_priors.py`, same folder). On the same 72 legs, SKEL and SKEL-J agree on thigh
+and shank length within about 1 %. SKEL and OSSO differ by about 3 %: OSSO's shank is 12 mm longer and its pelvis
+9 mm wider, consistently, and their thighs disagree by up to 29 mm in either direction. Neither is closer to the
+skeleton fitted to the MRI bones (10–14 mm per segment). Put into the synthetic squat
+(`validation/runs/leg_prior_downstream.py`), the OSSO-typical differences move the absolute knee load by 12–14 % but
+the within-person scenario changes by at most 1 percentage point (`docs/joint-load.md`).
+
 **On a real person: OpenCap subject 2** (1.96 m, 78.2 kg; sex not recorded, taken as male). There is no body
 scan, so SKEL used height and mass. Joint-centre segment lengths, m:
 

@@ -160,6 +160,32 @@ illustrative DXA table, not his scan.
 What it would take to state numbers for a real person: measured ground forces (force plates or insoles), the
 person's own DXA scan, and a squat the muscle model can carry.
 
+### How much the leg-bone model matters (synthetic truth only)
+
+SKEL and OSSO, two skeleton models that infer bones from the body surface, disagree about the same person's legs. On
+36 MRI subjects OSSO's shank is 3 % longer and its pelvis 5 % wider on average, and their thighs differ by up to 7 %
+either way (`validation/runs/mri_bones_3dbones/leg_priors.py`). `validation/runs/leg_prior_downstream.py` scales the
+synthetic squat person's bones by those differences and processes the same markers again: IK with those bones, then
+knee load.
+
+| Bones | Left knee peak | Fat −5 kg | Left quadriceps at 120 % | Both |
+|---|---|---|---|---|
+| as scaled from the markers | 3,794 N | −6.79 % | +3.13 % | −3.87 % |
+| OSSO-typical (thigh +1.5 %, shank +3.1 %, hip width +5.2 %) | 4,321 N (+13.9 %) | −6.75 % | +4.06 % | −3.10 % |
+
+- **The absolute load depends on the bone model, the changes within one person hardly do.** The peak moves by
+  12–14 %, two-thirds of the ground-force split's band. A within-person change moves by at most 1 percentage point and
+  keeps its sign and its robustness to the ground-force split. This is one more reason the slice states changes
+  within a person, not absolute loads. The right knee, not reportable here (a muscle at capacity), shows the same
+  pattern.
+- **Single changes:** thigh ±6.9 % moves the peak −3 to +6 %, shank ±4.5 % moves it +2 to +6 %, and hip width +5.2 %
+  moves it +1 to +4 %. The OSSO-typical combination (+12 %) is more than these parts add up to.
+- **Joint angles barely move.** Knee angle error against the synthetic truth rises by at most 0.2°. The wrong lengths go
+  into pelvis tilt and hip flexion instead, up to 2.5° worse.
+- **The markers notice a wrong thigh, not a wrong hip width.** Marker fit worsens by up to 2 mm RMS at ±7 % thigh and
+  stays at 8.4 mm at +5 % hip width. Marker capture could help choose leg bones; phone-video noise would likely hide it.
+- **One synthetic person, one squat,** with absolute loads above the in-vivo band (model-limited).
+
 ## Red lines (from the design, applied)
 
 - The outputs are model estimates for clinician discussion. They are never a weight-loss or exercise

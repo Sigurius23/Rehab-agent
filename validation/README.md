@@ -6,7 +6,7 @@ a working folder that goes away. Everything in this folder can be rerun.
 | Folder | What it holds |
 |---|---|
 | `audit/` | The claims audit of 2026-10-27, with code written only for it (no `rehabtwin` imports). |
-| `runs/` | The run scripts of the experiments: SKEL bones on synthetic bodies, the OpenCap marker fix, person bones after the fix, the DXA squat, synthetic genu valgum, knee joint load, skin-only skeletons against MRI bones (`mri_bones_3dbones/`, with its own README). |
+| `runs/` | The run scripts of the experiments: SKEL bones on synthetic bodies, the OpenCap marker fix, person bones after the fix, the DXA squat, synthetic genu valgum, knee joint load, skin-only skeletons against MRI bones (`mri_bones_3dbones/`, with its own README), leg-bone model differences put into the synthetic squat (`leg_prior_downstream.py`). |
 | `results/` | Result summaries: aggregate numbers only, as the docs quote them. |
 | `tests/` | Full test-suite logs: the run with one failure, the run after the fix, the run with skeletal alignment (174 passed), and the run with knee joint load (182 passed). |
 | `visuals/` | The audit page's 3D views: data preparation, the browser code, and a check of the browser's SKEL code against the Python reference. |
@@ -68,6 +68,8 @@ repository.
 | `joint_load_synthetic.json`, `joint_load_squat.json` | `runs/joint_load_squat.sh`: knee joint load and the fat, strength and combined scenarios on the synthetic squat and the OpenCap squat (illustrative DXA tables), with per-knee diagnostics | `docs/joint-load.md`, results |
 | `mri_bones_3dbones.json` | `runs/mri_bones_3dbones/`: SKEL, SKEL-J, OSSO and HIT skeletons predicted from the skin, against MRI bones on the 36 3DBones test subjects, with the floor (SKEL-J fitted to the bones); aggregates and paired tests only, no subject ids | `docs/person-model.md`, bones from body shape |
 | `mri_bones_3dbones_hip.json` | `runs/mri_bones_3dbones/hip_centres.py`: hip centres (femoral-head spheres) of the same predictions and the floor against MRI, on the 9 sides whose head is completely segmented; bias components, scatter, % of femur length, the segmentation-completeness evidence, whether the 9 are a fair sample | `docs/person-model.md`, bones from body shape |
+| `mri_bones_3dbones_legs.json` | `runs/mri_bones_3dbones/leg_priors.py`: hip, knee and ankle centres, thigh, shank and hip width of SKEL, SKEL-J, OSSO and the floor on the same 72 legs, compared pairwise; aggregates only | `docs/person-model.md`, bones from body shape |
+| `leg_prior_downstream.json` | `runs/leg_prior_downstream.py`: the synthetic squat person with its bones scaled by the SKEL-vs-OSSO differences: marker fit, joint-angle error against the truth, knee load, and the fat and quadriceps scenarios on both bone sets (synthetic truth only) | `docs/joint-load.md`, how much the leg-bone model matters |
 
 ## 3D views
 
