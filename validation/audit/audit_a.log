@@ -1,0 +1,22 @@
+[OK  ] markers: Markers_LSTM.xml reuses LaiUhlrich2022's augmenter marker locations | stated all 43 identical | measured 43 of 43 common markers identical 
+[OK  ] markers: generic tibia (knee to ankle joint centre), Pose2Sim vs LaiUhlrich2022 | stated 0.430 vs 0.400 m | measured 0.4300 vs 0.4001 m 
+[OK  ] markers: generic femur (hip to knee), Pose2Sim vs LaiUhlrich2022 | stated 0.397 vs 0.406 m | measured 0.3974 vs 0.4061 m 
+[OK  ] markers: lateral malleolus marker height above the ankle joint centre (default pose) | stated 4.5 cm vs 1.5 cm | measured 4.5 cm vs 1.5 cm 
+[OK  ] markers: RHJC_study marker distance from the Pose2Sim model's right hip joint | stated about 2 cm | measured 2.0 cm 
+[OK  ] shank: 5-phone scaled shank R/L and hip width, before the marker fix | stated 0.542/0.546 m, hip 0.203 | measured 0.542/0.546 m, hip 0.203 
+[OK  ] shank: 5-phone scaled shank R/L and hip width, after the marker fix | stated 0.493/0.497 m, hip 0.188 | measured 0.493/0.497 m, hip 0.188 
+[OK  ] shank: OpenCap's own scaled model, shank R/L | stated 0.485/0.495 m | measured 0.485/0.495 m 
+[OK  ] opencap: RMSE vs OpenCap, multi before the fix (pelvis tilt, hip R/L, knee R/L, ankle R/L) | stated 6.0 / 13.9 / 13.9 / 9.3 / 9.2 / 4.9 / 4.6 | measured 6.0 / 13.9 / 13.9 / 9.3 / 9.2 / 4.9 / 4.6 (n=576 frames) independent reader; reference shifted by the report's lag
+[OK  ] opencap: RMSE vs OpenCap, multi after the fix (pelvis tilt, hip R/L, knee R/L, ankle R/L) | stated 2.8 / 8.2 / 7.9 / 7.4 / 7.1 / 5.4 / 5.3 | measured 2.8 / 8.2 / 7.9 / 7.4 / 7.1 / 5.4 / 5.3 (n=576 frames) independent reader; reference shifted by the report's lag
+[OK  ] opencap: RMSE vs OpenCap, cams123 before the fix (pelvis tilt, hip R/L, knee R/L, ankle R/L) | stated 6.7 / 14.6 / 13.3 / 12.0 / 8.1 / 6.5 / 4.6 | measured 6.7 / 14.6 / 13.3 / 12.0 / 8.1 / 6.5 / 4.6 (n=575 frames) independent reader; reference shifted by the report's lag
+[OK  ] opencap: RMSE vs OpenCap, cams123 after the fix (pelvis tilt, hip R/L, knee R/L, ankle R/L) | stated 3.3 / 9.4 / 8.0 / 10.5 / 6.5 / 7.3 / 4.4 | measured 3.3 / 9.4 / 8.0 / 10.5 / 6.5 / 7.3 / 4.4 (n=575 frames) independent reader; reference shifted by the report's lag
+[DIFF] skel-synthetic: bodies, sexes and BMI range | stated 45 bodies, 23 female / 22 male, BMI 17-43 | measured 45 bodies, 23 female / 22 male, BMI 17.4-44.3 
+[OK  ] skel-synthetic: SKEL segment error, depth fit (mean abs per segment; worst) | stated mean <= 0.2 cm, worst 1.1 cm | measured 0.19 / 0.21 / 0.22 / 0.20 / 0.11 cm; worst 1.09 cm order: thigh, shank, upper arm, forearm, hip width
+[OK  ] skel-synthetic: SKEL segment error, height and mass (mean abs per segment; worst) | stated mean <= 0.5 cm, worst 1.5 cm | measured 0.37 / 0.48 / 0.35 / 0.35 / 0.16 cm; worst 1.51 cm order: thigh, shank, upper arm, forearm, hip width
+[OK  ] skel-synthetic: SKEL segment error, height only (mean abs per segment; worst) | stated mean <= 1.8 cm, worst 4.8 cm | measured 1.04 / 1.16 / 0.34 / 0.37 / 1.84 cm; worst 4.79 cm order: thigh, shank, upper arm, forearm, hip width
+[OK  ] skel-synthetic: stored true thigh lengths re-derived from shape parameters (10 bodies) | stated identical | measured max difference 0.0000 mm 
+[OK  ] skel-subject2: SKEL body for 1.96 m / 78.2 kg | stated 1.960 m, 78.2 kg | measured 1.960 m, 78.2 kg (1000 kg/m3) 
+[OK  ] skel-subject2: SKEL thigh / shank / upper arm | stated 0.471 / 0.491 / 0.313 m | measured 0.471 / 0.491 / 0.313 m 
+[OK  ] dxa-squat: right knee peak extension moment, height-and-mass vs DXA run | stated -12 % | measured -1.463 -> -1.285 N.m/kg (-12.2 %) 
+[OK  ] dxa-squat: right leg Fmax: height and mass / age and sex / DXA | stated 48.5 / 42.5 / 47.2 kN | measured 48.5 / 42.5 / 47.2 kN 
+20 of 21 checks match

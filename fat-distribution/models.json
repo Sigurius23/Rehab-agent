@@ -1,0 +1,255 @@
+{
+  "folder": "fat-distribution",
+  "purpose": "Models of human fat/adipose distribution for the Rehab Agent digital twin. Kept separate from the main catalog (catalog/repos.json) as requested. Compiled 2026-10-21; repo metadata fetched live from the GitHub API that day.",
+  "why_it_matters": "A body surface (SMPL/SMPL-X shape, LiDAR scan) is fat + muscle + bone combined. Without a fat layer the twin cannot separate subcutaneous fat from muscle, cannot judge muscle development honestly, and cannot update body composition as training progresses. See docs/accuracy.md red lines.",
+  "counts": {
+    "code_repos": 8,
+    "paper_only_models": 2,
+    "closed_reference_models": 2,
+    "total": 12
+  },
+  "models": [
+    {
+      "name": "TotalSegmentator (tissue-types subtasks)",
+      "repo": "wasserth/TotalSegmentator",
+      "url": "https://github.com/wasserth/TotalSegmentator",
+      "type": "segmentation-measured",
+      "inputs": [
+        "CT",
+        "MRI"
+      ],
+      "outputs": [
+        "subcutaneous_fat",
+        "torso_fat",
+        "intermuscular_fat (tissue_4_types)",
+        "skeletal_muscle (for contrast)"
+      ],
+      "twin_use": "Tier A — measured fat compartments from the patient's own imaging. Already in the main catalog as repo #99.",
+      "code_availability": "public repo, pip package",
+      "weights_availability": "public (pretrained)",
+      "stars_snapshot_live_2026_10_21": 3074,
+      "notes": "Start here. The tissue_4_types subtask additionally splits intermuscular fat out of the muscle class.",
+      "license": "Apache-2.0 (code; model weights/segmentation data carry their own terms - see repo)"
+    },
+    {
+      "name": "NIH CADLab Body Composition (MIST + 3D nnU-Net)",
+      "repo": "rsummers11/NIH_CADLab_Body_Composition",
+      "url": "https://github.com/rsummers11/NIH_CADLab_Body_Composition",
+      "type": "segmentation-measured",
+      "inputs": [
+        "whole-torso CT"
+      ],
+      "outputs": [
+        "torso muscle",
+        "adipose tissue (torso)"
+      ],
+      "twin_use": "Tier A — torso fat/muscle segmentation where CT already exists.",
+      "code_availability": "public repo",
+      "weights_availability": "downloadable model weights (see upstream README); NIH/NCI terms-of-use PDF in repo",
+      "stars_snapshot_live_2026_10_21": 2,
+      "notes": "Small research release from the NIH Clinical Center / NCI ecosystem — audit before use.",
+      "license": "none found in repo root (checked 2026-10-28; treat as all-rights-reserved)"
+    },
+    {
+      "name": "vatsatseg",
+      "repo": "maxdiefenbach/vatsatseg",
+      "url": "https://github.com/maxdiefenbach/vatsatseg",
+      "type": "segmentation-measured",
+      "inputs": [
+        "water-fat (Dixon) MRI: water image + fat image"
+      ],
+      "outputs": [
+        "visceral_adipose_tissue_VAT",
+        "subcutaneous_adipose_tissue_SAT"
+      ],
+      "twin_use": "Tier A — abdominal VAT/SAT, the metabolically important split. Python port of the TUM SAT_VAT_segmentation tool (Shen et al. 2016).",
+      "code_availability": "public repo",
+      "weights_availability": "classical (non-DL) segmentation; uses ITK-SNAP for manual correction",
+      "stars_snapshot_live_2026_10_21": 6,
+      "notes": "Abdominal region only. Good reference implementation even if replaced by a learned model later.",
+      "license": "GPL-3.0 (repo-root LICENSE.txt file, checked 2026-10-28)"
+    },
+    {
+      "name": "AT_Seg_3DCNN",
+      "repo": "HoldenWuLab/AT_Seg_3DCNN",
+      "url": "https://github.com/HoldenWuLab/AT_Seg_3DCNN",
+      "type": "segmentation-measured",
+      "inputs": [
+        "multi-contrast abdominal MRI (full FOV volumetric)"
+      ],
+      "outputs": [
+        "subcutaneous_adipose_tissue_SAT",
+        "visceral_adipose_tissue_VAT",
+        "volumes (longitudinal)"
+      ],
+      "twin_use": "Tier A — longitudinal abdominal fat change (training/diet follow-up), ACD 3D U-Net and 3D nnU-Net variants.",
+      "code_availability": "public repo",
+      "weights_availability": "see upstream; Academic Software License (UCLA) — not permissive open source",
+      "stars_snapshot_live_2026_10_21": 1,
+      "notes": "License is academic-use. Longitudinal design is exactly what progress tracking needs, but check terms.",
+      "license": "none found in repo root (checked 2026-10-28; treat as all-rights-reserved)"
+    },
+    {
+      "name": "WholeBodyATQuantification",
+      "repo": "tobihaui/WholeBodyATQuantification",
+      "url": "https://github.com/tobihaui/WholeBodyATQuantification",
+      "type": "segmentation-measured",
+      "inputs": [
+        "whole-body Dixon MRI segmentations"
+      ],
+      "outputs": [
+        "19 adipose compartments incl. thoracic/abdominal/gluteofemoral sub-compartments",
+        "ectopic fat deposits",
+        "muscle and organ volumes",
+        "fat percentages"
+      ],
+      "twin_use": "Tier A — richest compartment taxonomy found; quantification/post-processing code is public.",
+      "code_availability": "public repo (quantification routines)",
+      "weights_availability": "segmentation model available on request (per the 2026 preprint) — not a turnkey download",
+      "stars_snapshot_live_2026_10_21": 0,
+      "notes": "Very recent (2026 preprint, diabetes-research context). High value, low maturity — plan a request/retraining path.",
+      "license": "Apache-2.0 (repo-root LICENSE file, checked 2026-10-28)"
+    },
+    {
+      "name": "Adipose_Tissue_Segmentation",
+      "repo": "bogdanneamtu76/Adipose_Tissue_Segmentation",
+      "url": "https://github.com/bogdanneamtu76/Adipose_Tissue_Segmentation",
+      "type": "segmentation-measured",
+      "inputs": [
+        "abdominal MRI"
+      ],
+      "outputs": [
+        "total_adipose_TAT",
+        "visceral_VAT",
+        "subcutaneous_SAT"
+      ],
+      "twin_use": "Tier A reference — classical VAT/SAT delineation (Otsu/k-means/fuzzy c-means comparison) from the associated open-access paper.",
+      "code_availability": "public repo (notebook-grade)",
+      "weights_availability": "classical algorithms, no learned weights",
+      "stars_snapshot_live_2026_10_21": 0,
+      "notes": "Baseline/reference implementation; useful for sanity-checking learned segmentations.",
+      "license": "GPL-3.0 (repo-root LICENSE file, checked 2026-10-28)"
+    },
+    {
+      "name": "Pseudo-DXA",
+      "repo": "LambertLeong/Pseudo-DXA",
+      "url": "https://github.com/LambertLeong/Pseudo-DXA",
+      "type": "prediction-estimated",
+      "inputs": [
+        "3D optical body surface scan (SMPL-standardised mesh, T-pose)"
+      ],
+      "outputs": [
+        "synthetic DXA image",
+        "regional fat mass",
+        "lean mass",
+        "bone mass (via DXA analysis software)"
+      ],
+      "twin_use": "Tier B — ESTIMATE ONLY. Predicts interior fat/lean/bone distribution from exterior shape (Nature Communications Medicine 2024). Never present as a measurement.",
+      "code_availability": "public repo",
+      "weights_availability": "on request (Shepherd Research Lab); preprocessing requires Meshcapade SMPL fitting service",
+      "stars_snapshot_live_2026_10_21": 19,
+      "notes": "Conceptually ideal for the camera/LiDAR onboarding path (docs/hardware.md), gated on weights access and validation against real DXA.",
+      "license": "GPL-3.0 (repo-root LICENSE file, checked 2026-10-28)"
+    },
+    {
+      "name": "Silhouette fat-depot model (ML4H model zoo)",
+      "repo": "broadinstitute/ml4h (model_zoo/silhouette_mri)",
+      "url": "https://github.com/broadinstitute/ml4h/tree/master/model_zoo/silhouette_mri",
+      "type": "prediction-estimated",
+      "inputs": [
+        "front + side body silhouette images (from MRI, photos, or scan projections)"
+      ],
+      "outputs": [
+        "visceral_VAT volume (R2 0.88)",
+        "abdominal subcutaneous_ASAT (R2 0.93)",
+        "gluteofemoral_GFAT (R2 0.93)",
+        "VAT/ASAT ratio (R2 0.50-0.55)"
+      ],
+      "twin_use": "Tier B — ESTIMATE ONLY. Trained on 40,032 UK Biobank participants vs MRI ground truth (npj Digital Medicine 2022). Silhouettes can be derived from the iPhone LiDAR / camera onboarding scan.",
+      "code_availability": "code path inside the broadinstitute/ml4h repo (model zoo)",
+      "weights_availability": "see upstream model zoo; UK Biobank data itself is access-controlled",
+      "stars_snapshot_live_2026_10_21": 181,
+      "notes": "Strongest published evidence that shape predicts depot distribution — and its VAT/ASAT ratio result shows the limits (R2 ~0.5). Estimates carry population bias; validate per cohort.",
+      "license": "GPL-3.0 (repo-root LICENSE.txt file, checked 2026-10-28)"
+    },
+    {
+      "name": "Body fat estimation from surface meshes using graph neural networks",
+      "repo": null,
+      "url": "https://arxiv.org/abs/2308.02493",
+      "type": "paper-only-model",
+      "inputs": [
+        "triangulated body surface mesh (from MRI-derived surfaces, UK Biobank)"
+      ],
+      "outputs": [
+        "VAT volume (R2 0.893)",
+        "ASAT volume (R2 0.935)"
+      ],
+      "twin_use": "Tier B — ESTIMATE ONLY. Mesh-native version of the silhouette idea; fits a scan-based twin better than 2D silhouettes.",
+      "code_availability": "no verified public code repository found (2026-10-21)",
+      "weights_availability": "unknown",
+      "notes": "Reimplementation candidate: inputs/outputs and mesh resolution (~1000 faces optimal) are documented in the paper.",
+      "license": "n/a - no public code repository (paper-only or closed/licensed model)"
+    },
+    {
+      "name": "Prediction of total and regional body composition from 3D body shape",
+      "repo": null,
+      "url": "https://www.researchgate.net/publication/380068058_Prediction_of_Total_and_Regional_Body_Composition_from_3D_Body_Shape",
+      "type": "paper-only-model",
+      "inputs": [
+        "SMPL shape parameters fitted to DXA silhouette + anthropometry (height, waist, hip)"
+      ],
+      "outputs": [
+        "total and regional body composition masses (DXA-measured ground truth)"
+      ],
+      "twin_use": "Tier B — ESTIMATE ONLY. Shows SMPL betas carry composition signal once fitted properly, and that waist/hip measures materially improve the fit.",
+      "code_availability": "no verified public code repository found (2026-10-21)",
+      "weights_availability": "unknown",
+      "notes": "Method paper to reimplement against your own DXA/MRI ground truth; do not expect released weights.",
+      "license": "n/a - no public code repository (paper-only or closed/licensed model)"
+    },
+    {
+      "name": "GHBMC (Global Human Body Models Consortium) human body FE models",
+      "repo": null,
+      "url": "https://www.ghbmc.com/",
+      "type": "closed-reference-model",
+      "inputs": [
+        "multi-modality imaging-derived geometry (consortium models)"
+      ],
+      "outputs": [
+        "finite-element flesh/fat, muscle, organ and bone behaviour (crash/injury biomechanics)"
+      ],
+      "twin_use": "Reference only — licensed consortium models. Shows how fat/flesh is represented in high-end FE human models; not usable code for this project.",
+      "code_availability": "licensed, not open source",
+      "weights_availability": "n/a",
+      "notes": "Listed so the team knows the ceiling exists and why we do not build on it.",
+      "license": "n/a - no public code repository (paper-only or closed/licensed model)"
+    },
+    {
+      "name": "THUMS (Total HUman Model for Safety)",
+      "repo": null,
+      "url": "https://www.toyota.co.jp/en/innovation/partner_robot/",
+      "type": "closed-reference-model",
+      "inputs": [
+        "CT-derived whole-body geometry"
+      ],
+      "outputs": [
+        "finite-element soft tissue incl. fat as viscoelastic material, muscle, organs, bone"
+      ],
+      "twin_use": "Reference only — Toyota's licensed FE human model family (injury biomechanics).",
+      "code_availability": "licensed, not open source",
+      "weights_availability": "n/a",
+      "notes": "Reference for soft-tissue/fat material modelling choices in SOFA-style simulation.",
+      "license": "n/a - no public code repository (paper-only or closed/licensed model)"
+    }
+  ],
+  "explicitly_excluded": [
+    {
+      "kind": "single body-fat-percentage regressors on anthropometric tables (many small ML repos)",
+      "reason": "They predict one scalar percentage, not a distribution, from tabular measures. No spatial fat information for a twin."
+    },
+    {
+      "kind": "genetic/GWAS fat-distribution code (e.g. fatdistnGWAS, adiposity MR repos)",
+      "reason": "Population genetics of fat distribution, not a per-person body model. Out of scope for the twin."
+    }
+  ]
+}

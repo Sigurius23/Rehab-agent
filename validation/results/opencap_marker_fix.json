@@ -1,0 +1,5342 @@
+{
+ "cams04_aug_base": {
+  "per_coordinate": {
+   "pelvis_tilt": {
+    "joint": "pelvis",
+    "plane": "sagittal",
+    "n": 577,
+    "rmse_deg": 7.647,
+    "bias_deg": -2.435,
+    "rmse_offset_removed_deg": 7.249,
+    "max_abs_deg": 15.188,
+    "reference_rom_deg": 36.616
+   },
+   "pelvis_list": {
+    "joint": "pelvis",
+    "plane": "frontal",
+    "n": 577,
+    "rmse_deg": 3.483,
+    "bias_deg": -1.507,
+    "rmse_offset_removed_deg": 3.14,
+    "max_abs_deg": 12.091,
+    "reference_rom_deg": 7.547
+   },
+   "pelvis_rotation": {
+    "joint": "pelvis",
+    "plane": "transverse",
+    "n": 577,
+    "rmse_deg": 3.276,
+    "bias_deg": -1.557,
+    "rmse_offset_removed_deg": 2.882,
+    "max_abs_deg": 10.21,
+    "reference_rom_deg": 7.969
+   },
+   "hip_flexion_r": {
+    "joint": "hip_r",
+    "plane": "sagittal",
+    "n": 577,
+    "rmse_deg": 11.461,
+    "bias_deg": 8.472,
+    "rmse_offset_removed_deg": 7.719,
+    "max_abs_deg": 23.147,
+    "reference_rom_deg": 104.712
+   },
+   "hip_adduction_r": {
+    "joint": "hip_r",
+    "plane": "frontal",
+    "n": 577,
+    "rmse_deg": 7.552,
+    "bias_deg": 5.742,
+    "rmse_offset_removed_deg": 4.905,
+    "max_abs_deg": 19.111,
+    "reference_rom_deg": 18.353
+   },
+   "hip_rotation_r": {
+    "joint": "hip_r",
+    "plane": "transverse",
+    "n": 577,
+    "rmse_deg": 6.865,
+    "bias_deg": 0.317,
+    "rmse_offset_removed_deg": 6.858,
+    "max_abs_deg": 15.637,
+    "reference_rom_deg": 25.262
+   },
+   "knee_angle_r": {
+    "joint": "knee_r",
+    "plane": "sagittal",
+    "n": 577,
+    "rmse_deg": 11.544,
+    "bias_deg": 8.683,
+    "rmse_offset_removed_deg": 7.607,
+    "max_abs_deg": 28.749,
+    "reference_rom_deg": 89.587
+   },
+   "ankle_angle_r": {
+    "joint": "ankle_r",
+    "plane": "sagittal",
+    "n": 577,
+    "rmse_deg": 9.546,
+    "bias_deg": 5.46,
+    "rmse_offset_removed_deg": 7.83,
+    "max_abs_deg": 23.769,
+    "reference_rom_deg": 33.294
+   },
+   "subtalar_angle_r": {
+    "joint": "subtalar_r",
+    "plane": "frontal",
+    "n": 577,
+    "rmse_deg": 11.312,
+    "bias_deg": -9.521,
+    "rmse_offset_removed_deg": 6.108,
+    "max_abs_deg": 20.43,
+    "reference_rom_deg": 18.087
+   },
+   "mtp_angle_r": {
+    "joint": "mtp_r",
+    "plane": "sagittal",
+    "n": 577,
+    "rmse_deg": 0.0,
+    "bias_deg": 0.0,
+    "rmse_offset_removed_deg": 0.0,
+    "max_abs_deg": 0.0,
+    "reference_rom_deg": 0.0
+   },
+   "hip_flexion_l": {
+    "joint": "hip_l",
+    "plane": "sagittal",
+    "n": 577,
+    "rmse_deg": 11.068,
+    "bias_deg": 6.757,
+    "rmse_offset_removed_deg": 8.766,
+    "max_abs_deg": 22.246,
+    "reference_rom_deg": 105.779
+   },
+   "hip_adduction_l": {
+    "joint": "hip_l",
+    "plane": "frontal",
+    "n": 577,
+    "rmse_deg": 4.21,
+    "bias_deg": 0.789,
+    "rmse_offset_removed_deg": 4.135,
+    "max_abs_deg": 12.493,
+    "reference_rom_deg": 6.745
+   },
+   "hip_rotation_l": {
+    "joint": "hip_l",
+    "plane": "transverse",
+    "n": 577,
+    "rmse_deg": 9.452,
+    "bias_deg": 6.095,
+    "rmse_offset_removed_deg": 7.223,
+    "max_abs_deg": 26.961,
+    "reference_rom_deg": 12.44
+   },
+   "knee_angle_l": {
+    "joint": "knee_l",
+    "plane": "sagittal",
+    "n": 577,
+    "rmse_deg": 8.354,
+    "bias_deg": 5.801,
+    "rmse_offset_removed_deg": 6.011,
+    "max_abs_deg": 23.085,
+    "reference_rom_deg": 88.31
+   },
+   "ankle_angle_l": {
+    "joint": "ankle_l",
+    "plane": "sagittal",
+    "n": 577,
+    "rmse_deg": 6.155,
+    "bias_deg": -1.679,
+    "rmse_offset_removed_deg": 5.922,
+    "max_abs_deg": 15.071,
+    "reference_rom_deg": 18.631
+   },
+   "subtalar_angle_l": {
+    "joint": "subtalar_l",
+    "plane": "frontal",
+    "n": 577,
+    "rmse_deg": 23.913,
+    "bias_deg": -23.249,
+    "rmse_offset_removed_deg": 5.597,
+    "max_abs_deg": 33.429,
+    "reference_rom_deg": 18.995
+   },
+   "mtp_angle_l": {
+    "joint": "mtp_l",
+    "plane": "sagittal",
+    "n": 577,
+    "rmse_deg": 0.0,
+    "bias_deg": 0.0,
+    "rmse_offset_removed_deg": 0.0,
+    "max_abs_deg": 0.0,
+    "reference_rom_deg": 0.0
+   },
+   "arm_flex_r": {
+    "joint": "shoulder_r",
+    "plane": "sagittal",
+    "n": 577,
+    "rmse_deg": 29.741,
+    "bias_deg": 27.346,
+    "rmse_offset_removed_deg": 11.692,
+    "max_abs_deg": 53.189,
+    "reference_rom_deg": 122.152
+   },
+   "arm_add_r": {
+    "joint": "shoulder_r",
+    "plane": "frontal",
+    "n": 577,
+    "rmse_deg": 10.071,
+    "bias_deg": -4.139,
+    "rmse_offset_removed_deg": 9.181,
+    "max_abs_deg": 23.021,
+    "reference_rom_deg": 14.491
+   },
+   "arm_rot_r": {
+    "joint": "shoulder_r",
+    "plane": "transverse",
+    "n": 577,
+    "rmse_deg": 45.504,
+    "bias_deg": 2.223,
+    "rmse_offset_removed_deg": 45.45,
+    "max_abs_deg": 143.292,
+    "reference_rom_deg": 49.2
+   },
+   "elbow_flex_r": {
+    "joint": "elbow_r",
+    "plane": "sagittal",
+    "n": 577,
+    "rmse_deg": 25.523,
+    "bias_deg": 9.497,
+    "rmse_offset_removed_deg": 23.691,
+    "max_abs_deg": 66.893,
+    "reference_rom_deg": 82.648
+   },
+   "pro_sup_r": {
+    "joint": "forearm_r",
+    "plane": "transverse",
+    "n": 577,
+    "rmse_deg": 30.874,
+    "bias_deg": 7.373,
+    "rmse_offset_removed_deg": 29.981,
+    "max_abs_deg": 90.602,
+    "reference_rom_deg": 15.044
+   },
+   "arm_flex_l": {
+    "joint": "shoulder_l",
+    "plane": "sagittal",
+    "n": 577,
+    "rmse_deg": 30.116,
+    "bias_deg": 28.008,
+    "rmse_offset_removed_deg": 11.068,
+    "max_abs_deg": 51.494,
+    "reference_rom_deg": 116.343
+   },
+   "arm_add_l": {
+    "joint": "shoulder_l",
+    "plane": "frontal",
+    "n": 577,
+    "rmse_deg": 9.851,
+    "bias_deg": 5.987,
+    "rmse_offset_removed_deg": 7.824,
+    "max_abs_deg": 29.718,
+    "reference_rom_deg": 19.402
+   },
+   "arm_rot_l": {
+    "joint": "shoulder_l",
+    "plane": "transverse",
+    "n": 577,
+    "rmse_deg": 64.442,
+    "bias_deg": 36.873,
+    "rmse_offset_removed_deg": 52.85,
+    "max_abs_deg": 222.637,
+    "reference_rom_deg": 46.102
+   },
+   "elbow_flex_l": {
+    "joint": "elbow_l",
+    "plane": "sagittal",
+    "n": 577,
+    "rmse_deg": 18.447,
+    "bias_deg": 8.089,
+    "rmse_offset_removed_deg": 16.579,
+    "max_abs_deg": 56.231,
+    "reference_rom_deg": 79.835
+   },
+   "pro_sup_l": {
+    "joint": "forearm_l",
+    "plane": "transverse",
+    "n": 577,
+    "rmse_deg": 37.071,
+    "bias_deg": 20.878,
+    "rmse_offset_removed_deg": 30.633,
+    "max_abs_deg": 76.017,
+    "reference_rom_deg": 46.381
+   },
+   "torso.sagittal": {
+    "joint": "torso_segment",
+    "plane": "sagittal",
+    "n": 577,
+    "rmse_deg": 26.709,
+    "bias_deg": 24.842,
+    "rmse_offset_removed_deg": 9.81,
+    "max_abs_deg": 45.755,
+    "reference_rom_deg": 82.278
+   },
+   "torso.frontal": {
+    "joint": "torso_segment",
+    "plane": "frontal",
+    "n": 577,
+    "rmse_deg": 5.502,
+    "bias_deg": 0.754,
+    "rmse_offset_removed_deg": 5.45,
+    "max_abs_deg": 13.693,
+    "reference_rom_deg": 7.882
+   },
+   "pelvis.sagittal": {
+    "joint": "pelvis_segment",
+    "plane": "sagittal",
+    "n": 577,
+    "rmse_deg": 7.732,
+    "bias_deg": 2.566,
+    "rmse_offset_removed_deg": 7.294,
+    "max_abs_deg": 15.651,
+    "reference_rom_deg": 36.156
+   },
+   "pelvis.frontal": {
+    "joint": "pelvis_segment",
+    "plane": "frontal",
+    "n": 577,
+    "rmse_deg": 4.101,
+    "bias_deg": -2.427,
+    "rmse_offset_removed_deg": 3.306,
+    "max_abs_deg": 12.119,
+    "reference_rom_deg": 10.186
+   },
+   "knee_fppa_r": {
+    "joint": "knee_r",
+    "plane": "frontal",
+    "n": 577,
+    "rmse_deg": 6.005,
+    "bias_deg": 1.856,
+    "rmse_offset_removed_deg": 5.711,
+    "max_abs_deg": 20.055,
+    "reference_rom_deg": 44.352
+   },
+   "knee_fppa_l": {
+    "joint": "knee_l",
+    "plane": "frontal",
+    "n": 577,
+    "rmse_deg": 9.312,
+    "bias_deg": 1.391,
+    "rmse_offset_removed_deg": 9.207,
+    "max_abs_deg": 41.189,
+    "reference_rom_deg": 26.828
+   },
+   "lumbar_total.sagittal": {
+    "joint": "lumbar",
+    "plane": "sagittal",
+    "n": 577,
+    "rmse_deg": 27.16,
+    "bias_deg": -21.609,
+    "rmse_offset_removed_deg": 16.453,
+    "max_abs_deg": 57.199,
+    "reference_rom_deg": 50.171,
+    "reference_column": "lumbar_extension"
+   },
+   "lumbar_total.frontal": {
+    "joint": "lumbar",
+    "plane": "frontal",
+    "n": 577,
+    "rmse_deg": 9.555,
+    "bias_deg": 6.708,
+    "rmse_offset_removed_deg": 6.805,
+    "max_abs_deg": 27.003,
+    "reference_rom_deg": 9.903,
+    "reference_column": "lumbar_bending"
+   },
+   "lumbar_total.transverse": {
+    "joint": "lumbar",
+    "plane": "transverse",
+    "n": 577,
+    "rmse_deg": 17.38,
+    "bias_deg": 15.436,
+    "rmse_offset_removed_deg": 7.987,
+    "max_abs_deg": 29.816,
+    "reference_rom_deg": 8.286,
+    "reference_column": "lumbar_rotation"
+   }
+  },
+  "coverage": {
+   "compared_s": 9.6,
+   "overlap_s": 9.617,
+   "fraction": 0.998,
+   "min_fraction": 0.8
+  },
+  "time_lag_s": 0.050080999999996934,
+  "ik_marker_rms_m": {
+   "mean": 0.0809,
+   "p95": 0.1242,
+   "max": 0.1301
+  },
+  "model_notes": [],
+  "scale_factors": {
+   "pelvis": [
+    1.5127,
+    1.5127,
+    1.3694
+   ],
+   "sacrum": [
+    1.0862,
+    1.0862,
+    0.8645
+   ],
+   "femur_r": [
+    1.0689,
+    1.0689,
+    1.0689
+   ],
+   "patella_r": [
+    1.0689,
+    1.0689,
+    1.0689
+   ],
+   "tibia_r": [
+    1.2759,
+    1.2759,
+    1.2759
+   ],
+   "talus_r": [
+    1.1636,
+    1.1636,
+    1.1636
+   ],
+   "calcn_r": [
+    1.1636,
+    1.1636,
+    1.1636
+   ],
+   "toes_r": [
+    1.1636,
+    1.1636,
+    1.1636
+   ],
+   "femur_l": [
+    1.054,
+    1.054,
+    1.054
+   ],
+   "patella_l": [
+    1.054,
+    1.054,
+    1.054
+   ],
+   "tibia_l": [
+    1.2702,
+    1.2702,
+    1.2702
+   ],
+   "talus_l": [
+    1.1636,
+    1.1636,
+    1.1636
+   ],
+   "calcn_l": [
+    1.1636,
+    1.1636,
+    1.1636
+   ],
+   "toes_l": [
+    1.1636,
+    1.1636,
+    1.1636
+   ],
+   "lumbar5": [
+    1.0862,
+    1.0862,
+    0.8645
+   ],
+   "lumbar4": [
+    1.0862,
+    1.0862,
+    0.8645
+   ],
+   "lumbar3": [
+    1.0862,
+    1.0862,
+    0.8645
+   ],
+   "lumbar2": [
+    1.0862,
+    1.0862,
+    0.8645
+   ],
+   "lumbar1": [
+    1.0862,
+    1.0862,
+    0.8645
+   ],
+   "torso": [
+    1.0862,
+    1.0862,
+    0.8645
+   ],
+   "head": [
+    1.0862,
+    1.0862,
+    0.8645
+   ],
+   "Abdomen": [
+    1.0862,
+    1.0862,
+    0.8645
+   ],
+   "humerus_r": [
+    1.0,
+    1.0,
+    1.0
+   ],
+   "ulna_r": [
+    1.0,
+    1.0,
+    1.0
+   ],
+   "radius_r": [
+    1.0,
+    1.0,
+    1.0
+   ],
+   "hand_r": [
+    1.0,
+    1.0,
+    1.0
+   ],
+   "humerus_l": [
+    1.0,
+    1.0,
+    1.0
+   ],
+   "ulna_l": [
+    1.0,
+    1.0,
+    1.0
+   ],
+   "radius_l": [
+    1.0,
+    1.0,
+    1.0
+   ],
+   "hand_l": [
+    1.0,
+    1.0,
+    1.0
+   ]
+  }
+ },
+ "cams04_aug_fix": {
+  "per_coordinate": {
+   "pelvis_tilt": {
+    "joint": "pelvis",
+    "plane": "sagittal",
+    "n": 577,
+    "rmse_deg": 6.513,
+    "bias_deg": 1.052,
+    "rmse_offset_removed_deg": 6.427,
+    "max_abs_deg": 16.434,
+    "reference_rom_deg": 36.616
+   },
+   "pelvis_list": {
+    "joint": "pelvis",
+    "plane": "frontal",
+    "n": 577,
+    "rmse_deg": 3.546,
+    "bias_deg": -1.664,
+    "rmse_offset_removed_deg": 3.131,
+    "max_abs_deg": 12.308,
+    "reference_rom_deg": 7.547
+   },
+   "pelvis_rotation": {
+    "joint": "pelvis",
+    "plane": "transverse",
+    "n": 577,
+    "rmse_deg": 3.361,
+    "bias_deg": -1.484,
+    "rmse_offset_removed_deg": 3.016,
+    "max_abs_deg": 10.465,
+    "reference_rom_deg": 7.969
+   },
+   "hip_flexion_r": {
+    "joint": "hip_r",
+    "plane": "sagittal",
+    "n": 577,
+    "rmse_deg": 7.764,
+    "bias_deg": 2.363,
+    "rmse_offset_removed_deg": 7.396,
+    "max_abs_deg": 16.699,
+    "reference_rom_deg": 104.712
+   },
+   "hip_adduction_r": {
+    "joint": "hip_r",
+    "plane": "frontal",
+    "n": 577,
+    "rmse_deg": 6.94,
+    "bias_deg": 5.009,
+    "rmse_offset_removed_deg": 4.804,
+    "max_abs_deg": 19.376,
+    "reference_rom_deg": 18.353
+   },
+   "hip_rotation_r": {
+    "joint": "hip_r",
+    "plane": "transverse",
+    "n": 577,
+    "rmse_deg": 6.843,
+    "bias_deg": -1.107,
+    "rmse_offset_removed_deg": 6.752,
+    "max_abs_deg": 16.417,
+    "reference_rom_deg": 25.262
+   },
+   "knee_angle_r": {
+    "joint": "knee_r",
+    "plane": "sagittal",
+    "n": 577,
+    "rmse_deg": 9.094,
+    "bias_deg": 5.776,
+    "rmse_offset_removed_deg": 7.024,
+    "max_abs_deg": 25.97,
+    "reference_rom_deg": 89.587
+   },
+   "ankle_angle_r": {
+    "joint": "ankle_r",
+    "plane": "sagittal",
+    "n": 577,
+    "rmse_deg": 7.452,
+    "bias_deg": 2.595,
+    "rmse_offset_removed_deg": 6.985,
+    "max_abs_deg": 20.046,
+    "reference_rom_deg": 33.294
+   },
+   "subtalar_angle_r": {
+    "joint": "subtalar_r",
+    "plane": "frontal",
+    "n": 577,
+    "rmse_deg": 10.913,
+    "bias_deg": -8.37,
+    "rmse_offset_removed_deg": 7.003,
+    "max_abs_deg": 20.261,
+    "reference_rom_deg": 18.087
+   },
+   "mtp_angle_r": {
+    "joint": "mtp_r",
+    "plane": "sagittal",
+    "n": 577,
+    "rmse_deg": 0.0,
+    "bias_deg": 0.0,
+    "rmse_offset_removed_deg": 0.0,
+    "max_abs_deg": 0.0,
+    "reference_rom_deg": 0.0
+   },
+   "hip_flexion_l": {
+    "joint": "hip_l",
+    "plane": "sagittal",
+    "n": 577,
+    "rmse_deg": 8.206,
+    "bias_deg": 0.747,
+    "rmse_offset_removed_deg": 8.172,
+    "max_abs_deg": 18.645,
+    "reference_rom_deg": 105.779
+   },
+   "hip_adduction_l": {
+    "joint": "hip_l",
+    "plane": "frontal",
+    "n": 577,
+    "rmse_deg": 4.057,
+    "bias_deg": -0.669,
+    "rmse_offset_removed_deg": 4.001,
+    "max_abs_deg": 10.263,
+    "reference_rom_deg": 6.745
+   },
+   "hip_rotation_l": {
+    "joint": "hip_l",
+    "plane": "transverse",
+    "n": 577,
+    "rmse_deg": 9.261,
+    "bias_deg": 4.236,
+    "rmse_offset_removed_deg": 8.236,
+    "max_abs_deg": 25.316,
+    "reference_rom_deg": 12.44
+   },
+   "knee_angle_l": {
+    "joint": "knee_l",
+    "plane": "sagittal",
+    "n": 577,
+    "rmse_deg": 6.395,
+    "bias_deg": 3.028,
+    "rmse_offset_removed_deg": 5.633,
+    "max_abs_deg": 19.659,
+    "reference_rom_deg": 88.31
+   },
+   "ankle_angle_l": {
+    "joint": "ankle_l",
+    "plane": "sagittal",
+    "n": 577,
+    "rmse_deg": 7.099,
+    "bias_deg": -3.855,
+    "rmse_offset_removed_deg": 5.961,
+    "max_abs_deg": 16.642,
+    "reference_rom_deg": 18.631
+   },
+   "subtalar_angle_l": {
+    "joint": "subtalar_l",
+    "plane": "frontal",
+    "n": 577,
+    "rmse_deg": 22.279,
+    "bias_deg": -21.007,
+    "rmse_offset_removed_deg": 7.419,
+    "max_abs_deg": 33.123,
+    "reference_rom_deg": 18.995
+   },
+   "mtp_angle_l": {
+    "joint": "mtp_l",
+    "plane": "sagittal",
+    "n": 577,
+    "rmse_deg": 0.0,
+    "bias_deg": 0.0,
+    "rmse_offset_removed_deg": 0.0,
+    "max_abs_deg": 0.0,
+    "reference_rom_deg": 0.0
+   },
+   "arm_flex_r": {
+    "joint": "shoulder_r",
+    "plane": "sagittal",
+    "n": 577,
+    "rmse_deg": 28.103,
+    "bias_deg": 25.99,
+    "rmse_offset_removed_deg": 10.693,
+    "max_abs_deg": 49.765,
+    "reference_rom_deg": 122.152
+   },
+   "arm_add_r": {
+    "joint": "shoulder_r",
+    "plane": "frontal",
+    "n": 577,
+    "rmse_deg": 9.872,
+    "bias_deg": -3.853,
+    "rmse_offset_removed_deg": 9.09,
+    "max_abs_deg": 23.026,
+    "reference_rom_deg": 14.491
+   },
+   "arm_rot_r": {
+    "joint": "shoulder_r",
+    "plane": "transverse",
+    "n": 577,
+    "rmse_deg": 44.363,
+    "bias_deg": 1.325,
+    "rmse_offset_removed_deg": 44.343,
+    "max_abs_deg": 142.834,
+    "reference_rom_deg": 49.2
+   },
+   "elbow_flex_r": {
+    "joint": "elbow_r",
+    "plane": "sagittal",
+    "n": 577,
+    "rmse_deg": 25.283,
+    "bias_deg": 9.747,
+    "rmse_offset_removed_deg": 23.329,
+    "max_abs_deg": 66.857,
+    "reference_rom_deg": 82.648
+   },
+   "pro_sup_r": {
+    "joint": "forearm_r",
+    "plane": "transverse",
+    "n": 577,
+    "rmse_deg": 30.446,
+    "bias_deg": 7.436,
+    "rmse_offset_removed_deg": 29.523,
+    "max_abs_deg": 90.377,
+    "reference_rom_deg": 15.044
+   },
+   "arm_flex_l": {
+    "joint": "shoulder_l",
+    "plane": "sagittal",
+    "n": 577,
+    "rmse_deg": 29.106,
+    "bias_deg": 27.149,
+    "rmse_offset_removed_deg": 10.493,
+    "max_abs_deg": 48.431,
+    "reference_rom_deg": 116.343
+   },
+   "arm_add_l": {
+    "joint": "shoulder_l",
+    "plane": "frontal",
+    "n": 577,
+    "rmse_deg": 9.711,
+    "bias_deg": 5.731,
+    "rmse_offset_removed_deg": 7.839,
+    "max_abs_deg": 30.522,
+    "reference_rom_deg": 19.402
+   },
+   "arm_rot_l": {
+    "joint": "shoulder_l",
+    "plane": "transverse",
+    "n": 577,
+    "rmse_deg": 63.935,
+    "bias_deg": 36.354,
+    "rmse_offset_removed_deg": 52.594,
+    "max_abs_deg": 222.341,
+    "reference_rom_deg": 46.102
+   },
+   "elbow_flex_l": {
+    "joint": "elbow_l",
+    "plane": "sagittal",
+    "n": 577,
+    "rmse_deg": 18.264,
+    "bias_deg": 8.64,
+    "rmse_offset_removed_deg": 16.091,
+    "max_abs_deg": 55.844,
+    "reference_rom_deg": 79.835
+   },
+   "pro_sup_l": {
+    "joint": "forearm_l",
+    "plane": "transverse",
+    "n": 577,
+    "rmse_deg": 36.51,
+    "bias_deg": 20.432,
+    "rmse_offset_removed_deg": 30.258,
+    "max_abs_deg": 74.351,
+    "reference_rom_deg": 46.381
+   },
+   "torso.sagittal": {
+    "joint": "torso_segment",
+    "plane": "sagittal",
+    "n": 577,
+    "rmse_deg": 24.204,
+    "bias_deg": 22.74,
+    "rmse_offset_removed_deg": 8.288,
+    "max_abs_deg": 40.585,
+    "reference_rom_deg": 82.278
+   },
+   "torso.frontal": {
+    "joint": "torso_segment",
+    "plane": "frontal",
+    "n": 577,
+    "rmse_deg": 5.646,
+    "bias_deg": 1.039,
+    "rmse_offset_removed_deg": 5.55,
+    "max_abs_deg": 14.292,
+    "reference_rom_deg": 7.882
+   },
+   "pelvis.sagittal": {
+    "joint": "pelvis_segment",
+    "plane": "sagittal",
+    "n": 577,
+    "rmse_deg": 6.526,
+    "bias_deg": -0.91,
+    "rmse_offset_removed_deg": 6.462,
+    "max_abs_deg": 16.434,
+    "reference_rom_deg": 36.156
+   },
+   "pelvis.frontal": {
+    "joint": "pelvis_segment",
+    "plane": "frontal",
+    "n": 577,
+    "rmse_deg": 4.204,
+    "bias_deg": -2.68,
+    "rmse_offset_removed_deg": 3.239,
+    "max_abs_deg": 12.434,
+    "reference_rom_deg": 10.186
+   },
+   "knee_fppa_r": {
+    "joint": "knee_r",
+    "plane": "frontal",
+    "n": 577,
+    "rmse_deg": 5.365,
+    "bias_deg": 1.2,
+    "rmse_offset_removed_deg": 5.229,
+    "max_abs_deg": 18.119,
+    "reference_rom_deg": 44.352
+   },
+   "knee_fppa_l": {
+    "joint": "knee_l",
+    "plane": "frontal",
+    "n": 577,
+    "rmse_deg": 8.502,
+    "bias_deg": 0.498,
+    "rmse_offset_removed_deg": 8.487,
+    "max_abs_deg": 35.415,
+    "reference_rom_deg": 26.828
+   },
+   "lumbar_total.sagittal": {
+    "joint": "lumbar",
+    "plane": "sagittal",
+    "n": 577,
+    "rmse_deg": 26.927,
+    "bias_deg": -22.93,
+    "rmse_offset_removed_deg": 14.118,
+    "max_abs_deg": 55.728,
+    "reference_rom_deg": 50.171,
+    "reference_column": "lumbar_extension"
+   },
+   "lumbar_total.frontal": {
+    "joint": "lumbar",
+    "plane": "frontal",
+    "n": 577,
+    "rmse_deg": 10.046,
+    "bias_deg": 7.224,
+    "rmse_offset_removed_deg": 6.981,
+    "max_abs_deg": 27.609,
+    "reference_rom_deg": 9.903,
+    "reference_column": "lumbar_bending"
+   },
+   "lumbar_total.transverse": {
+    "joint": "lumbar",
+    "plane": "transverse",
+    "n": 577,
+    "rmse_deg": 17.202,
+    "bias_deg": 15.194,
+    "rmse_offset_removed_deg": 8.066,
+    "max_abs_deg": 29.878,
+    "reference_rom_deg": 8.286,
+    "reference_column": "lumbar_rotation"
+   }
+  },
+  "coverage": {
+   "compared_s": 9.6,
+   "overlap_s": 9.617,
+   "fraction": 0.998,
+   "min_fraction": 0.8
+  },
+  "time_lag_s": 0.050080999999996934,
+  "ik_marker_rms_m": {
+   "mean": 0.078,
+   "p95": 0.12,
+   "max": 0.1258
+  },
+  "model_notes": [
+   "rescaled 10 markers on their bodies by [1.0, 1.075, 1.0]: trial",
+   "rescaled 10 markers on their bodies by [1.0, 0.97867, 1.0]: trial",
+   "placed ['LHJC_study', 'RHJC_study'] on the joint centres they name: trial"
+  ],
+  "scale_factors": {
+   "pelvis": [
+    1.5127,
+    1.5127,
+    1.2671
+   ],
+   "sacrum": [
+    1.0862,
+    1.0862,
+    0.8645
+   ],
+   "femur_r": [
+    1.0613,
+    1.0613,
+    1.0613
+   ],
+   "patella_r": [
+    1.0613,
+    1.0613,
+    1.0613
+   ],
+   "tibia_r": [
+    1.1616,
+    1.1616,
+    1.1616
+   ],
+   "talus_r": [
+    1.1636,
+    1.1636,
+    1.1636
+   ],
+   "calcn_r": [
+    1.1636,
+    1.1636,
+    1.1636
+   ],
+   "toes_r": [
+    1.1636,
+    1.1636,
+    1.1636
+   ],
+   "femur_l": [
+    1.0465,
+    1.0465,
+    1.0465
+   ],
+   "patella_l": [
+    1.0465,
+    1.0465,
+    1.0465
+   ],
+   "tibia_l": [
+    1.1564,
+    1.1564,
+    1.1564
+   ],
+   "talus_l": [
+    1.1636,
+    1.1636,
+    1.1636
+   ],
+   "calcn_l": [
+    1.1636,
+    1.1636,
+    1.1636
+   ],
+   "toes_l": [
+    1.1636,
+    1.1636,
+    1.1636
+   ],
+   "lumbar5": [
+    1.0862,
+    1.0862,
+    0.8645
+   ],
+   "lumbar4": [
+    1.0862,
+    1.0862,
+    0.8645
+   ],
+   "lumbar3": [
+    1.0862,
+    1.0862,
+    0.8645
+   ],
+   "lumbar2": [
+    1.0862,
+    1.0862,
+    0.8645
+   ],
+   "lumbar1": [
+    1.0862,
+    1.0862,
+    0.8645
+   ],
+   "torso": [
+    1.0862,
+    1.0862,
+    0.8645
+   ],
+   "head": [
+    1.0862,
+    1.0862,
+    0.8645
+   ],
+   "Abdomen": [
+    1.0862,
+    1.0862,
+    0.8645
+   ],
+   "humerus_r": [
+    1.0,
+    1.0,
+    1.0
+   ],
+   "ulna_r": [
+    1.0,
+    1.0,
+    1.0
+   ],
+   "radius_r": [
+    1.0,
+    1.0,
+    1.0
+   ],
+   "hand_r": [
+    1.0,
+    1.0,
+    1.0
+   ],
+   "humerus_l": [
+    1.0,
+    1.0,
+    1.0
+   ],
+   "ulna_l": [
+    1.0,
+    1.0,
+    1.0
+   ],
+   "radius_l": [
+    1.0,
+    1.0,
+    1.0
+   ],
+   "hand_l": [
+    1.0,
+    1.0,
+    1.0
+   ]
+  }
+ },
+ "cams123_aug_base": {
+  "per_coordinate": {
+   "pelvis_tilt": {
+    "joint": "pelvis",
+    "plane": "sagittal",
+    "n": 575,
+    "rmse_deg": 6.749,
+    "bias_deg": -6.228,
+    "rmse_offset_removed_deg": 2.6,
+    "max_abs_deg": 12.222,
+    "reference_rom_deg": 36.616
+   },
+   "pelvis_list": {
+    "joint": "pelvis",
+    "plane": "frontal",
+    "n": 575,
+    "rmse_deg": 2.783,
+    "bias_deg": -1.718,
+    "rmse_offset_removed_deg": 2.189,
+    "max_abs_deg": 6.501,
+    "reference_rom_deg": 7.547
+   },
+   "pelvis_rotation": {
+    "joint": "pelvis",
+    "plane": "transverse",
+    "n": 575,
+    "rmse_deg": 3.23,
+    "bias_deg": -2.801,
+    "rmse_offset_removed_deg": 1.608,
+    "max_abs_deg": 6.302,
+    "reference_rom_deg": 7.969
+   },
+   "hip_flexion_r": {
+    "joint": "hip_r",
+    "plane": "sagittal",
+    "n": 575,
+    "rmse_deg": 14.635,
+    "bias_deg": 13.407,
+    "rmse_offset_removed_deg": 5.869,
+    "max_abs_deg": 24.163,
+    "reference_rom_deg": 104.712
+   },
+   "hip_adduction_r": {
+    "joint": "hip_r",
+    "plane": "frontal",
+    "n": 575,
+    "rmse_deg": 2.646,
+    "bias_deg": -0.299,
+    "rmse_offset_removed_deg": 2.629,
+    "max_abs_deg": 6.695,
+    "reference_rom_deg": 18.353
+   },
+   "hip_rotation_r": {
+    "joint": "hip_r",
+    "plane": "transverse",
+    "n": 575,
+    "rmse_deg": 4.333,
+    "bias_deg": -1.124,
+    "rmse_offset_removed_deg": 4.185,
+    "max_abs_deg": 10.002,
+    "reference_rom_deg": 25.262
+   },
+   "knee_angle_r": {
+    "joint": "knee_r",
+    "plane": "sagittal",
+    "n": 575,
+    "rmse_deg": 12.015,
+    "bias_deg": 10.399,
+    "rmse_offset_removed_deg": 6.018,
+    "max_abs_deg": 24.161,
+    "reference_rom_deg": 89.587
+   },
+   "ankle_angle_r": {
+    "joint": "ankle_r",
+    "plane": "sagittal",
+    "n": 575,
+    "rmse_deg": 6.533,
+    "bias_deg": -2.316,
+    "rmse_offset_removed_deg": 6.109,
+    "max_abs_deg": 19.155,
+    "reference_rom_deg": 33.294
+   },
+   "subtalar_angle_r": {
+    "joint": "subtalar_r",
+    "plane": "frontal",
+    "n": 575,
+    "rmse_deg": 10.387,
+    "bias_deg": -9.096,
+    "rmse_offset_removed_deg": 5.015,
+    "max_abs_deg": 21.259,
+    "reference_rom_deg": 18.087
+   },
+   "mtp_angle_r": {
+    "joint": "mtp_r",
+    "plane": "sagittal",
+    "n": 575,
+    "rmse_deg": 0.0,
+    "bias_deg": 0.0,
+    "rmse_offset_removed_deg": 0.0,
+    "max_abs_deg": 0.0,
+    "reference_rom_deg": 0.0
+   },
+   "hip_flexion_l": {
+    "joint": "hip_l",
+    "plane": "sagittal",
+    "n": 575,
+    "rmse_deg": 13.315,
+    "bias_deg": 12.277,
+    "rmse_offset_removed_deg": 5.152,
+    "max_abs_deg": 21.989,
+    "reference_rom_deg": 105.779
+   },
+   "hip_adduction_l": {
+    "joint": "hip_l",
+    "plane": "frontal",
+    "n": 575,
+    "rmse_deg": 3.539,
+    "bias_deg": -2.741,
+    "rmse_offset_removed_deg": 2.238,
+    "max_abs_deg": 8.301,
+    "reference_rom_deg": 6.745
+   },
+   "hip_rotation_l": {
+    "joint": "hip_l",
+    "plane": "transverse",
+    "n": 575,
+    "rmse_deg": 5.122,
+    "bias_deg": -0.363,
+    "rmse_offset_removed_deg": 5.109,
+    "max_abs_deg": 10.157,
+    "reference_rom_deg": 12.44
+   },
+   "knee_angle_l": {
+    "joint": "knee_l",
+    "plane": "sagittal",
+    "n": 575,
+    "rmse_deg": 8.112,
+    "bias_deg": 6.776,
+    "rmse_offset_removed_deg": 4.461,
+    "max_abs_deg": 15.659,
+    "reference_rom_deg": 88.31
+   },
+   "ankle_angle_l": {
+    "joint": "ankle_l",
+    "plane": "sagittal",
+    "n": 575,
+    "rmse_deg": 4.555,
+    "bias_deg": -3.837,
+    "rmse_offset_removed_deg": 2.455,
+    "max_abs_deg": 10.356,
+    "reference_rom_deg": 18.631
+   },
+   "subtalar_angle_l": {
+    "joint": "subtalar_l",
+    "plane": "frontal",
+    "n": 575,
+    "rmse_deg": 19.742,
+    "bias_deg": -19.572,
+    "rmse_offset_removed_deg": 2.591,
+    "max_abs_deg": 26.51,
+    "reference_rom_deg": 18.932
+   },
+   "mtp_angle_l": {
+    "joint": "mtp_l",
+    "plane": "sagittal",
+    "n": 575,
+    "rmse_deg": 0.0,
+    "bias_deg": 0.0,
+    "rmse_offset_removed_deg": 0.0,
+    "max_abs_deg": 0.0,
+    "reference_rom_deg": 0.0
+   },
+   "arm_flex_r": {
+    "joint": "shoulder_r",
+    "plane": "sagittal",
+    "n": 575,
+    "rmse_deg": 5.352,
+    "bias_deg": 2.249,
+    "rmse_offset_removed_deg": 4.857,
+    "max_abs_deg": 11.716,
+    "reference_rom_deg": 122.152
+   },
+   "arm_add_r": {
+    "joint": "shoulder_r",
+    "plane": "frontal",
+    "n": 575,
+    "rmse_deg": 9.543,
+    "bias_deg": -9.017,
+    "rmse_offset_removed_deg": 3.126,
+    "max_abs_deg": 15.121,
+    "reference_rom_deg": 14.491
+   },
+   "arm_rot_r": {
+    "joint": "shoulder_r",
+    "plane": "transverse",
+    "n": 575,
+    "rmse_deg": 6.265,
+    "bias_deg": 1.872,
+    "rmse_offset_removed_deg": 5.978,
+    "max_abs_deg": 18.456,
+    "reference_rom_deg": 49.2
+   },
+   "elbow_flex_r": {
+    "joint": "elbow_r",
+    "plane": "sagittal",
+    "n": 575,
+    "rmse_deg": 6.351,
+    "bias_deg": 3.969,
+    "rmse_offset_removed_deg": 4.957,
+    "max_abs_deg": 17.626,
+    "reference_rom_deg": 82.648
+   },
+   "pro_sup_r": {
+    "joint": "forearm_r",
+    "plane": "transverse",
+    "n": 575,
+    "rmse_deg": 18.337,
+    "bias_deg": -16.802,
+    "rmse_offset_removed_deg": 7.345,
+    "max_abs_deg": 30.827,
+    "reference_rom_deg": 15.044
+   },
+   "arm_flex_l": {
+    "joint": "shoulder_l",
+    "plane": "sagittal",
+    "n": 575,
+    "rmse_deg": 5.747,
+    "bias_deg": -4.113,
+    "rmse_offset_removed_deg": 4.014,
+    "max_abs_deg": 12.749,
+    "reference_rom_deg": 116.343
+   },
+   "arm_add_l": {
+    "joint": "shoulder_l",
+    "plane": "frontal",
+    "n": 575,
+    "rmse_deg": 7.093,
+    "bias_deg": -6.685,
+    "rmse_offset_removed_deg": 2.373,
+    "max_abs_deg": 11.638,
+    "reference_rom_deg": 19.402
+   },
+   "arm_rot_l": {
+    "joint": "shoulder_l",
+    "plane": "transverse",
+    "n": 575,
+    "rmse_deg": 5.96,
+    "bias_deg": -4.459,
+    "rmse_offset_removed_deg": 3.955,
+    "max_abs_deg": 15.274,
+    "reference_rom_deg": 46.102
+   },
+   "elbow_flex_l": {
+    "joint": "elbow_l",
+    "plane": "sagittal",
+    "n": 575,
+    "rmse_deg": 10.326,
+    "bias_deg": 9.522,
+    "rmse_offset_removed_deg": 3.994,
+    "max_abs_deg": 20.805,
+    "reference_rom_deg": 79.835
+   },
+   "pro_sup_l": {
+    "joint": "forearm_l",
+    "plane": "transverse",
+    "n": 575,
+    "rmse_deg": 8.65,
+    "bias_deg": 1.591,
+    "rmse_offset_removed_deg": 8.502,
+    "max_abs_deg": 23.047,
+    "reference_rom_deg": 46.381
+   },
+   "torso.sagittal": {
+    "joint": "torso_segment",
+    "plane": "sagittal",
+    "n": 575,
+    "rmse_deg": 3.215,
+    "bias_deg": -2.363,
+    "rmse_offset_removed_deg": 2.179,
+    "max_abs_deg": 8.274,
+    "reference_rom_deg": 82.278
+   },
+   "torso.frontal": {
+    "joint": "torso_segment",
+    "plane": "frontal",
+    "n": 575,
+    "rmse_deg": 1.73,
+    "bias_deg": 0.841,
+    "rmse_offset_removed_deg": 1.512,
+    "max_abs_deg": 4.248,
+    "reference_rom_deg": 7.882
+   },
+   "pelvis.sagittal": {
+    "joint": "pelvis_segment",
+    "plane": "sagittal",
+    "n": 575,
+    "rmse_deg": 6.806,
+    "bias_deg": 6.301,
+    "rmse_offset_removed_deg": 2.573,
+    "max_abs_deg": 12.126,
+    "reference_rom_deg": 36.156
+   },
+   "pelvis.frontal": {
+    "joint": "pelvis_segment",
+    "plane": "frontal",
+    "n": 575,
+    "rmse_deg": 4.264,
+    "bias_deg": -2.888,
+    "rmse_offset_removed_deg": 3.138,
+    "max_abs_deg": 8.868,
+    "reference_rom_deg": 10.186
+   },
+   "knee_fppa_r": {
+    "joint": "knee_r",
+    "plane": "frontal",
+    "n": 575,
+    "rmse_deg": 8.886,
+    "bias_deg": -5.04,
+    "rmse_offset_removed_deg": 7.319,
+    "max_abs_deg": 28.849,
+    "reference_rom_deg": 44.352
+   },
+   "knee_fppa_l": {
+    "joint": "knee_l",
+    "plane": "frontal",
+    "n": 575,
+    "rmse_deg": 8.611,
+    "bias_deg": -6.027,
+    "rmse_offset_removed_deg": 6.15,
+    "max_abs_deg": 21.777,
+    "reference_rom_deg": 26.828
+   },
+   "lumbar_total.sagittal": {
+    "joint": "lumbar",
+    "plane": "sagittal",
+    "n": 575,
+    "rmse_deg": 9.455,
+    "bias_deg": 8.705,
+    "rmse_offset_removed_deg": 3.692,
+    "max_abs_deg": 19.628,
+    "reference_rom_deg": 50.171,
+    "reference_column": "lumbar_extension"
+   },
+   "lumbar_total.frontal": {
+    "joint": "lumbar",
+    "plane": "frontal",
+    "n": 575,
+    "rmse_deg": 5.036,
+    "bias_deg": 3.725,
+    "rmse_offset_removed_deg": 3.389,
+    "max_abs_deg": 10.618,
+    "reference_rom_deg": 9.903,
+    "reference_column": "lumbar_bending"
+   },
+   "lumbar_total.transverse": {
+    "joint": "lumbar",
+    "plane": "transverse",
+    "n": 575,
+    "rmse_deg": 4.721,
+    "bias_deg": 2.079,
+    "rmse_offset_removed_deg": 4.238,
+    "max_abs_deg": 11.702,
+    "reference_rom_deg": 8.286,
+    "reference_column": "lumbar_rotation"
+   }
+  },
+  "coverage": {
+   "compared_s": 9.567,
+   "overlap_s": 9.583,
+   "fraction": 0.998,
+   "min_fraction": 0.8
+  },
+  "time_lag_s": 0.06674799999999692,
+  "ik_marker_rms_m": {
+   "mean": 0.0235,
+   "p95": 0.0262,
+   "max": 0.0279
+  },
+  "model_notes": [],
+  "scale_factors": {
+   "pelvis": [
+    1.3204,
+    1.3204,
+    1.2171
+   ],
+   "sacrum": [
+    1.0779,
+    1.0779,
+    0.8992
+   ],
+   "femur_r": [
+    1.1613,
+    1.1613,
+    1.1613
+   ],
+   "patella_r": [
+    1.1613,
+    1.1613,
+    1.1613
+   ],
+   "tibia_r": [
+    1.2635,
+    1.2635,
+    1.2635
+   ],
+   "talus_r": [
+    1.112,
+    1.112,
+    1.112
+   ],
+   "calcn_r": [
+    1.112,
+    1.112,
+    1.112
+   ],
+   "toes_r": [
+    1.112,
+    1.112,
+    1.112
+   ],
+   "femur_l": [
+    1.1497,
+    1.1497,
+    1.1497
+   ],
+   "patella_l": [
+    1.1497,
+    1.1497,
+    1.1497
+   ],
+   "tibia_l": [
+    1.27,
+    1.27,
+    1.27
+   ],
+   "talus_l": [
+    1.112,
+    1.112,
+    1.112
+   ],
+   "calcn_l": [
+    1.112,
+    1.112,
+    1.112
+   ],
+   "toes_l": [
+    1.112,
+    1.112,
+    1.112
+   ],
+   "lumbar5": [
+    1.0779,
+    1.0779,
+    0.8992
+   ],
+   "lumbar4": [
+    1.0779,
+    1.0779,
+    0.8992
+   ],
+   "lumbar3": [
+    1.0779,
+    1.0779,
+    0.8992
+   ],
+   "lumbar2": [
+    1.0779,
+    1.0779,
+    0.8992
+   ],
+   "lumbar1": [
+    1.0779,
+    1.0779,
+    0.8992
+   ],
+   "torso": [
+    1.0779,
+    1.0779,
+    0.8992
+   ],
+   "head": [
+    1.0779,
+    1.0779,
+    0.8992
+   ],
+   "Abdomen": [
+    1.0779,
+    1.0779,
+    0.8992
+   ],
+   "humerus_r": [
+    1.3326,
+    1.3326,
+    1.3326
+   ],
+   "ulna_r": [
+    1.1434,
+    1.1434,
+    1.1434
+   ],
+   "radius_r": [
+    1.1434,
+    1.1434,
+    1.1434
+   ],
+   "hand_r": [
+    1.1434,
+    1.1434,
+    1.1434
+   ],
+   "humerus_l": [
+    1.3326,
+    1.3326,
+    1.3326
+   ],
+   "ulna_l": [
+    1.1434,
+    1.1434,
+    1.1434
+   ],
+   "radius_l": [
+    1.1434,
+    1.1434,
+    1.1434
+   ],
+   "hand_l": [
+    1.1434,
+    1.1434,
+    1.1434
+   ]
+  }
+ },
+ "cams123_aug_fix": {
+  "per_coordinate": {
+   "pelvis_tilt": {
+    "joint": "pelvis",
+    "plane": "sagittal",
+    "n": 575,
+    "rmse_deg": 3.335,
+    "bias_deg": -2.127,
+    "rmse_offset_removed_deg": 2.569,
+    "max_abs_deg": 7.477,
+    "reference_rom_deg": 36.616
+   },
+   "pelvis_list": {
+    "joint": "pelvis",
+    "plane": "frontal",
+    "n": 575,
+    "rmse_deg": 2.757,
+    "bias_deg": -1.69,
+    "rmse_offset_removed_deg": 2.178,
+    "max_abs_deg": 6.405,
+    "reference_rom_deg": 7.547
+   },
+   "pelvis_rotation": {
+    "joint": "pelvis",
+    "plane": "transverse",
+    "n": 575,
+    "rmse_deg": 3.257,
+    "bias_deg": -2.773,
+    "rmse_offset_removed_deg": 1.708,
+    "max_abs_deg": 6.208,
+    "reference_rom_deg": 7.969
+   },
+   "hip_flexion_r": {
+    "joint": "hip_r",
+    "plane": "sagittal",
+    "n": 575,
+    "rmse_deg": 9.418,
+    "bias_deg": 7.277,
+    "rmse_offset_removed_deg": 5.978,
+    "max_abs_deg": 18.499,
+    "reference_rom_deg": 104.712
+   },
+   "hip_adduction_r": {
+    "joint": "hip_r",
+    "plane": "frontal",
+    "n": 575,
+    "rmse_deg": 2.886,
+    "bias_deg": -1.421,
+    "rmse_offset_removed_deg": 2.512,
+    "max_abs_deg": 7.642,
+    "reference_rom_deg": 18.353
+   },
+   "hip_rotation_r": {
+    "joint": "hip_r",
+    "plane": "transverse",
+    "n": 575,
+    "rmse_deg": 5.695,
+    "bias_deg": -4.162,
+    "rmse_offset_removed_deg": 3.887,
+    "max_abs_deg": 11.511,
+    "reference_rom_deg": 25.262
+   },
+   "knee_angle_r": {
+    "joint": "knee_r",
+    "plane": "sagittal",
+    "n": 575,
+    "rmse_deg": 10.519,
+    "bias_deg": 8.58,
+    "rmse_offset_removed_deg": 6.086,
+    "max_abs_deg": 22.636,
+    "reference_rom_deg": 89.587
+   },
+   "ankle_angle_r": {
+    "joint": "ankle_r",
+    "plane": "sagittal",
+    "n": 575,
+    "rmse_deg": 7.32,
+    "bias_deg": -1.671,
+    "rmse_offset_removed_deg": 7.127,
+    "max_abs_deg": 20.728,
+    "reference_rom_deg": 33.294
+   },
+   "subtalar_angle_r": {
+    "joint": "subtalar_r",
+    "plane": "frontal",
+    "n": 575,
+    "rmse_deg": 8.13,
+    "bias_deg": -1.879,
+    "rmse_offset_removed_deg": 7.909,
+    "max_abs_deg": 21.03,
+    "reference_rom_deg": 18.087
+   },
+   "mtp_angle_r": {
+    "joint": "mtp_r",
+    "plane": "sagittal",
+    "n": 575,
+    "rmse_deg": 0.0,
+    "bias_deg": 0.0,
+    "rmse_offset_removed_deg": 0.0,
+    "max_abs_deg": 0.0,
+    "reference_rom_deg": 0.0
+   },
+   "hip_flexion_l": {
+    "joint": "hip_l",
+    "plane": "sagittal",
+    "n": 575,
+    "rmse_deg": 7.974,
+    "bias_deg": 6.224,
+    "rmse_offset_removed_deg": 4.984,
+    "max_abs_deg": 16.244,
+    "reference_rom_deg": 105.779
+   },
+   "hip_adduction_l": {
+    "joint": "hip_l",
+    "plane": "frontal",
+    "n": 575,
+    "rmse_deg": 4.692,
+    "bias_deg": -4.049,
+    "rmse_offset_removed_deg": 2.37,
+    "max_abs_deg": 9.675,
+    "reference_rom_deg": 6.745
+   },
+   "hip_rotation_l": {
+    "joint": "hip_l",
+    "plane": "transverse",
+    "n": 575,
+    "rmse_deg": 7.813,
+    "bias_deg": -3.874,
+    "rmse_offset_removed_deg": 6.785,
+    "max_abs_deg": 13.792,
+    "reference_rom_deg": 12.44
+   },
+   "knee_angle_l": {
+    "joint": "knee_l",
+    "plane": "sagittal",
+    "n": 575,
+    "rmse_deg": 6.479,
+    "bias_deg": 5.075,
+    "rmse_offset_removed_deg": 4.029,
+    "max_abs_deg": 13.623,
+    "reference_rom_deg": 88.31
+   },
+   "ankle_angle_l": {
+    "joint": "ankle_l",
+    "plane": "sagittal",
+    "n": 575,
+    "rmse_deg": 4.381,
+    "bias_deg": -3.453,
+    "rmse_offset_removed_deg": 2.696,
+    "max_abs_deg": 11.304,
+    "reference_rom_deg": 18.631
+   },
+   "subtalar_angle_l": {
+    "joint": "subtalar_l",
+    "plane": "frontal",
+    "n": 575,
+    "rmse_deg": 13.12,
+    "bias_deg": -12.189,
+    "rmse_offset_removed_deg": 4.856,
+    "max_abs_deg": 20.33,
+    "reference_rom_deg": 18.932
+   },
+   "mtp_angle_l": {
+    "joint": "mtp_l",
+    "plane": "sagittal",
+    "n": 575,
+    "rmse_deg": 0.0,
+    "bias_deg": 0.0,
+    "rmse_offset_removed_deg": 0.0,
+    "max_abs_deg": 0.0,
+    "reference_rom_deg": 0.0
+   },
+   "arm_flex_r": {
+    "joint": "shoulder_r",
+    "plane": "sagittal",
+    "n": 575,
+    "rmse_deg": 5.969,
+    "bias_deg": 2.798,
+    "rmse_offset_removed_deg": 5.273,
+    "max_abs_deg": 12.958,
+    "reference_rom_deg": 122.152
+   },
+   "arm_add_r": {
+    "joint": "shoulder_r",
+    "plane": "frontal",
+    "n": 575,
+    "rmse_deg": 10.108,
+    "bias_deg": -9.54,
+    "rmse_offset_removed_deg": 3.341,
+    "max_abs_deg": 15.927,
+    "reference_rom_deg": 14.491
+   },
+   "arm_rot_r": {
+    "joint": "shoulder_r",
+    "plane": "transverse",
+    "n": 575,
+    "rmse_deg": 6.578,
+    "bias_deg": 2.218,
+    "rmse_offset_removed_deg": 6.193,
+    "max_abs_deg": 19.606,
+    "reference_rom_deg": 49.2
+   },
+   "elbow_flex_r": {
+    "joint": "elbow_r",
+    "plane": "sagittal",
+    "n": 575,
+    "rmse_deg": 8.152,
+    "bias_deg": 5.644,
+    "rmse_offset_removed_deg": 5.881,
+    "max_abs_deg": 21.306,
+    "reference_rom_deg": 82.648
+   },
+   "pro_sup_r": {
+    "joint": "forearm_r",
+    "plane": "transverse",
+    "n": 575,
+    "rmse_deg": 19.044,
+    "bias_deg": -17.7,
+    "rmse_offset_removed_deg": 7.028,
+    "max_abs_deg": 30.992,
+    "reference_rom_deg": 15.044
+   },
+   "arm_flex_l": {
+    "joint": "shoulder_l",
+    "plane": "sagittal",
+    "n": 575,
+    "rmse_deg": 5.696,
+    "bias_deg": -3.88,
+    "rmse_offset_removed_deg": 4.17,
+    "max_abs_deg": 12.859,
+    "reference_rom_deg": 116.343
+   },
+   "arm_add_l": {
+    "joint": "shoulder_l",
+    "plane": "frontal",
+    "n": 575,
+    "rmse_deg": 7.519,
+    "bias_deg": -7.055,
+    "rmse_offset_removed_deg": 2.602,
+    "max_abs_deg": 12.813,
+    "reference_rom_deg": 19.402
+   },
+   "arm_rot_l": {
+    "joint": "shoulder_l",
+    "plane": "transverse",
+    "n": 575,
+    "rmse_deg": 6.199,
+    "bias_deg": -4.496,
+    "rmse_offset_removed_deg": 4.268,
+    "max_abs_deg": 17.203,
+    "reference_rom_deg": 46.102
+   },
+   "elbow_flex_l": {
+    "joint": "elbow_l",
+    "plane": "sagittal",
+    "n": 575,
+    "rmse_deg": 12.1,
+    "bias_deg": 11.303,
+    "rmse_offset_removed_deg": 4.319,
+    "max_abs_deg": 23.013,
+    "reference_rom_deg": 79.835
+   },
+   "pro_sup_l": {
+    "joint": "forearm_l",
+    "plane": "transverse",
+    "n": 575,
+    "rmse_deg": 8.638,
+    "bias_deg": 1.014,
+    "rmse_offset_removed_deg": 8.579,
+    "max_abs_deg": 24.982,
+    "reference_rom_deg": 46.381
+   },
+   "torso.sagittal": {
+    "joint": "torso_segment",
+    "plane": "sagittal",
+    "n": 575,
+    "rmse_deg": 3.533,
+    "bias_deg": -2.579,
+    "rmse_offset_removed_deg": 2.415,
+    "max_abs_deg": 8.966,
+    "reference_rom_deg": 82.278
+   },
+   "torso.frontal": {
+    "joint": "torso_segment",
+    "plane": "frontal",
+    "n": 575,
+    "rmse_deg": 1.723,
+    "bias_deg": 0.815,
+    "rmse_offset_removed_deg": 1.518,
+    "max_abs_deg": 4.258,
+    "reference_rom_deg": 7.882
+   },
+   "pelvis.sagittal": {
+    "joint": "pelvis_segment",
+    "plane": "sagittal",
+    "n": 575,
+    "rmse_deg": 3.386,
+    "bias_deg": 2.202,
+    "rmse_offset_removed_deg": 2.572,
+    "max_abs_deg": 7.602,
+    "reference_rom_deg": 36.156
+   },
+   "pelvis.frontal": {
+    "joint": "pelvis_segment",
+    "plane": "frontal",
+    "n": 575,
+    "rmse_deg": 4.211,
+    "bias_deg": -2.898,
+    "rmse_offset_removed_deg": 3.055,
+    "max_abs_deg": 8.864,
+    "reference_rom_deg": 10.186
+   },
+   "knee_fppa_r": {
+    "joint": "knee_r",
+    "plane": "frontal",
+    "n": 575,
+    "rmse_deg": 8.63,
+    "bias_deg": -5.501,
+    "rmse_offset_removed_deg": 6.649,
+    "max_abs_deg": 26.709,
+    "reference_rom_deg": 44.352
+   },
+   "knee_fppa_l": {
+    "joint": "knee_l",
+    "plane": "frontal",
+    "n": 575,
+    "rmse_deg": 8.92,
+    "bias_deg": -6.462,
+    "rmse_offset_removed_deg": 6.149,
+    "max_abs_deg": 20.791,
+    "reference_rom_deg": 26.828
+   },
+   "lumbar_total.sagittal": {
+    "joint": "lumbar",
+    "plane": "sagittal",
+    "n": 575,
+    "rmse_deg": 6.224,
+    "bias_deg": 4.811,
+    "rmse_offset_removed_deg": 3.948,
+    "max_abs_deg": 15.692,
+    "reference_rom_deg": 50.171,
+    "reference_column": "lumbar_extension"
+   },
+   "lumbar_total.frontal": {
+    "joint": "lumbar",
+    "plane": "frontal",
+    "n": 575,
+    "rmse_deg": 4.993,
+    "bias_deg": 3.714,
+    "rmse_offset_removed_deg": 3.337,
+    "max_abs_deg": 10.36,
+    "reference_rom_deg": 9.903,
+    "reference_column": "lumbar_bending"
+   },
+   "lumbar_total.transverse": {
+    "joint": "lumbar",
+    "plane": "transverse",
+    "n": 575,
+    "rmse_deg": 4.921,
+    "bias_deg": 1.921,
+    "rmse_offset_removed_deg": 4.53,
+    "max_abs_deg": 11.822,
+    "reference_rom_deg": 8.286,
+    "reference_column": "lumbar_rotation"
+   }
+  },
+  "coverage": {
+   "compared_s": 9.567,
+   "overlap_s": 9.583,
+   "fraction": 0.998,
+   "min_fraction": 0.8
+  },
+  "time_lag_s": 0.06674799999999692,
+  "ik_marker_rms_m": {
+   "mean": 0.0208,
+   "p95": 0.0249,
+   "max": 0.0276
+  },
+  "model_notes": [
+   "rescaled 10 markers on their bodies by [1.0, 1.075, 1.0]: trial",
+   "rescaled 10 markers on their bodies by [1.0, 0.97867, 1.0]: trial",
+   "placed ['LHJC_study', 'RHJC_study'] on the joint centres they name: trial"
+  ],
+  "scale_factors": {
+   "pelvis": [
+    1.3204,
+    1.3204,
+    1.1261
+   ],
+   "sacrum": [
+    1.0779,
+    1.0779,
+    0.8992
+   ],
+   "femur_r": [
+    1.153,
+    1.153,
+    1.153
+   ],
+   "patella_r": [
+    1.153,
+    1.153,
+    1.153
+   ],
+   "tibia_r": [
+    1.1503,
+    1.1503,
+    1.1503
+   ],
+   "talus_r": [
+    1.112,
+    1.112,
+    1.112
+   ],
+   "calcn_r": [
+    1.112,
+    1.112,
+    1.112
+   ],
+   "toes_r": [
+    1.112,
+    1.112,
+    1.112
+   ],
+   "femur_l": [
+    1.1415,
+    1.1415,
+    1.1415
+   ],
+   "patella_l": [
+    1.1415,
+    1.1415,
+    1.1415
+   ],
+   "tibia_l": [
+    1.1562,
+    1.1562,
+    1.1562
+   ],
+   "talus_l": [
+    1.112,
+    1.112,
+    1.112
+   ],
+   "calcn_l": [
+    1.112,
+    1.112,
+    1.112
+   ],
+   "toes_l": [
+    1.112,
+    1.112,
+    1.112
+   ],
+   "lumbar5": [
+    1.0779,
+    1.0779,
+    0.8992
+   ],
+   "lumbar4": [
+    1.0779,
+    1.0779,
+    0.8992
+   ],
+   "lumbar3": [
+    1.0779,
+    1.0779,
+    0.8992
+   ],
+   "lumbar2": [
+    1.0779,
+    1.0779,
+    0.8992
+   ],
+   "lumbar1": [
+    1.0779,
+    1.0779,
+    0.8992
+   ],
+   "torso": [
+    1.0779,
+    1.0779,
+    0.8992
+   ],
+   "head": [
+    1.0779,
+    1.0779,
+    0.8992
+   ],
+   "Abdomen": [
+    1.0779,
+    1.0779,
+    0.8992
+   ],
+   "humerus_r": [
+    1.3326,
+    1.3326,
+    1.3326
+   ],
+   "ulna_r": [
+    1.1434,
+    1.1434,
+    1.1434
+   ],
+   "radius_r": [
+    1.1434,
+    1.1434,
+    1.1434
+   ],
+   "hand_r": [
+    1.1434,
+    1.1434,
+    1.1434
+   ],
+   "humerus_l": [
+    1.3326,
+    1.3326,
+    1.3326
+   ],
+   "ulna_l": [
+    1.1434,
+    1.1434,
+    1.1434
+   ],
+   "radius_l": [
+    1.1434,
+    1.1434,
+    1.1434
+   ],
+   "hand_l": [
+    1.1434,
+    1.1434,
+    1.1434
+   ]
+  }
+ },
+ "cams13_aug_base": {
+  "per_coordinate": {
+   "pelvis_tilt": {
+    "joint": "pelvis",
+    "plane": "sagittal",
+    "n": 575,
+    "rmse_deg": 5.243,
+    "bias_deg": -4.642,
+    "rmse_offset_removed_deg": 2.436,
+    "max_abs_deg": 9.875,
+    "reference_rom_deg": 36.616
+   },
+   "pelvis_list": {
+    "joint": "pelvis",
+    "plane": "frontal",
+    "n": 575,
+    "rmse_deg": 7.864,
+    "bias_deg": 3.425,
+    "rmse_offset_removed_deg": 7.079,
+    "max_abs_deg": 13.345,
+    "reference_rom_deg": 7.547
+   },
+   "pelvis_rotation": {
+    "joint": "pelvis",
+    "plane": "transverse",
+    "n": 575,
+    "rmse_deg": 3.382,
+    "bias_deg": -1.176,
+    "rmse_offset_removed_deg": 3.171,
+    "max_abs_deg": 8.328,
+    "reference_rom_deg": 7.969
+   },
+   "hip_flexion_r": {
+    "joint": "hip_r",
+    "plane": "sagittal",
+    "n": 575,
+    "rmse_deg": 11.073,
+    "bias_deg": 10.168,
+    "rmse_offset_removed_deg": 4.383,
+    "max_abs_deg": 19.947,
+    "reference_rom_deg": 104.712
+   },
+   "hip_adduction_r": {
+    "joint": "hip_r",
+    "plane": "frontal",
+    "n": 575,
+    "rmse_deg": 9.171,
+    "bias_deg": -4.58,
+    "rmse_offset_removed_deg": 7.945,
+    "max_abs_deg": 17.749,
+    "reference_rom_deg": 18.353
+   },
+   "hip_rotation_r": {
+    "joint": "hip_r",
+    "plane": "transverse",
+    "n": 575,
+    "rmse_deg": 5.051,
+    "bias_deg": -2.3,
+    "rmse_offset_removed_deg": 4.498,
+    "max_abs_deg": 10.337,
+    "reference_rom_deg": 25.262
+   },
+   "knee_angle_r": {
+    "joint": "knee_r",
+    "plane": "sagittal",
+    "n": 575,
+    "rmse_deg": 6.903,
+    "bias_deg": 5.705,
+    "rmse_offset_removed_deg": 3.886,
+    "max_abs_deg": 17.132,
+    "reference_rom_deg": 89.587
+   },
+   "ankle_angle_r": {
+    "joint": "ankle_r",
+    "plane": "sagittal",
+    "n": 575,
+    "rmse_deg": 6.586,
+    "bias_deg": -3.477,
+    "rmse_offset_removed_deg": 5.593,
+    "max_abs_deg": 21.489,
+    "reference_rom_deg": 33.294
+   },
+   "subtalar_angle_r": {
+    "joint": "subtalar_r",
+    "plane": "frontal",
+    "n": 575,
+    "rmse_deg": 10.384,
+    "bias_deg": -8.488,
+    "rmse_offset_removed_deg": 5.981,
+    "max_abs_deg": 21.327,
+    "reference_rom_deg": 18.087
+   },
+   "mtp_angle_r": {
+    "joint": "mtp_r",
+    "plane": "sagittal",
+    "n": 575,
+    "rmse_deg": 0.0,
+    "bias_deg": 0.0,
+    "rmse_offset_removed_deg": 0.0,
+    "max_abs_deg": 0.0,
+    "reference_rom_deg": 0.0
+   },
+   "hip_flexion_l": {
+    "joint": "hip_l",
+    "plane": "sagittal",
+    "n": 575,
+    "rmse_deg": 14.394,
+    "bias_deg": 13.006,
+    "rmse_offset_removed_deg": 6.168,
+    "max_abs_deg": 24.052,
+    "reference_rom_deg": 105.779
+   },
+   "hip_adduction_l": {
+    "joint": "hip_l",
+    "plane": "frontal",
+    "n": 575,
+    "rmse_deg": 7.796,
+    "bias_deg": 4.012,
+    "rmse_offset_removed_deg": 6.685,
+    "max_abs_deg": 14.635,
+    "reference_rom_deg": 6.745
+   },
+   "hip_rotation_l": {
+    "joint": "hip_l",
+    "plane": "transverse",
+    "n": 575,
+    "rmse_deg": 5.709,
+    "bias_deg": 0.384,
+    "rmse_offset_removed_deg": 5.696,
+    "max_abs_deg": 11.754,
+    "reference_rom_deg": 12.44
+   },
+   "knee_angle_l": {
+    "joint": "knee_l",
+    "plane": "sagittal",
+    "n": 575,
+    "rmse_deg": 9.846,
+    "bias_deg": 8.164,
+    "rmse_offset_removed_deg": 5.505,
+    "max_abs_deg": 19.465,
+    "reference_rom_deg": 88.31
+   },
+   "ankle_angle_l": {
+    "joint": "ankle_l",
+    "plane": "sagittal",
+    "n": 575,
+    "rmse_deg": 4.813,
+    "bias_deg": -3.973,
+    "rmse_offset_removed_deg": 2.716,
+    "max_abs_deg": 9.665,
+    "reference_rom_deg": 18.631
+   },
+   "subtalar_angle_l": {
+    "joint": "subtalar_l",
+    "plane": "frontal",
+    "n": 575,
+    "rmse_deg": 24.012,
+    "bias_deg": -23.546,
+    "rmse_offset_removed_deg": 4.712,
+    "max_abs_deg": 31.585,
+    "reference_rom_deg": 18.932
+   },
+   "mtp_angle_l": {
+    "joint": "mtp_l",
+    "plane": "sagittal",
+    "n": 575,
+    "rmse_deg": 0.0,
+    "bias_deg": 0.0,
+    "rmse_offset_removed_deg": 0.0,
+    "max_abs_deg": 0.0,
+    "reference_rom_deg": 0.0
+   },
+   "arm_flex_r": {
+    "joint": "shoulder_r",
+    "plane": "sagittal",
+    "n": 575,
+    "rmse_deg": 6.45,
+    "bias_deg": 2.168,
+    "rmse_offset_removed_deg": 6.074,
+    "max_abs_deg": 19.536,
+    "reference_rom_deg": 122.152
+   },
+   "arm_add_r": {
+    "joint": "shoulder_r",
+    "plane": "frontal",
+    "n": 575,
+    "rmse_deg": 4.738,
+    "bias_deg": -2.16,
+    "rmse_offset_removed_deg": 4.216,
+    "max_abs_deg": 10.818,
+    "reference_rom_deg": 14.491
+   },
+   "arm_rot_r": {
+    "joint": "shoulder_r",
+    "plane": "transverse",
+    "n": 575,
+    "rmse_deg": 12.653,
+    "bias_deg": 6.472,
+    "rmse_offset_removed_deg": 10.873,
+    "max_abs_deg": 38.904,
+    "reference_rom_deg": 49.2
+   },
+   "elbow_flex_r": {
+    "joint": "elbow_r",
+    "plane": "sagittal",
+    "n": 575,
+    "rmse_deg": 6.974,
+    "bias_deg": -1.586,
+    "rmse_offset_removed_deg": 6.791,
+    "max_abs_deg": 18.599,
+    "reference_rom_deg": 82.648
+   },
+   "pro_sup_r": {
+    "joint": "forearm_r",
+    "plane": "transverse",
+    "n": 575,
+    "rmse_deg": 17.27,
+    "bias_deg": -14.875,
+    "rmse_offset_removed_deg": 8.773,
+    "max_abs_deg": 26.781,
+    "reference_rom_deg": 15.044
+   },
+   "arm_flex_l": {
+    "joint": "shoulder_l",
+    "plane": "sagittal",
+    "n": 575,
+    "rmse_deg": 12.178,
+    "bias_deg": 2.649,
+    "rmse_offset_removed_deg": 11.886,
+    "max_abs_deg": 37.265,
+    "reference_rom_deg": 116.343
+   },
+   "arm_add_l": {
+    "joint": "shoulder_l",
+    "plane": "frontal",
+    "n": 575,
+    "rmse_deg": 12.421,
+    "bias_deg": -10.889,
+    "rmse_offset_removed_deg": 5.977,
+    "max_abs_deg": 22.07,
+    "reference_rom_deg": 19.402
+   },
+   "arm_rot_l": {
+    "joint": "shoulder_l",
+    "plane": "transverse",
+    "n": 575,
+    "rmse_deg": 21.41,
+    "bias_deg": 8.615,
+    "rmse_offset_removed_deg": 19.6,
+    "max_abs_deg": 64.114,
+    "reference_rom_deg": 46.102
+   },
+   "elbow_flex_l": {
+    "joint": "elbow_l",
+    "plane": "sagittal",
+    "n": 575,
+    "rmse_deg": 8.634,
+    "bias_deg": 5.472,
+    "rmse_offset_removed_deg": 6.679,
+    "max_abs_deg": 23.286,
+    "reference_rom_deg": 79.835
+   },
+   "pro_sup_l": {
+    "joint": "forearm_l",
+    "plane": "transverse",
+    "n": 575,
+    "rmse_deg": 13.944,
+    "bias_deg": 7.019,
+    "rmse_offset_removed_deg": 12.049,
+    "max_abs_deg": 41.776,
+    "reference_rom_deg": 46.381
+   },
+   "torso.sagittal": {
+    "joint": "torso_segment",
+    "plane": "sagittal",
+    "n": 575,
+    "rmse_deg": 2.767,
+    "bias_deg": 0.808,
+    "rmse_offset_removed_deg": 2.646,
+    "max_abs_deg": 11.916,
+    "reference_rom_deg": 82.278
+   },
+   "torso.frontal": {
+    "joint": "torso_segment",
+    "plane": "frontal",
+    "n": 575,
+    "rmse_deg": 3.435,
+    "bias_deg": -2.123,
+    "rmse_offset_removed_deg": 2.7,
+    "max_abs_deg": 6.891,
+    "reference_rom_deg": 7.882
+   },
+   "pelvis.sagittal": {
+    "joint": "pelvis_segment",
+    "plane": "sagittal",
+    "n": 575,
+    "rmse_deg": 5.09,
+    "bias_deg": 4.393,
+    "rmse_offset_removed_deg": 2.572,
+    "max_abs_deg": 9.049,
+    "reference_rom_deg": 36.156
+   },
+   "pelvis.frontal": {
+    "joint": "pelvis_segment",
+    "plane": "frontal",
+    "n": 575,
+    "rmse_deg": 8.908,
+    "bias_deg": 2.621,
+    "rmse_offset_removed_deg": 8.514,
+    "max_abs_deg": 14.087,
+    "reference_rom_deg": 10.186
+   },
+   "knee_fppa_r": {
+    "joint": "knee_r",
+    "plane": "frontal",
+    "n": 575,
+    "rmse_deg": 4.399,
+    "bias_deg": -0.605,
+    "rmse_offset_removed_deg": 4.358,
+    "max_abs_deg": 21.831,
+    "reference_rom_deg": 44.352
+   },
+   "knee_fppa_l": {
+    "joint": "knee_l",
+    "plane": "frontal",
+    "n": 575,
+    "rmse_deg": 10.406,
+    "bias_deg": -6.643,
+    "rmse_offset_removed_deg": 8.01,
+    "max_abs_deg": 26.706,
+    "reference_rom_deg": 26.828
+   },
+   "lumbar_total.sagittal": {
+    "joint": "lumbar",
+    "plane": "sagittal",
+    "n": 575,
+    "rmse_deg": 5.801,
+    "bias_deg": 3.939,
+    "rmse_offset_removed_deg": 4.259,
+    "max_abs_deg": 13.474,
+    "reference_rom_deg": 50.171,
+    "reference_column": "lumbar_extension"
+   },
+   "lumbar_total.frontal": {
+    "joint": "lumbar",
+    "plane": "frontal",
+    "n": 575,
+    "rmse_deg": 11.107,
+    "bias_deg": -4.931,
+    "rmse_offset_removed_deg": 9.953,
+    "max_abs_deg": 20.137,
+    "reference_rom_deg": 9.903,
+    "reference_column": "lumbar_bending"
+   },
+   "lumbar_total.transverse": {
+    "joint": "lumbar",
+    "plane": "transverse",
+    "n": 575,
+    "rmse_deg": 6.099,
+    "bias_deg": -0.191,
+    "rmse_offset_removed_deg": 6.096,
+    "max_abs_deg": 11.874,
+    "reference_rom_deg": 8.286,
+    "reference_column": "lumbar_rotation"
+   }
+  },
+  "coverage": {
+   "compared_s": 9.567,
+   "overlap_s": 9.583,
+   "fraction": 0.998,
+   "min_fraction": 0.8
+  },
+  "time_lag_s": 0.06674799999999692,
+  "ik_marker_rms_m": {
+   "mean": 0.0298,
+   "p95": 0.0456,
+   "max": 0.0597
+  },
+  "model_notes": [],
+  "scale_factors": {
+   "pelvis": [
+    1.2836,
+    1.2836,
+    1.353
+   ],
+   "sacrum": [
+    1.1238,
+    1.1238,
+    0.9234
+   ],
+   "femur_r": [
+    1.1095,
+    1.1095,
+    1.1095
+   ],
+   "patella_r": [
+    1.1095,
+    1.1095,
+    1.1095
+   ],
+   "tibia_r": [
+    1.2005,
+    1.2005,
+    1.2005
+   ],
+   "talus_r": [
+    1.0892,
+    1.0892,
+    1.0892
+   ],
+   "calcn_r": [
+    1.0892,
+    1.0892,
+    1.0892
+   ],
+   "toes_r": [
+    1.0892,
+    1.0892,
+    1.0892
+   ],
+   "femur_l": [
+    1.1466,
+    1.1466,
+    1.1466
+   ],
+   "patella_l": [
+    1.1466,
+    1.1466,
+    1.1466
+   ],
+   "tibia_l": [
+    1.3325,
+    1.3325,
+    1.3325
+   ],
+   "talus_l": [
+    1.0892,
+    1.0892,
+    1.0892
+   ],
+   "calcn_l": [
+    1.0892,
+    1.0892,
+    1.0892
+   ],
+   "toes_l": [
+    1.0892,
+    1.0892,
+    1.0892
+   ],
+   "lumbar5": [
+    1.1238,
+    1.1238,
+    0.9234
+   ],
+   "lumbar4": [
+    1.1238,
+    1.1238,
+    0.9234
+   ],
+   "lumbar3": [
+    1.1238,
+    1.1238,
+    0.9234
+   ],
+   "lumbar2": [
+    1.1238,
+    1.1238,
+    0.9234
+   ],
+   "lumbar1": [
+    1.1238,
+    1.1238,
+    0.9234
+   ],
+   "torso": [
+    1.1238,
+    1.1238,
+    0.9234
+   ],
+   "head": [
+    1.1238,
+    1.1238,
+    0.9234
+   ],
+   "Abdomen": [
+    1.1238,
+    1.1238,
+    0.9234
+   ],
+   "humerus_r": [
+    1.1344,
+    1.1344,
+    1.1344
+   ],
+   "ulna_r": [
+    1.2309,
+    1.2309,
+    1.2309
+   ],
+   "radius_r": [
+    1.2309,
+    1.2309,
+    1.2309
+   ],
+   "hand_r": [
+    1.2309,
+    1.2309,
+    1.2309
+   ],
+   "humerus_l": [
+    1.1344,
+    1.1344,
+    1.1344
+   ],
+   "ulna_l": [
+    1.2309,
+    1.2309,
+    1.2309
+   ],
+   "radius_l": [
+    1.2309,
+    1.2309,
+    1.2309
+   ],
+   "hand_l": [
+    1.2309,
+    1.2309,
+    1.2309
+   ]
+  }
+ },
+ "cams13_aug_fix": {
+  "per_coordinate": {
+   "pelvis_tilt": {
+    "joint": "pelvis",
+    "plane": "sagittal",
+    "n": 575,
+    "rmse_deg": 2.586,
+    "bias_deg": -0.64,
+    "rmse_offset_removed_deg": 2.506,
+    "max_abs_deg": 6.905,
+    "reference_rom_deg": 36.616
+   },
+   "pelvis_list": {
+    "joint": "pelvis",
+    "plane": "frontal",
+    "n": 575,
+    "rmse_deg": 7.666,
+    "bias_deg": 3.45,
+    "rmse_offset_removed_deg": 6.846,
+    "max_abs_deg": 13.135,
+    "reference_rom_deg": 7.547
+   },
+   "pelvis_rotation": {
+    "joint": "pelvis",
+    "plane": "transverse",
+    "n": 575,
+    "rmse_deg": 3.288,
+    "bias_deg": -1.558,
+    "rmse_offset_removed_deg": 2.895,
+    "max_abs_deg": 8.275,
+    "reference_rom_deg": 7.969
+   },
+   "hip_flexion_r": {
+    "joint": "hip_r",
+    "plane": "sagittal",
+    "n": 575,
+    "rmse_deg": 6.098,
+    "bias_deg": 4.214,
+    "rmse_offset_removed_deg": 4.407,
+    "max_abs_deg": 14.393,
+    "reference_rom_deg": 104.712
+   },
+   "hip_adduction_r": {
+    "joint": "hip_r",
+    "plane": "frontal",
+    "n": 575,
+    "rmse_deg": 9.37,
+    "bias_deg": -5.513,
+    "rmse_offset_removed_deg": 7.577,
+    "max_abs_deg": 18.185,
+    "reference_rom_deg": 18.353
+   },
+   "hip_rotation_r": {
+    "joint": "hip_r",
+    "plane": "transverse",
+    "n": 575,
+    "rmse_deg": 6.812,
+    "bias_deg": -5.415,
+    "rmse_offset_removed_deg": 4.133,
+    "max_abs_deg": 12.229,
+    "reference_rom_deg": 25.262
+   },
+   "knee_angle_r": {
+    "joint": "knee_r",
+    "plane": "sagittal",
+    "n": 575,
+    "rmse_deg": 5.468,
+    "bias_deg": 3.855,
+    "rmse_offset_removed_deg": 3.878,
+    "max_abs_deg": 15.267,
+    "reference_rom_deg": 89.587
+   },
+   "ankle_angle_r": {
+    "joint": "ankle_r",
+    "plane": "sagittal",
+    "n": 575,
+    "rmse_deg": 7.472,
+    "bias_deg": -3.504,
+    "rmse_offset_removed_deg": 6.6,
+    "max_abs_deg": 23.429,
+    "reference_rom_deg": 33.294
+   },
+   "subtalar_angle_r": {
+    "joint": "subtalar_r",
+    "plane": "frontal",
+    "n": 575,
+    "rmse_deg": 9.62,
+    "bias_deg": -2.249,
+    "rmse_offset_removed_deg": 9.354,
+    "max_abs_deg": 21.209,
+    "reference_rom_deg": 18.087
+   },
+   "mtp_angle_r": {
+    "joint": "mtp_r",
+    "plane": "sagittal",
+    "n": 575,
+    "rmse_deg": 0.0,
+    "bias_deg": 0.0,
+    "rmse_offset_removed_deg": 0.0,
+    "max_abs_deg": 0.0,
+    "reference_rom_deg": 0.0
+   },
+   "hip_flexion_l": {
+    "joint": "hip_l",
+    "plane": "sagittal",
+    "n": 575,
+    "rmse_deg": 9.059,
+    "bias_deg": 6.969,
+    "rmse_offset_removed_deg": 5.787,
+    "max_abs_deg": 17.83,
+    "reference_rom_deg": 105.779
+   },
+   "hip_adduction_l": {
+    "joint": "hip_l",
+    "plane": "frontal",
+    "n": 575,
+    "rmse_deg": 7.15,
+    "bias_deg": 2.533,
+    "rmse_offset_removed_deg": 6.686,
+    "max_abs_deg": 13.226,
+    "reference_rom_deg": 6.745
+   },
+   "hip_rotation_l": {
+    "joint": "hip_l",
+    "plane": "transverse",
+    "n": 575,
+    "rmse_deg": 7.584,
+    "bias_deg": -2.821,
+    "rmse_offset_removed_deg": 7.04,
+    "max_abs_deg": 12.756,
+    "reference_rom_deg": 12.44
+   },
+   "knee_angle_l": {
+    "joint": "knee_l",
+    "plane": "sagittal",
+    "n": 575,
+    "rmse_deg": 7.97,
+    "bias_deg": 6.278,
+    "rmse_offset_removed_deg": 4.909,
+    "max_abs_deg": 16.422,
+    "reference_rom_deg": 88.31
+   },
+   "ankle_angle_l": {
+    "joint": "ankle_l",
+    "plane": "sagittal",
+    "n": 575,
+    "rmse_deg": 4.253,
+    "bias_deg": -3.582,
+    "rmse_offset_removed_deg": 2.294,
+    "max_abs_deg": 9.745,
+    "reference_rom_deg": 18.631
+   },
+   "subtalar_angle_l": {
+    "joint": "subtalar_l",
+    "plane": "frontal",
+    "n": 575,
+    "rmse_deg": 17.323,
+    "bias_deg": -16.964,
+    "rmse_offset_removed_deg": 3.51,
+    "max_abs_deg": 24.61,
+    "reference_rom_deg": 18.932
+   },
+   "mtp_angle_l": {
+    "joint": "mtp_l",
+    "plane": "sagittal",
+    "n": 575,
+    "rmse_deg": 0.0,
+    "bias_deg": 0.0,
+    "rmse_offset_removed_deg": 0.0,
+    "max_abs_deg": 0.0,
+    "reference_rom_deg": 0.0
+   },
+   "arm_flex_r": {
+    "joint": "shoulder_r",
+    "plane": "sagittal",
+    "n": 575,
+    "rmse_deg": 6.655,
+    "bias_deg": 2.368,
+    "rmse_offset_removed_deg": 6.22,
+    "max_abs_deg": 20.968,
+    "reference_rom_deg": 122.152
+   },
+   "arm_add_r": {
+    "joint": "shoulder_r",
+    "plane": "frontal",
+    "n": 575,
+    "rmse_deg": 5.059,
+    "bias_deg": -2.717,
+    "rmse_offset_removed_deg": 4.267,
+    "max_abs_deg": 11.621,
+    "reference_rom_deg": 14.491
+   },
+   "arm_rot_r": {
+    "joint": "shoulder_r",
+    "plane": "transverse",
+    "n": 575,
+    "rmse_deg": 12.454,
+    "bias_deg": 6.412,
+    "rmse_offset_removed_deg": 10.677,
+    "max_abs_deg": 38.94,
+    "reference_rom_deg": 49.2
+   },
+   "elbow_flex_r": {
+    "joint": "elbow_r",
+    "plane": "sagittal",
+    "n": 575,
+    "rmse_deg": 5.38,
+    "bias_deg": 0.202,
+    "rmse_offset_removed_deg": 5.376,
+    "max_abs_deg": 18.282,
+    "reference_rom_deg": 82.648
+   },
+   "pro_sup_r": {
+    "joint": "forearm_r",
+    "plane": "transverse",
+    "n": 575,
+    "rmse_deg": 17.693,
+    "bias_deg": -15.538,
+    "rmse_offset_removed_deg": 8.462,
+    "max_abs_deg": 27.348,
+    "reference_rom_deg": 15.044
+   },
+   "arm_flex_l": {
+    "joint": "shoulder_l",
+    "plane": "sagittal",
+    "n": 575,
+    "rmse_deg": 13.338,
+    "bias_deg": 3.25,
+    "rmse_offset_removed_deg": 12.936,
+    "max_abs_deg": 40.787,
+    "reference_rom_deg": 116.343
+   },
+   "arm_add_l": {
+    "joint": "shoulder_l",
+    "plane": "frontal",
+    "n": 575,
+    "rmse_deg": 12.799,
+    "bias_deg": -11.22,
+    "rmse_offset_removed_deg": 6.159,
+    "max_abs_deg": 22.546,
+    "reference_rom_deg": 19.402
+   },
+   "arm_rot_l": {
+    "joint": "shoulder_l",
+    "plane": "transverse",
+    "n": 575,
+    "rmse_deg": 22.008,
+    "bias_deg": 8.909,
+    "rmse_offset_removed_deg": 20.124,
+    "max_abs_deg": 65.992,
+    "reference_rom_deg": 46.102
+   },
+   "elbow_flex_l": {
+    "joint": "elbow_l",
+    "plane": "sagittal",
+    "n": 575,
+    "rmse_deg": 8.952,
+    "bias_deg": 7.106,
+    "rmse_offset_removed_deg": 5.445,
+    "max_abs_deg": 22.898,
+    "reference_rom_deg": 79.835
+   },
+   "pro_sup_l": {
+    "joint": "forearm_l",
+    "plane": "transverse",
+    "n": 575,
+    "rmse_deg": 13.079,
+    "bias_deg": 5.87,
+    "rmse_offset_removed_deg": 11.688,
+    "max_abs_deg": 39.946,
+    "reference_rom_deg": 46.381
+   },
+   "torso.sagittal": {
+    "joint": "torso_segment",
+    "plane": "sagittal",
+    "n": 575,
+    "rmse_deg": 2.352,
+    "bias_deg": 0.395,
+    "rmse_offset_removed_deg": 2.319,
+    "max_abs_deg": 9.943,
+    "reference_rom_deg": 82.278
+   },
+   "torso.frontal": {
+    "joint": "torso_segment",
+    "plane": "frontal",
+    "n": 575,
+    "rmse_deg": 3.197,
+    "bias_deg": -2.096,
+    "rmse_offset_removed_deg": 2.414,
+    "max_abs_deg": 6.359,
+    "reference_rom_deg": 7.882
+   },
+   "pelvis.sagittal": {
+    "joint": "pelvis_segment",
+    "plane": "sagittal",
+    "n": 575,
+    "rmse_deg": 2.703,
+    "bias_deg": 0.457,
+    "rmse_offset_removed_deg": 2.665,
+    "max_abs_deg": 7.124,
+    "reference_rom_deg": 36.156
+   },
+   "pelvis.frontal": {
+    "joint": "pelvis_segment",
+    "plane": "frontal",
+    "n": 575,
+    "rmse_deg": 8.504,
+    "bias_deg": 2.457,
+    "rmse_offset_removed_deg": 8.141,
+    "max_abs_deg": 13.424,
+    "reference_rom_deg": 10.186
+   },
+   "knee_fppa_r": {
+    "joint": "knee_r",
+    "plane": "frontal",
+    "n": 575,
+    "rmse_deg": 4.208,
+    "bias_deg": -1.219,
+    "rmse_offset_removed_deg": 4.027,
+    "max_abs_deg": 18.634,
+    "reference_rom_deg": 44.352
+   },
+   "knee_fppa_l": {
+    "joint": "knee_l",
+    "plane": "frontal",
+    "n": 575,
+    "rmse_deg": 10.277,
+    "bias_deg": -7.0,
+    "rmse_offset_removed_deg": 7.525,
+    "max_abs_deg": 24.723,
+    "reference_rom_deg": 26.828
+   },
+   "lumbar_total.sagittal": {
+    "joint": "lumbar",
+    "plane": "sagittal",
+    "n": 575,
+    "rmse_deg": 3.985,
+    "bias_deg": 0.352,
+    "rmse_offset_removed_deg": 3.969,
+    "max_abs_deg": 15.183,
+    "reference_rom_deg": 50.171,
+    "reference_column": "lumbar_extension"
+   },
+   "lumbar_total.frontal": {
+    "joint": "lumbar",
+    "plane": "frontal",
+    "n": 575,
+    "rmse_deg": 10.633,
+    "bias_deg": -4.764,
+    "rmse_offset_removed_deg": 9.506,
+    "max_abs_deg": 19.113,
+    "reference_rom_deg": 9.903,
+    "reference_column": "lumbar_bending"
+   },
+   "lumbar_total.transverse": {
+    "joint": "lumbar",
+    "plane": "transverse",
+    "n": 575,
+    "rmse_deg": 5.935,
+    "bias_deg": 0.028,
+    "rmse_offset_removed_deg": 5.935,
+    "max_abs_deg": 11.761,
+    "reference_rom_deg": 8.286,
+    "reference_column": "lumbar_rotation"
+   }
+  },
+  "coverage": {
+   "compared_s": 9.567,
+   "overlap_s": 9.583,
+   "fraction": 0.998,
+   "min_fraction": 0.8
+  },
+  "time_lag_s": 0.06674799999999692,
+  "ik_marker_rms_m": {
+   "mean": 0.0249,
+   "p95": 0.0401,
+   "max": 0.0541
+  },
+  "model_notes": [
+   "rescaled 10 markers on their bodies by [1.0, 1.075, 1.0]: trial",
+   "rescaled 10 markers on their bodies by [1.0, 0.97867, 1.0]: trial",
+   "placed ['LHJC_study', 'RHJC_study'] on the joint centres they name: trial"
+  ],
+  "scale_factors": {
+   "pelvis": [
+    1.2836,
+    1.2836,
+    1.2519
+   ],
+   "sacrum": [
+    1.1238,
+    1.1238,
+    0.9234
+   ],
+   "femur_r": [
+    1.1016,
+    1.1016,
+    1.1016
+   ],
+   "patella_r": [
+    1.1016,
+    1.1016,
+    1.1016
+   ],
+   "tibia_r": [
+    1.0929,
+    1.0929,
+    1.0929
+   ],
+   "talus_r": [
+    1.0892,
+    1.0892,
+    1.0892
+   ],
+   "calcn_r": [
+    1.0892,
+    1.0892,
+    1.0892
+   ],
+   "toes_r": [
+    1.0892,
+    1.0892,
+    1.0892
+   ],
+   "femur_l": [
+    1.1384,
+    1.1384,
+    1.1384
+   ],
+   "patella_l": [
+    1.1384,
+    1.1384,
+    1.1384
+   ],
+   "tibia_l": [
+    1.2131,
+    1.2131,
+    1.2131
+   ],
+   "talus_l": [
+    1.0892,
+    1.0892,
+    1.0892
+   ],
+   "calcn_l": [
+    1.0892,
+    1.0892,
+    1.0892
+   ],
+   "toes_l": [
+    1.0892,
+    1.0892,
+    1.0892
+   ],
+   "lumbar5": [
+    1.1238,
+    1.1238,
+    0.9234
+   ],
+   "lumbar4": [
+    1.1238,
+    1.1238,
+    0.9234
+   ],
+   "lumbar3": [
+    1.1238,
+    1.1238,
+    0.9234
+   ],
+   "lumbar2": [
+    1.1238,
+    1.1238,
+    0.9234
+   ],
+   "lumbar1": [
+    1.1238,
+    1.1238,
+    0.9234
+   ],
+   "torso": [
+    1.1238,
+    1.1238,
+    0.9234
+   ],
+   "head": [
+    1.1238,
+    1.1238,
+    0.9234
+   ],
+   "Abdomen": [
+    1.1238,
+    1.1238,
+    0.9234
+   ],
+   "humerus_r": [
+    1.1344,
+    1.1344,
+    1.1344
+   ],
+   "ulna_r": [
+    1.2309,
+    1.2309,
+    1.2309
+   ],
+   "radius_r": [
+    1.2309,
+    1.2309,
+    1.2309
+   ],
+   "hand_r": [
+    1.2309,
+    1.2309,
+    1.2309
+   ],
+   "humerus_l": [
+    1.1344,
+    1.1344,
+    1.1344
+   ],
+   "ulna_l": [
+    1.2309,
+    1.2309,
+    1.2309
+   ],
+   "radius_l": [
+    1.2309,
+    1.2309,
+    1.2309
+   ],
+   "hand_l": [
+    1.2309,
+    1.2309,
+    1.2309
+   ]
+  }
+ },
+ "mono_aug_base": {
+  "per_coordinate": {
+   "pelvis_tilt": {
+    "joint": "pelvis",
+    "plane": "sagittal",
+    "n": 577,
+    "rmse_deg": 20.11,
+    "bias_deg": 18.784,
+    "rmse_offset_removed_deg": 7.181,
+    "max_abs_deg": 40.588,
+    "reference_rom_deg": 36.615
+   },
+   "pelvis_list": {
+    "joint": "pelvis",
+    "plane": "frontal",
+    "n": 577,
+    "rmse_deg": 4.34,
+    "bias_deg": -1.786,
+    "rmse_offset_removed_deg": 3.956,
+    "max_abs_deg": 9.329,
+    "reference_rom_deg": 7.546
+   },
+   "pelvis_rotation": {
+    "joint": "pelvis",
+    "plane": "transverse",
+    "n": 577,
+    "rmse_deg": 7.874,
+    "bias_deg": 6.694,
+    "rmse_offset_removed_deg": 4.145,
+    "max_abs_deg": 11.357,
+    "reference_rom_deg": 7.969
+   },
+   "hip_flexion_r": {
+    "joint": "hip_r",
+    "plane": "sagittal",
+    "n": 577,
+    "rmse_deg": 10.413,
+    "bias_deg": -8.296,
+    "rmse_offset_removed_deg": 6.292,
+    "max_abs_deg": 23.464,
+    "reference_rom_deg": 104.712
+   },
+   "hip_adduction_r": {
+    "joint": "hip_r",
+    "plane": "frontal",
+    "n": 577,
+    "rmse_deg": 4.552,
+    "bias_deg": 3.022,
+    "rmse_offset_removed_deg": 3.405,
+    "max_abs_deg": 9.015,
+    "reference_rom_deg": 18.353
+   },
+   "hip_rotation_r": {
+    "joint": "hip_r",
+    "plane": "transverse",
+    "n": 577,
+    "rmse_deg": 4.45,
+    "bias_deg": -0.017,
+    "rmse_offset_removed_deg": 4.45,
+    "max_abs_deg": 11.829,
+    "reference_rom_deg": 25.262
+   },
+   "knee_angle_r": {
+    "joint": "knee_r",
+    "plane": "sagittal",
+    "n": 577,
+    "rmse_deg": 14.919,
+    "bias_deg": 13.039,
+    "rmse_offset_removed_deg": 7.25,
+    "max_abs_deg": 26.599,
+    "reference_rom_deg": 89.586
+   },
+   "ankle_angle_r": {
+    "joint": "ankle_r",
+    "plane": "sagittal",
+    "n": 577,
+    "rmse_deg": 13.35,
+    "bias_deg": 1.524,
+    "rmse_offset_removed_deg": 13.263,
+    "max_abs_deg": 41.363,
+    "reference_rom_deg": 33.292
+   },
+   "subtalar_angle_r": {
+    "joint": "subtalar_r",
+    "plane": "frontal",
+    "n": 577,
+    "rmse_deg": 12.294,
+    "bias_deg": -11.498,
+    "rmse_offset_removed_deg": 4.352,
+    "max_abs_deg": 21.146,
+    "reference_rom_deg": 18.087
+   },
+   "mtp_angle_r": {
+    "joint": "mtp_r",
+    "plane": "sagittal",
+    "n": 577,
+    "rmse_deg": 0.0,
+    "bias_deg": 0.0,
+    "rmse_offset_removed_deg": 0.0,
+    "max_abs_deg": 0.0,
+    "reference_rom_deg": 0.0
+   },
+   "hip_flexion_l": {
+    "joint": "hip_l",
+    "plane": "sagittal",
+    "n": 577,
+    "rmse_deg": 9.579,
+    "bias_deg": -4.905,
+    "rmse_offset_removed_deg": 8.228,
+    "max_abs_deg": 30.146,
+    "reference_rom_deg": 105.778
+   },
+   "hip_adduction_l": {
+    "joint": "hip_l",
+    "plane": "frontal",
+    "n": 577,
+    "rmse_deg": 4.24,
+    "bias_deg": -2.481,
+    "rmse_offset_removed_deg": 3.438,
+    "max_abs_deg": 8.631,
+    "reference_rom_deg": 6.744
+   },
+   "hip_rotation_l": {
+    "joint": "hip_l",
+    "plane": "transverse",
+    "n": 577,
+    "rmse_deg": 17.169,
+    "bias_deg": 16.83,
+    "rmse_offset_removed_deg": 3.395,
+    "max_abs_deg": 27.302,
+    "reference_rom_deg": 12.44
+   },
+   "knee_angle_l": {
+    "joint": "knee_l",
+    "plane": "sagittal",
+    "n": 577,
+    "rmse_deg": 21.485,
+    "bias_deg": 19.246,
+    "rmse_offset_removed_deg": 9.549,
+    "max_abs_deg": 33.155,
+    "reference_rom_deg": 88.31
+   },
+   "ankle_angle_l": {
+    "joint": "ankle_l",
+    "plane": "sagittal",
+    "n": 577,
+    "rmse_deg": 18.453,
+    "bias_deg": -13.269,
+    "rmse_offset_removed_deg": 12.824,
+    "max_abs_deg": 65.606,
+    "reference_rom_deg": 18.63
+   },
+   "subtalar_angle_l": {
+    "joint": "subtalar_l",
+    "plane": "frontal",
+    "n": 577,
+    "rmse_deg": 20.353,
+    "bias_deg": -18.343,
+    "rmse_offset_removed_deg": 8.819,
+    "max_abs_deg": 31.958,
+    "reference_rom_deg": 18.994
+   },
+   "mtp_angle_l": {
+    "joint": "mtp_l",
+    "plane": "sagittal",
+    "n": 577,
+    "rmse_deg": 0.0,
+    "bias_deg": 0.0,
+    "rmse_offset_removed_deg": 0.0,
+    "max_abs_deg": 0.0,
+    "reference_rom_deg": 0.0
+   },
+   "arm_flex_r": {
+    "joint": "shoulder_r",
+    "plane": "sagittal",
+    "n": 577,
+    "rmse_deg": 19.316,
+    "bias_deg": 0.762,
+    "rmse_offset_removed_deg": 19.301,
+    "max_abs_deg": 50.536,
+    "reference_rom_deg": 122.151
+   },
+   "arm_add_r": {
+    "joint": "shoulder_r",
+    "plane": "frontal",
+    "n": 577,
+    "rmse_deg": 4.731,
+    "bias_deg": -3.717,
+    "rmse_offset_removed_deg": 2.926,
+    "max_abs_deg": 11.024,
+    "reference_rom_deg": 14.49
+   },
+   "arm_rot_r": {
+    "joint": "shoulder_r",
+    "plane": "transverse",
+    "n": 577,
+    "rmse_deg": 8.775,
+    "bias_deg": -7.1,
+    "rmse_offset_removed_deg": 5.157,
+    "max_abs_deg": 17.91,
+    "reference_rom_deg": 49.196
+   },
+   "elbow_flex_r": {
+    "joint": "elbow_r",
+    "plane": "sagittal",
+    "n": 577,
+    "rmse_deg": 10.972,
+    "bias_deg": -4.919,
+    "rmse_offset_removed_deg": 9.807,
+    "max_abs_deg": 24.611,
+    "reference_rom_deg": 82.645
+   },
+   "pro_sup_r": {
+    "joint": "forearm_r",
+    "plane": "transverse",
+    "n": 577,
+    "rmse_deg": 6.754,
+    "bias_deg": -3.862,
+    "rmse_offset_removed_deg": 5.542,
+    "max_abs_deg": 14.188,
+    "reference_rom_deg": 15.044
+   },
+   "arm_flex_l": {
+    "joint": "shoulder_l",
+    "plane": "sagittal",
+    "n": 577,
+    "rmse_deg": 17.909,
+    "bias_deg": -5.271,
+    "rmse_offset_removed_deg": 17.116,
+    "max_abs_deg": 50.213,
+    "reference_rom_deg": 116.342
+   },
+   "arm_add_l": {
+    "joint": "shoulder_l",
+    "plane": "frontal",
+    "n": 577,
+    "rmse_deg": 23.493,
+    "bias_deg": -22.819,
+    "rmse_offset_removed_deg": 5.585,
+    "max_abs_deg": 32.768,
+    "reference_rom_deg": 19.401
+   },
+   "arm_rot_l": {
+    "joint": "shoulder_l",
+    "plane": "transverse",
+    "n": 577,
+    "rmse_deg": 4.239,
+    "bias_deg": 0.751,
+    "rmse_offset_removed_deg": 4.171,
+    "max_abs_deg": 11.951,
+    "reference_rom_deg": 46.101
+   },
+   "elbow_flex_l": {
+    "joint": "elbow_l",
+    "plane": "sagittal",
+    "n": 577,
+    "rmse_deg": 16.693,
+    "bias_deg": 9.443,
+    "rmse_offset_removed_deg": 13.766,
+    "max_abs_deg": 40.537,
+    "reference_rom_deg": 79.835
+   },
+   "pro_sup_l": {
+    "joint": "forearm_l",
+    "plane": "transverse",
+    "n": 577,
+    "rmse_deg": 28.62,
+    "bias_deg": 25.361,
+    "rmse_offset_removed_deg": 13.264,
+    "max_abs_deg": 45.678,
+    "reference_rom_deg": 46.381
+   },
+   "torso.sagittal": {
+    "joint": "torso_segment",
+    "plane": "sagittal",
+    "n": 577,
+    "rmse_deg": 9.44,
+    "bias_deg": 5.951,
+    "rmse_offset_removed_deg": 7.328,
+    "max_abs_deg": 18.759,
+    "reference_rom_deg": 82.278
+   },
+   "torso.frontal": {
+    "joint": "torso_segment",
+    "plane": "frontal",
+    "n": 577,
+    "rmse_deg": 7.22,
+    "bias_deg": 6.759,
+    "rmse_offset_removed_deg": 2.538,
+    "max_abs_deg": 13.964,
+    "reference_rom_deg": 7.882
+   },
+   "pelvis.sagittal": {
+    "joint": "pelvis_segment",
+    "plane": "sagittal",
+    "n": 577,
+    "rmse_deg": 19.814,
+    "bias_deg": -18.459,
+    "rmse_offset_removed_deg": 7.203,
+    "max_abs_deg": 40.729,
+    "reference_rom_deg": 36.156
+   },
+   "pelvis.frontal": {
+    "joint": "pelvis_segment",
+    "plane": "frontal",
+    "n": 577,
+    "rmse_deg": 5.287,
+    "bias_deg": -4.098,
+    "rmse_offset_removed_deg": 3.34,
+    "max_abs_deg": 11.716,
+    "reference_rom_deg": 10.186
+   },
+   "knee_fppa_r": {
+    "joint": "knee_r",
+    "plane": "frontal",
+    "n": 577,
+    "rmse_deg": 5.931,
+    "bias_deg": -1.544,
+    "rmse_offset_removed_deg": 5.727,
+    "max_abs_deg": 26.951,
+    "reference_rom_deg": 44.35
+   },
+   "knee_fppa_l": {
+    "joint": "knee_l",
+    "plane": "frontal",
+    "n": 577,
+    "rmse_deg": 7.138,
+    "bias_deg": 4.591,
+    "rmse_offset_removed_deg": 5.466,
+    "max_abs_deg": 20.672,
+    "reference_rom_deg": 26.827
+   },
+   "lumbar_total.sagittal": {
+    "joint": "lumbar",
+    "plane": "sagittal",
+    "n": 577,
+    "rmse_deg": 25.832,
+    "bias_deg": -25.039,
+    "rmse_offset_removed_deg": 6.35,
+    "max_abs_deg": 39.367,
+    "reference_rom_deg": 50.171,
+    "reference_column": "lumbar_extension"
+   },
+   "lumbar_total.frontal": {
+    "joint": "lumbar",
+    "plane": "frontal",
+    "n": 577,
+    "rmse_deg": 9.274,
+    "bias_deg": 7.71,
+    "rmse_offset_removed_deg": 5.154,
+    "max_abs_deg": 19.066,
+    "reference_rom_deg": 9.902,
+    "reference_column": "lumbar_bending"
+   },
+   "lumbar_total.transverse": {
+    "joint": "lumbar",
+    "plane": "transverse",
+    "n": 577,
+    "rmse_deg": 12.909,
+    "bias_deg": -9.411,
+    "rmse_offset_removed_deg": 8.835,
+    "max_abs_deg": 24.11,
+    "reference_rom_deg": 8.286,
+    "reference_column": "lumbar_rotation"
+   }
+  },
+  "coverage": {
+   "compared_s": 9.6,
+   "overlap_s": 9.617,
+   "fraction": 0.998,
+   "min_fraction": 0.8
+  },
+  "time_lag_s": 0.9167649999999963,
+  "ik_marker_rms_m": {
+   "mean": 0.026,
+   "p95": 0.0295,
+   "max": 0.0395
+  },
+  "model_notes": [],
+  "scale_factors": {
+   "pelvis": [
+    1.0717,
+    1.0717,
+    1.1567
+   ],
+   "sacrum": [
+    0.9882,
+    0.9882,
+    0.7412
+   ],
+   "femur_r": [
+    0.8775,
+    0.8775,
+    0.8775
+   ],
+   "patella_r": [
+    0.8775,
+    0.8775,
+    0.8775
+   ],
+   "tibia_r": [
+    1.0922,
+    1.0922,
+    1.0922
+   ],
+   "talus_r": [
+    0.6267,
+    0.6267,
+    0.6267
+   ],
+   "calcn_r": [
+    0.6267,
+    0.6267,
+    0.6267
+   ],
+   "toes_r": [
+    0.6267,
+    0.6267,
+    0.6267
+   ],
+   "femur_l": [
+    0.9652,
+    0.9652,
+    0.9652
+   ],
+   "patella_l": [
+    0.9652,
+    0.9652,
+    0.9652
+   ],
+   "tibia_l": [
+    1.0433,
+    1.0433,
+    1.0433
+   ],
+   "talus_l": [
+    0.6267,
+    0.6267,
+    0.6267
+   ],
+   "calcn_l": [
+    0.6267,
+    0.6267,
+    0.6267
+   ],
+   "toes_l": [
+    0.6267,
+    0.6267,
+    0.6267
+   ],
+   "lumbar5": [
+    0.9882,
+    0.9882,
+    0.7412
+   ],
+   "lumbar4": [
+    0.9882,
+    0.9882,
+    0.7412
+   ],
+   "lumbar3": [
+    0.9882,
+    0.9882,
+    0.7412
+   ],
+   "lumbar2": [
+    0.9882,
+    0.9882,
+    0.7412
+   ],
+   "lumbar1": [
+    0.9882,
+    0.9882,
+    0.7412
+   ],
+   "torso": [
+    0.9882,
+    0.9882,
+    0.7412
+   ],
+   "head": [
+    0.9882,
+    0.9882,
+    0.7412
+   ],
+   "Abdomen": [
+    0.9882,
+    0.9882,
+    0.7412
+   ],
+   "humerus_r": [
+    1.026,
+    1.026,
+    1.026
+   ],
+   "ulna_r": [
+    1.0638,
+    1.0638,
+    1.0638
+   ],
+   "radius_r": [
+    1.0638,
+    1.0638,
+    1.0638
+   ],
+   "hand_r": [
+    1.0638,
+    1.0638,
+    1.0638
+   ],
+   "humerus_l": [
+    1.026,
+    1.026,
+    1.026
+   ],
+   "ulna_l": [
+    1.0638,
+    1.0638,
+    1.0638
+   ],
+   "radius_l": [
+    1.0638,
+    1.0638,
+    1.0638
+   ],
+   "hand_l": [
+    1.0638,
+    1.0638,
+    1.0638
+   ]
+  }
+ },
+ "mono_aug_fix": {
+  "per_coordinate": {
+   "pelvis_tilt": {
+    "joint": "pelvis",
+    "plane": "sagittal",
+    "n": 577,
+    "rmse_deg": 22.684,
+    "bias_deg": 21.444,
+    "rmse_offset_removed_deg": 7.396,
+    "max_abs_deg": 44.44,
+    "reference_rom_deg": 36.615
+   },
+   "pelvis_list": {
+    "joint": "pelvis",
+    "plane": "frontal",
+    "n": 577,
+    "rmse_deg": 4.39,
+    "bias_deg": -1.078,
+    "rmse_offset_removed_deg": 4.256,
+    "max_abs_deg": 9.053,
+    "reference_rom_deg": 7.546
+   },
+   "pelvis_rotation": {
+    "joint": "pelvis",
+    "plane": "transverse",
+    "n": 577,
+    "rmse_deg": 7.642,
+    "bias_deg": 6.597,
+    "rmse_offset_removed_deg": 3.858,
+    "max_abs_deg": 11.078,
+    "reference_rom_deg": 7.969
+   },
+   "hip_flexion_r": {
+    "joint": "hip_r",
+    "plane": "sagittal",
+    "n": 577,
+    "rmse_deg": 15.627,
+    "bias_deg": -14.309,
+    "rmse_offset_removed_deg": 6.282,
+    "max_abs_deg": 31.065,
+    "reference_rom_deg": 104.712
+   },
+   "hip_adduction_r": {
+    "joint": "hip_r",
+    "plane": "frontal",
+    "n": 577,
+    "rmse_deg": 3.753,
+    "bias_deg": 1.582,
+    "rmse_offset_removed_deg": 3.403,
+    "max_abs_deg": 7.663,
+    "reference_rom_deg": 18.353
+   },
+   "hip_rotation_r": {
+    "joint": "hip_r",
+    "plane": "transverse",
+    "n": 577,
+    "rmse_deg": 4.693,
+    "bias_deg": -1.923,
+    "rmse_offset_removed_deg": 4.28,
+    "max_abs_deg": 9.665,
+    "reference_rom_deg": 25.262
+   },
+   "knee_angle_r": {
+    "joint": "knee_r",
+    "plane": "sagittal",
+    "n": 577,
+    "rmse_deg": 11.544,
+    "bias_deg": 9.372,
+    "rmse_offset_removed_deg": 6.741,
+    "max_abs_deg": 23.272,
+    "reference_rom_deg": 89.586
+   },
+   "ankle_angle_r": {
+    "joint": "ankle_r",
+    "plane": "sagittal",
+    "n": 577,
+    "rmse_deg": 11.89,
+    "bias_deg": -2.083,
+    "rmse_offset_removed_deg": 11.706,
+    "max_abs_deg": 42.078,
+    "reference_rom_deg": 33.292
+   },
+   "subtalar_angle_r": {
+    "joint": "subtalar_r",
+    "plane": "frontal",
+    "n": 577,
+    "rmse_deg": 11.336,
+    "bias_deg": -10.36,
+    "rmse_offset_removed_deg": 4.602,
+    "max_abs_deg": 21.1,
+    "reference_rom_deg": 18.087
+   },
+   "mtp_angle_r": {
+    "joint": "mtp_r",
+    "plane": "sagittal",
+    "n": 577,
+    "rmse_deg": 0.0,
+    "bias_deg": 0.0,
+    "rmse_offset_removed_deg": 0.0,
+    "max_abs_deg": 0.0,
+    "reference_rom_deg": 0.0
+   },
+   "hip_flexion_l": {
+    "joint": "hip_l",
+    "plane": "sagittal",
+    "n": 577,
+    "rmse_deg": 13.719,
+    "bias_deg": -10.734,
+    "rmse_offset_removed_deg": 8.544,
+    "max_abs_deg": 37.405,
+    "reference_rom_deg": 105.778
+   },
+   "hip_adduction_l": {
+    "joint": "hip_l",
+    "plane": "frontal",
+    "n": 577,
+    "rmse_deg": 5.187,
+    "bias_deg": -4.108,
+    "rmse_offset_removed_deg": 3.167,
+    "max_abs_deg": 10.294,
+    "reference_rom_deg": 6.744
+   },
+   "hip_rotation_l": {
+    "joint": "hip_l",
+    "plane": "transverse",
+    "n": 577,
+    "rmse_deg": 14.887,
+    "bias_deg": 14.35,
+    "rmse_offset_removed_deg": 3.961,
+    "max_abs_deg": 25.929,
+    "reference_rom_deg": 12.44
+   },
+   "knee_angle_l": {
+    "joint": "knee_l",
+    "plane": "sagittal",
+    "n": 577,
+    "rmse_deg": 17.868,
+    "bias_deg": 15.526,
+    "rmse_offset_removed_deg": 8.843,
+    "max_abs_deg": 28.718,
+    "reference_rom_deg": 88.31
+   },
+   "ankle_angle_l": {
+    "joint": "ankle_l",
+    "plane": "sagittal",
+    "n": 577,
+    "rmse_deg": 18.396,
+    "bias_deg": -14.266,
+    "rmse_offset_removed_deg": 11.614,
+    "max_abs_deg": 65.235,
+    "reference_rom_deg": 18.63
+   },
+   "subtalar_angle_l": {
+    "joint": "subtalar_l",
+    "plane": "frontal",
+    "n": 577,
+    "rmse_deg": 14.018,
+    "bias_deg": -10.656,
+    "rmse_offset_removed_deg": 9.109,
+    "max_abs_deg": 26.644,
+    "reference_rom_deg": 18.994
+   },
+   "mtp_angle_l": {
+    "joint": "mtp_l",
+    "plane": "sagittal",
+    "n": 577,
+    "rmse_deg": 0.0,
+    "bias_deg": 0.0,
+    "rmse_offset_removed_deg": 0.0,
+    "max_abs_deg": 0.0,
+    "reference_rom_deg": 0.0
+   },
+   "arm_flex_r": {
+    "joint": "shoulder_r",
+    "plane": "sagittal",
+    "n": 577,
+    "rmse_deg": 19.373,
+    "bias_deg": 0.367,
+    "rmse_offset_removed_deg": 19.369,
+    "max_abs_deg": 51.389,
+    "reference_rom_deg": 122.151
+   },
+   "arm_add_r": {
+    "joint": "shoulder_r",
+    "plane": "frontal",
+    "n": 577,
+    "rmse_deg": 4.793,
+    "bias_deg": -3.745,
+    "rmse_offset_removed_deg": 2.991,
+    "max_abs_deg": 11.054,
+    "reference_rom_deg": 14.49
+   },
+   "arm_rot_r": {
+    "joint": "shoulder_r",
+    "plane": "transverse",
+    "n": 577,
+    "rmse_deg": 8.423,
+    "bias_deg": -6.45,
+    "rmse_offset_removed_deg": 5.416,
+    "max_abs_deg": 17.875,
+    "reference_rom_deg": 49.196
+   },
+   "elbow_flex_r": {
+    "joint": "elbow_r",
+    "plane": "sagittal",
+    "n": 577,
+    "rmse_deg": 10.008,
+    "bias_deg": -4.121,
+    "rmse_offset_removed_deg": 9.12,
+    "max_abs_deg": 24.164,
+    "reference_rom_deg": 82.645
+   },
+   "pro_sup_r": {
+    "joint": "forearm_r",
+    "plane": "transverse",
+    "n": 577,
+    "rmse_deg": 6.919,
+    "bias_deg": -4.19,
+    "rmse_offset_removed_deg": 5.506,
+    "max_abs_deg": 13.603,
+    "reference_rom_deg": 15.044
+   },
+   "arm_flex_l": {
+    "joint": "shoulder_l",
+    "plane": "sagittal",
+    "n": 577,
+    "rmse_deg": 17.927,
+    "bias_deg": -6.384,
+    "rmse_offset_removed_deg": 16.752,
+    "max_abs_deg": 51.49,
+    "reference_rom_deg": 116.342
+   },
+   "arm_add_l": {
+    "joint": "shoulder_l",
+    "plane": "frontal",
+    "n": 577,
+    "rmse_deg": 24.415,
+    "bias_deg": -23.753,
+    "rmse_offset_removed_deg": 5.647,
+    "max_abs_deg": 33.135,
+    "reference_rom_deg": 19.401
+   },
+   "arm_rot_l": {
+    "joint": "shoulder_l",
+    "plane": "transverse",
+    "n": 577,
+    "rmse_deg": 4.28,
+    "bias_deg": 0.484,
+    "rmse_offset_removed_deg": 4.253,
+    "max_abs_deg": 13.347,
+    "reference_rom_deg": 46.101
+   },
+   "elbow_flex_l": {
+    "joint": "elbow_l",
+    "plane": "sagittal",
+    "n": 577,
+    "rmse_deg": 16.784,
+    "bias_deg": 10.995,
+    "rmse_offset_removed_deg": 12.682,
+    "max_abs_deg": 40.73,
+    "reference_rom_deg": 79.835
+   },
+   "pro_sup_l": {
+    "joint": "forearm_l",
+    "plane": "transverse",
+    "n": 577,
+    "rmse_deg": 28.045,
+    "bias_deg": 24.627,
+    "rmse_offset_removed_deg": 13.418,
+    "max_abs_deg": 45.811,
+    "reference_rom_deg": 46.381
+   },
+   "torso.sagittal": {
+    "joint": "torso_segment",
+    "plane": "sagittal",
+    "n": 577,
+    "rmse_deg": 8.625,
+    "bias_deg": 4.542,
+    "rmse_offset_removed_deg": 7.332,
+    "max_abs_deg": 16.545,
+    "reference_rom_deg": 82.278
+   },
+   "torso.frontal": {
+    "joint": "torso_segment",
+    "plane": "frontal",
+    "n": 577,
+    "rmse_deg": 7.008,
+    "bias_deg": 6.522,
+    "rmse_offset_removed_deg": 2.563,
+    "max_abs_deg": 14.151,
+    "reference_rom_deg": 7.882
+   },
+   "pelvis.sagittal": {
+    "joint": "pelvis_segment",
+    "plane": "sagittal",
+    "n": 577,
+    "rmse_deg": 22.461,
+    "bias_deg": -21.217,
+    "rmse_offset_removed_deg": 7.372,
+    "max_abs_deg": 44.59,
+    "reference_rom_deg": 36.156
+   },
+   "pelvis.frontal": {
+    "joint": "pelvis_segment",
+    "plane": "frontal",
+    "n": 577,
+    "rmse_deg": 5.225,
+    "bias_deg": -3.762,
+    "rmse_offset_removed_deg": 3.626,
+    "max_abs_deg": 11.642,
+    "reference_rom_deg": 10.186
+   },
+   "knee_fppa_r": {
+    "joint": "knee_r",
+    "plane": "frontal",
+    "n": 577,
+    "rmse_deg": 5.465,
+    "bias_deg": -1.998,
+    "rmse_offset_removed_deg": 5.086,
+    "max_abs_deg": 22.354,
+    "reference_rom_deg": 44.35
+   },
+   "knee_fppa_l": {
+    "joint": "knee_l",
+    "plane": "frontal",
+    "n": 577,
+    "rmse_deg": 5.722,
+    "bias_deg": 2.863,
+    "rmse_offset_removed_deg": 4.954,
+    "max_abs_deg": 18.031,
+    "reference_rom_deg": 26.827
+   },
+   "lumbar_total.sagittal": {
+    "joint": "lumbar",
+    "plane": "sagittal",
+    "n": 577,
+    "rmse_deg": 26.955,
+    "bias_deg": -26.317,
+    "rmse_offset_removed_deg": 5.831,
+    "max_abs_deg": 42.073,
+    "reference_rom_deg": 50.171,
+    "reference_column": "lumbar_extension"
+   },
+   "lumbar_total.frontal": {
+    "joint": "lumbar",
+    "plane": "frontal",
+    "n": 577,
+    "rmse_deg": 8.979,
+    "bias_deg": 6.944,
+    "rmse_offset_removed_deg": 5.693,
+    "max_abs_deg": 19.144,
+    "reference_rom_deg": 9.902,
+    "reference_column": "lumbar_bending"
+   },
+   "lumbar_total.transverse": {
+    "joint": "lumbar",
+    "plane": "transverse",
+    "n": 577,
+    "rmse_deg": 13.631,
+    "bias_deg": -10.094,
+    "rmse_offset_removed_deg": 9.159,
+    "max_abs_deg": 27.886,
+    "reference_rom_deg": 8.286,
+    "reference_column": "lumbar_rotation"
+   }
+  },
+  "coverage": {
+   "compared_s": 9.6,
+   "overlap_s": 9.617,
+   "fraction": 0.998,
+   "min_fraction": 0.8
+  },
+  "time_lag_s": 0.9167649999999963,
+  "ik_marker_rms_m": {
+   "mean": 0.0245,
+   "p95": 0.032,
+   "max": 0.0433
+  },
+  "model_notes": [
+   "rescaled 10 markers on their bodies by [1.0, 1.075, 1.0]: trial",
+   "rescaled 10 markers on their bodies by [1.0, 0.97867, 1.0]: trial",
+   "placed ['LHJC_study', 'RHJC_study'] on the joint centres they name: trial"
+  ],
+  "scale_factors": {
+   "pelvis": [
+    1.0717,
+    1.0717,
+    1.0703
+   ],
+   "sacrum": [
+    0.9882,
+    0.9882,
+    0.7412
+   ],
+   "femur_r": [
+    0.8713,
+    0.8713,
+    0.8713
+   ],
+   "patella_r": [
+    0.8713,
+    0.8713,
+    0.8713
+   ],
+   "tibia_r": [
+    0.9943,
+    0.9943,
+    0.9943
+   ],
+   "talus_r": [
+    0.6267,
+    0.6267,
+    0.6267
+   ],
+   "calcn_r": [
+    0.6267,
+    0.6267,
+    0.6267
+   ],
+   "toes_r": [
+    0.6267,
+    0.6267,
+    0.6267
+   ],
+   "femur_l": [
+    0.9583,
+    0.9583,
+    0.9583
+   ],
+   "patella_l": [
+    0.9583,
+    0.9583,
+    0.9583
+   ],
+   "tibia_l": [
+    0.9498,
+    0.9498,
+    0.9498
+   ],
+   "talus_l": [
+    0.6267,
+    0.6267,
+    0.6267
+   ],
+   "calcn_l": [
+    0.6267,
+    0.6267,
+    0.6267
+   ],
+   "toes_l": [
+    0.6267,
+    0.6267,
+    0.6267
+   ],
+   "lumbar5": [
+    0.9882,
+    0.9882,
+    0.7412
+   ],
+   "lumbar4": [
+    0.9882,
+    0.9882,
+    0.7412
+   ],
+   "lumbar3": [
+    0.9882,
+    0.9882,
+    0.7412
+   ],
+   "lumbar2": [
+    0.9882,
+    0.9882,
+    0.7412
+   ],
+   "lumbar1": [
+    0.9882,
+    0.9882,
+    0.7412
+   ],
+   "torso": [
+    0.9882,
+    0.9882,
+    0.7412
+   ],
+   "head": [
+    0.9882,
+    0.9882,
+    0.7412
+   ],
+   "Abdomen": [
+    0.9882,
+    0.9882,
+    0.7412
+   ],
+   "humerus_r": [
+    1.026,
+    1.026,
+    1.026
+   ],
+   "ulna_r": [
+    1.0638,
+    1.0638,
+    1.0638
+   ],
+   "radius_r": [
+    1.0638,
+    1.0638,
+    1.0638
+   ],
+   "hand_r": [
+    1.0638,
+    1.0638,
+    1.0638
+   ],
+   "humerus_l": [
+    1.026,
+    1.026,
+    1.026
+   ],
+   "ulna_l": [
+    1.0638,
+    1.0638,
+    1.0638
+   ],
+   "radius_l": [
+    1.0638,
+    1.0638,
+    1.0638
+   ],
+   "hand_l": [
+    1.0638,
+    1.0638,
+    1.0638
+   ]
+  }
+ },
+ "multi_aug_base": {
+  "per_coordinate": {
+   "pelvis_tilt": {
+    "joint": "pelvis",
+    "plane": "sagittal",
+    "n": 576,
+    "rmse_deg": 5.975,
+    "bias_deg": -5.462,
+    "rmse_offset_removed_deg": 2.423,
+    "max_abs_deg": 10.582,
+    "reference_rom_deg": 36.616
+   },
+   "pelvis_list": {
+    "joint": "pelvis",
+    "plane": "frontal",
+    "n": 576,
+    "rmse_deg": 2.625,
+    "bias_deg": -1.431,
+    "rmse_offset_removed_deg": 2.2,
+    "max_abs_deg": 7.805,
+    "reference_rom_deg": 7.547
+   },
+   "pelvis_rotation": {
+    "joint": "pelvis",
+    "plane": "transverse",
+    "n": 576,
+    "rmse_deg": 3.614,
+    "bias_deg": -2.863,
+    "rmse_offset_removed_deg": 2.205,
+    "max_abs_deg": 6.905,
+    "reference_rom_deg": 7.969
+   },
+   "hip_flexion_r": {
+    "joint": "hip_r",
+    "plane": "sagittal",
+    "n": 576,
+    "rmse_deg": 13.856,
+    "bias_deg": 13.057,
+    "rmse_offset_removed_deg": 4.639,
+    "max_abs_deg": 22.459,
+    "reference_rom_deg": 104.712
+   },
+   "hip_adduction_r": {
+    "joint": "hip_r",
+    "plane": "frontal",
+    "n": 576,
+    "rmse_deg": 3.155,
+    "bias_deg": 1.183,
+    "rmse_offset_removed_deg": 2.925,
+    "max_abs_deg": 6.082,
+    "reference_rom_deg": 18.353
+   },
+   "hip_rotation_r": {
+    "joint": "hip_r",
+    "plane": "transverse",
+    "n": 576,
+    "rmse_deg": 4.95,
+    "bias_deg": -2.909,
+    "rmse_offset_removed_deg": 4.005,
+    "max_abs_deg": 10.295,
+    "reference_rom_deg": 25.262
+   },
+   "knee_angle_r": {
+    "joint": "knee_r",
+    "plane": "sagittal",
+    "n": 576,
+    "rmse_deg": 9.274,
+    "bias_deg": 8.69,
+    "rmse_offset_removed_deg": 3.237,
+    "max_abs_deg": 18.807,
+    "reference_rom_deg": 89.587
+   },
+   "ankle_angle_r": {
+    "joint": "ankle_r",
+    "plane": "sagittal",
+    "n": 576,
+    "rmse_deg": 4.906,
+    "bias_deg": -1.164,
+    "rmse_offset_removed_deg": 4.766,
+    "max_abs_deg": 16.489,
+    "reference_rom_deg": 33.294
+   },
+   "subtalar_angle_r": {
+    "joint": "subtalar_r",
+    "plane": "frontal",
+    "n": 576,
+    "rmse_deg": 11.033,
+    "bias_deg": -10.19,
+    "rmse_offset_removed_deg": 4.23,
+    "max_abs_deg": 20.31,
+    "reference_rom_deg": 18.087
+   },
+   "mtp_angle_r": {
+    "joint": "mtp_r",
+    "plane": "sagittal",
+    "n": 576,
+    "rmse_deg": 0.0,
+    "bias_deg": 0.0,
+    "rmse_offset_removed_deg": 0.0,
+    "max_abs_deg": 0.0,
+    "reference_rom_deg": 0.0
+   },
+   "hip_flexion_l": {
+    "joint": "hip_l",
+    "plane": "sagittal",
+    "n": 576,
+    "rmse_deg": 13.925,
+    "bias_deg": 13.432,
+    "rmse_offset_removed_deg": 3.673,
+    "max_abs_deg": 21.39,
+    "reference_rom_deg": 105.779
+   },
+   "hip_adduction_l": {
+    "joint": "hip_l",
+    "plane": "frontal",
+    "n": 576,
+    "rmse_deg": 4.268,
+    "bias_deg": -3.728,
+    "rmse_offset_removed_deg": 2.077,
+    "max_abs_deg": 7.454,
+    "reference_rom_deg": 6.745
+   },
+   "hip_rotation_l": {
+    "joint": "hip_l",
+    "plane": "transverse",
+    "n": 576,
+    "rmse_deg": 4.156,
+    "bias_deg": -0.467,
+    "rmse_offset_removed_deg": 4.129,
+    "max_abs_deg": 7.992,
+    "reference_rom_deg": 12.44
+   },
+   "knee_angle_l": {
+    "joint": "knee_l",
+    "plane": "sagittal",
+    "n": 576,
+    "rmse_deg": 9.184,
+    "bias_deg": 8.851,
+    "rmse_offset_removed_deg": 2.45,
+    "max_abs_deg": 14.365,
+    "reference_rom_deg": 88.31
+   },
+   "ankle_angle_l": {
+    "joint": "ankle_l",
+    "plane": "sagittal",
+    "n": 576,
+    "rmse_deg": 4.638,
+    "bias_deg": -2.496,
+    "rmse_offset_removed_deg": 3.909,
+    "max_abs_deg": 10.351,
+    "reference_rom_deg": 18.631
+   },
+   "subtalar_angle_l": {
+    "joint": "subtalar_l",
+    "plane": "frontal",
+    "n": 576,
+    "rmse_deg": 20.185,
+    "bias_deg": -19.935,
+    "rmse_offset_removed_deg": 3.168,
+    "max_abs_deg": 27.618,
+    "reference_rom_deg": 18.932
+   },
+   "mtp_angle_l": {
+    "joint": "mtp_l",
+    "plane": "sagittal",
+    "n": 576,
+    "rmse_deg": 0.0,
+    "bias_deg": 0.0,
+    "rmse_offset_removed_deg": 0.0,
+    "max_abs_deg": 0.0,
+    "reference_rom_deg": 0.0
+   },
+   "arm_flex_r": {
+    "joint": "shoulder_r",
+    "plane": "sagittal",
+    "n": 576,
+    "rmse_deg": 5.132,
+    "bias_deg": 1.96,
+    "rmse_offset_removed_deg": 4.743,
+    "max_abs_deg": 13.519,
+    "reference_rom_deg": 122.152
+   },
+   "arm_add_r": {
+    "joint": "shoulder_r",
+    "plane": "frontal",
+    "n": 576,
+    "rmse_deg": 10.736,
+    "bias_deg": -10.289,
+    "rmse_offset_removed_deg": 3.067,
+    "max_abs_deg": 18.693,
+    "reference_rom_deg": 14.491
+   },
+   "arm_rot_r": {
+    "joint": "shoulder_r",
+    "plane": "transverse",
+    "n": 576,
+    "rmse_deg": 3.951,
+    "bias_deg": 1.331,
+    "rmse_offset_removed_deg": 3.72,
+    "max_abs_deg": 15.119,
+    "reference_rom_deg": 49.2
+   },
+   "elbow_flex_r": {
+    "joint": "elbow_r",
+    "plane": "sagittal",
+    "n": 576,
+    "rmse_deg": 7.625,
+    "bias_deg": 6.753,
+    "rmse_offset_removed_deg": 3.54,
+    "max_abs_deg": 16.481,
+    "reference_rom_deg": 82.648
+   },
+   "pro_sup_r": {
+    "joint": "forearm_r",
+    "plane": "transverse",
+    "n": 576,
+    "rmse_deg": 16.278,
+    "bias_deg": -15.126,
+    "rmse_offset_removed_deg": 6.015,
+    "max_abs_deg": 24.876,
+    "reference_rom_deg": 15.044
+   },
+   "arm_flex_l": {
+    "joint": "shoulder_l",
+    "plane": "sagittal",
+    "n": 576,
+    "rmse_deg": 4.607,
+    "bias_deg": -1.54,
+    "rmse_offset_removed_deg": 4.342,
+    "max_abs_deg": 9.653,
+    "reference_rom_deg": 116.343
+   },
+   "arm_add_l": {
+    "joint": "shoulder_l",
+    "plane": "frontal",
+    "n": 576,
+    "rmse_deg": 7.598,
+    "bias_deg": -7.154,
+    "rmse_offset_removed_deg": 2.557,
+    "max_abs_deg": 12.57,
+    "reference_rom_deg": 19.402
+   },
+   "arm_rot_l": {
+    "joint": "shoulder_l",
+    "plane": "transverse",
+    "n": 576,
+    "rmse_deg": 3.501,
+    "bias_deg": -1.564,
+    "rmse_offset_removed_deg": 3.132,
+    "max_abs_deg": 11.343,
+    "reference_rom_deg": 46.102
+   },
+   "elbow_flex_l": {
+    "joint": "elbow_l",
+    "plane": "sagittal",
+    "n": 576,
+    "rmse_deg": 9.536,
+    "bias_deg": 8.938,
+    "rmse_offset_removed_deg": 3.323,
+    "max_abs_deg": 17.955,
+    "reference_rom_deg": 79.835
+   },
+   "pro_sup_l": {
+    "joint": "forearm_l",
+    "plane": "transverse",
+    "n": 576,
+    "rmse_deg": 10.325,
+    "bias_deg": 5.884,
+    "rmse_offset_removed_deg": 8.484,
+    "max_abs_deg": 21.762,
+    "reference_rom_deg": 46.381
+   },
+   "torso.sagittal": {
+    "joint": "torso_segment",
+    "plane": "sagittal",
+    "n": 576,
+    "rmse_deg": 2.676,
+    "bias_deg": -0.793,
+    "rmse_offset_removed_deg": 2.556,
+    "max_abs_deg": 6.329,
+    "reference_rom_deg": 82.278
+   },
+   "torso.frontal": {
+    "joint": "torso_segment",
+    "plane": "frontal",
+    "n": 576,
+    "rmse_deg": 2.571,
+    "bias_deg": 1.202,
+    "rmse_offset_removed_deg": 2.272,
+    "max_abs_deg": 7.334,
+    "reference_rom_deg": 7.882
+   },
+   "pelvis.sagittal": {
+    "joint": "pelvis_segment",
+    "plane": "sagittal",
+    "n": 576,
+    "rmse_deg": 6.064,
+    "bias_deg": 5.547,
+    "rmse_offset_removed_deg": 2.449,
+    "max_abs_deg": 10.539,
+    "reference_rom_deg": 36.156
+   },
+   "pelvis.frontal": {
+    "joint": "pelvis_segment",
+    "plane": "frontal",
+    "n": 576,
+    "rmse_deg": 4.025,
+    "bias_deg": -2.757,
+    "rmse_offset_removed_deg": 2.932,
+    "max_abs_deg": 8.061,
+    "reference_rom_deg": 10.186
+   },
+   "knee_fppa_r": {
+    "joint": "knee_r",
+    "plane": "frontal",
+    "n": 576,
+    "rmse_deg": 4.723,
+    "bias_deg": -3.494,
+    "rmse_offset_removed_deg": 3.178,
+    "max_abs_deg": 14.914,
+    "reference_rom_deg": 44.352
+   },
+   "knee_fppa_l": {
+    "joint": "knee_l",
+    "plane": "frontal",
+    "n": 576,
+    "rmse_deg": 9.547,
+    "bias_deg": -7.288,
+    "rmse_offset_removed_deg": 6.166,
+    "max_abs_deg": 24.723,
+    "reference_rom_deg": 26.828
+   },
+   "lumbar_total.sagittal": {
+    "joint": "lumbar",
+    "plane": "sagittal",
+    "n": 576,
+    "rmse_deg": 7.136,
+    "bias_deg": 6.348,
+    "rmse_offset_removed_deg": 3.259,
+    "max_abs_deg": 14.498,
+    "reference_rom_deg": 50.171,
+    "reference_column": "lumbar_extension"
+   },
+   "lumbar_total.frontal": {
+    "joint": "lumbar",
+    "plane": "frontal",
+    "n": 576,
+    "rmse_deg": 5.553,
+    "bias_deg": 4.102,
+    "rmse_offset_removed_deg": 3.743,
+    "max_abs_deg": 14.717,
+    "reference_rom_deg": 9.903,
+    "reference_column": "lumbar_bending"
+   },
+   "lumbar_total.transverse": {
+    "joint": "lumbar",
+    "plane": "transverse",
+    "n": 576,
+    "rmse_deg": 5.17,
+    "bias_deg": 1.875,
+    "rmse_offset_removed_deg": 4.817,
+    "max_abs_deg": 12.412,
+    "reference_rom_deg": 8.286,
+    "reference_column": "lumbar_rotation"
+   }
+  },
+  "coverage": {
+   "compared_s": 9.567,
+   "overlap_s": 9.6,
+   "fraction": 0.997,
+   "min_fraction": 0.8
+  },
+  "time_lag_s": 0.06674799999999692,
+  "ik_marker_rms_m": {
+   "mean": 0.0236,
+   "p95": 0.0277,
+   "max": 0.029
+  },
+  "model_notes": [],
+  "scale_factors": {
+   "pelvis": [
+    1.3336,
+    1.3336,
+    1.2174
+   ],
+   "sacrum": [
+    1.0793,
+    1.0793,
+    0.889
+   ],
+   "femur_r": [
+    1.1266,
+    1.1266,
+    1.1266
+   ],
+   "patella_r": [
+    1.1266,
+    1.1266,
+    1.1266
+   ],
+   "tibia_r": [
+    1.2598,
+    1.2598,
+    1.2598
+   ],
+   "talus_r": [
+    1.124,
+    1.124,
+    1.124
+   ],
+   "calcn_r": [
+    1.124,
+    1.124,
+    1.124
+   ],
+   "toes_r": [
+    1.124,
+    1.124,
+    1.124
+   ],
+   "femur_l": [
+    1.1107,
+    1.1107,
+    1.1107
+   ],
+   "patella_l": [
+    1.1107,
+    1.1107,
+    1.1107
+   ],
+   "tibia_l": [
+    1.2703,
+    1.2703,
+    1.2703
+   ],
+   "talus_l": [
+    1.124,
+    1.124,
+    1.124
+   ],
+   "calcn_l": [
+    1.124,
+    1.124,
+    1.124
+   ],
+   "toes_l": [
+    1.124,
+    1.124,
+    1.124
+   ],
+   "lumbar5": [
+    1.0793,
+    1.0793,
+    0.889
+   ],
+   "lumbar4": [
+    1.0793,
+    1.0793,
+    0.889
+   ],
+   "lumbar3": [
+    1.0793,
+    1.0793,
+    0.889
+   ],
+   "lumbar2": [
+    1.0793,
+    1.0793,
+    0.889
+   ],
+   "lumbar1": [
+    1.0793,
+    1.0793,
+    0.889
+   ],
+   "torso": [
+    1.0793,
+    1.0793,
+    0.889
+   ],
+   "head": [
+    1.0793,
+    1.0793,
+    0.889
+   ],
+   "Abdomen": [
+    1.0793,
+    1.0793,
+    0.889
+   ],
+   "humerus_r": [
+    1.2874,
+    1.2874,
+    1.2874
+   ],
+   "ulna_r": [
+    1.1563,
+    1.1563,
+    1.1563
+   ],
+   "radius_r": [
+    1.1563,
+    1.1563,
+    1.1563
+   ],
+   "hand_r": [
+    1.1563,
+    1.1563,
+    1.1563
+   ],
+   "humerus_l": [
+    1.2874,
+    1.2874,
+    1.2874
+   ],
+   "ulna_l": [
+    1.1563,
+    1.1563,
+    1.1563
+   ],
+   "radius_l": [
+    1.1563,
+    1.1563,
+    1.1563
+   ],
+   "hand_l": [
+    1.1563,
+    1.1563,
+    1.1563
+   ]
+  }
+ },
+ "multi_aug_fix": {
+  "per_coordinate": {
+   "pelvis_tilt": {
+    "joint": "pelvis",
+    "plane": "sagittal",
+    "n": 576,
+    "rmse_deg": 2.805,
+    "bias_deg": -1.223,
+    "rmse_offset_removed_deg": 2.525,
+    "max_abs_deg": 6.53,
+    "reference_rom_deg": 36.616
+   },
+   "pelvis_list": {
+    "joint": "pelvis",
+    "plane": "frontal",
+    "n": 576,
+    "rmse_deg": 2.633,
+    "bias_deg": -1.386,
+    "rmse_offset_removed_deg": 2.239,
+    "max_abs_deg": 7.711,
+    "reference_rom_deg": 7.547
+   },
+   "pelvis_rotation": {
+    "joint": "pelvis",
+    "plane": "transverse",
+    "n": 576,
+    "rmse_deg": 3.595,
+    "bias_deg": -2.827,
+    "rmse_offset_removed_deg": 2.221,
+    "max_abs_deg": 6.838,
+    "reference_rom_deg": 7.969
+   },
+   "hip_flexion_r": {
+    "joint": "hip_r",
+    "plane": "sagittal",
+    "n": 576,
+    "rmse_deg": 8.189,
+    "bias_deg": 6.715,
+    "rmse_offset_removed_deg": 4.686,
+    "max_abs_deg": 15.489,
+    "reference_rom_deg": 104.712
+   },
+   "hip_adduction_r": {
+    "joint": "hip_r",
+    "plane": "frontal",
+    "n": 576,
+    "rmse_deg": 2.847,
+    "bias_deg": 0.001,
+    "rmse_offset_removed_deg": 2.847,
+    "max_abs_deg": 6.725,
+    "reference_rom_deg": 18.353
+   },
+   "hip_rotation_r": {
+    "joint": "hip_r",
+    "plane": "transverse",
+    "n": 576,
+    "rmse_deg": 6.915,
+    "bias_deg": -5.728,
+    "rmse_offset_removed_deg": 3.875,
+    "max_abs_deg": 14.188,
+    "reference_rom_deg": 25.262
+   },
+   "knee_angle_r": {
+    "joint": "knee_r",
+    "plane": "sagittal",
+    "n": 576,
+    "rmse_deg": 7.428,
+    "bias_deg": 6.74,
+    "rmse_offset_removed_deg": 3.121,
+    "max_abs_deg": 16.29,
+    "reference_rom_deg": 89.587
+   },
+   "ankle_angle_r": {
+    "joint": "ankle_r",
+    "plane": "sagittal",
+    "n": 576,
+    "rmse_deg": 5.367,
+    "bias_deg": -0.594,
+    "rmse_offset_removed_deg": 5.334,
+    "max_abs_deg": 16.438,
+    "reference_rom_deg": 33.294
+   },
+   "subtalar_angle_r": {
+    "joint": "subtalar_r",
+    "plane": "frontal",
+    "n": 576,
+    "rmse_deg": 7.125,
+    "bias_deg": -3.277,
+    "rmse_offset_removed_deg": 6.326,
+    "max_abs_deg": 17.459,
+    "reference_rom_deg": 18.087
+   },
+   "mtp_angle_r": {
+    "joint": "mtp_r",
+    "plane": "sagittal",
+    "n": 576,
+    "rmse_deg": 0.0,
+    "bias_deg": 0.0,
+    "rmse_offset_removed_deg": 0.0,
+    "max_abs_deg": 0.0,
+    "reference_rom_deg": 0.0
+   },
+   "hip_flexion_l": {
+    "joint": "hip_l",
+    "plane": "sagittal",
+    "n": 576,
+    "rmse_deg": 7.902,
+    "bias_deg": 6.937,
+    "rmse_offset_removed_deg": 3.784,
+    "max_abs_deg": 15.326,
+    "reference_rom_deg": 105.779
+   },
+   "hip_adduction_l": {
+    "joint": "hip_l",
+    "plane": "frontal",
+    "n": 576,
+    "rmse_deg": 5.412,
+    "bias_deg": -4.947,
+    "rmse_offset_removed_deg": 2.194,
+    "max_abs_deg": 8.976,
+    "reference_rom_deg": 6.745
+   },
+   "hip_rotation_l": {
+    "joint": "hip_l",
+    "plane": "transverse",
+    "n": 576,
+    "rmse_deg": 6.943,
+    "bias_deg": -3.925,
+    "rmse_offset_removed_deg": 5.728,
+    "max_abs_deg": 12.407,
+    "reference_rom_deg": 12.44
+   },
+   "knee_angle_l": {
+    "joint": "knee_l",
+    "plane": "sagittal",
+    "n": 576,
+    "rmse_deg": 7.112,
+    "bias_deg": 6.742,
+    "rmse_offset_removed_deg": 2.263,
+    "max_abs_deg": 11.955,
+    "reference_rom_deg": 88.31
+   },
+   "ankle_angle_l": {
+    "joint": "ankle_l",
+    "plane": "sagittal",
+    "n": 576,
+    "rmse_deg": 5.293,
+    "bias_deg": -2.452,
+    "rmse_offset_removed_deg": 4.69,
+    "max_abs_deg": 11.999,
+    "reference_rom_deg": 18.631
+   },
+   "subtalar_angle_l": {
+    "joint": "subtalar_l",
+    "plane": "frontal",
+    "n": 576,
+    "rmse_deg": 13.76,
+    "bias_deg": -12.968,
+    "rmse_offset_removed_deg": 4.602,
+    "max_abs_deg": 22.795,
+    "reference_rom_deg": 18.932
+   },
+   "mtp_angle_l": {
+    "joint": "mtp_l",
+    "plane": "sagittal",
+    "n": 576,
+    "rmse_deg": 0.0,
+    "bias_deg": 0.0,
+    "rmse_offset_removed_deg": 0.0,
+    "max_abs_deg": 0.0,
+    "reference_rom_deg": 0.0
+   },
+   "arm_flex_r": {
+    "joint": "shoulder_r",
+    "plane": "sagittal",
+    "n": 576,
+    "rmse_deg": 5.197,
+    "bias_deg": 2.231,
+    "rmse_offset_removed_deg": 4.693,
+    "max_abs_deg": 13.423,
+    "reference_rom_deg": 122.152
+   },
+   "arm_add_r": {
+    "joint": "shoulder_r",
+    "plane": "frontal",
+    "n": 576,
+    "rmse_deg": 11.255,
+    "bias_deg": -10.814,
+    "rmse_offset_removed_deg": 3.12,
+    "max_abs_deg": 18.914,
+    "reference_rom_deg": 14.491
+   },
+   "arm_rot_r": {
+    "joint": "shoulder_r",
+    "plane": "transverse",
+    "n": 576,
+    "rmse_deg": 3.964,
+    "bias_deg": 1.413,
+    "rmse_offset_removed_deg": 3.704,
+    "max_abs_deg": 14.505,
+    "reference_rom_deg": 49.2
+   },
+   "elbow_flex_r": {
+    "joint": "elbow_r",
+    "plane": "sagittal",
+    "n": 576,
+    "rmse_deg": 9.126,
+    "bias_deg": 8.433,
+    "rmse_offset_removed_deg": 3.488,
+    "max_abs_deg": 18.493,
+    "reference_rom_deg": 82.648
+   },
+   "pro_sup_r": {
+    "joint": "forearm_r",
+    "plane": "transverse",
+    "n": 576,
+    "rmse_deg": 17.047,
+    "bias_deg": -16.091,
+    "rmse_offset_removed_deg": 5.629,
+    "max_abs_deg": 25.593,
+    "reference_rom_deg": 15.044
+   },
+   "arm_flex_l": {
+    "joint": "shoulder_l",
+    "plane": "sagittal",
+    "n": 576,
+    "rmse_deg": 4.44,
+    "bias_deg": -1.224,
+    "rmse_offset_removed_deg": 4.268,
+    "max_abs_deg": 9.385,
+    "reference_rom_deg": 116.343
+   },
+   "arm_add_l": {
+    "joint": "shoulder_l",
+    "plane": "frontal",
+    "n": 576,
+    "rmse_deg": 8.045,
+    "bias_deg": -7.535,
+    "rmse_offset_removed_deg": 2.82,
+    "max_abs_deg": 13.612,
+    "reference_rom_deg": 19.402
+   },
+   "arm_rot_l": {
+    "joint": "shoulder_l",
+    "plane": "transverse",
+    "n": 576,
+    "rmse_deg": 3.524,
+    "bias_deg": -1.42,
+    "rmse_offset_removed_deg": 3.226,
+    "max_abs_deg": 11.449,
+    "reference_rom_deg": 46.102
+   },
+   "elbow_flex_l": {
+    "joint": "elbow_l",
+    "plane": "sagittal",
+    "n": 576,
+    "rmse_deg": 10.978,
+    "bias_deg": 10.61,
+    "rmse_offset_removed_deg": 2.816,
+    "max_abs_deg": 18.24,
+    "reference_rom_deg": 79.835
+   },
+   "pro_sup_l": {
+    "joint": "forearm_l",
+    "plane": "transverse",
+    "n": 576,
+    "rmse_deg": 9.874,
+    "bias_deg": 5.075,
+    "rmse_offset_removed_deg": 8.47,
+    "max_abs_deg": 21.19,
+    "reference_rom_deg": 46.381
+   },
+   "torso.sagittal": {
+    "joint": "torso_segment",
+    "plane": "sagittal",
+    "n": 576,
+    "rmse_deg": 2.565,
+    "bias_deg": -1.012,
+    "rmse_offset_removed_deg": 2.357,
+    "max_abs_deg": 6.164,
+    "reference_rom_deg": 82.278
+   },
+   "torso.frontal": {
+    "joint": "torso_segment",
+    "plane": "frontal",
+    "n": 576,
+    "rmse_deg": 2.538,
+    "bias_deg": 1.228,
+    "rmse_offset_removed_deg": 2.221,
+    "max_abs_deg": 7.434,
+    "reference_rom_deg": 7.882
+   },
+   "pelvis.sagittal": {
+    "joint": "pelvis_segment",
+    "plane": "sagittal",
+    "n": 576,
+    "rmse_deg": 2.882,
+    "bias_deg": 1.31,
+    "rmse_offset_removed_deg": 2.567,
+    "max_abs_deg": 6.693,
+    "reference_rom_deg": 36.156
+   },
+   "pelvis.frontal": {
+    "joint": "pelvis_segment",
+    "plane": "frontal",
+    "n": 576,
+    "rmse_deg": 3.957,
+    "bias_deg": -2.71,
+    "rmse_offset_removed_deg": 2.883,
+    "max_abs_deg": 7.834,
+    "reference_rom_deg": 10.186
+   },
+   "knee_fppa_r": {
+    "joint": "knee_r",
+    "plane": "frontal",
+    "n": 576,
+    "rmse_deg": 5.242,
+    "bias_deg": -4.184,
+    "rmse_offset_removed_deg": 3.158,
+    "max_abs_deg": 15.182,
+    "reference_rom_deg": 44.352
+   },
+   "knee_fppa_l": {
+    "joint": "knee_l",
+    "plane": "frontal",
+    "n": 576,
+    "rmse_deg": 9.609,
+    "bias_deg": -7.632,
+    "rmse_offset_removed_deg": 5.838,
+    "max_abs_deg": 22.42,
+    "reference_rom_deg": 26.828
+   },
+   "lumbar_total.sagittal": {
+    "joint": "lumbar",
+    "plane": "sagittal",
+    "n": 576,
+    "rmse_deg": 3.915,
+    "bias_deg": 2.335,
+    "rmse_offset_removed_deg": 3.142,
+    "max_abs_deg": 10.723,
+    "reference_rom_deg": 50.171,
+    "reference_column": "lumbar_extension"
+   },
+   "lumbar_total.frontal": {
+    "joint": "lumbar",
+    "plane": "frontal",
+    "n": 576,
+    "rmse_deg": 5.564,
+    "bias_deg": 4.085,
+    "rmse_offset_removed_deg": 3.777,
+    "max_abs_deg": 14.766,
+    "reference_rom_deg": 9.903,
+    "reference_column": "lumbar_bending"
+   },
+   "lumbar_total.transverse": {
+    "joint": "lumbar",
+    "plane": "transverse",
+    "n": 576,
+    "rmse_deg": 5.113,
+    "bias_deg": 1.87,
+    "rmse_offset_removed_deg": 4.759,
+    "max_abs_deg": 12.223,
+    "reference_rom_deg": 8.286,
+    "reference_column": "lumbar_rotation"
+   }
+  },
+  "coverage": {
+   "compared_s": 9.567,
+   "overlap_s": 9.6,
+   "fraction": 0.997,
+   "min_fraction": 0.8
+  },
+  "time_lag_s": 0.06674799999999692,
+  "ik_marker_rms_m": {
+   "mean": 0.0207,
+   "p95": 0.0244,
+   "max": 0.0258
+  },
+  "model_notes": [
+   "rescaled 10 markers on their bodies by [1.0, 1.075, 1.0]: trial",
+   "rescaled 10 markers on their bodies by [1.0, 0.97867, 1.0]: trial",
+   "placed ['LHJC_study', 'RHJC_study'] on the joint centres they name: trial"
+  ],
+  "scale_factors": {
+   "pelvis": [
+    1.3336,
+    1.3336,
+    1.1265
+   ],
+   "sacrum": [
+    1.0793,
+    1.0793,
+    0.889
+   ],
+   "femur_r": [
+    1.1186,
+    1.1186,
+    1.1186
+   ],
+   "patella_r": [
+    1.1186,
+    1.1186,
+    1.1186
+   ],
+   "tibia_r": [
+    1.1469,
+    1.1469,
+    1.1469
+   ],
+   "talus_r": [
+    1.124,
+    1.124,
+    1.124
+   ],
+   "calcn_r": [
+    1.124,
+    1.124,
+    1.124
+   ],
+   "toes_r": [
+    1.124,
+    1.124,
+    1.124
+   ],
+   "femur_l": [
+    1.1028,
+    1.1028,
+    1.1028
+   ],
+   "patella_l": [
+    1.1028,
+    1.1028,
+    1.1028
+   ],
+   "tibia_l": [
+    1.1565,
+    1.1565,
+    1.1565
+   ],
+   "talus_l": [
+    1.124,
+    1.124,
+    1.124
+   ],
+   "calcn_l": [
+    1.124,
+    1.124,
+    1.124
+   ],
+   "toes_l": [
+    1.124,
+    1.124,
+    1.124
+   ],
+   "lumbar5": [
+    1.0793,
+    1.0793,
+    0.889
+   ],
+   "lumbar4": [
+    1.0793,
+    1.0793,
+    0.889
+   ],
+   "lumbar3": [
+    1.0793,
+    1.0793,
+    0.889
+   ],
+   "lumbar2": [
+    1.0793,
+    1.0793,
+    0.889
+   ],
+   "lumbar1": [
+    1.0793,
+    1.0793,
+    0.889
+   ],
+   "torso": [
+    1.0793,
+    1.0793,
+    0.889
+   ],
+   "head": [
+    1.0793,
+    1.0793,
+    0.889
+   ],
+   "Abdomen": [
+    1.0793,
+    1.0793,
+    0.889
+   ],
+   "humerus_r": [
+    1.2874,
+    1.2874,
+    1.2874
+   ],
+   "ulna_r": [
+    1.1563,
+    1.1563,
+    1.1563
+   ],
+   "radius_r": [
+    1.1563,
+    1.1563,
+    1.1563
+   ],
+   "hand_r": [
+    1.1563,
+    1.1563,
+    1.1563
+   ],
+   "humerus_l": [
+    1.2874,
+    1.2874,
+    1.2874
+   ],
+   "ulna_l": [
+    1.1563,
+    1.1563,
+    1.1563
+   ],
+   "radius_l": [
+    1.1563,
+    1.1563,
+    1.1563
+   ],
+   "hand_l": [
+    1.1563,
+    1.1563,
+    1.1563
+   ]
+  }
+ }
+}

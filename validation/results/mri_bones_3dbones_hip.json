@@ -1,0 +1,357 @@
+{
+ "n_subjects": 36,
+ "n_sides": 72,
+ "n_failed": 0,
+ "target_mm": 5.0,
+ "notes": [
+  "Hip centre = sphere fitted to the femoral head, the same code on the MRI femur, each prediction and the floor; predictions are cut at the MRI's slice planes (20 mm apart) and sampled on its 2.1 mm grid first.",
+  "Only sides whose MRI femur keeps the top of its head are scored: the top slice at most 25 mm across (a cap) and the fitted sphere's top within -5..+10 mm of it. Elsewhere the head's upper part is not in the segmentation and a centre fitted to what is left sits too low.",
+  "Error = prediction minus MRI, mm: anterior, medial (toward the midline) and superior components.",
+  "skel_mri (the floor) is SKEL-J fitted to the MRI bones: its error is what this ground truth can resolve.",
+  "slicing_shift = sliced minus unsliced centre on the same mesh: what the 20 mm slicing alone moves.",
+  "Relative error uses the floor femur's length (fitted to the person's bones, not quantised by slices).",
+  "Hip only: knee and ankle centres are not defined well enough on 20 mm slices.",
+  "One cohort, lying down, arms overhead; SKEL-J was trained on this cohort, SKEL and OSSO were not.",
+  "Selection: the subjects with a complete head against the rest on body volume, bone depth and sex (selection block). With nine subjects only a large difference would show; if the complete heads skew small, the predictor errors here are optimistic, since skin-only error grows with soft tissue.",
+  "Any calibration of a predictor's offset (e.g. OSSO's anterior bias) must be fitted on separate data and only then scored here; fitting it on these hips would fit the test set. Nothing about these hips may enter the training or calibration of a predictor this bench later checks."
+ ],
+ "segmentation": {
+  "complete_heads": "9/72 sides, 9 subjects",
+  "top_slice_mm_all_sides": {
+   "mean": 38.19,
+   "sd": 11.57,
+   "median": 39.3,
+   "p90": 48.91
+  },
+  "floor_reaches_beyond_mri_mm": {
+   "femur_top": {
+    "median": 15.2,
+    "over_10mm": "42/72"
+   },
+   "femur_bottom": {
+    "median": 7.8,
+    "over_10mm": "31/72"
+   },
+   "tibia_fibula_top": {
+    "median": 16.2,
+    "over_10mm": "55/72"
+   },
+   "tibia_fibula_bottom": {
+    "median": 25.4,
+    "over_10mm": "60/72"
+   }
+  }
+ },
+ "mri_head": {
+  "radius_mm": {
+   "mean": 23.67,
+   "sd": 3.17,
+   "median": 22.1,
+   "p90": 27.42
+  },
+  "fit_rms_mm": {
+   "mean": 0.96,
+   "sd": 0.1,
+   "median": 0.97,
+   "p90": 1.04
+  },
+  "slices_used": {
+   "mean": 3.11,
+   "sd": 0.33,
+   "median": 3.0,
+   "p90": 3.2
+  }
+ },
+ "floor_femur_length_mm": {
+  "mean": 471.92,
+  "sd": 35.38,
+  "median": 464.3,
+  "p90": 517.14
+ },
+ "methods": {
+  "skel": {
+   "distance_mm": {
+    "mean": 22.62,
+    "sd": 12.66,
+    "median": 22.79,
+    "p90": 35.86
+   },
+   "within_target": "1/9",
+   "bias_mm": {
+    "anterior": {
+     "mean": 4.74,
+     "sd": 5.68,
+     "median": 4.06,
+     "p90": 10.36
+    },
+    "medial": {
+     "mean": 6.94,
+     "sd": 7.96,
+     "median": 6.64,
+     "p90": 16.94
+    },
+    "superior": {
+     "mean": 4.31,
+     "sd": 23.23,
+     "median": 0.75,
+     "p90": 34.04
+    }
+   },
+   "bias_vector_length_mm": 9.44,
+   "scatter_after_bias_rms_mm": 23.77,
+   "distance_pct_of_femur_length": {
+    "mean": 4.84,
+    "sd": 2.75,
+    "median": 5.11,
+    "p90": 7.99
+   },
+   "slicing_shift_mm": {
+    "mean": 0.64,
+    "sd": 0.38,
+    "median": 0.68,
+    "p90": 1.06
+   },
+   "head_radius_mm": {
+    "mean": 23.53,
+    "sd": 1.16,
+    "median": 22.9,
+    "p90": 25.3
+   },
+   "fit_rms_mm": {
+    "mean": 0.92,
+    "sd": 0.05,
+    "median": 0.93,
+    "p90": 0.96
+   }
+  },
+  "skel_j": {
+   "distance_mm": {
+    "mean": 21.78,
+    "sd": 11.96,
+    "median": 21.83,
+    "p90": 35.09
+   },
+   "within_target": "0/9",
+   "bias_mm": {
+    "anterior": {
+     "mean": 4.61,
+     "sd": 5.48,
+     "median": 5.93,
+     "p90": 10.82
+    },
+    "medial": {
+     "mean": 6.58,
+     "sd": 6.02,
+     "median": 5.23,
+     "p90": 15.08
+    },
+    "superior": {
+     "mean": 4.27,
+     "sd": 22.74,
+     "median": 5.54,
+     "p90": 29.39
+    }
+   },
+   "bias_vector_length_mm": 9.1,
+   "scatter_after_bias_rms_mm": 22.77,
+   "distance_pct_of_femur_length": {
+    "mean": 4.64,
+    "sd": 2.56,
+    "median": 4.93,
+    "p90": 7.39
+   },
+   "slicing_shift_mm": {
+    "mean": 0.7,
+    "sd": 0.46,
+    "median": 0.69,
+    "p90": 1.29
+   },
+   "head_radius_mm": {
+    "mean": 23.44,
+    "sd": 1.22,
+    "median": 23.1,
+    "p90": 25.42
+   },
+   "fit_rms_mm": {
+    "mean": 0.93,
+    "sd": 0.05,
+    "median": 0.91,
+    "p90": 0.99
+   }
+  },
+  "osso": {
+   "distance_mm": {
+    "mean": 33.77,
+    "sd": 7.09,
+    "median": 32.23,
+    "p90": 43.31
+   },
+   "within_target": "0/9",
+   "bias_mm": {
+    "anterior": {
+     "mean": 20.72,
+     "sd": 7.23,
+     "median": 23.21,
+     "p90": 28.46
+    },
+    "medial": {
+     "mean": 4.77,
+     "sd": 7.02,
+     "median": 4.95,
+     "p90": 11.83
+    },
+    "superior": {
+     "mean": 10.14,
+     "sd": 24.64,
+     "median": 15.83,
+     "p90": 36.51
+    }
+   },
+   "bias_vector_length_mm": 23.56,
+   "scatter_after_bias_rms_mm": 25.1,
+   "distance_pct_of_femur_length": {
+    "mean": 7.2,
+    "sd": 1.66,
+    "median": 7.16,
+    "p90": 9.44
+   },
+   "slicing_shift_mm": {
+    "mean": 0.69,
+    "sd": 0.34,
+    "median": 0.67,
+    "p90": 1.1
+   },
+   "head_radius_mm": {
+    "mean": 23.74,
+    "sd": 1.34,
+    "median": 23.0,
+    "p90": 25.38
+   },
+   "fit_rms_mm": {
+    "mean": 0.79,
+    "sd": 0.07,
+    "median": 0.81,
+    "p90": 0.85
+   }
+  },
+  "skel_mri": {
+   "distance_mm": {
+    "mean": 10.21,
+    "sd": 2.85,
+    "median": 10.33,
+    "p90": 13.53
+   },
+   "within_target": "0/9",
+   "bias_mm": {
+    "anterior": {
+     "mean": -3.43,
+     "sd": 3.33,
+     "median": -2.48,
+     "p90": 0.28
+    },
+    "medial": {
+     "mean": 6.07,
+     "sd": 3.69,
+     "median": 7.44,
+     "p90": 9.8
+    },
+    "superior": {
+     "mean": 5.06,
+     "sd": 4.18,
+     "median": 6.42,
+     "p90": 9.25
+    }
+   },
+   "bias_vector_length_mm": 8.61,
+   "scatter_after_bias_rms_mm": 6.12,
+   "distance_pct_of_femur_length": {
+    "mean": 2.16,
+    "sd": 0.61,
+    "median": 2.16,
+    "p90": 2.94
+   },
+   "slicing_shift_mm": {
+    "mean": 0.6,
+    "sd": 0.38,
+    "median": 0.42,
+    "p90": 1.07
+   },
+   "head_radius_mm": {
+    "mean": 24.11,
+    "sd": 1.69,
+    "median": 23.7,
+    "p90": 25.98
+   },
+   "fit_rms_mm": {
+    "mean": 0.87,
+    "sd": 0.07,
+    "median": 0.88,
+    "p90": 0.95
+   }
+  }
+ },
+ "paired_per_side": {
+  "skel_j - skel": {
+   "mean_mm": -0.84,
+   "first_better_in": "7/9",
+   "wilcoxon_p": 0.36
+  },
+  "osso - skel": {
+   "mean_mm": 11.15,
+   "first_better_in": "0/9",
+   "wilcoxon_p": 0.0039
+  },
+  "osso - skel_j": {
+   "mean_mm": 11.99,
+   "first_better_in": "1/9",
+   "wilcoxon_p": 0.0078
+  }
+ },
+ "selection": {
+  "body_volume_l": {
+   "complete_median_range": [
+    72.0,
+    52.4,
+    111.5
+   ],
+   "others_median_range": [
+    78.0,
+    49.3,
+    130.6
+   ],
+   "mann_whitney_p": 0.58
+  },
+  "bone_depth_mm": {
+   "complete_median_range": [
+    36.4,
+    30.8,
+    45.6
+   ],
+   "others_median_range": [
+    38.8,
+    29.2,
+    55.1
+   ],
+   "mann_whitney_p": 0.55
+  },
+  "thigh_depth_mm": {
+   "complete_median_range": [
+    51.6,
+    44.0,
+    60.1
+   ],
+   "others_median_range": [
+    50.6,
+    39.7,
+    69.8
+   ],
+   "mann_whitney_p": 0.83
+  },
+  "female": {
+   "complete": "6/9",
+   "others": "16/27",
+   "fisher_p": 1.0
+  }
+ },
+ "dataset_verdict": "On the 9 complete heads the floor (SKEL-J fitted to the MRI bones) lands 10.21 mm from the MRI hip centre on average (90th percentile 13.53 mm). That is above the 5 mm target, so this dataset cannot test it: predictors are ranked only at the precision the floor supports."
+}

@@ -24,7 +24,7 @@
 | D-05 | Exoskeleton safety ownership | Named responsible engineer + risk assessment process | Must exist before Track-2 hardware is powered near a person | Exo Track 2 |
 | D-06 | Patient-facing surface | Phone app (matches iPhone hardware) vs clinician-led tablet vs web | Phone-first, clinician-reviewed outputs only (roadmap Phase 3) | Phase 3 |
 | D-07 | Data jurisdiction & retention for RGB-D health data | Local-only processing vs cloud mocap services | Local-only by default (hardware.md privacy note) | Any real recording |
-| D-08 | Original 70 repos' live metadata | Run `scripts/enrich_metadata.py --apply` with a GitHub token | Do before the first public release of this repo | Catalog polish |
+| D-08 | Original 70 repos' live metadata | ~~Run `scripts/enrich_metadata.py --apply` with a GitHub token~~ **Done 2026-10-28** (anonymous API: repos 1–52 + gap entries refreshed; licenses for all 115 verified (7 repos added since, fully documented at entry); documentation standard enforced by validator/tests). Re-run with `GITHUB_TOKEN` before public release to refresh stars/forks again | Before the first public release of this repo | Catalog polish |
 | D-09 | SKEL/SMPL licensing for anything beyond research | SKEL, SMPL, HSMR weights and OpenCap Monocular are non-commercial; MediaPipe/OpenSim/Pose2Sim are permissive | Research use now; ask MPI-IS (ps-license@tue.mpg.de) before any commercial plan, or plan a permissive body model | Commercial use of `pipeline/` with the SKEL front-end |
 | D-10 | Gravity reference for monocular captures | Phone IMU (ARKit/CoreMotion) vs floor-plane fit vs levelled tripod | Record the device gravity vector with every capture (`pipeline` uses it first); floor fit only as a cross-check | Any trunk/pelvis inclination number |
 | D-11 | Monocular front-end choice | HSMR/SKEL (implemented adapter) vs WHAM-based OpenCap Monocular vs SAM4Dcap | Measure HSMR/SKEL on LabValidation; keep OpenCap Monocular's 4.8° MAE as the bar | Tier-C/B kinematics claims |
@@ -72,6 +72,7 @@
 | G-03 | No Tier-A subject | Corrections and cues stay illustrations | D-02 imaging pathway; personalised `.osim` drops into `pipeline/configs` |
 | G-04 | Physical BLE write to SenseShift untested | Suit Track 1 | One ESP32 + vibration motors bench test with `suit-bridge --ble` |
 | G-05 | SlimeVR posture signals unvalidated | Live cues | Same validation protocol as video (per joint × plane), IMU vs mocap |
+| G-06 | `utahmobl/opencap-monocular` and `davidpagnon/Sports2D` were used by `pipeline/` but not catalogued | The catalog's documentation standard needs live stars/forks, which the pipeline session's network could not fetch | **Done 2026-10-28**: catalog IDs 116–117, stars/forks fetched by the HarmannBitte session. Licences from the repo-root LICENSE files: PolyForm Noncommercial 1.0.0 for OpenCap Monocular (re-checked at e2d0b14; the API says NOASSERTION and the paper Apache-2.0, neither matches the file; it also needs SMPL weights) and BSD-3-Clause for Sports2D |
 
 ## Known catalog limitations (accepted, recorded)
 - Star/fork counts are orientation only and go stale; upstream READMEs win.

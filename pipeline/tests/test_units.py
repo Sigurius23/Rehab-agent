@@ -341,6 +341,147 @@ def test_cue_engine_faded_schedule_and_refractory():
     assert all(b - a >= 5.0 for a, b in zip(times, times[1:]))
 
 
+def test_cue_rule_relative_to_standing_holds_and_safety_flags():
+    """A knee that stands in 8 deg of valgus is cued for what it adds in the squat, not for how it stands; with no
+    standing value the rule is not evaluated; a screening hold waits for a clinician-set target; a clinician safety
+    flag holds the region whatever the rule says."""
+    t = np.arange(0, 4, 0.01)
+    s = np.where((t > 1) & (t < 2), 15.0, 8.0)       # stands at 8, squats to 15: 7 deg more
+    rel = _rule_spec()
+    rel["rules"][0]["relative_to"] = "standing"
+    ok = {"tier": "A", "allowed_joint_planes": ["knee_r.frontal"]}
+    _, sent_abs = feedback.replay(_rule_spec(), t, {"s": s}, **ok)
+    log, sent = feedback.replay(rel, t, {"s": s}, baselines={"s": 8.0}, **ok)
+    assert len(sent_abs) == 1 and not sent and not [e for e in log if "decision" in e]
+    s2 = np.where((t > 1) & (t < 2), 20.0, 8.0)      # 12 deg beyond standing: cued, the standing value logged
+    log, sent = feedback.replay(rel, t, {"s": s2}, baselines={"s": 8.0}, **ok)
+    d = [e for e in log if "decision" in e]
+    assert len(sent) == 1 and d[0]["value"] == 12.0 and d[0]["standing_value"] == 8.0
+    log, sent = feedback.replay(rel, t, {"s": s2}, **ok)
+    summ = feedback.summarise(rel, log, sent, "A", ok["allowed_joint_planes"])
+    assert not sent and summ["per_rule"]["v"]["unevaluated"] and "no standing value" in summ["per_rule"]["v"]["not_evaluated_because"]
+    holds = {"knee_r.frontal": "structural knee alignment on record (genu valgum)"}
+    log, sent = feedback.replay(rel, t, {"s": s2}, baselines={"s": 8.0}, holds=holds, **ok)
+    d = [e for e in log if "decision" in e]
+    assert not sent and d[0]["decision"] == "would_cue" and "set by the treating clinician" in d[0]["reason"]
+    summ = feedback.summarise(rel, log, sent, "A", ok["allowed_joint_planes"], {"s": 8.0}, holds)
+    assert "genu valgum" in summ["per_rule"]["v"]["gate"] and summ["screening_holds"] == holds
+    rel["rules"][0]["clinician_target"] = True
+    _, sent = feedback.replay(rel, t, {"s": s2}, baselines={"s": 8.0}, holds=holds, **ok)
+    assert len(sent) == 1                                       # the clinician set this person's target
+    safe = {"knee_r": "clinician safety flag 'joint-instability' (confirmed, set 2026-10-01) at right knee"}
+    log, sent = feedback.replay(rel, t, {"s": s2}, baselines={"s": 8.0}, holds=holds, safety=safe, **ok)
+    d = [e for e in log if "decision" in e]
+    assert not sent and "no cues at this region" in d[0]["reason"]          # nothing overrides a safety flag
+    bad = _rule_spec()
+    bad["rules"][0]["relative_to"] = "yesterday"
+    with pytest.raises(ValueError, match="relative_to"):
+        feedback.replay(bad, t, {"s": s})
+
+
+def _legs(valgus_r=0.0, flex_l=0.0, longer_r_mm=0.0, hip_up_r_mm=0.0, names="lstm"):
+    """Standing markers (x forward, y up, z right) with a right knee shifted medially by ``valgus_r`` degrees of
+    thigh-shank angle, a left knee bent forward by ``flex_l`` degrees, and the right leg longer / hip higher."""
+    pts = {}
+    for side, z in (("r", 0.1), ("l", -0.1)):
+        hip_y = 0.9 + (hip_up_r_mm / 1000 if side == "r" else 0.0)
+        ankle_y = 0.08 - (longer_r_mm / 1000 if side == "r" else 0.0)
+        hip, ankle = np.array([0.0, hip_y, z]), np.array([0.0, ankle_y, z])
+        knee = (hip + ankle) / 2
+        half = (hip_y - ankle_y) / 2
+        if side == "r" and valgus_r:
+            knee[2] -= half * np.tan(np.radians(valgus_r / 2))      # medial = towards -z for the right leg
+        if side == "l" and flex_l:
+            knee[0] += half * np.tan(np.radians(flex_l / 2))        # forward
+        pts[side] = (hip, knee, ankle)
+    sh = {"r": np.array([0.0, 1.45, 0.19]), "l": np.array([0.0, 1.45, -0.18])}
+    if names == "lstm":
+        out = {"RHJC_study": pts["r"][0], "LHJC_study": pts["l"][0], "r_shoulder_study": sh["r"], "L_shoulder_study": sh["l"]}
+        for side, pre in (("r", "r_"), ("l", "L_")):
+            for part, k in (("knee", 1), ("ankle", 2)):
+                c = pts[side][k]
+                out[f"{pre}{part}_study"] = c + [0, 0, 0.05 if side == "r" else -0.05]
+                out[f"{pre}m{part}_study"] = c - [0, 0, 0.05 if side == "r" else -0.05]
+    else:      # MediaPipe keypoints
+        out = {"RHip": pts["r"][0], "RKnee": pts["r"][1], "RAnkle": pts["r"][2], "LHip": pts["l"][0], "LKnee": pts["l"][1],
+               "LAnkle": pts["l"][2], "RShoulder": sh["r"], "LShoulder": sh["l"]}
+    return list(out), np.array(list(out.values()))
+
+
+def test_standing_alignment_from_markers():
+    from rehabtwin import alignment
+    a = alignment.measure(*_legs())
+    assert a["knee_frontal_deg"] == {"r": 0.0, "l": 0.0} and a["knee_sagittal_deg"] == {"r": 0.0, "l": 0.0}
+    assert a["markers"]["knee_r"] == ["r_knee_study", "r_mknee_study"] and a["leg_length_difference_mm"] == 0.0
+    a = alignment.measure(*_legs(valgus_r=8.0, flex_l=5.0, longer_r_mm=12.0, hip_up_r_mm=12.0, names="mediapipe"))
+    assert a["knee_frontal_deg"]["r"] == pytest.approx(8.0, abs=0.01) and a["knee_frontal_deg"]["l"] == 0.0
+    assert a["knee_sagittal_deg"]["l"] == pytest.approx(5.0, abs=0.01) and a["markers"]["knee_r"] == ["RKnee"]
+    assert a["leg_length_difference_mm"] == pytest.approx(24.0, abs=0.2)      # 12 mm higher hip + 12 mm lower ankle
+    assert a["pelvic_obliquity_mm"] == pytest.approx(12.0, abs=0.01)
+    assert a["shoulder_reach_m"] == {"r": 0.19, "l": 0.18} and a["shoulder_height_difference_mm"] == 0.0
+    # the same body turned and lifted: the same alignment
+    names, pts = _legs(valgus_r=8.0)
+    turned = pts @ rot_y(35).T + [1.0, 0.3, -2.0]
+    assert alignment.measure(names, turned)["knee_frontal_deg"]["r"] == pytest.approx(8.0, abs=0.01)
+    with pytest.raises(ValueError, match="ankle_l"):
+        alignment.measure(names[:-6], pts[:-6])
+
+
+def test_limb_alignment_records_tiers_and_holds():
+    from rehabtwin import alignment
+    xray = {"measured_at": "2026-09-01", "structural": True, "diagnosis": "genu valgum",
+            "right": {"mechanical_axis_hka_deg": 9.0, "tibial_torsion_deg": 30.0, "source": "radiograph"},
+            "left": {"mechanical_axis_hka_deg": 7.5, "source": "radiograph"}}
+    assert alignment.check_limb_alignment(xray) == "B" and alignment.check_limb_alignment({**xray, "approved_by": "Dr. X"}) == "A"
+    exam = {"measured_at": "2026-09-01", "right": {"mechanical_axis_hka_deg": 4.0, "source": "clinical-measurement"}}
+    assert alignment.check_limb_alignment(exam) == "C" and alignment.check_limb_alignment({**exam, "approved_by": "Dr. X"}) == "B"
+    mixed = {"measured_at": "2026-09-01", "right": {"mechanical_axis_hka_deg": 4.0, "source": "eos"},
+             "left": {"mechanical_axis_hka_deg": 3.0, "source": "clinical-measurement"}}
+    assert alignment.check_limb_alignment(mixed) == "C"                     # the least-evidenced side
+    for bad, msg in (({**xray, "right": {"mechanical_axis_hka_deg": 9.0, "source": "standing frame markers"}}, "screening only"),
+                     ({**xray, "right": {"mechanical_axis_hka_deg": 178.0, "source": "radiograph"}}, "not the 180-degree"),
+                     ({**xray, "right": {"knee_frontal_deg": 9.0, "source": "radiograph"}}, "unknown fields"),
+                     ({k: v for k, v in xray.items() if k != "measured_at"}, "measured_at"),
+                     ({"measured_at": "2026-09-01", "right": {"source": "ct"}}, "no alignment values"),
+                     ({"measured_at": "2026-09-01"}, "right")):
+        with pytest.raises(ValueError, match=msg):
+            alignment.check_limb_alignment(bad)
+    assert alignment.knee_hka(xray) == {"r": 9.0, "l": 7.5}
+    h = alignment.structural_holds(xray)
+    assert set(h) == {"knee_r.frontal", "knee_l.frontal"} and "genu valgum" in h["knee_r.frontal"]
+    assert alignment.structural_holds({**xray, "structural": False}) == {}
+    estimate = {"method": "standing frame markers", "knee_frontal_deg": {"r": 7.0, "l": 2.0}}
+    s = alignment.screening_holds(estimate)
+    assert set(s) == {"knee_r.frontal"} and alignment.CHECK_PROMPT in s["knee_r.frontal"]   # beyond 6 deg only
+    assert not any(w in s["knee_r.frontal"].lower() for w in ("x-ray", "radiograph", "scan", "mri", "ct "))
+    assert alignment.screening_holds(estimate, recorded=xray) == {}          # the record knows better than the camera
+    assert alignment.screening_holds(None) == {}
+
+
+def test_safety_flags_are_the_clinicians_and_fail_closed():
+    from rehabtwin import safety
+    knee = {"flag": "joint-instability", "body_region": "right knee", "status": "suspected", "set_by": "clinician",
+            "set_at": "2026-10-01", "restrictions": ["no valgus loading"]}
+    neck = {"flag": "atlantoaxial-instability", "body_region": "cervical spine", "status": "not-assessed",
+            "set_by": "clinician", "set_at": "2026-10-01"}
+    odd = {"flag": "other", "body_region": "sacroiliac region", "status": "confirmed", "set_by": "clinician",
+           "set_at": "2026-10-01"}
+    assert safety.check_flags([knee, neck]) == [knee, neck] and safety.check_flags({"safety_flags": [knee]}) == [knee]
+    for bad, msg in (({**knee, "set_by": "physio"}, "never sets or clears"), ({**knee, "status": "gone"}, "status"),
+                     ({**knee, "flag": "weak"}, "flag"), ({k: v for k, v in knee.items() if k != "set_at"}, "set_at"),
+                     ({**knee, "restrictions": "none"}, "list of strings")):
+        with pytest.raises(ValueError, match=msg):
+            safety.check_flags([bad])
+    joints = ["knee_r", "knee_l", "hip_r", "neck", "head_segment", "torso_segment", "lumbar"]
+    h = safety.holds([knee, neck], joints)
+    assert set(h) == {"knee_r", "neck", "head_segment"} and "no valgus loading" in h["knee_r"]
+    assert safety.holds([{**knee, "status": "cleared"}], joints) == {}
+    h = safety.holds([odd], joints)
+    assert set(h) == set(joints) and "every joint is held" in h["knee_l"]     # unknown region: everything held
+    both = {**knee, "body_region": "both knees (bilateral)"}
+    assert set(safety.holds([both], joints)) == {"knee_r", "knee_l"}
+
+
 def test_feedback_rules_template_loads():
     spec = feedback.load_rules("squat_posture")
     assert "TEMPLATE" in spec["author"] and all("joint_plane" in r for r in spec["rules"])
@@ -474,8 +615,8 @@ def test_live_chain_posture_to_suit_payloads(tmp_path):
     res = {}
     transport = suit.DryRunTransport()
     threads = [
-        threading.Thread(target=lambda: res.update(eng=lsl_bridge.run_live(
-            spec, "A", ["knee_r.frontal"], duration_s=15, source="rt_chain_posture"))),
+        threading.Thread(target=lambda: res.update(eng=lsl_bridge.run_live(      # stands at 2 deg (lsl-live: --session's)
+            spec, "A", ["knee_r.frontal"], duration_s=15, source="rt_chain_posture", baselines={"knee_fppa_r": 2.0}))),
         threading.Thread(target=lambda: suit.run_bridge(suit.SuitDriver("suit_bhaptics", header=hdr), transport,
                                                         duration_s=4.0, rate_hz=50)),
     ]
@@ -1469,9 +1610,82 @@ def test_muscle_caveat_follows_the_muscle_model(tmp_path, monkeypatch):
     study, mdir = cli.muscle_study(d, plant=False, view_3d=False, use_strength=True)
     cav = study["runs"]["measured"]["caveats"][0]
     assert calls[-1]["muscle_model"]["source"].startswith("strength")       # reaches muscles.run (and muscles.json)
-    assert "knee_extension_r" in cav and "dynamometry" in cav and "all other muscles keep generic" in cav
+    assert "knee_extension_r" in cav and "dynamometry" in cav and "all other muscles: generic" in cav
     assert "no personalised strength" not in cav and "no EMG calibration" in cav
     assert cav in (mdir / "muscles.html").read_text()
+
+
+def test_recording_scale_against_the_person_and_which_front_ends_measure_scale():
+    cfg = {"scaling": {"measurements": [
+        {"name": "femur_r", "pairs": [["A", "B"]], "bodies": {"femur_r": "X Y Z"}},
+        {"name": "pelvisZ", "pairs": [["C", "D"]], "bodies": {"pelvis": "Z"}},
+        {"name": "absent", "pairs": [["A", "Q"]], "bodies": {"tibia_r": "X Y Z"}}]}}
+    model = np.array([[0, 0, 0], [0, 0.4, 0], [0, 0, 0], [0, 0, 0.2]], float)
+    static = model * 0.9                                    # a recording 10% small ...
+    person = {"femur_r": [1.0, 1.0, 1.0], "pelvis": [1.2, 1.2, 1.0]}
+    ratio, per = opensim_stage.recording_scale(cfg, ["A", "B", "C", "D"], static, model, person)
+    assert per == {"femur_r": 0.9, "pelvisZ": 0.9} and ratio == 0.9   # ... measured against the person's Z factor
+    with pytest.raises(ValueError, match="no scaling measurement"):
+        opensim_stage.recording_scale(cfg, ["A", "B", "C", "D"], static, model, {})
+    measured = opensim_stage.scale_is_measured
+    assert not measured({"source": "MediaPipe Pose (monocular)"}) and not measured({"source": "HSMR+SKEL"})
+    assert measured({"source": "MediaPipe Pose, 5-camera DLT triangulation"}) and measured({"source": "synthetic"})
+    assert not measured({"source": "anything", "metric_scale": False})
+
+
+def test_capacity_regression_and_caveats():
+    from rehabtwin import capacity
+    ref = capacity.REFERENCE
+    assert capacity.limb_muscle_volume_cm3(ref["mass_kg"], ref["height_m"]) == pytest.approx(7304.4, abs=0.1)
+    # twice the mass at the same height: less than twice the muscle (the regression's intercept)
+    r = capacity.limb_muscle_volume_cm3(2 * ref["mass_kg"], ref["height_m"]) / capacity.limb_muscle_volume_cm3(
+        ref["mass_kg"], ref["height_m"])
+    assert 1.8 < r < 1.9
+    assert not any(c.startswith("BMI") for c in capacity.caveats(70, 1.75))
+    assert capacity.caveats(110, 1.75)[0].startswith("BMI 35.9 > 30")
+    assert len(set(capacity.LEG_MUSCLES)) == 40
+
+
+def test_capacity_scaling_needs_a_measured_mass_and_a_height(tmp_path, monkeypatch):
+    import json
+
+    from rehabtwin import capacity, cli, muscles
+    calls = []
+    _fake_muscles_and_strength(monkeypatch, calls)
+    scaled = []
+    monkeypatch.setattr(capacity, "scale_model", lambda *a, **k: scaled.append(a) or {
+        "method": "m", "subject": {"mass_kg": 81.5, "height_m": 1.8, "bmi": 25.2}, "factor_median": 1.1,
+        "caveats": ["BMI x"]})
+    monkeypatch.setattr(cli, "resolve", lambda p: Path("generic.osim"))
+    d = _mass_session(tmp_path, "measured", 81.5)
+    study, _ = cli.muscle_study(d, plant=False, view_3d=False)
+    assert study["muscle_model"]["capacity"] == {"scaled": False, "why_not": "no height (process with --height-m or --person)"}
+    assert calls[-1]["model_path"] == d / "model.osim" and not scaled
+    qc = json.loads((d / "qc.json").read_text())
+    qc["subject"]["height_m"] = 1.8
+    (d / "qc.json").write_text(json.dumps(qc))
+    sess = json.loads((d / "session.json").read_text())
+    sess["pipeline"]["config"] = "skel105_pose2sim.json"
+    (d / "session.json").write_text(json.dumps(sess))
+    study, _ = cli.muscle_study(d, plant=False, view_3d=False)
+    assert scaled[-1][2:4] == (81.5, 1.8) and calls[-1]["model_path"] == d / "capacity" / "model_capacity.osim"
+    assert study["muscle_model"]["source"].startswith("body-size scaled")
+    assert json.loads((d / "capacity" / "capacity.json").read_text())["processing_id"] == "p0"
+    assert "population regression" in muscles.muscle_caveat(study["muscle_model"]) and "BMI x" in muscles.muscle_caveat(
+        study["muscle_model"])
+    study, _ = cli.muscle_study(d, plant=False, view_3d=False, capacity=False)
+    assert study["muscle_model"]["capacity"]["why_not"].startswith("not requested")
+    qc["scaling"] = {"method": "person model: its personalised model, segment masses scaled", "person_model": {}}
+    (d / "qc.json").write_text(json.dumps(qc))
+    study, _ = cli.muscle_study(d, plant=False, view_3d=False)
+    assert study["muscle_model"]["capacity"]["why_not"].startswith("personalised model")
+    qc["scaling"] = {}
+    qc["subject"]["mass_source"] = "assumed default"
+    (d / "qc.json").write_text(json.dumps(qc))
+    study, _ = cli.muscle_study(d, plant=False, view_3d=False, allow_assumed_mass=True)
+    assert study["muscle_model"]["capacity"]["why_not"] == "body mass assumed default, not measured"
+    rec, _ = cli.strength_calibration(d, d / "tests.json", allow_assumed_mass=True)
+    assert rec["capacity"]["scaled"] is False
 
 
 # ------------------------------------------------------------- re-processing: stale derived results

@@ -509,6 +509,42 @@ def _muscle_banner(study):
                 f"dynamometer tests, {mm['calibrated_muscles']} muscles; geometry generic, Tier {e(study['twin_tier'])}). "
                 + (f"Measured deficits: {e(flags)}. " if flags else "No between-limb deficit below 90 %. ")
                 + "Ground forces are estimated, not measured.</p>")
+    cap = mm.get("capacity") or {}
+    bmi = "".join(e(c) + " " for c in cap.get("caveats", []) if c.startswith(("BMI", "Age")))
+    scan = cap.get("dxa")
+    masses = (f" Segment masses follow the scan's regional masses ({e(scan['method'])} {e(scan['date'])})."
+              if cap.get("mass_distribution") else "")
+    if cap.get("scaled") and cap.get("imaging"):
+        im, src = cap["imaging"], cap.get("sources", {})
+        rest = sum(v for k, v in src.items() if not k.startswith("measured") and "fat" not in k)
+        return (f"<p class='banner'><b>What-if simulation with measured leg muscles</b> (Tier {e(study['twin_tier'])}): "
+                f"{e(im.get('method', ''))} {e(im.get('date', ''))} gives size and/or fat fraction for "
+                f"{2 * 40 - rest} of 80 leg muscles"
+                + (f"; the other {rest} take their leg's volume from {e(cap.get('leg_source_text', 'height and mass'))}"
+                   if rest else "")
+                + ". Muscle geometry stays generic, and maximum force follows contractile volume, not a strength "
+                "test." + masses + " " + bmi + "Ground forces are estimated, not measured.</p>")
+    if cap.get("scaled") and cap.get("leg_source") == "dxa":
+        v = cap["leg_muscle_cm3"]
+        return (f"<p class='banner'><b>What-if simulation with leg muscle sized from a DXA scan</b> "
+                f"({e(scan['method'])} {e(scan['date'])}; Tier {e(study['twin_tier'])}): {v['right']} cm³ right and "
+                f"{v['left']} cm³ left leg muscle from each leg's lean mass (McCarthy 2023, against MRI), shared among "
+                "the leg's muscles as in the generic model; trunk and arms generic." + masses + " DXA measures each "
+                "leg, not each muscle, nor muscle quality or strength (<code>rehabtwin strength</code> adds "
+                "dynamometry). Ground forces are estimated, not measured.</p>")
+    if cap.get("scaled"):
+        sub = cap["subject"]
+        who = (f"a {sub['age_years']:.0f}-year-old {e(sub['sex'])} of {sub['height_m']} m and {sub['mass_kg']} kg"
+               if cap.get("leg_source") == "anthropometry" else f"{sub['height_m']} m and {sub['mass_kg']} kg")
+        how = ("NHANES DXA reference data (age, sex, height and mass)" if cap.get("leg_source") == "anthropometry" else
+               "a population regression (Handsfield 2014)")
+        typical = "an average person of this age, sex and size" if cap.get("leg_source") == "anthropometry" else \
+            "an average young healthy adult of this size"
+        return (f"<p class='banner'><b>What-if simulation with leg capacities scaled to {who}</b> "
+                f"(Tier {e(study['twin_tier'])}): {how}, leg Fmax ×{cap['factor_median']:.2f} median, trunk and arms "
+                f"generic. It is what {typical} has, not this person's measured strength (<code>rehabtwin strength</code> "
+                "adds dynamometry; a DXA scan, <code>rehabtwin person dxa</code>, measures each leg's muscle). "
+                + bmi + "Ground forces are estimated, not measured.</p>")
     return (f"<p class='banner'><b>What-if simulation on a generic (Tier {e(study['twin_tier'])}) muscle model.</b> "
             "Not a statement about this person's muscles (docs/accuracy.md: no 'underdeveloped muscle' claim without "
             "imaging/strength/EMG evidence; <code>rehabtwin strength</code> adds dynamometry). Ground forces are "
@@ -533,6 +569,60 @@ def _consistency_span(base, study):
                        "estimate (segment angular momentum, arm swing). Treat every muscle number on this page as "
                        "unreliable; measure ground forces (force plates or pressure insoles) for this exercise.</p>")
     return "".join(out)
+
+
+def _knee_load_html(jl):
+    """The joint-load block of a muscle study (rehabtwin/joint_load.py): labels first, then baseline, scenarios."""
+    e = html.escape
+    labels = "".join(f"<li><b>{e(k.replace('_', ' '))}:</b> {e(v)}</li>" for k, v in jl["labels"].items())
+    band = jl.get("baseline_band_over_grf_split", {})
+    dg = jl.get("baseline_diagnostics") or {}
+    base = "".join(
+        f"<tr><td>{'right' if s == 'r' else 'left'}</td><td>{v['peak_compression_N']:.0f} N ({v['peak_compression_bw']:.2f} BW)</td>"
+        f"<td>{e(f'{band[s][0]:.0f}–{band[s][1]:.0f} N') if s in band else '—'}</td><td>{v['knee_flexion_at_peak_deg']}°</td>"
+        f"<td>{v['impulse_Ns']:.0f} N·s{'' if dg.get(s, {}).get('impulse_reportable', True) else ' (not reportable)'}</td>"
+        f"<td>{v.get('patellofemoral_peak_N', '—')}</td></tr>" for s, v in jl["baseline"].items())
+    diag = "".join(
+        f"<tr><td>{'right' if s == 'r' else 'left'}</td><td>{'yes' if d['reportable'] else 'NO: ' + e('; '.join(d['why_not_reportable']))}</td>"
+        f"<td>{d['peak_resultant_bw']} BW{' (above)' if d['above_in_vivo_band'] else ''}</td>"
+        f"<td>{e(', '.join(d['saturated_knee_muscles_at_peak']) or 'none')}</td><td>{d['knee_reserve_share_at_peak'] * 100:.0f}%</td>"
+        f"<td>{d['quadriceps_moment_arm_cm_at_peak']} cm</td>"
+        f"<td>{e(', '.join(f'{k} {v:.0f} N' for k, v in d['compression_at_peak_N'].items() if abs(v) >= 1))}</td></tr>"
+        for s, d in dg.items())
+    diag = (f"<h3>Can the peak be trusted?</h3><table><tr><th>knee</th><th>reportable</th><th>peak resultant vs "
+            f"in-vivo band</th><th>muscles at capacity</th><th>reserve share of knee moment</th><th>quadriceps moment arm"
+            f"</th><th>compression at the peak, by source</th></tr>{diag}</table>" if diag else "")
+    charts = ""
+    for s in jl["baseline"]:
+        series = {lab: sr[s] for lab, sr in jl["series"].items() if s in sr}
+        t = jl["series"]["measured"]["t"]
+        charts += _svg_chart(np.asarray(t), {k: v[:len(t)] for k, v in series.items()}, [],
+                             f"{'Right' if s == 'r' else 'Left'} knee: tibiofemoral compression", unit="N")
+    rows, evidence = [], []
+    for lab, sc in jl["scenarios"].items():
+        for s, v in sc["knee"].items():
+            p = v["peak"]
+            rng = p.get("change_pct_range_over_grf_split")
+            rob = ("" if "robust_to_grf_split" not in p else
+                   f"<td>{'yes' if p['robust_to_grf_split'] else 'no'} ({rng[0]:+.1f} to {rng[1]:+.1f}%)</td>")
+            if not v.get("reportable", True):
+                rows.append(f"<tr><td>{e(lab)}</td><td>{'right' if s == 'r' else 'left'}</td><td colspan='4' class='muted'>"
+                            f"not reportable: {e('; '.join(v['why_not_reportable']))}</td></tr>")
+                continue
+            rows.append(f"<tr><td>{e(lab)}</td><td>{'right' if s == 'r' else 'left'}</td><td>{p['change_N']:+.0f} N</td>"
+                        f"<td>{p['change_pct']:+.1f}%</td>{rob}<td>{'—' if v['impulse_pct'] is None else format(v['impulse_pct'], '+.1f') + '%'}</td></tr>")
+        rows.append(f"<tr><td colspan='6' class='muted'>{e(sc['reading'])}</td></tr>")
+        if sc.get("published_evidence"):
+            evidence.append(sc["published_evidence"])
+    robust_th = "<th>robust to GRF split</th>" if any("robust_to_grf_split" in v["peak"] for sc in jl["scenarios"].values()
+                                                      for v in sc["knee"].values()) else ""
+    scen = (f"<h3>Scenarios: change from the measured baseline, same person, same motion</h3><table><tr><th>scenario</th>"
+            f"<th>knee</th><th>peak compression</th><th>change</th>{robust_th}<th>impulse</th></tr>{''.join(rows)}</table>"
+            if rows else "")
+    ev = "".join(f"<p class='banner'>{e(x)}</p>" for x in dict.fromkeys(evidence))
+    return (f"<h2>Knee joint load</h2><ul>{labels}</ul>{charts}<table><tr><th>knee</th><th>peak compression</th>"
+            f"<th>GRF-split band</th><th>flexion at peak</th><th>impulse (rep)</th><th>patellofemoral peak (N)</th></tr>"
+            f"{base}</table>{diag}{scen}{ev}")
 
 
 def write_muscles(path, study, view=None):
@@ -582,7 +672,8 @@ def write_muscles(path, study, view=None):
     exo_html += (f"<h2>Passive elastic supports</h2><table><tr><th>variant</th><th>joint</th><th>stiffness (N·m/rad)</th>"
                  f"<th>slack until</th><th>resists</th><th>peak (N·m)</th><th>mean (N·m)</th><th>engaged</th></tr>"
                  f"{pas_rows}</table>" if pas_rows else "")
-    exo_html = dev_banner + exo_html if exo_html else ""
+    bone_banner = f"<p class='banner'><b>{e(study['bone_caveat'])}</b></p>" if study.get("bone_caveat") else ""
+    exo_html = dev_banner + bone_banner + exo_html if exo_html else ""
     reserve_notes = "".join(f"<li>{e(lab)}: {e(', '.join(f'{k} {v} N·m' for k, v in r['reserve_torque_peaks_Nm'].items()) or 'none')}"
                             f"; saturated muscles: {e(', '.join(r['muscles_saturated']) or 'none')}</li>" for lab, r in runs.items())
     grf = base["grf"]
@@ -600,6 +691,7 @@ def write_muscles(path, study, view=None):
 {_consistency_span(base, study)}</div>
 {_svg_bars(groups, variants, "Peak muscle-group activation (fraction of group capacity)")}
 {_muscle_view(view) if view else ""}
+{_knee_load_html(study["joint_load"]) if study.get("joint_load") else ""}
 <h2>Biggest changes</h2>{sens_html}
 <table><tr><th>variant</th><th>group</th><th>measured</th><th>variant</th><th>change</th>{"<th>robust to GRF split</th>" if sens else ""}</tr>{''.join(rows)}</table>
 {exo_html}
@@ -631,18 +723,19 @@ def write_strength(path, rec, tier):
         f"<tr><td>{e(a)}</td><td>{v['right_Nm']:.1f}</td><td>{v['left_Nm']:.1f}</td><td>{v['lsi_pct']:.0f}%</td>"
         f"<td>{e(v['weaker_side'] or '-')}</td><td>{low if v['flag'] else 'ok'}</td></tr>"
         for a, v in rec["symmetry"].items())
+    base_model = "body-size scaled model" if (rec.get("capacity") or {}).get("scaled") else "generic model"
     doc = f"""<!doctype html><html lang="en"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1"><title>Strength calibration</title>
 <style>{_CSS}</style></head><body>
 <h1>Strength calibration</h1>
 <p class="banner"><b>Measured joint strength, generic muscle geometry (Tier {e(tier)}).</b> Each factor is the
-person's torque relative to the generic model's capacity for that test's prime movers; it rescales their
+person's torque relative to the {base_model}'s capacity for that test's prime movers; it rescales their
 maximum isometric force and nothing else. "Weak" here means weak in the measured test — the factor says
 nothing about muscle size or why.</p>{mass_banner}
 <div class="kv">{mass_span}<span>muscles calibrated: {rec['calibrated_muscles']} of {rec['total_muscles']}</span>
 {''.join(f"<span>{e(k)}: {e(str(rec[k]))}</span>" for k in ("device", "protocol", "tester", "date") if k in rec)}</div>
 <h2>Tests</h2>
-<table><tr><th>action</th><th>posture</th><th>measured (N·m)</th><th>N·m/kg</th><th>generic model (N·m)</th>
+<table><tr><th>action</th><th>posture</th><th>measured (N·m)</th><th>N·m/kg</th><th>{base_model} (N·m)</th>
 <th>factor</th><th>muscles scaled (prime + synergists)</th></tr>{rows}</table>
 <h2>Limb symmetry</h2>
 {f"<table><tr><th>action</th><th>right (N·m)</th><th>left (N·m)</th><th>LSI</th><th>weaker side</th><th></th></tr>{sym}</table>" if sym else "<p class='muted'>No action measured on both sides.</p>"}
@@ -788,6 +881,8 @@ def write_correction(path, summary, measured_time, signals_measured, signals_cor
               "or for feedback. It shows what the requested change implies for the rest of the body.</p>"
               if summary["twin_tier"] != "A" else
               "<p class='banner'><b>Tier A correction target.</b> Clinician review required before use.</p>")
+    if summary.get("bone_caveat"):
+        banner += f"<p class='banner'>{e(summary['bone_caveat'])}</p>"
     doc = f"""<!doctype html><html lang="en"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1"><title>Correction {e(summary['spec'])}</title>
 <style>{_CSS}</style></head><body>

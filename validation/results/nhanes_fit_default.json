@@ -1,0 +1,43 @@
+{
+ "terms": [
+  "1",
+  "age",
+  "(age - 50)^2/100",
+  "male",
+  "height_m",
+  "mass_kg",
+  "male*age",
+  "male*height_m",
+  "male*mass_kg"
+ ],
+ "coef": [
+  -5.320571,
+  -0.012909,
+  0.0056,
+  -0.308041,
+  4.804623,
+  0.066168,
+  -0.009488,
+  0.814435,
+  0.00676
+ ],
+ "n": 7528,
+ "ages": [
+  18,
+  85
+ ],
+ "test_2001_2002": {
+  "n": 3978,
+  "mae_kg": 0.565,
+  "mae_pct": 7.51,
+  "bias_kg": 0.118,
+  "by_group_mae_pct": {
+   "18-49": 7.5,
+   "50+": 7.6,
+   "BMI >= 30": 7.7,
+   "women": 8.0,
+   "men": 7.1
+  }
+ },
+ "matches_capacity_LEG_LEAN_MODEL": true
+}

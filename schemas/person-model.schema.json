@@ -1,0 +1,188 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Rehab Agent person model",
+  "description": "PERSON/person.json (pipeline/rehabtwin/person.py, docs/person-model.md): what is known about one person, where each value came from, and which twin layer (docs/accuracy.md) it fills. Every session of the person uses it. No direct identifiers: person_ref is pseudonymous.",
+  "type": "object",
+  "required": ["format", "person_ref", "version", "created_at", "updated_at", "anthropometrics", "model", "segments", "keypoint_segments", "layers", "history"],
+  "properties": {
+    "format": {"const": "rehabtwin-person/1"},
+    "person_ref": {"type": "string", "minLength": 1},
+    "version": {"type": "integer", "minimum": 1, "description": "Raised on every change; earlier versions are in history/person_vNNN.json."},
+    "created_at": {"type": "string"},
+    "updated_at": {"type": "string"},
+    "synthetic": {"type": "boolean", "description": "Built from a synthetic session (tests): only synthetic sequences may use it."},
+    "sex": {"enum": ["female", "male"], "description": "As the reference data record it (NHANES: recorded sex); with anthropometrics.age_years it sizes the leg muscles when no scan does."},
+    "anthropometrics": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "object",
+        "required": ["value", "source", "measured", "measured_at"],
+        "properties": {
+          "value": {"type": "number", "exclusiveMinimum": 0},
+          "source": {"type": "string"},
+          "measured": {"type": "boolean", "description": "false: an assumed value, never used where a measured one is required."},
+          "measured_at": {"type": "string"}
+        }
+      }
+    },
+    "model": {
+      "oneOf": [
+        {"type": "null"},
+        {
+          "type": "object",
+          "required": ["kind", "file", "sha256", "generic_model", "generic_model_sha256", "scale_set", "config", "built_from"],
+          "properties": {
+            "kind": {"const": "scaled-generic"},
+            "file": {"type": "string"},
+            "sha256": {"type": "string"},
+            "generic_model": {"type": "string"},
+            "generic_model_sha256": {"type": "string", "description": "The scale factors apply to this generic model only; process refuses another."},
+            "scale_set": {"type": "object", "additionalProperties": {"type": "array", "items": {"type": "number"}, "minItems": 3, "maxItems": 3}},
+            "config": {"type": "string"},
+            "built_from": {"type": "object", "anyOf": [{"required": ["session_id"]}, {"required": ["method"]}],
+                           "description": "The calibration session the scale factors came from, or method 'skel' (person bones)."}
+          }
+        },
+        {
+          "type": "object",
+          "required": ["kind", "file", "sha256", "provenance", "tier", "evidence"],
+          "properties": {
+            "kind": {"const": "personalised"},
+            "file": {"type": "string"},
+            "sha256": {"type": "string"},
+            "provenance": {"type": "string", "description": "Copy of the model-provenance record (pipeline/rehabtwin/tiers.py) next to person.json."},
+            "tier": {"enum": ["A", "B"]},
+            "evidence": {"type": "string"}
+          }
+        }
+      ]
+    },
+    "segments": {
+      "type": "object",
+      "description": "Joint-centre distances of the model in its default pose, m.",
+      "additionalProperties": {"type": "object", "required": ["length_m"], "properties": {"length_m": {"type": "number"}}}
+    },
+    "keypoint_segments": {
+      "type": "object",
+      "description": "Distances between model markers (e.g. LHip-LKnee), as rehabtwin kinect's segment check uses them, m.",
+      "additionalProperties": {"type": "object", "required": ["length_m"], "properties": {"length_m": {"type": "number"}}}
+    },
+    "muscle_imaging": {
+      "type": "object",
+      "required": ["method", "date", "muscles", "sha256"],
+      "description": "Measured muscle size and quality from MRI/CT segmentation (pipeline/rehabtwin/capacity.py): per labelled muscle or group and side, volume in cm³ and/or MRI proton-density fat fraction (0-1). Muscles it covers get Fmax from the measured contractile volume; the rest from height and mass.",
+      "properties": {
+        "method": {"type": "string"},
+        "date": {"type": "string"},
+        "approved_by": {"type": "string"},
+        "muscles": {
+          "type": "object",
+          "minProperties": 1,
+          "additionalProperties": {
+            "type": "object",
+            "properties": {
+              "volume_cm3": {"type": "number", "exclusiveMinimum": 0},
+              "fat_fraction": {"type": "number", "minimum": 0, "exclusiveMaximum": 1},
+              "mean_hu": {"type": "number", "description": "CT attenuation, recorded only (protocol-dependent)"}
+            }
+          }
+        }
+      }
+    },
+    "bone_density": {
+      "type": "object",
+      "required": ["method", "date", "sites", "classification", "sha256"],
+      "description": "DXA or QCT bone density with its screening category (pipeline/rehabtwin/bone.py). Not part of the OpenSim model; load what-ifs show it.",
+      "properties": {
+        "method": {"type": "string", "pattern": "^(DXA|QCT)"},
+        "date": {"type": "string"},
+        "age_years": {"type": "number"},
+        "sex": {"enum": ["female", "male"]},
+        "postmenopausal": {"type": "boolean"},
+        "approved_by": {"type": "string"},
+        "sites": {"type": "object", "minProperties": 1},
+        "classification": {"type": "object", "required": ["category", "site", "value", "basis"]}
+      }
+    },
+    "limb_alignment": {
+      "type": "object",
+      "required": ["measured_at", "tier", "source_summary"],
+      "description": "Limb alignment from imaging or a clinician (pipeline/rehabtwin/alignment.py): the twin manifest's limb_alignment block (right/left limb_side, each with its source) with its provenance. Camera estimates can't be recorded here. mechanical_axis_hka_deg (+ valgus) personalises the knee of every session's model; holds: knees whose posture cues wait for a clinician-set target (structural alignment).",
+      "properties": {
+        "right": {"type": "object", "properties": {"source": {"enum": ["eos", "ct", "mri", "radiograph", "clinical-measurement"]}, "mechanical_axis_hka_deg": {"type": "number", "minimum": -30, "maximum": 30}}},
+        "left": {"type": "object", "properties": {"source": {"enum": ["eos", "ct", "mri", "radiograph", "clinical-measurement"]}, "mechanical_axis_hka_deg": {"type": "number", "minimum": -30, "maximum": 30}}},
+        "measured_at": {"type": "string"},
+        "approved_by": {"type": "string"},
+        "tier": {"enum": ["A", "B", "C"]},
+        "structural": {"type": "boolean"},
+        "diagnosis": {"type": "string"},
+        "holds": {"type": "object", "additionalProperties": {"type": "string"}}
+      }
+    },
+    "alignment_screening": {
+      "type": "object",
+      "required": ["status", "uncertainty", "knee_frontal_deg", "session_id"],
+      "description": "Standing alignment estimated from a session's camera frame (qc.json static_alignment): screening only, never applied to the model; its uncertainty is not yet measured until repeat sessions give the smallest detectable change.",
+      "properties": {
+        "status": {"const": "estimated"},
+        "uncertainty": {"type": "string"},
+        "session_id": {"type": "string"},
+        "knee_frontal_deg": {"type": "object", "propertyNames": {"enum": ["r", "l"]}}
+      }
+    },
+    "safety_flags": {
+      "type": "array",
+      "description": "A clinician's safety flags as given (twin manifest safety_flags; pipeline/rehabtwin/safety.py). The twin never sets or clears them; active flags (any status but cleared) hold posture cues and assistance what-ifs at their region.",
+      "items": {"type": "object", "required": ["flag", "status", "set_by", "set_at", "body_region"], "properties": {"set_by": {"const": "clinician"}, "status": {"enum": ["confirmed", "suspected", "cleared", "not-assessed"]}}}
+    },
+    "dxa": {
+      "type": "object",
+      "required": ["method", "date", "regions", "sha256", "checks"],
+      "description": "Whole-body DXA regional table (pipeline/rehabtwin/dxa.py): leg muscle per leg from leg lean mass, segment mass distribution from each region's share of the scanned mass, regional fat.",
+      "properties": {
+        "method": {"type": "string", "pattern": "^DXA"},
+        "date": {"type": "string"},
+        "approved_by": {"type": "string"},
+        "regions": {
+          "type": "object",
+          "required": ["left_leg", "right_leg"],
+          "propertyNames": {"enum": ["left_arm", "right_arm", "left_leg", "right_leg", "trunk", "head"]},
+          "additionalProperties": {
+            "type": "object",
+            "properties": {
+              "lean_kg": {"type": "number", "minimum": 0, "description": "lean soft tissue without bone mineral"},
+              "fat_kg": {"type": "number", "minimum": 0},
+              "bmc_kg": {"type": "number", "minimum": 0}
+            },
+            "additionalProperties": false
+          }
+        },
+        "checks": {"type": "object", "required": ["distribution"], "description": "distribution: all six regions with lean, fat and BMC (segment masses can follow the scan); mass_check: scanned vs measured mass."},
+        "fat": {"type": "object"}
+      }
+    },
+    "skel_bones": {
+      "type": "object",
+      "required": ["method", "source", "sex", "betas", "measures_m", "segments_m", "scale_set", "skel_model", "smpl_model"],
+      "description": "Bones from body shape (pipeline/rehabtwin/skel_bones.py): SKEL's anatomical joint centres for the person's SMPL surface or height and mass, as segment lengths and per-body scale factors for the generic model. vs_model_cm: SKEL minus the session-built model, per segment.",
+      "properties": {"source": {"enum": ["shape", "height-mass"]}, "sex": {"enum": ["female", "male"]}}
+    },
+    "surface_shape": {
+      "type": "object",
+      "description": "Body surface fitted to depth (Tier B surface layer); see docs/person-model.md."
+    },
+    "layers": {
+      "type": "object",
+      "required": ["bone_geometry", "joint_centres", "surface_shape", "kinematics", "muscle", "soft_tissue"],
+      "additionalProperties": {
+        "type": "object",
+        "required": ["status", "tier"],
+        "properties": {"status": {"type": "string"}, "tier": {"enum": ["A", "B", "C", null]}}
+      }
+    },
+    "history": {
+      "type": "array",
+      "items": {"type": "object", "required": ["version", "at", "event"]}
+    }
+  }
+}

@@ -1,0 +1,76 @@
+{
+ "checks": [
+  {
+   "section": "nhanes",
+   "claim": "leg-lean model refitted on all NHANES 1999-2002 adults with DXA",
+   "stated": "n 7528, coefficients as shipped",
+   "measured": "n 7528, max coefficient difference 4.9e-07",
+   "ok": true,
+   "note": ""
+  },
+  {
+   "section": "nhanes",
+   "claim": "adults 50+ with knee strength and DXA",
+   "stated": "2104",
+   "measured": "2104",
+   "ok": true,
+   "note": ""
+  },
+  {
+   "section": "nhanes",
+   "claim": "all: r / person-to-person spread, height-mass -> age-sex -> DXA",
+   "stated": "0.65 / 28.0 % -> 0.75 / 23.7 % -> 0.79 / 22.3 %",
+   "measured": "0.652 / 28.0 % -> 0.752 / 23.7 % -> 0.787 / 22.3 %",
+   "ok": true,
+   "note": ""
+  },
+  {
+   "section": "nhanes",
+   "claim": "women: r / person-to-person spread, height-mass -> age-sex -> DXA",
+   "stated": "0.51 / 24.4 % -> 0.56 / 23.5 % -> 0.62 / 22.4 %",
+   "measured": "0.510 / 24.4 % -> 0.561 / 23.5 % -> 0.616 / 22.4 %",
+   "ok": true,
+   "note": ""
+  },
+  {
+   "section": "nhanes",
+   "claim": "men: r / person-to-person spread, height-mass -> age-sex -> DXA",
+   "stated": "0.51 / 24.3 % -> 0.58 / 23.0 % -> 0.65 / 21.5 %",
+   "measured": "0.510 / 24.3 % -> 0.577 / 23.0 % -> 0.647 / 21.5 %",
+   "ok": true,
+   "note": ""
+  },
+  {
+   "section": "myosegmentum",
+   "claim": "knee extension at 60 deg, HV001-HV011: r and spread, regression vs MRI volume + fat",
+   "stated": "r 0.44 -> 0.86, spread 16 % -> 10 %",
+   "measured": "r 0.44 -> 0.86, spread 16.3 % -> 9.9 % (n=11; generic r 0.50)",
+   "ok": true,
+   "note": ""
+  },
+  {
+   "section": "myosegmentum",
+   "claim": "quadriceps measured / height-mass regression, healthy legs",
+   "stated": "0.75, spread 15 %",
+   "measured": "0.750, spread 15.4 % (n=30 legs)",
+   "ok": true,
+   "note": ""
+  },
+  {
+   "section": "myosegmentum",
+   "claim": "patients' quadriceps measured / regression",
+   "stated": "0.49 (the regression gives twice theirs)",
+   "measured": "0.487 (n=8 legs)",
+   "ok": true,
+   "note": ""
+  },
+  {
+   "section": "myosegmentum",
+   "claim": "quadriceps measured / predicted: height-mass regression vs age-and-sex default (15 healthy)",
+   "stated": "0.75 -> 0.93, r 0.54 -> 0.60",
+   "measured": "0.750 -> 0.931, r 0.535 -> 0.604",
+   "ok": true,
+   "note": ""
+  }
+ ]
+}

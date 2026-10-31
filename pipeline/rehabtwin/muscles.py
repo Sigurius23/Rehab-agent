@@ -321,11 +321,12 @@ def reserves_xml(model_path, path, residual_force=10.0, reserve_force=1.0, ideal
 
 
 def run(model_path, motion_path, out_dir, weaken=None, label="measured", exercise="squat", start=None, stop=None,
-        assist=(), grf_share_bias=0.0, passive=(), max_fps=None, muscle_model=None):
+        assist=(), grf_share_bias=0.0, passive=(), max_fps=None, muscle_model=None, joint_load=False):
     """GRF estimate → ID → SO for one motion. Returns a summary dict (also written to muscles.json).
 
     ``muscle_model``: the study's record of where muscle capacities came from (generic or dynamometry),
-    so the caveats describe the model actually used."""
+    so the caveats describe the model actually used. ``joint_load``: also the knees' Joint Reaction loads
+    (rehabtwin/joint_load.py) as ``knee_load``."""
     osim = _osim()
     out = Path(out_dir) / label
     out.mkdir(parents=True, exist_ok=True)
@@ -377,6 +378,16 @@ def run(model_path, motion_path, out_dir, weaken=None, label="measured", exercis
         if not osim.AnalyzeTool(str(out / "so_setup.xml")).run():
             raise RuntimeError(f"static optimisation failed ({out})")
     summary = summarise(out, model_path, grf_qc, exercise, assist, muscle_model)
+    if joint_load:
+        from . import joint_load as jl
+        joints = jl.knee_joints(osim.Model(str(out / "model_dynamics.osim")))
+        names = [j for side in joints.values() for j in side.values() if j]
+        (out / "jr_setup.xml").write_text(jl.reaction_setup_xml(t0, t1, names))
+        with _cwd(out):
+            if not osim.AnalyzeTool(str(out / "jr_setup.xml")).run():
+                raise RuntimeError(f"joint reaction analysis failed ({out})")
+        summary["knee_load"] = jl.knee_loads(out, joints, grf_qc["body_mass_kg"], tab)
+        summary["knee_load"]["diagnostics"] = jl.diagnostics(out, joints, summary["knee_load"], tab)
     window = (tab.time >= t0 - 1e-9) & (tab.time <= t1 + 1e-9)
     summary["passive_devices"] = {}
     for dev in model_info["passive"]:
@@ -401,10 +412,31 @@ def run(model_path, motion_path, out_dir, weaken=None, label="measured", exercis
 def muscle_caveat(muscle_model=None):
     """Which capacities are measured and which generic: dynamometry fixes only the tested groups."""
     mm = muscle_model or {}
+    cap = mm.get("capacity") or {}
+    leg = {"dxa": "each leg's volume from its DXA lean mass (McCarthy 2023)",
+           "anthropometry": "scaled to the person's age, sex, height and mass (NHANES DXA reference data)"}.get(
+        cap.get("leg_source"), "scaled to the measured height and mass by a population regression (Handsfield 2014)")
+    size = ("leg muscles from measured volume/fat fraction where imaged (" + (cap["imaging"].get("method") or "imaging")
+            + f"), the others take their leg's volume from {cap.get('leg_source_text', 'height and mass')}, trunk and "
+            "arms generic"
+            if cap.get("imaging") else f"leg muscles {leg}, trunk and arms generic" if cap.get("scaled")
+            else "generic (scaled) parameters")
+    if cap.get("mass_distribution"):
+        size += "; segment masses from the DXA regional masses"
+    bmi = next((c for c in cap.get("caveats", []) if c.startswith(("BMI", "Age"))), "")
     if mm.get("source", "").startswith("strength"):
         return (f"Muscle capacities of the tested groups ({', '.join(mm.get('tests', [])) or 'none'}; "
-                f"{mm.get('calibrated_muscles', '?')} muscles) come from dynamometry; all other muscles keep generic "
-                "(scaled) parameters. Muscle geometry is generic; no EMG calibration.")
+                f"{mm.get('calibrated_muscles', '?')} muscles) come from dynamometry; all other muscles: {size}. "
+                f"Muscle geometry is generic; no EMG calibration. {bmi}").strip()
+    if cap.get("imaging"):
+        return (f"Muscle capacities: {size}. Force follows contractile volume, not a strength test; muscle geometry "
+                f"is generic; no EMG calibration. {bmi}").strip()
+    if cap.get("scaled") and cap.get("leg_source") == "dxa":
+        return (f"Muscle capacities: {size}. Measured per leg, not per muscle; force follows volume, not a strength "
+                f"test; muscle geometry is generic; no EMG calibration. {bmi}").strip()
+    if cap.get("scaled"):
+        return (f"Muscle capacities: {size}. A population estimate, not this person's measured strength; "
+                f"muscle geometry is generic; no EMG calibration. {bmi}").strip()
     return "Generic (scaled) muscle parameters: no personalised strength, no EMG calibration."
 
 

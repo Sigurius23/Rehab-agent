@@ -26,12 +26,28 @@ clinician (or a test) can inspect what the system believed at each step.
   integration failures in this stack are frame/unit mismatches (SMPL vs OpenSim).
 - **No stage silently imputes missing joints.** Missing/occluded data is flagged;
   rehab feedback on fabricated motion is a safety bug, not a feature.
+- **The twin manifest is the contract for personalisation.** Audit-derived
+  blocks (`spinopelvic_parameters`, `limb_alignment`, `muscle_parameters`,
+  `bone_quality`, `devices_and_prostheses`, `safety_flags`, `body_state` in
+  `schemas/twin-manifest.schema.json`; `breathing` in the session schema) are
+  populated only from imaging/clinical sources listed in `docs/accuracy.md`.
+  Safety flags restrict downstream stages; stages must check them, not just
+  record them.
 
 ## Two front-ends, one back-end
 Camera (FreeMoCap/OpenCap/Pose2Sim) and IMU (TransPose/PIP/PNP/OpenSimLive) paths
 converge at Stage 4–5: once you have a skeleton moving in OpenSim, assessment,
 simulation and visualisation are shared. Pick the front-end per setting
 (clinic = cameras, home = IMU) without rebuilding the back-end.
+
+## Scenario / what-if simulation (design stage)
+Stage 5–6 outputs feed a clinician-facing scenario model
+(`docs/design-joint-load-stress-model.md`): baseline vs fat-change /
+muscle-training / assistive-torque scenarios reporting per-joint load,
+muscle effort, distribution and stability — with fat effects anchored
+to measured body composition and muscle effects reported honestly
+(effort/stability, not promised load reduction). Illustrative demo:
+`examples/joint-load-demo/index.html`.
 
 ## Where an LLM/agent layer belongs
 Only *after* Stage 5 outputs exist: summarising measured ROM/gait/torque trends,
@@ -45,8 +61,9 @@ every claim it makes.
 |---|---|---|
 | 1–2 Capture, pose | `adapters/hsmr_to_skelseq.py` (HSMR + SKEL), `adapters/mediapipe_pose.py` + `mp-mono` / `mp-multiview`, `vmc-posture` (SlimeVR) | file contract: `rehabtwin/sequence.py` (`skel_seq.npz`) |
 | 3–4 Body model, skeleton | SKEL skin markers + joint centres → OpenSim scaling (`opensim_stage.py`) | Pose2Sim full-body model, 318 muscles |
+| Person model | `person` (`person.py`): the person's bones, measurements and twin layers across sessions; `process --person`, `kinect --person` | `docs/person-model.md`; `schemas/person-model.schema.json` |
 | 5 Biomechanics | `process` (gravity, gaps, filtering, scale, static IK, marker placement, IK), `muscles` (estimated GRF, ID) | QC in `qc.json`; validation per joint × plane |
-| 6 Muscle sim | `muscles` (static optimisation; weakness and ideal-exo what-ifs) | Tier-labelled what-ifs |
+| 6 Muscle sim | `muscles` (static optimisation; weakness and ideal-exo what-ifs), leg capacity scaled to body size (`capacity.py`) | Tier-labelled what-ifs |
 | 7 Control / assistance | `muscles --assist` (ideal assistive device sizing) | upper bound; assist-as-needed caveat |
 | 8 Visualisation | `report.html`, `correction.html`, `muscles.html`, `cues.html`, `index.html` (3D replay, charts) | self-contained HTML |
 | Feedback | `correct` (correction view), `cues` / `lsl-live` / `suit-bridge` (haptic loop) | gated: Tier A + validated joint/plane only |

@@ -1,5 +1,9 @@
 # Validation results — what has actually been measured
 
+> **Synthetic results, no clinical validation.** A figure from a synthetic test is measured against a simulated
+> body; a real-video figure is measured against another markerless system (OpenCap), not marker mocap or a
+> clinical outcome. Quote any number from this file with its caveat.
+
 Results from `pipeline/` (rehabtwin 0.1.0, OpenSim 4.6, Pose2Sim model
 `Model_Pose2Sim_muscles_flex.osim`). Each block says what was compared with what.
 **None of these is a clinical validation**: no marker-mocap reference has been run yet
@@ -118,16 +122,16 @@ Values are RMSE in degrees; brackets give (bias / SD after removing the bias).
 
 | Signal | 5 cams, keypoints only | **5 cams + augmenter** | 1 cam (frontal) | 1 cam + augmenter† |
 |---|---|---|---|---|
-| Trunk inclination, sagittal | 47.4 (−23.4 / 41.3) | **2.7 (−0.8 / 2.6)** | 9.7 (+7.4 / 6.3) | 9.4 (+6.0 / 7.3) |
-| Trunk inclination, frontal | 8.7 (+2.0 / 8.4) | **2.6 (+1.2 / 2.3)** | 10.3 (+8.8 / 5.2) | 7.2 (+6.8 / 2.5) |
-| Pelvis tilt | 37.3 (−29.1 / 23.4) | **6.0 (−5.5 / 2.4)** | 18.9 (+15.5 / 10.9) | 20.1 (+18.8 / 7.2) |
-| Pelvis list | 2.6 | **2.6** | 7.8 | 4.3 |
-| Lumbar flexion (total) | 50.9 (+37.5 / 34.4) | **7.1 (+6.3 / 3.2)** | 25.3 (−23.8 / 8.8) | 25.8 (−25.0 / 6.3) |
-| Hip flexion R | 36.0 (+25.7 / 25.3) | **13.9 (+13.1 / 4.6)** | 17.5 (−14.5 / 9.8) | 10.4 (−8.3 / 6.3) |
-| Hip adduction R | 2.4 | **3.2** | 3.2 | 4.6 |
-| Knee flexion R / L | 8.1 / 5.9 | **9.3 / 9.2 (+8.7 / 3.2)** | 10.2 / 13.7 | 14.9 / 21.5 |
-| Ankle dorsiflexion R / L | 8.5 / 6.5 | **4.9 / 4.6** | 13.5 / 12.0 | 13.3 / 18.4 |
-| Knee FPPA R / L | 20.7 / 21.4 | **4.7 / 9.5** | 6.7 / 10.4 | 5.9 / 7.1 |
+| Trunk inclination, sagittal | 47.4 (−23.4 / 41.3) | **2.6 (−1.0 / 2.4)** | 9.7 (+7.4 / 6.3) | 8.6 (+4.5 / 7.3) |
+| Trunk inclination, frontal | 8.7 (+2.0 / 8.4) | **2.5 (+1.2 / 2.2)** | 10.3 (+8.8 / 5.2) | 7.0 (+6.5 / 2.6) |
+| Pelvis tilt | 37.3 (−29.1 / 23.4) | **2.8 (−1.2 / 2.5)** | 18.9 (+15.5 / 10.9) | 22.7 (+21.4 / 7.4) |
+| Pelvis list | 2.6 | **2.6** | 7.8 | 4.4 |
+| Lumbar flexion (total) | 50.9 (+37.5 / 34.4) | **3.9 (+2.3 / 3.1)** | 25.3 (−23.8 / 8.8) | 27.0 (−26.3 / 5.8) |
+| Hip flexion R | 36.0 (+25.7 / 25.3) | **8.2 (+6.7 / 4.7)** | 17.5 (−14.5 / 9.8) | 15.6 (−14.3 / 6.3) |
+| Hip adduction R | 2.4 | **2.8** | 3.2 | 3.8 |
+| Knee flexion R / L | 8.1 / 5.9 | **7.4 / 7.1 (+6.7 / 3.1)** | 10.2 / 13.7 | 11.5 / 17.9 |
+| Ankle dorsiflexion R / L | 8.5 / 6.5 | **5.4 / 5.3** | 13.5 / 12.0 | 11.9 / 18.4 |
+| Knee FPPA R / L | 20.7 / 21.4 | **5.2 / 9.6** | 6.7 / 10.4 | 5.5 / 5.7 |
 
 † Measured when keypoint gaps of any length were bridged with straight lines before the augmenter. In this
 view the heels and the left ankle drop out for 0.3–0.8 s at the bottom of each squat. The augmenter's
@@ -135,7 +139,9 @@ lower-body markers are now left empty there (164 frames), so `process` solves on
 longest is 1.2 s with no complete rep, and its validation report marks every gate not-tested
 (`coverage`). Re-run with the current gap handling, the two 5-camera columns agree with the earlier run
 to 0.3°. The 1-cam column is the re-run: heel gaps longer than 0.2 s are no longer bridged, which moved
-the ankles by 1–2° and every other signal by ≤ 0.5°.
+the ankles by 1–2° and every other signal by ≤ 0.5°. The two augmenter columns are with the marker
+correction (point 6); before it they read pelvis tilt 6.0 / 20.1, hip flexion R 13.9 / 10.4 and knee
+9.3 / 14.9.
 
 What this shows:
 
@@ -144,30 +150,63 @@ What this shows:
    up to 95° of pelvis tilt with 56° of lumbar *extension*. The synthetic round trip (§1) could not
    show this, because it uses 105 dense SKEL markers.
 2. **OpenCap's LSTM augmenter fixes it.** It predicts ASIS/PSIS, epicondyles and malleoli from the
-   keypoints, height and mass. With 5 cameras, the trunk then agrees within 2.7°, pelvis tilt within
-   6° (2.4° after removing the bias), knee FPPA R within 4.7°, and ankle within 5°.
+   keypoints, height and mass. With 5 cameras and the marker correction (point 6), the trunk then agrees
+   within 2.6°, pelvis tilt within 2.8°, lumbar within 3.9°, knee FPPA R within 5.2°, and ankle within 5.4°.
 3. **Pose2Sim's weak L5/S1 prior hurt here.** OpenCap's IK has none. With the prior, pelvis tilt was
-   13.0° and hip flexion 20.3°; without it, 6.0° and 13.9°. `mediapipe_lstm_pose2sim` now leaves the
-   prior out.
-4. **Remaining constant offsets are mostly definitional.** Knee is +8.7° and hip flexion +13°. The
-   Pose2Sim model and LaiUhlrich2022 define the pelvis and knee frames differently, and MediaPipe's hip
-   landmarks are not OpenPose's. The bias-removed agreement is 2.4–4.6° for these joints.
+   13.0° and hip flexion 20.3°; without it, 6.0° and 13.9° (both before the marker correction).
+   `mediapipe_lstm_pose2sim` now leaves the prior out.
+4. **Remaining constant offsets.** Knee and hip flexion are both +6.7° (+8.7° and +13° before the
+   marker correction). The Pose2Sim model and LaiUhlrich2022 define the pelvis and knee frames
+   differently, and MediaPipe's hip landmarks are not OpenPose's. The bias-removed agreement is 2.5–4.7°
+   for these joints.
 5. **One camera is not enough for the trunk–pelvis–hip chain**: 10–25° on those signals from keypoints.
-   With the augmenter it was 9–26°, with knee and ankle worse (13–22°), and only while the heel
+   With the augmenter it was 9–27°, with knee and ankle worse (12–18°), and only while the heel
    dropouts were bridged; the current pipeline solves only fragments of this view. Knee FPPA, hip
    adduction and frontal pelvis stay within 3–11° from keypoints.
+6. **Pose2Sim's augmenter marker set was made for OpenCap's model.** `Markers_LSTM.xml` has the
+   body-frame marker locations of OpenCap's LaiUhlrich2022, but the Pose2Sim model's tibia is 0.430 m
+   (0.400 m there), its femur 0.397 m (0.406 m) and its hip joints 2 cm elsewhere in the pelvis. The
+   malleolus markers sat 4.5 cm above the ankle joint, and scaling made this 1.96 m person's shank
+   0.54 m. OpenCap's own result, SKEL's prediction from height and mass (`docs/person-model.md`) and
+   Winter's proportions all put it at 0.48–0.50 m.
+
+   `mediapipe_lstm_pose2sim` now corrects the marker set (`marker_rescale`, `marker_to_joint`;
+   `docs/upstream-issues.md`):
+   - the shank and thigh markers move along their bones by the length ratio;
+   - the hip-joint-centre markers sit on the hip joints.
+
+   The shank is now 0.49–0.50 m (5 and 3 phones), and the hip width is the measured hip-centre distance
+   (0.188 m, was 0.203). RMSE against OpenCap, before → after (same inputs):
+
+   | Signal | 5 phones | 3 phones | 1 phone (bridged) |
+   |---|---|---|---|
+   | Pelvis tilt | 6.0 → 2.8 | 6.7 → 3.3 | 20.1 → 22.7 |
+   | Lumbar flexion | 7.1 → 3.9 | 9.5 → 6.2 | 25.8 → 27.0 |
+   | Hip flexion R / L | 13.9 / 13.9 → 8.2 / 7.9 | 14.6 / 13.3 → 9.4 / 8.0 | 10.4 / 9.6 → 15.6 / 13.7 |
+   | Knee flexion R / L | 9.3 / 9.2 → 7.4 / 7.1 | 12.0 / 8.1 → 10.5 / 6.5 | 14.9 / 21.5 → 11.5 / 17.9 |
+   | Ankle R / L | 4.9 / 4.6 → 5.4 / 5.3 | 6.5 / 4.6 → 7.3 / 4.4 | 13.4 / 18.5 → 11.9 / 18.4 |
+   | Knee FPPA R / L | 4.7 / 9.5 → 5.2 / 9.6 | 8.9 / 8.6 → 8.6 / 8.9 | 5.9 / 7.1 → 5.5 / 5.7 |
+   | IK marker RMS (cm) | 2.36 → 2.07 | 2.35 → 2.08 | 2.60 → 2.45 |
+
+   - **With 2 or more phones,** pelvis, lumbar, hip and knee agree better, and the markers fit better.
+     The ankles agree 0.5–0.9° worse, perhaps because LaiUhlrich2022's ankle joint also sits 1 cm further
+     back in the tibia, which this correction does not move.
+   - **With one phone,** results are mixed: its scale is estimated, not measured.
 
 **How many phones?** The same trial with camera subsets, all with the augmenter (RMSE vs OpenCap, °):
 
 | Signal | 2 phones at ±40° (80° apart)† | 2 phones at ±65° (130° apart)† | 3 phones (−40°, 0°, +40°) | 5 phones |
 |---|---:|---:|---:|---:|
-| Trunk inclination, sagittal / frontal | 2.8 / 3.0 | 8.7 / 6.1 | 3.2 / 1.7 | 2.7 / 2.6 |
-| Pelvis tilt / list | 6.0 / 3.0 | 5.4 / 3.2 | 6.7 / 2.8 | 6.0 / 2.6 |
-| Lumbar flexion | 7.6 | 14.0 | 9.4 | 7.1 |
-| Hip adduction R | 4.2 | 7.5 | 2.6 | 3.2 |
-| Knee flexion R · ankle R | 10.4 · 5.6 | 9.6 · 8.8 | 12.0 · 6.5 | 9.3 · 4.9 |
-| Knee FPPA R / L | 4.1 / 13.0 | 6.0 / 9.3 | 8.9 / 8.6 | 4.7 / 9.5 |
-| IK marker RMS (cm) | 3.2 | 6.1 | 2.4 | 2.4 |
+| Trunk inclination, sagittal / frontal | 2.8 / 3.0 | 8.7 / 6.1 | 3.5 / 1.7 | 2.6 / 2.5 |
+| Pelvis tilt / list | 6.0 / 3.0 | 5.4 / 3.2 | 3.3 / 2.8 | 2.8 / 2.6 |
+| Lumbar flexion | 7.6 | 14.0 | 6.2 | 3.9 |
+| Hip adduction R | 4.2 | 7.5 | 2.9 | 2.8 |
+| Knee flexion R · ankle R | 10.4 · 5.6 | 9.6 · 8.8 | 10.5 · 7.3 | 7.4 · 5.4 |
+| Knee FPPA R / L | 4.1 / 13.0 | 6.0 / 9.3 | 8.6 / 8.9 | 5.2 / 9.6 |
+| IK marker RMS (cm) | 3.2 | 6.1 | 2.1 | 2.1 |
+
+The 3- and 5-phone columns are with the marker correction (point 6); the two 2-phone columns were measured
+before it.
 
 † Bridged with straight lines through keypoint dropouts. With two phones MediaPipe loses the knees at the
 bottom of the squat: at ±40° the left knee for up to 1.4 s (4.0 s of the 9.7 s trial) and the right for up
@@ -191,7 +230,9 @@ signals monocular capture should not drive (pelvis, hip flexion, lumbar).
 
 ## 5. The whole chain on the real squat — and where it stops
 
-Same trial (5 phones + augmenter), squat 2 (1.5 s per rep):
+Same trial (5 phones + augmenter), squat 2 (1.5 s per rep). These runs predate the augmenter marker
+correction (§4 point 6), which moved pelvis tilt by about 4° and lumbar flexion by about 4° on this trial;
+the chain's behaviour below does not depend on it, the angles quoted do by a few degrees:
 - `cues` with the template rule set fires on every rep: trunk 79° forward and lumbar −40° at the bottom,
   against template thresholds of 45° and −25°. All cues are "would cue" (Tier C).
 - `correct --spec squat_trunk_upright`: lumbar flexion −42° → −21° and trunk 82° → 62°, feet held within

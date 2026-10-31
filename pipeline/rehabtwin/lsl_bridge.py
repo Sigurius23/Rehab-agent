@@ -98,8 +98,11 @@ def stream_tags(inlet):
 
 
 def run_live(spec, tier, allowed_joint_planes, duration_s=None, source=POSTURE_STREAM, publish_would_cue=False,
-             resolve_timeout=10.0, idle_timeout=2.0, expect_session=None, expect_front_end=None):
+             resolve_timeout=10.0, idle_timeout=2.0, expect_session=None, expect_front_end=None, baselines=None,
+             holds=None, safety=None):
     """Real-time loop: posture stream in, cue markers out. Returns the engine (log in ``engine.log``).
+    ``baselines``/``holds``/``safety``: the person's standing values, screening holds and clinician safety flags
+    (rehabtwin/feedback.py).
 
     With ``expect_session``/``expect_front_end`` the posture stream must carry the same tags,
     otherwise the engine runs at Tier C (nothing is sent) and the mismatch is logged.
@@ -117,7 +120,8 @@ def run_live(spec, tier, allowed_joint_planes, duration_s=None, source=POSTURE_S
         tier, allowed_joint_planes = "C", ()
     out = pylsl.StreamOutlet(pylsl.StreamInfo(CUE_STREAM, "Markers", 1, pylsl.IRREGULAR_RATE, "string",
                                               f"{CUE_STREAM}:{expect_session or sid}"))
-    eng = CueEngine(spec, tier=tier, allowed_joint_planes=tuple(allowed_joint_planes))
+    eng = CueEngine(spec, tier=tier, allowed_joint_planes=tuple(allowed_joint_planes), baselines=dict(baselines or {}),
+                    holds=dict(holds or {}), safety=dict(safety or {}))
     if mismatch:
         eng.log.append({"t": 0.0, "event": "source_mismatch", "reason": "; ".join(mismatch) + " -> Tier C, no cues"})
     t_start, t_first = time.monotonic(), None

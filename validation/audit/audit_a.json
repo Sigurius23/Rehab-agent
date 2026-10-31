@@ -1,0 +1,210 @@
+{
+ "checks": [
+  {
+   "section": "markers",
+   "claim": "Markers_LSTM.xml reuses LaiUhlrich2022's augmenter marker locations",
+   "stated": "all 43 identical",
+   "measured": "43 of 43 common markers identical",
+   "ok": true,
+   "note": ""
+  },
+  {
+   "section": "markers",
+   "claim": "generic tibia (knee to ankle joint centre), Pose2Sim vs LaiUhlrich2022",
+   "stated": "0.430 vs 0.400 m",
+   "measured": "0.4300 vs 0.4001 m",
+   "ok": true,
+   "note": ""
+  },
+  {
+   "section": "markers",
+   "claim": "generic femur (hip to knee), Pose2Sim vs LaiUhlrich2022",
+   "stated": "0.397 vs 0.406 m",
+   "measured": "0.3974 vs 0.4061 m",
+   "ok": true,
+   "note": ""
+  },
+  {
+   "section": "markers",
+   "claim": "lateral malleolus marker height above the ankle joint centre (default pose)",
+   "stated": "4.5 cm vs 1.5 cm",
+   "measured": "4.5 cm vs 1.5 cm",
+   "ok": true,
+   "note": ""
+  },
+  {
+   "section": "markers",
+   "claim": "RHJC_study marker distance from the Pose2Sim model's right hip joint",
+   "stated": "about 2 cm",
+   "measured": "2.0 cm",
+   "ok": true,
+   "note": ""
+  },
+  {
+   "section": "shank",
+   "claim": "5-phone scaled shank R/L and hip width, before the marker fix",
+   "stated": "0.542/0.546 m, hip 0.203",
+   "measured": "0.542/0.546 m, hip 0.203",
+   "ok": true,
+   "note": ""
+  },
+  {
+   "section": "shank",
+   "claim": "5-phone scaled shank R/L and hip width, after the marker fix",
+   "stated": "0.493/0.497 m, hip 0.188",
+   "measured": "0.493/0.497 m, hip 0.188",
+   "ok": true,
+   "note": ""
+  },
+  {
+   "section": "shank",
+   "claim": "OpenCap's own scaled model, shank R/L",
+   "stated": "0.485/0.495 m",
+   "measured": "0.485/0.495 m",
+   "ok": true,
+   "note": ""
+  },
+  {
+   "section": "opencap",
+   "claim": "RMSE vs OpenCap, multi before the fix (pelvis tilt, hip R/L, knee R/L, ankle R/L)",
+   "stated": "6.0 / 13.9 / 13.9 / 9.3 / 9.2 / 4.9 / 4.6",
+   "measured": "6.0 / 13.9 / 13.9 / 9.3 / 9.2 / 4.9 / 4.6 (n=576 frames)",
+   "ok": true,
+   "note": "independent reader; reference shifted by the report's lag"
+  },
+  {
+   "section": "opencap",
+   "claim": "RMSE vs OpenCap, multi after the fix (pelvis tilt, hip R/L, knee R/L, ankle R/L)",
+   "stated": "2.8 / 8.2 / 7.9 / 7.4 / 7.1 / 5.4 / 5.3",
+   "measured": "2.8 / 8.2 / 7.9 / 7.4 / 7.1 / 5.4 / 5.3 (n=576 frames)",
+   "ok": true,
+   "note": "independent reader; reference shifted by the report's lag"
+  },
+  {
+   "section": "opencap",
+   "claim": "RMSE vs OpenCap, cams123 before the fix (pelvis tilt, hip R/L, knee R/L, ankle R/L)",
+   "stated": "6.7 / 14.6 / 13.3 / 12.0 / 8.1 / 6.5 / 4.6",
+   "measured": "6.7 / 14.6 / 13.3 / 12.0 / 8.1 / 6.5 / 4.6 (n=575 frames)",
+   "ok": true,
+   "note": "independent reader; reference shifted by the report's lag"
+  },
+  {
+   "section": "opencap",
+   "claim": "RMSE vs OpenCap, cams123 after the fix (pelvis tilt, hip R/L, knee R/L, ankle R/L)",
+   "stated": "3.3 / 9.4 / 8.0 / 10.5 / 6.5 / 7.3 / 4.4",
+   "measured": "3.3 / 9.4 / 8.0 / 10.5 / 6.5 / 7.3 / 4.4 (n=575 frames)",
+   "ok": true,
+   "note": "independent reader; reference shifted by the report's lag"
+  },
+  {
+   "section": "skel-synthetic",
+   "claim": "bodies, sexes and BMI range",
+   "stated": "45 bodies, 23 female / 22 male, BMI 17-43",
+   "measured": "45 bodies, 23 female / 22 male, BMI 17.4-44.3",
+   "ok": false,
+   "note": ""
+  },
+  {
+   "section": "skel-synthetic",
+   "claim": "SKEL segment error, depth fit (mean abs per segment; worst)",
+   "stated": "mean <= 0.2 cm, worst 1.1 cm",
+   "measured": "0.19 / 0.21 / 0.22 / 0.20 / 0.11 cm; worst 1.09 cm",
+   "ok": true,
+   "note": "order: thigh, shank, upper arm, forearm, hip width"
+  },
+  {
+   "section": "skel-synthetic",
+   "claim": "SKEL segment error, height and mass (mean abs per segment; worst)",
+   "stated": "mean <= 0.5 cm, worst 1.5 cm",
+   "measured": "0.37 / 0.48 / 0.35 / 0.35 / 0.16 cm; worst 1.51 cm",
+   "ok": true,
+   "note": "order: thigh, shank, upper arm, forearm, hip width"
+  },
+  {
+   "section": "skel-synthetic",
+   "claim": "SKEL segment error, height only (mean abs per segment; worst)",
+   "stated": "mean <= 1.8 cm, worst 4.8 cm",
+   "measured": "1.04 / 1.16 / 0.34 / 0.37 / 1.84 cm; worst 4.79 cm",
+   "ok": true,
+   "note": "order: thigh, shank, upper arm, forearm, hip width"
+  },
+  {
+   "section": "skel-synthetic",
+   "claim": "stored true thigh lengths re-derived from shape parameters (10 bodies)",
+   "stated": "identical",
+   "measured": "max difference 0.0000 mm",
+   "ok": true,
+   "note": ""
+  },
+  {
+   "section": "skel-subject2",
+   "claim": "SKEL body for 1.96 m / 78.2 kg",
+   "stated": "1.960 m, 78.2 kg",
+   "measured": "1.960 m, 78.2 kg (1000 kg/m3)",
+   "ok": true,
+   "note": ""
+  },
+  {
+   "section": "skel-subject2",
+   "claim": "SKEL thigh / shank / upper arm",
+   "stated": "0.471 / 0.491 / 0.313 m",
+   "measured": "0.471 / 0.491 / 0.313 m",
+   "ok": true,
+   "note": ""
+  },
+  {
+   "section": "dxa-squat",
+   "claim": "right knee peak extension moment, height-and-mass vs DXA run",
+   "stated": "-12 %",
+   "measured": "-1.463 -> -1.285 N.m/kg (-12.2 %)",
+   "ok": true,
+   "note": ""
+  },
+  {
+   "section": "dxa-squat",
+   "claim": "right leg Fmax: height and mass / age and sex / DXA",
+   "stated": "48.5 / 42.5 / 47.2 kN",
+   "measured": "48.5 / 42.5 / 47.2 kN",
+   "ok": true,
+   "note": ""
+  }
+ ],
+ "agreement": {
+  "multi_aug_base": {
+   "pelvis_tilt": 5.974875185417648,
+   "hip_flexion_r": 13.856126864028264,
+   "hip_flexion_l": 13.925118203088806,
+   "knee_angle_r": 9.273604591705853,
+   "knee_angle_l": 9.183819266393602,
+   "ankle_angle_r": 4.906211100599531,
+   "ankle_angle_l": 4.637594333622103
+  },
+  "multi_aug_fix": {
+   "pelvis_tilt": 2.805092083876398,
+   "hip_flexion_r": 8.188512513419017,
+   "hip_flexion_l": 7.90181542050177,
+   "knee_angle_r": 7.427551796154905,
+   "knee_angle_l": 7.111890462319372,
+   "ankle_angle_r": 5.366748254707382,
+   "ankle_angle_l": 5.292861882206273
+  },
+  "cams123_aug_base": {
+   "pelvis_tilt": 6.748632220772792,
+   "hip_flexion_r": 14.635339927362123,
+   "hip_flexion_l": 13.314697121095804,
+   "knee_angle_r": 12.015321241557512,
+   "knee_angle_l": 8.112320324466184,
+   "ankle_angle_r": 6.533357387649125,
+   "ankle_angle_l": 4.555349920513936
+  },
+  "cams123_aug_fix": {
+   "pelvis_tilt": 3.334939346198947,
+   "hip_flexion_r": 9.417532712629276,
+   "hip_flexion_l": 7.973889304969164,
+   "knee_angle_r": 10.519032530156302,
+   "knee_angle_l": 6.479429098083515,
+   "ankle_angle_r": 7.3200794648758825,
+   "ankle_angle_l": 4.3812908936771064
+  }
+ }
+}

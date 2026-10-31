@@ -13,6 +13,7 @@
 | Primary motion cameras | 1–4× RGB cameras (webcam/machine-vision/phone) | 1080p @ 60 fps preferred, manual exposure + focus lock, global shutter preferred for fast movement; tripod-mounted at known positions |
 | Body surface scan + mobile RGB-D | iPhone Pro with LiDAR (iPhone 12 Pro or later Pro/Pro Max) | Rear LiDAR for whole-body surface; front TrueDepth for head/face close range |
 | Optional fixed depth viewpoint | Intel RealSense D455 | The D455 is a long-range stereo depth camera with a 95 mm baseline, global-shutter depth sensors, an RGB sensor, and a built-in IMU [1](https://github.com/realsenseai/librealsense) |
+| Depth viewpoint you may already own | Kinect v1 (Xbox 360 / Kinect for Windows) | 640 × 480 depth at 30 fps, ~0.8–4 m, structured light (indoors only). Recorder and front end: `docs/kinect-v1.md`. Not yet validated |
 | Host | Workstation/laptop with GPU | Runs pose, fusion, twin solving, recording (LSL) |
 | Calibration kit | ChArUco board (printed rigid, measured square size), tape measure, floor markers | Used every setup change — see protocol below |
 | Anthropometry kit | Height measure, scale, segment-length tape measurements | Cheap ground truth that constrains SHAPY/SMPL shape fitting |

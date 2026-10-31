@@ -16,6 +16,19 @@ Safety gate (docs/accuracy.md): a cue is only *sent* when the twin tier is A
 and the rule's joint/plane passed validation. Otherwise the event is logged as
 ``would_cue`` with the blocking reason, which is still useful for reviewing a
 rule set on recorded sessions.
+
+The person's own skeleton (rehabtwin/alignment.py): a rule with ``"relative_to":
+"standing"`` compares the signal's change from the person's standing value
+(``baselines``) with its threshold, so a knee that stands in valgus is not cued
+for standing as it does. Without that baseline the rule is not evaluated.
+
+Two kinds of hold stop a cue before the tier gate:
+* ``safety`` {joint: reason}: a clinician's safety flag covers the joint
+  (rehabtwin/safety.py). Nothing overrides it.
+* ``holds`` {joint_plane: reason}: screening holds the twin sets from its evidence
+  (a structural alignment on record, or a camera-estimated standing angle beyond
+  the screening threshold). A rule whose target the treating clinician set for
+  this person (``"clinician_target": true``) may cue there.
 """
 from __future__ import annotations
 
@@ -53,14 +66,38 @@ class _RuleState:
     credit: float = 0.0
 
 
+def gate_reason(rule, tier, allowed_joint_planes, holds=None, safety=None):
+    """None if the rule's cues may be sent, else the reason they are blocked."""
+    joint = rule["joint_plane"].split(".")[0]
+    if (safety or {}).get(joint):
+        return f"{safety[joint]}: no cues at this region"
+    if (holds or {}).get(rule["joint_plane"]) and not rule.get("clinician_target"):
+        return f"{holds[rule['joint_plane']]}: the target must be set by the treating clinician"
+    if tier != "A":
+        return f"tier {tier}: feedback requires a Tier-A twin"
+    if rule["joint_plane"] not in allowed_joint_planes:
+        return f"{rule['joint_plane']} not validated for feedback"
+    return None
+
+
+def needs_baseline(rule, baselines):
+    return rule.get("relative_to") == "standing" and (baselines or {}).get(rule["signal"]) is None
+
+
 @dataclass
 class CueEngine:
     spec: dict
     tier: str = "C"
     allowed_joint_planes: tuple = ()
+    baselines: dict = field(default_factory=dict)    # {signal: the person's standing value}
+    holds: dict = field(default_factory=dict)        # {joint_plane: screening hold}
+    safety: dict = field(default_factory=dict)       # {joint: clinician safety flag}
     log: list = field(default_factory=list)
 
     def __post_init__(self):
+        for r in self.spec["rules"]:
+            if r.get("relative_to") not in (None, "standing"):
+                raise ValueError(f"rule {r['id']}: relative_to must be 'standing'")
         self.state = {r["id"]: _RuleState() for r in self.spec["rules"]}
         self.evaluated = {r["id"]: 0 for r in self.spec["rules"]}   # samples where the rule's signal was usable
         self.last_cue = {}
@@ -72,11 +109,7 @@ class CueEngine:
 
     def gate(self, rule):
         """None if the cue may be sent, else the reason it is blocked."""
-        if self.tier != "A":
-            return f"tier {self.tier}: feedback requires a Tier-A twin"
-        if rule["joint_plane"] not in self.allowed_joint_planes:
-            return f"{rule['joint_plane']} not validated for feedback"
-        return None
+        return gate_reason(rule, self.tier, self.allowed_joint_planes, self.holds, self.safety)
 
     def _fraction(self, k):
         """Share of violations that get a cue at violation number k (0-based), linear fade."""
@@ -87,10 +120,11 @@ class CueEngine:
         """Feed one frame ({signal: value}); returns the actuator commands to send now."""
         out = []
         for r in self.spec["rules"]:
-            if r["signal"] not in signals or not np.isfinite(signals[r["signal"]]):
+            if r["signal"] not in signals or not np.isfinite(signals[r["signal"]]) or needs_baseline(r, self.baselines):
                 continue
             self.evaluated[r["id"]] += 1
-            v = float(signals[r["signal"]])
+            base = self.baselines[r["signal"]] if r.get("relative_to") == "standing" else None
+            v = float(signals[r["signal"]]) - (base or 0.0)
             st = self.state[r["id"]]
             op = OPS[r["op"]]
             beyond = op(v, r["threshold"])
@@ -119,6 +153,8 @@ class CueEngine:
                 gate = self.gate(r)
                 entry = {"t": round(t, 3), "rule": r["id"], "signal": r["signal"], "value": round(v, 2),
                          "threshold": r["threshold"], "actuator": cue["actuator"], "violation": st.events}
+                if base is not None:
+                    entry["standing_value"] = round(base, 2)
                 if reason:
                     entry["decision"], entry["reason"] = "withheld", reason
                 elif gate:
@@ -138,9 +174,10 @@ class CueEngine:
                          "duration_s": round(t - st.since, 3)})
 
 
-def replay(spec, time, signals, tier="C", allowed_joint_planes=()):
+def replay(spec, time, signals, tier="C", allowed_joint_planes=(), baselines=None, holds=None, safety=None):
     """Run the engine over a recorded session. Returns (engine log, sent commands)."""
-    eng = CueEngine(spec, tier=tier, allowed_joint_planes=tuple(allowed_joint_planes))
+    eng = CueEngine(spec, tier=tier, allowed_joint_planes=tuple(allowed_joint_planes), baselines=dict(baselines or {}),
+                    holds=dict(holds or {}), safety=dict(safety or {}))
     sent = []
     for k, t in enumerate(time):
         sent += eng.update(float(t), {n: v[k] for n, v in signals.items()})
@@ -149,7 +186,7 @@ def replay(spec, time, signals, tier="C", allowed_joint_planes=()):
     return eng.log, sent
 
 
-def summarise(spec, log, sent, tier, allowed):
+def summarise(spec, log, sent, tier, allowed, baselines=None, holds=None, safety=None):
     per_rule = {}
     for r in spec["rules"]:
         ev = [e for e in log if e.get("rule") == r["id"] and "decision" in e]
@@ -164,8 +201,13 @@ def summarise(spec, log, sent, tier, allowed):
             "would_cue": sum(e["decision"] == "would_cue" for e in ev),
             "withheld_by_schedule": sum(e.get("reason", "").startswith("faded") for e in ev),
             "peaks": [e["peak"] for e in ends],
-            "gate": (f"tier {tier}: feedback requires a Tier-A twin" if tier != "A"
-                     else None if r["joint_plane"] in allowed else f"{r['joint_plane']} not validated"),
+            "gate": gate_reason(r, tier, allowed, holds, safety),
         }
+        if r.get("relative_to") == "standing":
+            per_rule[r["id"]]["standing_value"] = (baselines or {}).get(r["signal"])
+            if needs_baseline(r, baselines):
+                per_rule[r["id"]]["not_evaluated_because"] = f"no standing value of {r['signal']} for this person"
     return {"rules": spec["name"], "author": spec.get("author", "unspecified"), "twin_tier": tier,
-            "allowed_joint_planes": list(allowed), "per_rule": per_rule, "commands_sent": len(sent)}
+            "allowed_joint_planes": list(allowed), "screening_holds": dict(holds or {}),
+            "safety_holds": dict(safety or {}), "per_rule": per_rule,
+            "commands_sent": len(sent)}

@@ -5,11 +5,12 @@ repos:
     category: "anatomy-models"
     tier: "extended"
     language: "HTML"
-    updated_snapshot: "Oct 16, 2024"
+    license: "MIT"
+    updated_snapshot: "2026-10-26 (live API 2026-10-28)"
     description: "Clone of the BodyParts3D / Anatomography 3D model files"
     notes: "Reference anatomy geometry; check source-data terms before redistribution."
     upstream_path: "upstream/Kevin-Mattheus-Moerman/BodyParts3D"
-    stars_snapshot: 176
+    stars_snapshot: 180
     forks_snapshot: 33
     private: false
     pipeline_stages: ["body-model", "visualization"]
@@ -19,11 +20,12 @@ repos:
     category: "body-models"
     tier: "core"
     language: "Python"
-    updated_snapshot: "Aug 12, 2024"
+    license: "NOASSERTION (custom/mixed license file in repo - read before use)"
+    updated_snapshot: "2026-10-28 (live API 2026-10-28)"
     description: "SMPL-X: expressive parametric human body model (body, hands, face)"
     notes: "Model weights are license-gated via the SMPL-X website; code license != model license."
     upstream_path: "upstream/vchoutas/smplx"
-    stars_snapshot: 2738
+    stars_snapshot: 2746
     forks_snapshot: 400
     private: false
     pipeline_stages: ["body-model"]
@@ -33,12 +35,13 @@ repos:
     category: "anatomy-models"
     tier: "extended"
     language: "Python"
-    updated_snapshot: "yesterday (snapshot)"
-    description: "Human male anatomy model"
+    license: "NOASSERTION (custom/mixed license file in repo - read before use)"
+    updated_snapshot: "2026-10-28 (live API 2026-10-28)"
+    description: "Open-source 3D human male anatomy model for Blender - layered bones, muscles, organs and body systems from the Z-Anatomy project"
     notes: "Blender-oriented anatomy reference."
     upstream_path: "upstream/Z-Anatomy/Models-of-human-anatomy"
-    stars_snapshot: 255
-    forks_snapshot: 56
+    stars_snapshot: 281
+    forks_snapshot: 59
     private: false
     pipeline_stages: ["body-model", "visualization"]
     tags: ["anatomy", "blender", "male-model"]
@@ -47,12 +50,13 @@ repos:
     category: "body-models"
     tier: "core"
     language: "Python"
-    updated_snapshot: "Oct 29, 2024"
+    license: "NOASSERTION (custom/mixed license file in repo - read before use)"
+    updated_snapshot: "2026-10-25 (live API 2026-10-28)"
     description: "From a body shape, infer the anatomic skeleton"
     notes: "Key bridge: surface body -> skeleton for rehab biomechanics."
     upstream_path: "upstream/MarilynKeller/OSSO"
-    stars_snapshot: 238
-    forks_snapshot: 34
+    stars_snapshot: 239
+    forks_snapshot: 33
     private: false
     pipeline_stages: ["body-model", "skeleton"]
     tags: ["skeleton-inference", "smpl", "osso"]
@@ -61,11 +65,12 @@ repos:
     category: "body-models"
     tier: "core"
     language: "Python"
-    updated_snapshot: "Feb 25 (snapshot)"
+    license: "NOASSERTION (custom/mixed license file in repo - read before use)"
+    updated_snapshot: "2026-10-26 (live API 2026-10-28)"
     description: "SKEL — From Skin to Skeleton: biomechanically accurate 3D digital humans (SIGGRAPH Asia 2023)"
     notes: "Core skeleton model for the SMPL->OpenSim path. rehabtwin reads SKEL's 24 anatomical joints + 105 BSM skin markers; SKEL q = 0 is used as the neutral static trial for OpenSim scaling."
     upstream_path: "upstream/MarilynKeller/SKEL"
-    stars_snapshot: 370
+    stars_snapshot: 372
     forks_snapshot: 49
     private: false
     pipeline_stages: ["body-model", "skeleton", "biomechanics"]
@@ -75,7 +80,8 @@ repos:
     category: "body-models"
     tier: "extended"
     language: "Python"
-    updated_snapshot: "Sep 30, 2024"
+    license: "NOASSERTION (custom/mixed license file in repo - read before use)"
+    updated_snapshot: "2026-08-29 (live API 2026-10-28)"
     description: "SUPR: A Sparse Unified Part-Based Human Representation (ECCV 2022)"
     notes: "Alternative parametric body representation."
     upstream_path: "upstream/ahmedosman/SUPR"
@@ -89,11 +95,12 @@ repos:
     category: "visualization-tools"
     tier: "specialized"
     language: "TeX"
-    updated_snapshot: "last week (snapshot)"
+    license: "none found in repo root (checked 2026-10-28; treat as all-rights-reserved)"
+    updated_snapshot: "2026-10-27 (live API 2026-10-28)"
     description: "Build and visualize musculoskeletal models in Blender"
     notes: "Blender MSK authoring/visualization."
     upstream_path: "upstream/PashavanBijlert/MuSkeMo"
-    stars_snapshot: 71
+    stars_snapshot: 73
     forks_snapshot: 4
     private: false
     pipeline_stages: ["visualization", "biomechanics"]
@@ -103,12 +110,13 @@ repos:
     category: "pose-mocap"
     tier: "core"
     language: "Python"
-    updated_snapshot: "2 weeks ago (snapshot)"
+    license: "Apache-2.0"
+    updated_snapshot: "2026-10-28 (live API 2026-10-28)"
     description: "Main OpenCap processing pipeline — markerless motion capture from smartphones"
     notes: "Clinically oriented markerless mocap; check cloud/API dependencies."
     upstream_path: "upstream/opencap-org/opencap-core"
-    stars_snapshot: 374
-    forks_snapshot: 256
+    stars_snapshot: 381
+    forks_snapshot: 257
     private: false
     pipeline_stages: ["capture", "pose", "biomechanics"]
     tags: ["opencap", "markerless", "smartphone", "gait"]
@@ -117,12 +125,13 @@ repos:
     category: "biomechanics"
     tier: "core"
     language: "Python"
-    updated_snapshot: "Sep 10 (snapshot)"
-    description: "Utilities for processing OpenCap data"
+    license: "Apache-2.0"
+    updated_snapshot: "2026-10-28 (live API 2026-10-28)"
+    description: "Utility library for processing OpenCap recordings - data handling and downstream OpenSim-oriented analysis of smartphone motion-capture sessions"
     notes: "Companion to opencap-core for downstream OpenSim analysis."
     upstream_path: "upstream/opencap-org/opencap-processing"
-    stars_snapshot: 158
-    forks_snapshot: 103
+    stars_snapshot: 160
+    forks_snapshot: 104
     private: false
     pipeline_stages: ["biomechanics", "tooling"]
     tags: ["opencap", "opensim", "utilities"]
@@ -131,11 +140,12 @@ repos:
     category: "body-models"
     tier: "extended"
     language: "Python"
-    updated_snapshot: "Nov 12, 2024"
+    license: "Apache-2.0"
+    updated_snapshot: "2026-10-25 (live API 2026-10-28)"
     description: "OpenMMLab 3D Human Parametric Model Toolbox and Benchmark"
     notes: "Broad toolbox; heavier dependency stack."
     upstream_path: "upstream/open-mmlab/mmhuman3d"
-    stars_snapshot: 1430
+    stars_snapshot: 1431
     forks_snapshot: 155
     private: false
     pipeline_stages: ["body-model", "pose", "tooling"]
@@ -145,12 +155,13 @@ repos:
     category: "anatomy-models"
     tier: "specialized"
     language: "Python"
-    updated_snapshot: "8 hours ago (snapshot)"
+    license: "NOASSERTION (custom/mixed license file in repo - read before use)"
+    updated_snapshot: "2026-10-28 (live API 2026-10-28)"
     description: "MPFB2 — free and open source human generator for Blender"
     notes: "Patient/avatar generation in Blender."
     upstream_path: "upstream/makehumancommunity/mpfb2"
-    stars_snapshot: 648
-    forks_snapshot: 90
+    stars_snapshot: 670
+    forks_snapshot: 96
     private: false
     pipeline_stages: ["body-model", "visualization"]
     tags: ["makehuman", "blender", "human-generator"]
@@ -159,12 +170,13 @@ repos:
     category: "visualization-tools"
     tier: "specialized"
     language: "TypeScript"
-    updated_snapshot: "Feb 25, 2024"
+    license: "MIT"
+    updated_snapshot: "2026-10-28 (live API 2026-10-28)"
     description: "Online 3D OpenPose editor for Stable Diffusion and ControlNet"
     notes: "Peripheral to rehab; useful for pose authoring/annotation UX ideas."
     upstream_path: "upstream/ZhUyU1997/open-pose-editor"
-    stars_snapshot: 959
-    forks_snapshot: 222
+    stars_snapshot: 960
+    forks_snapshot: 224
     private: false
     pipeline_stages: ["visualization", "tooling"]
     tags: ["openpose", "editor", "controlnet"]
@@ -173,6 +185,7 @@ repos:
     category: "pose-mocap"
     tier: "private"
     language: null
+    license: "not recorded (private repository)"
     updated_snapshot: "May 22 (snapshot)"
     description: "Dynamic AI-Driven Anatomical Pose Transfer (DAAPT)"
     notes: "PRIVATE in source list — not publicly cloneable. Listed for completeness only."
@@ -187,12 +200,13 @@ repos:
     category: "pose-mocap"
     tier: "extended"
     language: "Python"
-    updated_snapshot: "Jul 10 (snapshot)"
+    license: "NOASSERTION (custom/mixed license file in repo - read before use)"
+    updated_snapshot: "2026-10-28 (live API 2026-10-28)"
     description: "MAMMA: Markerless Accurate Multi-person Motion Acquisition"
     notes: "Multi-person markerless mocap."
     upstream_path: "upstream/cuevhv/mamma"
-    stars_snapshot: 839
-    forks_snapshot: 81
+    stars_snapshot: 864
+    forks_snapshot: 85
     private: false
     pipeline_stages: ["capture", "pose"]
     tags: ["markerless", "multi-person", "mocap"]
@@ -200,8 +214,9 @@ repos:
     url: "https://github.com/MaureenZOU/worldstring"
     category: "3d-reconstruction"
     tier: "experimental"
-    language: "[Highlight] Python"
-    updated_snapshot: "Jun 4 (snapshot)"
+    language: "Python"
+    license: "none found in repo root (checked 2026-10-28; treat as all-rights-reserved)"
+    updated_snapshot: "2026-08-10 (live API 2026-10-28)"
     description: "Official implementation for Actionable World Representation (worldstring)"
     notes: "Research code; rehab relevance is indirect (world/action representation)."
     upstream_path: "upstream/MaureenZOU/worldstring"
@@ -215,11 +230,12 @@ repos:
     category: "3d-reconstruction"
     tier: "experimental"
     language: "Python"
-    updated_snapshot: "2 weeks ago (snapshot)"
+    license: "NOASSERTION (custom/mixed license file in repo - read before use)"
+    updated_snapshot: "2026-10-26 (live API 2026-10-28)"
     description: "Official inference code for World Tracing"
     notes: "Research code; evaluate before depending on it."
     upstream_path: "upstream/haoz19/world-tracing"
-    stars_snapshot: 371
+    stars_snapshot: 373
     forks_snapshot: 29
     private: false
     pipeline_stages: ["pose", "visualization"]
@@ -229,11 +245,12 @@ repos:
     category: "3d-reconstruction"
     tier: "experimental"
     language: null
-    updated_snapshot: "Jun 15 (snapshot)"
+    license: "none found in repo root (checked 2026-10-28; treat as all-rights-reserved)"
+    updated_snapshot: "2026-10-27 (live API 2026-10-28)"
     description: "Flex4DHuman turns monocular or sparse multi-view videos of dynamic subjects into synchronized dense multi-view videos"
-    notes: "Useful if multi-view synthesis helps assessment review."
+    notes: "Useful if multi-view synthesis helps assessment review. GitHub reports no primary language (checked 2026-10-28)."
     upstream_path: "upstream/Andy-Cheng/Flex4DHuman"
-    stars_snapshot: 105
+    stars_snapshot: 106
     forks_snapshot: 7
     private: false
     pipeline_stages: ["capture", "pose"]
@@ -243,12 +260,13 @@ repos:
     category: "3d-reconstruction"
     tier: "experimental"
     language: "Python"
-    updated_snapshot: "Sep 2 (snapshot)"
+    license: "NOASSERTION (custom/mixed license file in repo - read before use)"
+    updated_snapshot: "2026-10-26 (live API 2026-10-28)"
     description: "MeshFlow: Efficient Artistic Mesh Generation via MeshVAE and Flow-based Diffusion Transformer (CVPR 2026)"
     notes: "General mesh generation, not human-specific by default."
     upstream_path: "upstream/facebookresearch/meshflow"
     stars_snapshot: 528
-    forks_snapshot: 27
+    forks_snapshot: 28
     private: false
     pipeline_stages: ["body-model", "visualization"]
     tags: ["mesh-generation", "diffusion", "vae"]
@@ -257,11 +275,12 @@ repos:
     category: "pose-mocap"
     tier: "specialized"
     language: null
-    updated_snapshot: "Jul 13 (snapshot)"
+    license: "none found in repo root (checked 2026-10-28; treat as all-rights-reserved)"
+    updated_snapshot: "2026-10-25 (live API 2026-10-28)"
     description: "Official PyTorch implementation: The Surprising Effectiveness of Video Diffusion Models for Hand Motion Reconstruction"
-    notes: "Hand rehab (fine motor) is the plausible niche."
+    notes: "Hand rehab (fine motor) is the plausible niche. GitHub reports no primary language (checked 2026-10-28)."
     upstream_path: "upstream/NTUYWANG103/ViDiHand"
-    stars_snapshot: 193
+    stars_snapshot: 194
     forks_snapshot: 7
     private: false
     pipeline_stages: ["pose"]
@@ -271,12 +290,13 @@ repos:
     category: "musculoskeletal-sim"
     tier: "core"
     language: "Python"
-    updated_snapshot: "5 hours ago (snapshot)"
+    license: "Apache-2.0"
+    updated_snapshot: "2026-10-28 (live API 2026-10-28)"
     description: "MyoSuite — musculoskeletal environments/tasks in MuJoCo, wrapped in the Gym API"
     notes: "Core RL/control sandbox for muscle-actuated rehab tasks."
     upstream_path: "upstream/MyoHub/myosuite"
-    stars_snapshot: 1260
-    forks_snapshot: 178
+    stars_snapshot: 1267
+    forks_snapshot: 181
     private: false
     pipeline_stages: ["muscle-sim", "control-rl"]
     tags: ["myosuite", "mujoco", "gym", "musculoskeletal"]
@@ -285,11 +305,12 @@ repos:
     category: "body-models"
     tier: "extended"
     language: "Python"
-    updated_snapshot: "Oct 8, 2024"
+    license: "NOASSERTION (custom/mixed license file in repo - read before use)"
+    updated_snapshot: "2026-10-27 (live API 2026-10-28)"
     description: "HIT: Estimating Internal Human Implicit Tissues from the Body Surface (2024)"
     notes: "Internal tissue estimation; research-stage."
     upstream_path: "upstream/MarilynKeller/HIT"
-    stars_snapshot: 102
+    stars_snapshot: 105
     forks_snapshot: 13
     private: false
     pipeline_stages: ["body-model", "skeleton"]
@@ -299,7 +320,8 @@ repos:
     category: "biomechanics"
     tier: "core"
     language: "Python"
-    updated_snapshot: "May 28 (snapshot)"
+    license: "NOASSERTION (custom/mixed license file in repo - read before use)"
+    updated_snapshot: "2026-10-14 (live API 2026-10-28)"
     description: "Enable inputting a SMPL sequence into AddBiomechanics to fit an OpenSim skeleton model to the sequence"
     notes: "Critical glue repo: SMPL motion -> OpenSim skeleton fitting."
     upstream_path: "upstream/MarilynKeller/SMPL2AddBiomechanics"
@@ -313,7 +335,8 @@ repos:
     category: "visualization-tools"
     tier: "core"
     language: "Python"
-    updated_snapshot: "Aug 15, 2025"
+    license: "MIT"
+    updated_snapshot: "2026-10-14 (live API 2026-10-28)"
     description: "aitviewer fork supporting visualization of OpenSim models and SKEL"
     notes: "Preferred viewer for SKEL/OpenSim rehab sequences."
     upstream_path: "upstream/MarilynKeller/aitviewer-skel"
@@ -327,7 +350,8 @@ repos:
     category: "body-models"
     tier: "extended"
     language: "Python"
-    updated_snapshot: "Feb 2, 2024"
+    license: "NOASSERTION (custom/mixed license file in repo - read before use)"
+    updated_snapshot: "2026-10-14 (live API 2026-10-28)"
     description: "STAR — A Sparse Trained Articulated Human Body Regressor (ECCV 2020)"
     notes: "Older parametric model; prefer SMPL-X/SKEL for new work unless STAR is required."
     upstream_path: "upstream/ahmedosman/STAR"
@@ -341,12 +365,13 @@ repos:
     category: "musculoskeletal-sim"
     tier: "core"
     language: "Python"
-    updated_snapshot: "2 weeks ago (snapshot)"
-    description: "Musculoskeletal models in MuJoCo"
+    license: "Apache-2.0"
+    updated_snapshot: "2026-10-27 (live API 2026-10-28)"
+    description: "MyoSuite's MuJoCo musculoskeletal model library - muscle-actuated limb and full-body models loaded by the MyoSuite environments"
     notes: "Model library companion to MyoSuite."
     upstream_path: "upstream/MyoHub/myo_sim"
-    stars_snapshot: 211
-    forks_snapshot: 50
+    stars_snapshot: 214
+    forks_snapshot: 51
     private: false
     pipeline_stages: ["muscle-sim"]
     tags: ["mujoco", "musculoskeletal", "models"]
@@ -355,11 +380,12 @@ repos:
     category: "biomechanics"
     tier: "core"
     language: "Python"
-    updated_snapshot: "Oct 22, 2024"
+    license: "Apache-2.0"
+    updated_snapshot: "2026-10-21 (live API 2026-10-28)"
     description: "Convert OpenSim 4.0+ MSK models into MuJoCo format with optimized muscle kinematics and kinetics"
     notes: "Bridge between clinical biomechanics (OpenSim) and RL sim (MuJoCo)."
     upstream_path: "upstream/MyoHub/myoconverter"
-    stars_snapshot: 129
+    stars_snapshot: 130
     forks_snapshot: 16
     private: false
     pipeline_stages: ["biomechanics", "muscle-sim", "tooling"]
@@ -369,8 +395,9 @@ repos:
     category: "visualization-tools"
     tier: "extended"
     language: "JavaScript"
-    updated_snapshot: "2 weeks ago (snapshot)"
-    description: "OpenCap viewer"
+    license: "Apache-2.0"
+    updated_snapshot: "2026-10-14 (live API 2026-10-28)"
+    description: "OpenCap viewer - browser-based web viewer for inspecting OpenCap motion-capture sessions, trials and results"
     notes: "Web viewer for OpenCap sessions."
     upstream_path: "upstream/opencap-org/opencap-viewer"
     stars_snapshot: 11
@@ -383,11 +410,12 @@ repos:
     category: "pose-mocap"
     tier: "core"
     language: "Python"
-    updated_snapshot: "Mar 6 (snapshot)"
+    license: "MIT"
+    updated_snapshot: "2026-10-27 (live API 2026-10-28)"
     description: "Reconstructing Humans with a Biomechanically Accurate Skeleton (CVPR 2025 Oral)"
-    notes: "Direct image/video -> biomechanical skeleton path; high rehab relevance. Front-end of pipeline/ (adapters/hsmr_to_skelseq.py). Needs the gated SKEL model (skel.is.tue.mpg.de) and its checkpoint from HuggingFace. Quirk: demo resizes inputs with (H, W) passed as (W, H) — a 3840x2160 video runs at 1080x608; the adapter replicates this."
+    notes: "Direct image/video -> biomechanical skeleton path; high rehab relevance. Front-end of pipeline/ (adapters/hsmr_to_skelseq.py). Needs the gated SKEL model (skel.is.tue.mpg.de) and its checkpoint from HuggingFace. Quirk: demo resizes inputs with (H, W) passed as (W, H) - a 3840x2160 video runs at 1080x608; the adapter replicates this."
     upstream_path: "upstream/IsshikiHugh/HSMR"
-    stars_snapshot: 634
+    stars_snapshot: 636
     forks_snapshot: 55
     private: false
     pipeline_stages: ["pose", "skeleton"]
@@ -397,11 +425,12 @@ repos:
     category: "pose-mocap"
     tier: "experimental"
     language: "Jupyter Notebook"
-    updated_snapshot: "Aug 28 (snapshot)"
+    license: "none found in repo root (checked 2026-10-28; treat as all-rights-reserved)"
+    updated_snapshot: "2026-10-27 (live API 2026-10-28)"
     description: "SKEL-CF: Coarse-to-Fine Biomechanical Skeleton and Surface Mesh Recovery"
     notes: "Newer SKEL-based recovery; evaluate reproducibility."
     upstream_path: "upstream/Intellindust-AI-Lab/SKEL-CF"
-    stars_snapshot: 82
+    stars_snapshot: 83
     forks_snapshot: 5
     private: false
     pipeline_stages: ["pose", "skeleton", "body-model"]
@@ -410,13 +439,14 @@ repos:
     url: "https://github.com/ZhengyiLuo/SMPLSim"
     category: "musculoskeletal-sim"
     tier: "extended"
-    language: null
-    updated_snapshot: "(snapshot truncated)"
+    language: "Python"
+    license: "BSD-3-Clause"
+    updated_snapshot: "2026-10-22 (live API 2026-10-28)"
     description: "Simulating SMPL humanoid, supporting PHC / PHC-MJX / PULSE / SimXR code bases"
     notes: "Simulation harness around SMPL humanoids."
     upstream_path: "upstream/ZhengyiLuo/SMPLSim"
-    stars_snapshot: null
-    forks_snapshot: null
+    stars_snapshot: 354
+    forks_snapshot: 28
     private: false
     pipeline_stages: ["muscle-sim", "control-rl"]
     tags: ["smpl", "humanoid", "simulation"]
@@ -425,12 +455,13 @@ repos:
     category: "musculoskeletal-sim"
     tier: "extended"
     language: "Python"
-    updated_snapshot: "Aug 21, 2025"
+    license: "NOASSERTION (custom/mixed license file in repo - read before use)"
+    updated_snapshot: "2026-10-27 (live API 2026-10-28)"
     description: "Perpetual Humanoid Control for Real-time Simulated Avatars (ICCV 2023)"
     notes: "Humanoid control policy; useful for simulated patient/exercise avatars."
     upstream_path: "upstream/ZhengyiLuo/PHC"
-    stars_snapshot: 1305
-    forks_snapshot: 129
+    stars_snapshot: 1307
+    forks_snapshot: 128
     private: false
     pipeline_stages: ["control-rl", "muscle-sim"]
     tags: ["phc", "humanoid-control", "avatar"]
@@ -439,12 +470,13 @@ repos:
     category: "biomechanics"
     tier: "core"
     language: "C++"
-    updated_snapshot: "15 hours ago (snapshot)"
+    license: "Apache-2.0"
+    updated_snapshot: "2026-10-28 (live API 2026-10-28)"
     description: "SimTK OpenSim C++ libraries and command-line applications, with Java/Python wrapping"
     notes: "The clinical biomechanics engine. Heavy native build; prefer Python conda packages where possible."
     upstream_path: "upstream/opensim-org/opensim-core"
-    stars_snapshot: 1132
-    forks_snapshot: 403
+    stars_snapshot: 1139
+    forks_snapshot: 405
     private: false
     pipeline_stages: ["biomechanics", "muscle-sim"]
     tags: ["opensim", "simtk", "inverse-kinematics", "dynamics"]
@@ -453,7 +485,8 @@ repos:
     category: "biomechanics"
     tier: "extended"
     language: "C++"
-    updated_snapshot: "Sep 14, 2025"
+    license: "NOASSERTION (custom/mixed license file in repo - read before use)"
+    updated_snapshot: "2026-10-27 (live API 2026-10-28)"
     description: "Nimble: Physics Engine for Biomechanics and Deep Learning"
     notes: "Differentiable biomechanics physics; research-grade."
     upstream_path: "upstream/keenon/nimblephysics"
@@ -467,7 +500,8 @@ repos:
     category: "biomechanics"
     tier: "core"
     language: "TypeScript"
-    updated_snapshot: "Aug 4 (snapshot)"
+    license: "NOASSERTION (custom/mixed license file in repo - read before use)"
+    updated_snapshot: "2026-10-14 (live API 2026-10-28)"
     description: "A tool to automatically process and share biomechanics data"
     notes: "Automated marker/mocap -> OpenSim processing and sharing."
     upstream_path: "upstream/keenon/AddBiomechanics"
@@ -481,12 +515,13 @@ repos:
     category: "pose-mocap"
     tier: "core"
     language: "Python"
-    updated_snapshot: "12 hours ago (snapshot)"
+    license: "BSD-3-Clause"
+    updated_snapshot: "2026-10-28 (live API 2026-10-28)"
     description: "Markerless kinematics with any cameras — from 2D pose estimation to 3D OpenSim motion"
     notes: "Best-documented open path: cameras -> OpenSim kinematics. Strong rehab candidate. Used by pipeline/ (rehabtwin): Model_Pose2Sim_muscles_flex.osim + Markers_SKEL.xml/Markers_Mediapipe.xml. Known issue (2026-10-21): the 7 head markers in Markers_SKEL.xml carry torso-frame coordinates (top of head ~0.5 m too high); rehabtwin re-expresses them (configs/skel105_pose2sim.json)."
     upstream_path: "upstream/perfanalytics/pose2sim"
-    stars_snapshot: 852
-    forks_snapshot: 117
+    stars_snapshot: 861
+    forks_snapshot: 119
     private: false
     pipeline_stages: ["capture", "pose", "biomechanics"]
     tags: ["pose2sim", "opensim", "markerless", "triangulation"]
@@ -495,11 +530,12 @@ repos:
     category: "pose-mocap"
     tier: "core"
     language: "Python"
-    updated_snapshot: "Feb 23, 2024"
+    license: "NOASSERTION (custom/mixed license file in repo - read before use)"
+    updated_snapshot: "2026-10-28 (live API 2026-10-28)"
     description: "Expressive Body Capture: 3D Hands, Face, and Body from a Single Image (SMPLify-X)"
     notes: "Single-image fitting baseline; slower optimization-based path."
     upstream_path: "upstream/vchoutas/smplify-x"
-    stars_snapshot: 2182
+    stars_snapshot: 2185
     forks_snapshot: 375
     private: false
     pipeline_stages: ["pose", "body-model"]
@@ -509,12 +545,13 @@ repos:
     category: "visualization-tools"
     tier: "core"
     language: "Python"
-    updated_snapshot: "May 7 (snapshot)"
+    license: "MIT"
+    updated_snapshot: "2026-10-14 (live API 2026-10-28)"
     description: "A set of tools to visualize and interact with sequences of 3D data"
     notes: "Upstream viewer; see aitviewer-skel fork for OpenSim/SKEL."
     upstream_path: "upstream/eth-ait/aitviewer"
     stars_snapshot: 756
-    forks_snapshot: 75
+    forks_snapshot: 76
     private: false
     pipeline_stages: ["visualization"]
     tags: ["aitviewer", "smpl", "visualization"]
@@ -523,11 +560,12 @@ repos:
     category: "biomechanics"
     tier: "specialized"
     language: "Python"
-    updated_snapshot: "last month (snapshot)"
+    license: "MIT"
+    updated_snapshot: "2026-10-24 (live API 2026-10-28)"
     description: "A generic interface to generate a virtual buddy (biomechanical models)"
     notes: "Small/emerging; evaluate API maturity."
     upstream_path: "upstream/pyomeca/biobuddy"
-    stars_snapshot: 15
+    stars_snapshot: 16
     forks_snapshot: 18
     private: false
     pipeline_stages: ["body-model", "biomechanics", "tooling"]
@@ -537,7 +575,8 @@ repos:
     category: "anatomy-models"
     tier: "specialized"
     language: "MATLAB"
-    updated_snapshot: "Aug 19, 2024"
+    license: "NOASSERTION (custom/mixed license file in repo - read before use)"
+    updated_snapshot: "2026-10-14 (live API 2026-10-28)"
     description: "STAPLE — Shared Tools for Automatic Personalised Lower Extremity modelling: generating skeletal models from 3D bone geometries"
     notes: "Lower-limb personalization; MATLAB dependency."
     upstream_path: "upstream/modenaxe/msk-STAPLE"
@@ -551,7 +590,8 @@ repos:
     category: "musculoskeletal-sim"
     tier: "extended"
     language: "C++"
-    updated_snapshot: "2 weeks ago (snapshot)"
+    license: "Apache-2.0"
+    updated_snapshot: "2026-10-21 (live API 2026-10-28)"
     description: "SCONE core — software for performing predictive simulations of biological motion"
     notes: "Predictive gait/movement simulation."
     upstream_path: "upstream/tgeijten/scone-core"
@@ -565,9 +605,10 @@ repos:
     category: "visualization-tools"
     tier: "extended"
     language: "C++"
-    updated_snapshot: "2 weeks ago (snapshot)"
+    license: "GPL-3.0"
+    updated_snapshot: "2026-10-14 (live API 2026-10-28)"
     description: "SCONE Studio — graphical user interface for SCONE"
-    notes: "GUI companion to scone-core."
+    notes: "GUI companion to scone-core for building, running and inspecting predictive simulations without writing code."
     upstream_path: "upstream/tgeijten/scone-studio"
     stars_snapshot: 46
     forks_snapshot: 7
@@ -579,9 +620,10 @@ repos:
     category: "musculoskeletal-sim"
     tier: "extended"
     language: "Python"
-    updated_snapshot: "May 15 (snapshot)"
-    description: "Gym environments for SCONE"
-    notes: "RL interface to SCONE models."
+    license: "Apache-2.0"
+    updated_snapshot: "2026-10-14 (live API 2026-10-28)"
+    description: "Gym environments for SCONE - reinforcement-learning environments wrapping SCONE predictive musculoskeletal simulations"
+    notes: "RL interface to SCONE models; pairs with scone-core and depRL for learning muscle-control policies."
     upstream_path: "upstream/tgeijten/sconegym"
     stars_snapshot: 50
     forks_snapshot: 10
@@ -593,12 +635,13 @@ repos:
     category: "musculoskeletal-sim"
     tier: "specialized"
     language: "Python"
-    updated_snapshot: "Jun 27, 2025"
+    license: "MIT"
+    updated_snapshot: "2026-10-14 (live API 2026-10-28)"
     description: "DEP-RL: Embodied Exploration for Reinforcement Learning in Overactuated and Musculoskeletal Systems (ICLR 2023)"
     notes: "RL method for overactuated muscle systems. Star count in snapshot is ambiguous."
     upstream_path: "upstream/tgeijten/depRL"
     stars_snapshot: 3
-    forks_snapshot: null
+    forks_snapshot: 0
     private: false
     pipeline_stages: ["control-rl", "muscle-sim"]
     tags: ["dep-rl", "musculoskeletal", "rl"]
@@ -607,12 +650,13 @@ repos:
     category: "musculoskeletal-sim"
     tier: "extended"
     language: "Python"
-    updated_snapshot: "9 hours ago (snapshot)"
+    license: "Apache-2.0"
+    updated_snapshot: "2026-10-27 (live API 2026-10-28)"
     description: "Towards Embodied AI with MuscleMimic: Unlocking full-body musculoskeletal motor learning at scale"
     notes: "Recent full-body muscle motor learning; watch maturity."
     upstream_path: "upstream/amathislab/musclemimic"
-    stars_snapshot: 353
-    forks_snapshot: 48
+    stars_snapshot: 359
+    forks_snapshot: 50
     private: false
     pipeline_stages: ["muscle-sim", "control-rl"]
     tags: ["musclemimic", "full-body", "motor-learning"]
@@ -621,11 +665,12 @@ repos:
     category: "musculoskeletal-sim"
     tier: "extended"
     language: "Python"
-    updated_snapshot: "3 weeks ago (snapshot)"
+    license: "Apache-2.0"
+    updated_snapshot: "2026-10-27 (live API 2026-10-28)"
     description: "Musculoskeletal models released from MuscleMimic research: full-body musculoskeletal model"
     notes: "Companion model assets for musclemimic."
     upstream_path: "upstream/amathislab/musclemimic_models"
-    stars_snapshot: 61
+    stars_snapshot: 63
     forks_snapshot: 7
     private: false
     pipeline_stages: ["muscle-sim", "body-model"]
@@ -635,11 +680,12 @@ repos:
     category: "musculoskeletal-sim"
     tier: "extended"
     language: "Python"
-    updated_snapshot: "Aug 22 (snapshot)"
+    license: "MIT"
+    updated_snapshot: "2026-10-28 (live API 2026-10-28)"
     description: "Imitation learning benchmark focusing on complex locomotion tasks using MuJoCo"
     notes: "Locomotion benchmark; rehab relevance via gait retraining sims."
     upstream_path: "upstream/robfiras/loco-mujoco"
-    stars_snapshot: 1474
+    stars_snapshot: 1471
     forks_snapshot: 153
     private: false
     pipeline_stages: ["control-rl", "muscle-sim"]
@@ -649,12 +695,13 @@ repos:
     category: "anatomy-models"
     tier: "specialized"
     language: null
-    updated_snapshot: "Feb 28 (snapshot)"
+    license: "Apache-2.0"
+    updated_snapshot: "2026-10-28 (live API 2026-10-28)"
     description: "MS-Human-700: Whole-body Human MusculoSkeletal Model"
-    notes: "Model asset repo; verify format/license before use."
+    notes: "Model asset repo; verify format/license before use. GitHub reports no primary language (checked 2026-10-28)."
     upstream_path: "upstream/LNSGroup/MS-Human-700"
-    stars_snapshot: 51
-    forks_snapshot: 4
+    stars_snapshot: 244
+    forks_snapshot: 25
     private: false
     pipeline_stages: ["muscle-sim", "body-model"]
     tags: ["whole-body", "musculoskeletal-model", "700"]
@@ -663,11 +710,12 @@ repos:
     category: "rehab-assistive"
     tier: "specialized"
     language: "C++"
-    updated_snapshot: "Aug 4 (snapshot)"
+    license: "NOASSERTION (custom/mixed license file in repo - read before use)"
+    updated_snapshot: "2026-10-25 (live API 2026-10-28)"
     description: "EXO-PLORE: Exploring Exoskeleton Control Space through Human-Aligned Simulation (ICLR 2026)"
     notes: "Exoskeleton control exploration."
     upstream_path: "upstream/DaebangStn/exo-plore"
-    stars_snapshot: 22
+    stars_snapshot: 23
     forks_snapshot: 4
     private: false
     pipeline_stages: ["control-rl", "muscle-sim"]
@@ -677,7 +725,8 @@ repos:
     category: "rehab-assistive"
     tier: "specialized"
     language: "HTML"
-    updated_snapshot: "Aug 26, 2025"
+    license: "none found in repo root (checked 2026-10-28; treat as all-rights-reserved)"
+    updated_snapshot: "2026-10-14 (live API 2026-10-28)"
     description: "Stanford NMBL sit-to-stand project (details in upstream repo)"
     notes: "Sit-to-stand is a core rehab functional task; inspect upstream for scope/data."
     upstream_path: "upstream/stanfordnmbl/sit2stand"
@@ -691,12 +740,13 @@ repos:
     category: "biomechanics"
     tier: "extended"
     language: "Python"
-    updated_snapshot: "May 18 (snapshot)"
-    description: "Gait dynamics tools (Stanford NMBL)"
+    license: "MIT"
+    updated_snapshot: "2026-10-27 (live API 2026-10-28)"
+    description: "Gait dynamics tools from Stanford NMBL - utilities for gait-dynamics analysis alongside OpenSim workflows"
     notes: "Gait analysis; pairs with OpenSim workflows."
     upstream_path: "upstream/stanfordnmbl/GaitDynamics"
-    stars_snapshot: 132
-    forks_snapshot: 18
+    stars_snapshot: 135
+    forks_snapshot: 17
     private: false
     pipeline_stages: ["biomechanics"]
     tags: ["gait", "dynamics", "stanford-nmbl"]
@@ -705,12 +755,13 @@ repos:
     category: "data-capture"
     tier: "specialized"
     language: "C"
-    updated_snapshot: "Apr 21, 2025"
+    license: "LGPL-2.1"
+    updated_snapshot: "2026-10-14 (live API 2026-10-28)"
     description: "Record3D iOS app library — receive RGBD stream from iOS devices with TrueDepth cameras"
     notes: "Low-cost depth capture from iPhone/iPad."
     upstream_path: "upstream/marek-simonik/record3d"
     stars_snapshot: 493
-    forks_snapshot: 77
+    forks_snapshot: 78
     private: false
     pipeline_stages: ["capture"]
     tags: ["rgbd", "ios", "truedepth", "streaming"]
@@ -719,12 +770,13 @@ repos:
     category: "3d-reconstruction"
     tier: "core"
     language: "C++"
-    updated_snapshot: "3 weeks ago (snapshot)"
+    license: "NOASSERTION (custom/mixed license file in repo - read before use)"
+    updated_snapshot: "2026-10-28 (live API 2026-10-28)"
     description: "Open3D: A Modern Library for 3D Data Processing"
     notes: "General 3D backbone for scans/point clouds; not rehab-specific."
     upstream_path: "upstream/isl-org/Open3D"
-    stars_snapshot: 14109
-    forks_snapshot: 2636
+    stars_snapshot: 14136
+    forks_snapshot: 2646
     private: false
     pipeline_stages: ["capture", "visualization", "tooling"]
     tags: ["open3d", "point-cloud", "3d-processing"]
@@ -733,6 +785,7 @@ repos:
     category: "rehab-assistive"
     tier: "specialized"
     language: "Python"
+    license: "none found in repo root (checked 2026-10-28; treat as all-rights-reserved)"
     updated_snapshot: "2026-10-14 (live API 2026-10-21)"
     description: "MyoBack — simulation of a neuromusculoskeletal model of the back with an exoskeleton; a MyoSuite back model derived from a physiologically accurate OpenSim model, validated with a passive back exoskeleton"
     notes: "Resolved 2026-10-21 from upstream README. Back/spine rehab + exo evaluation niche; pairs with dfki-av/simspine. License: not declared in GitHub API metadata (2026-10-21) — check upstream repo."
@@ -747,6 +800,7 @@ repos:
     category: "musculoskeletal-sim"
     tier: "specialized"
     language: "Mathematica"
+    license: "Apache-2.0"
     updated_snapshot: "2026-10-20 (live API 2026-10-21)"
     description: "MASS (Muscle-Actuated Skeletal System) — simulation and control of a full-body musculoskeletal system driven by muscle activations, with Python/PyTorch deep-RL interfacing (SIGGRAPH 2019)"
     notes: "Resolved 2026-10-21 from upstream README (Apache-2.0). Research simulator; compare against MyoSuite/SCONE before adopting. License (GitHub API, 2026-10-21): Apache-2.0."
@@ -761,6 +815,7 @@ repos:
     category: "rehab-assistive"
     tier: "specialized"
     language: "Jupyter Notebook"
+    license: "Apache-2.0"
     updated_snapshot: "21 minutes ago (snapshot)"
     description: "MyoAssist (assistive musculoskeletal simulation; details in upstream repo)"
     notes: "Assistive-device simulation niche."
@@ -775,6 +830,7 @@ repos:
     category: "rehab-assistive"
     tier: "specialized"
     language: "Mathematica"
+    license: "Apache-2.0"
     updated_snapshot: "2026-10-14 (live API 2026-10-21)"
     description: "MASS/DART exoskeleton variant — upstream README presents the MASS muscle-actuated full-body skeletal simulation system; exoskeleton-specific changes are not documented in the README"
     notes: "Partially resolved 2026-10-21: base system identified as MASS, but exo specifics are undocumented upstream — audit the code diff before any use. License (GitHub API, 2026-10-21): Apache-2.0."
@@ -789,9 +845,10 @@ repos:
     category: "data-capture"
     tier: "specialized"
     language: "C++"
+    license: "MIT"
     updated_snapshot: "Apr 4 (snapshot)"
     description: "An app for collecting raw RGB-D scans on iOS devices"
-    notes: "iOS RGB-D scan collection."
+    notes: "iOS RGB-D scan-collection app; candidate capture front-end for Tier-B surface scanning."
     upstream_path: "upstream/strayrobots/scanner"
     stars_snapshot: 155
     forks_snapshot: 30
@@ -803,6 +860,7 @@ repos:
     category: "visualization-tools"
     tier: "specialized"
     language: "C++"
+    license: "MIT"
     updated_snapshot: "Jun 27, 2022"
     description: "A graphical user interface to annotate point clouds and 3D data"
     notes: "Annotation tooling for 3D clinical datasets."
@@ -817,6 +875,7 @@ repos:
     category: "pose-mocap"
     tier: "specialized"
     language: "Python"
+    license: "NOASSERTION (custom/mixed license file in repo - read before use)"
     updated_snapshot: "Jul 13, 2021"
     description: "PROX: Resolving 3D Human Pose Ambiguities with 3D Scene Constraints"
     notes: "Older (2021); scene-aware pose in home/clinic environments is conceptually relevant."
@@ -831,6 +890,7 @@ repos:
     category: "body-models"
     tier: "specialized"
     language: "C#"
+    license: "none found in repo root (checked 2026-10-28; treat as all-rights-reserved)"
     updated_snapshot: "2026-10-14 (live API 2026-10-21)"
     description: "RC-SMPL — Real-time Cumulative SMPL-based Avatar Body Generation (IEEE ISMAR 2023); cumulatively updates avatar texture and normal maps from images/video in real time"
     notes: "Resolved 2026-10-21 from upstream README. Twin *appearance* layer (texture/normals), not anatomical accuracy. License: not declared in GitHub API metadata (2026-10-21) — check upstream repo."
@@ -845,6 +905,7 @@ repos:
     category: "datasets-interaction"
     tier: "specialized"
     language: "Python"
+    license: "NOASSERTION (custom/mixed license file in repo - read before use)"
     updated_snapshot: "Feb 16, 2025"
     description: "Code to access the BEHAVE dataset (CVPR 2022) — human-object interaction"
     notes: "HOI dataset; useful for ADL (activities of daily living) rehab contexts."
@@ -859,12 +920,13 @@ repos:
     category: "biomechanics"
     tier: "experimental"
     language: "Python"
-    updated_snapshot: "May 25 (snapshot)"
+    license: "NOASSERTION (custom/mixed license file in repo - read before use)"
+    updated_snapshot: "2026-10-14 (live API 2026-10-28)"
     description: "SIMSPINE: A Biomechanics-Aware Simulation Framework for 3D Spine Motion Annotation and Benchmarking"
     notes: "Spine-specific; relevant to back rehab / MyoBack thread."
     upstream_path: "upstream/dfki-av/simspine"
     stars_snapshot: 13
-    forks_snapshot: null
+    forks_snapshot: 0
     private: false
     pipeline_stages: ["skeleton", "biomechanics"]
     tags: ["spine", "simulation", "annotation", "benchmark"]
@@ -873,6 +935,7 @@ repos:
     category: "pose-mocap"
     tier: "core"
     language: "Python"
+    license: "GPL-3.0"
     updated_snapshot: "May 8, 2025"
     description: "TransPose — real-time motion capture that estimates poses and global translations using only 6 IMUs"
     notes: "Wearable IMU path for home rehab without cameras."
@@ -887,6 +950,7 @@ repos:
     category: "pose-mocap"
     tier: "core"
     language: "Python"
+    license: "GPL-3.0"
     updated_snapshot: "May 8, 2025"
     description: "PIP — real-time system that captures physically correct human motion, joint torques, and ground reaction forces with only 6 IMUs"
     notes: "IMU + physics outputs (torques/GRF) are unusually rehab-relevant."
@@ -901,6 +965,7 @@ repos:
     category: "pose-mocap"
     tier: "extended"
     language: "Python"
+    license: "GPL-3.0"
     updated_snapshot: "Aug 10, 2025"
     description: "PNP — real-time human motion capture based on 6 IMUs, upgrading PIP through non-inertial forces"
     notes: "Successor direction to PIP; compare before choosing."
@@ -915,12 +980,13 @@ repos:
     category: "datasets-interaction"
     tier: "experimental"
     language: "Python"
-    updated_snapshot: "last week (snapshot)"
+    license: "MIT"
+    updated_snapshot: "2026-10-23 (live API 2026-10-28)"
     description: "ECHO: method for reconstructing human-object interaction from sparse ego-centric tracking"
-    notes: "Egocentric HOI; early-stage."
+    notes: "Egocentric human-object interaction reconstruction; early-stage research code with niche relevance to hand/object rehab review."
     upstream_path: "upstream/ptrvilya/echo"
-    stars_snapshot: 16
-    forks_snapshot: null
+    stars_snapshot: 17
+    forks_snapshot: 0
     private: false
     pipeline_stages: ["pose", "dataset"]
     tags: ["egocentric", "human-object-interaction", "reconstruction"]
@@ -929,6 +995,7 @@ repos:
     category: "biomechanics"
     tier: "specialized"
     language: "C++"
+    license: "Apache-2.0"
     updated_snapshot: "Apr 5, 2023"
     description: "Live inverse kinematics based on IMU orientations using OpenSim 4.1 API"
     notes: "Real-time OpenSim IK from IMUs; pinned to OpenSim 4.1 — check maintenance."
@@ -943,6 +1010,7 @@ repos:
     category: "pose-mocap"
     tier: "core"
     language: "TypeScript"
+    license: "AGPL-3.0"
     updated_snapshot: "2 days ago (snapshot)"
     description: "FreeMoCap — Free Motion Capture for Everyone"
     notes: "Most accessible entry point: webcams -> 3D motion. Strong Phase-1 candidate."
@@ -957,6 +1025,7 @@ repos:
     category: "3d-reconstruction"
     tier: "experimental"
     language: "Python"
+    license: "MIT"
     updated_snapshot: "4 days ago (snapshot)"
     description: "UniForge3D: Joint 3D Reconstruction and Generation in a Shared Anchor-Guided Space"
     notes: "General 3D; human application needs validation."
@@ -971,6 +1040,7 @@ repos:
     category: "3d-reconstruction"
     tier: "experimental"
     language: "Python"
+    license: "MIT"
     updated_snapshot: "4 days ago (snapshot)"
     description: "GaussiAnimate: Reconstruct and Rig Animatable Categories with Level of Dynamics"
     notes: "Rigging/animation research; peripheral until human-specific results are shown."
@@ -985,6 +1055,7 @@ repos:
     category: "body-models"
     tier: "core"
     language: "Python"
+    license: "none found in repo root (checked 2026-10-28; treat as all-rights-reserved)"
     updated_snapshot: "2026-10-05 (live API 2026-10-21)"
     description: "SHAPY — accurate 3D body shape regression using metric and semantic attributes; predicts SMPL-X shape plus height/weight/chest/waist/hip measurements from an image"
     notes: "Digital-twin onboarding: turns a photo + optional measurements into a personalised body shape. License: not declared in GitHub API metadata (2026-10-21) — check upstream repo."
@@ -999,6 +1070,7 @@ repos:
     category: "3d-reconstruction"
     tier: "extended"
     language: "Python"
+    license: "NOASSERTION (custom/mixed license file in repo - read before use)"
     updated_snapshot: "2026-10-14 (live API 2026-10-21)"
     description: "ECON — explicit clothed humans optimised via normal integration; high-fidelity 3D clothed human from a single image, SMPL-X animatable"
     notes: "Captures the patient's actual outer/clothed shape for the twin. License (GitHub API, 2026-10-21): NOASSERTION."
@@ -1013,6 +1085,7 @@ repos:
     category: "body-models"
     tier: "extended"
     language: "Python"
+    license: "NOASSERTION (custom/mixed license file in repo - read before use)"
     updated_snapshot: "2026-09-29 (live API 2026-10-21)"
     description: "PIXIE — collaborative regression of expressive bodies: whole-body SMPL-X with detailed face and hand articulation from a single image"
     notes: "Avatar personalisation including face/hands. License (GitHub API, 2026-10-21): NOASSERTION."
@@ -1027,6 +1100,7 @@ repos:
     category: "pose-mocap"
     tier: "core"
     language: "C++"
+    license: "Apache-2.0"
     updated_snapshot: "2026-10-20 (live API 2026-10-21)"
     description: "MediaPipe — cross-platform ML perception pipelines; Pose infers 33 3D body landmarks in real time on phone, desktop and web"
     notes: "Zero-friction patient-side tracker for the live twin. License (GitHub API, 2026-10-21): Apache-2.0."
@@ -1041,6 +1115,7 @@ repos:
     category: "pose-mocap"
     tier: "core"
     language: "Python"
+    license: "Apache-2.0"
     updated_snapshot: "2026-10-20 (live API 2026-10-21)"
     description: "MMPose — OpenMMLab pose estimation toolbox and benchmark, including the RTMPose real-time model family"
     notes: "Production/swappable 2D-pose layer under Pose2Sim-style pipelines. License (GitHub API, 2026-10-21): Apache-2.0."
@@ -1055,6 +1130,7 @@ repos:
     category: "pose-mocap"
     tier: "core"
     language: "Jupyter Notebook"
+    license: "NOASSERTION (custom/mixed license file in repo - read before use)"
     updated_snapshot: "2026-10-20 (live API 2026-10-21)"
     description: "GVHMR — world-grounded human motion recovery via gravity-view coordinates; SMPL motion in camera and world frames from monocular video"
     notes: "Gravity/world frame is essential for posture (vs camera-frame pose). License (GitHub API, 2026-10-21): NOASSERTION."
@@ -1069,6 +1145,7 @@ repos:
     category: "pose-mocap"
     tier: "extended"
     language: "Python"
+    license: "MIT-like (see file)"
     updated_snapshot: "2026-10-20 (live API 2026-10-21)"
     description: "EasyMocap — multi-view and monocular SMPL/SMPL-X/MANO motion capture toolkit"
     notes: "Clinic-grade multi-camera tier for higher-accuracy twin sessions. License (GitHub API, 2026-10-21): NOASSERTION."
@@ -1083,6 +1160,7 @@ repos:
     category: "pose-mocap"
     tier: "extended"
     language: "Python"
+    license: "CC (see file)"
     updated_snapshot: "2026-10-16 (live API 2026-10-21)"
     description: "Sapiens — high-resolution foundation models for human-centric vision: 2D pose, body-part segmentation, depth and normals"
     notes: "Dense human perception front-end (keypoints + parts) for twin fitting. License (GitHub API, 2026-10-21): NOASSERTION."
@@ -1097,6 +1175,7 @@ repos:
     category: "pose-mocap"
     tier: "experimental"
     language: "Python"
+    license: "NOASSERTION (custom/mixed license file in repo - read before use)"
     updated_snapshot: "2026-10-20 (live API 2026-10-21)"
     description: "Sapiens2 — 1K-resolution human vision transformers pretrained on 1B human images; pose, segmentation, normals, pointmaps, matting"
     notes: "Successor to Sapiens; evaluate against Sapiens v1 before adopting. License (GitHub API, 2026-10-21): NOASSERTION."
@@ -1111,6 +1190,7 @@ repos:
     category: "data-capture"
     tier: "core"
     language: "Fluent"
+    license: "MIT"
     updated_snapshot: "2026-10-18 (live API 2026-10-21)"
     description: "SlimeVR Server — server for the SlimeVR open full-body tracking ecosystem; fuses IMU trackers into a full-body pose"
     notes: "Sensor-suit hub: the wearable side of the 1:1 twin without cameras. License (GitHub API, 2026-10-21): Apache-2.0. pipeline/ reads its VMC output (`rehabtwin vmc-posture`) for live posture cues."
@@ -1125,6 +1205,7 @@ repos:
     category: "data-capture"
     tier: "core"
     language: "C++"
+    license: "MIT"
     updated_snapshot: "2026-10-20 (live API 2026-10-21)"
     description: "SlimeVR Tracker firmware for ESP32/ESP8266 and various IMUs — DIY open-hardware body trackers"
     notes: "Buildable/buyable IMU trackers; pairs with SlimeVR-Server. License (GitHub API, 2026-10-21): Apache-2.0."
@@ -1139,6 +1220,7 @@ repos:
     category: "data-capture"
     tier: "core"
     language: "HTML"
+    license: "MIT"
     updated_snapshot: "2026-10-17 (live API 2026-10-21)"
     description: "Lab Streaming Layer (LSL) — multimodal time-synchronised data transmission and recording (liblsl, pylsl, LabRecorder/XDF ecosystem)"
     notes: "Sync layer that keeps video + IMU + EMG + haptic streams aligned for a true 1:1 twin. License (GitHub API, 2026-10-21): NOASSERTION."
@@ -1153,6 +1235,7 @@ repos:
     category: "pose-mocap"
     tier: "specialized"
     language: "Python"
+    license: "LGPL (see file)"
     updated_snapshot: "2026-10-20 (live API 2026-10-21)"
     description: "DeepLabCut — markerless pose estimation of user-defined features with deep learning (animals incl. humans)"
     notes: "Use when rehab needs custom landmarks (e.g. scapula/pelvis) trained on your own labelled video. License (GitHub API, 2026-10-21): LGPL-3.0."
@@ -1167,6 +1250,7 @@ repos:
     category: "pose-mocap"
     tier: "specialized"
     language: "Python"
+    license: "AGPL-3.0"
     updated_snapshot: "2026-10-02 (live API 2026-10-21)"
     description: "DeepLabCut-Live — SDK for running DeepLabCut models on a live video stream"
     notes: "Real-time companion to DeepLabCut for live custom-landmark tracking. License (GitHub API, 2026-10-21): NOASSERTION."
@@ -1181,6 +1265,7 @@ repos:
     category: "visualization-tools"
     tier: "specialized"
     language: "C#"
+    license: "MIT"
     updated_snapshot: "2026-07-25 (live API 2026-10-21)"
     description: "Real-time SMPL-X in Unity — shape reconstruction via a Python server plus MediaPipe pose in Unity, animating SMPL-X live"
     notes: "Reference implementation for the missing live-twin Unity front-end (example code, not a product). License (GitHub API, 2026-10-21): MIT."
@@ -1195,6 +1280,7 @@ repos:
     category: "rehab-assessment"
     tier: "extended"
     language: "Jupyter Notebook"
+    license: "none found in repo root (checked 2026-10-28; treat as all-rights-reserved)"
     updated_snapshot: "2026-10-18 (live API 2026-10-21)"
     description: "Framework for quality assessment of physical rehabilitation exercises on the UI-PRMD dataset (skeletal joint data, correct vs incorrect movements)"
     notes: "Teaches the agent what 'wrong' looks like for standard rehab exercises. License: not declared in GitHub API metadata (2026-10-21) — check upstream repo."
@@ -1209,6 +1295,7 @@ repos:
     category: "rehab-assessment"
     tier: "core"
     language: "Python"
+    license: "MIT"
     updated_snapshot: "2026-08-31 (live API 2026-10-21)"
     description: "Graph convolutional networks for assessment of physical rehabilitation exercises (KIMORE and UI-PRMD)"
     notes: "Clinician-scored exercise quality (KIMORE includes patients) — core for the correction layer. License (GitHub API, 2026-10-21): MIT."
@@ -1223,6 +1310,7 @@ repos:
     category: "rehab-assessment"
     tier: "experimental"
     language: "Python"
+    license: "MIT"
     updated_snapshot: "2026-10-20 (live API 2026-10-21)"
     description: "MDM — Human Motion Diffusion Model; text/action-to-motion generation plus motion editing and in-betweening"
     notes: "Generates a 'corrected' movement to show the patient. MUST be constrained by SKEL/OpenSim joint limits; diffusion alone can produce anatomically impossible motion. License (GitHub API, 2026-10-21): MIT."
@@ -1237,6 +1325,7 @@ repos:
     category: "biomechanics"
     tier: "extended"
     language: "C++"
+    license: "Apache-2.0"
     updated_snapshot: "2026-07-26 (live API 2026-10-21)"
     description: "OpenSim Moco — solve optimal control problems for musculoskeletal models with direct collocation (muscle activity for observed/corrected motion, motion prediction)"
     notes: "Standalone repo is ARCHIVED; development moved into opensim-core (already catalogued). Listed so the capability is discoverable. License (GitHub API, 2026-10-21): Apache-2.0. ARCHIVED upstream (read-only)."
@@ -1251,6 +1340,7 @@ repos:
     category: "biomechanics"
     tier: "extended"
     language: "C++"
+    license: "GPL-3.0"
     updated_snapshot: "2026-08-07 (live API 2026-10-21)"
     description: "OpenSimRT — real-time musculoskeletal kinematics and dynamics analysis using marker- and IMU-based solutions"
     notes: "Real-time biofeedback path (e.g. gait retraining) on top of OpenSim. License (GitHub API, 2026-10-21): GPL-3.0."
@@ -1265,6 +1355,7 @@ repos:
     category: "biomechanics"
     tier: "core"
     language: "C++"
+    license: "Apache-2.0"
     updated_snapshot: "2026-08-26 (live API 2026-10-21)"
     description: "CEINMS — Calibrated EMG-Informed Neuromusculoskeletal Modelling Toolbox; estimates muscle forces and joint moments calibrated to the individual, OpenSim-compatible"
     notes: "The muscle-personalisation layer: without EMG-informed calibration, 'underdeveloped muscle' claims are generic-model guesses. A real-time variant (CEINMS-RT) targets wearable-robot control. License (GitHub API, 2026-10-21): Apache-2.0."
@@ -1279,6 +1370,7 @@ repos:
     category: "musculoskeletal-sim"
     tier: "specialized"
     language: "C++"
+    license: "none found in repo root (checked 2026-10-28; treat as all-rights-reserved)"
     updated_snapshot: "2026-10-20 (live API 2026-10-21)"
     description: "SOFA — real-time multi-physics simulation with emphasis on medical simulation; FEM soft-tissue modelling"
     notes: "Muscle/soft-tissue deformation layer — MuJoCo/MyoSuite muscles are line actuators and cannot show bulge/atrophy visually. License (GitHub API, 2026-10-21): LGPL-2.1."
@@ -1293,6 +1385,7 @@ repos:
     category: "haptics-exoskeleton"
     tier: "core"
     language: "HTML"
+    license: "LGPL (see file)"
     updated_snapshot: "2026-10-19 (live API 2026-10-21)"
     description: "OpenExo — open-source modular exoskeleton platform for mobility and rehabilitation research: mechanical designs, electronics, firmware, control and biofeedback schemes"
     notes: "KEY hardware repo: the buildable exoskeleton base (hip/ankle/elbow configurations). License (GitHub API, 2026-10-21): NOASSERTION."
@@ -1307,6 +1400,7 @@ repos:
     category: "haptics-exoskeleton"
     tier: "extended"
     language: "Python"
+    license: "LGPL (see file)"
     updated_snapshot: "2026-10-10 (live API 2026-10-21)"
     description: "Open-Source Leg — open-source SDK for developing and testing algorithms on robotic prosthesis/exoskeleton leg hardware (actuators and sensors)"
     notes: "Lower-limb actuator/sensor control stack; prosthesis-first but transferable to exo legs. License (GitHub API, 2026-10-21): LGPL-2.1."
@@ -1321,6 +1415,7 @@ repos:
     category: "haptics-exoskeleton"
     tier: "core"
     language: "C++"
+    license: "GPL-3.0"
     updated_snapshot: "2026-10-05 (live API 2026-10-21)"
     description: "SenseShift firmware — open-source firmware for DIY haptic-feedback devices (vest, gloves, sleeves), compatible with bHaptics and OpenGloves protocols"
     notes: "The posture-cueing suit: vibrate where posture breaks. Haptic cueing is buildable today, unlike powered spinal support. License (GitHub API, 2026-10-21): GPL-3.0. pipeline/ drives it via `rehabtwin suit-bridge` (bHaptics BLE payloads; layouts parsed from devices.hpp at run time)."
@@ -1335,6 +1430,7 @@ repos:
     category: "haptics-exoskeleton"
     tier: "specialized"
     language: "C++"
+    license: "MIT"
     updated_snapshot: "2026-10-20 (live API 2026-10-21)"
     description: "LucidGloves — Arduino/ESP32 DIY VR haptic gloves with force feedback, via OpenGloves"
     notes: "Hand-rehab niche only; not a body/posture solution. License (GitHub API, 2026-10-21): MIT."
@@ -1349,6 +1445,7 @@ repos:
     category: "haptics-exoskeleton"
     tier: "extended"
     language: "C++"
+    license: "Apache-2.0"
     updated_snapshot: "2026-10-20 (live API 2026-10-21)"
     description: "moteus — open-source brushless DC servo motor controller (firmware and PCB designs)"
     notes: "Actuator controller for actual joint-support torque in an exo build. License (GitHub API, 2026-10-21): Apache-2.0."
@@ -1363,6 +1460,7 @@ repos:
     category: "haptics-exoskeleton"
     tier: "specialized"
     language: "C++"
+    license: "MIT"
     updated_snapshot: "2026-10-20 (live API 2026-10-21)"
     description: "Arduino SimpleFOC — field-oriented control library for BLDC and stepper motors across Arduino/STM32/ESP32-class hardware"
     notes: "Cheapest path to custom actuator control for exo prototyping. License (GitHub API, 2026-10-21): MIT."
@@ -1377,6 +1475,7 @@ repos:
     category: "medical-imaging"
     tier: "core"
     language: "Python"
+    license: "Apache-2.0"
     updated_snapshot: "2026-10-20 (live API 2026-10-21)"
     description: "Tool for robust segmentation of >100 important anatomical structures in CT and MR images"
     notes: "Accuracy-first onboarding: patient bone/muscle/organ geometry from their own MRI/CT, replacing statistical guessing. License (GitHub API, 2026-10-21): Apache-2.0."
@@ -1391,6 +1490,7 @@ repos:
     category: "medical-imaging"
     tier: "extended"
     language: "Python"
+    license: "Apache-2.0"
     updated_snapshot: "2026-10-20 (live API 2026-10-21)"
     description: "nnU-Net — self-configuring biomedical image segmentation framework (the segmentation engine behind TotalSegmentator)"
     notes: "Train custom bone/muscle segmentation when TotalSegmentator classes are not specific enough. License (GitHub API, 2026-10-21): Apache-2.0."
@@ -1405,6 +1505,7 @@ repos:
     category: "medical-imaging"
     tier: "core"
     language: "C++"
+    license: "GPL (see file)"
     updated_snapshot: "2026-10-20 (live API 2026-10-21)"
     description: "3D Slicer — free open-source platform for medical image visualisation, DICOM handling, segmentation, registration and quantification"
     notes: "Clinician workstation to inspect/correct segmentations and landmarks before they enter the twin. Accuracy gate, not optional tooling. License (GitHub API, 2026-10-21): NOASSERTION."
@@ -1419,6 +1520,7 @@ repos:
     category: "medical-imaging"
     tier: "specialized"
     language: "Scala"
+    license: "Apache-2.0"
     updated_snapshot: "2026-10-17 (live API 2026-10-21)"
     description: "Scalismo — library for statistical shape modelling and model-based image analysis"
     notes: "Reconstruct full bone shapes from sparse landmarks/imaging when a full MRI/CT is unavailable. License (GitHub API, 2026-10-21): Apache-2.0."
@@ -1433,6 +1535,7 @@ repos:
     category: "anatomy-models"
     tier: "extended"
     language: "Python"
+    license: "none found in repo root (checked 2026-10-28; treat as all-rights-reserved)"
     updated_snapshot: "2026-10-11 (live API 2026-10-21)"
     description: "Automated pipeline generating personalised musculoskeletal models from medical images: CT/MRI -> segmentation -> OpenSim model with muscle attachments and wrapping"
     notes: "End-to-end patient-specific OpenSim generation (uses MSK-STAPLE, already catalogued). New/small project — audit before depending on it. License: not declared in GitHub API metadata (2026-10-21) — check upstream repo."
@@ -1447,6 +1550,7 @@ repos:
     category: "anatomy-models"
     tier: "extended"
     language: "Jupyter Notebook"
+    license: "none found in repo root (checked 2026-10-28; treat as all-rights-reserved)"
     updated_snapshot: "2026-09-04 (live API 2026-10-21)"
     description: "MRI-based workflow for personalised musculoskeletal models: subject-specific joint centres and muscle paths via thin-plate-spline mapping (3D Slicer + OpenSim)"
     notes: "Evidence-driven alternative to generic scaling; published comparison shows generic scaling can misplace e.g. the knee centre by centimetres. License: not declared in GitHub API metadata (2026-10-21) — check upstream repo."
@@ -1461,6 +1565,7 @@ repos:
     category: "data-capture"
     tier: "core"
     language: "C++"
+    license: "Apache-2.0"
     updated_snapshot: "2026-10-20 (live API 2026-10-21)"
     description: "RealSense SDK 2.0 (librealsense) — official cross-platform driver/library for RealSense depth cameras including the D455; includes pyrealsense2 and ROS wrappers"
     notes: "Selected-hardware driver (optional RealSense D455 — see docs/hardware.md). Depth is stereo with on-device calibration; use rs-align for RGB-depth alignment and record hardware timestamps for LSL sync. License (GitHub API, 2026-10-21): Apache-2.0."
@@ -1475,6 +1580,7 @@ repos:
     category: "data-capture"
     tier: "specialized"
     language: "C++"
+    license: "BSD-3-Clause"
     updated_snapshot: "2026-10-20 (live API 2026-10-21)"
     description: "Kalibr — visual-inertial calibration toolbox for cameras and IMUs"
     notes: "Extrinsic/intrinsic calibration for the selected hardware (cameras + D455 IMU). Accuracy of everything downstream is bounded by this step. License (GitHub API, 2026-10-21): NOASSERTION."
@@ -1489,6 +1595,7 @@ repos:
     category: "data-capture"
     tier: "specialized"
     language: "C"
+    license: "BSD-2-Clause"
     updated_snapshot: "2026-10-20 (live API 2026-10-21)"
     description: "AprilTag — visual fiducial marker system for robotics (pose of tagged objects from camera images)"
     notes: "Known-geometry fiducials for extrinsic calibration checks and validation-rig ground truth (docs/validation-protocol.md). License (GitHub API, 2026-10-21): NOASSERTION."
@@ -1503,6 +1610,7 @@ repos:
     category: "3d-reconstruction"
     tier: "extended"
     language: "Python"
+    license: "none found in repo root (checked 2026-10-28; treat as all-rights-reserved)"
     updated_snapshot: "2026-10-20 (live API 2026-10-21)"
     description: "Meshroom — node-based photogrammetry toolbox (AliceVision) for 3D reconstruction from photos"
     notes: "Higher-resolution static surface reconstruction from the RGB cameras than iPhone LiDAR; subject must hold still — breathing/movement is the accuracy limit. License (GitHub API, 2026-10-21): NOASSERTION."
@@ -1512,31 +1620,138 @@ repos:
     private: false
     pipeline_stages: ["capture", "body-model"]
     tags: ["meshroom", "photogrammetry", "alicevision", "surface-reconstruction"]
+  - slug: "IDEA-Research/Motion-X"
+    url: "https://github.com/IDEA-Research/Motion-X"
+    category: "datasets-interaction"
+    tier: "specialized"
+    language: "Python"
+    license: "NOASSERTION - non-commercial scientific research purposes only (repo LICENSE)"
+    updated_snapshot: "2026-10-28 (live API 2026-10-28)"
+    description: "Motion-X (NeurIPS 2023) - large-scale 3D expressive whole-body human motion dataset: 81.1K clips / ~144 h of SMPL-X whole-body poses (body, hands, face) with text annotations, built from online video plus eight existing datasets"
+    notes: "Video-derived SMPL-X motion corpus for motion priors and tracker stress-testing. Pseudo-labelled, so never accuracy ground truth; non-commercial research licence with per-source terms - audit before any product use."
+    upstream_path: "upstream/IDEA-Research/Motion-X"
+    stars_snapshot: 905
+    forks_snapshot: 25
+    private: false
+    pipeline_stages: ["dataset", "pose"]
+    tags: ["motion-x", "smpl-x", "dataset", "text-to-motion"]
+  - slug: "li-ronghui/LODGE"
+    url: "https://github.com/li-ronghui/LODGE"
+    category: "rehab-assessment"
+    tier: "experimental"
+    language: "Python"
+    license: "none found in repo root (checked 2026-10-28; treat as all-rights-reserved)"
+    updated_snapshot: "2026-09-09 (live API 2026-10-28)"
+    description: "LODGE (CVPR 2024) - coarse-to-fine diffusion network for long music-driven dance generation guided by characteristic dance primitives"
+    notes: "Dance-generation reference for clinician-constrained 'corrected movement' drafts only - generation, not measurement; output must pass SKEL/OpenSim joint limits before display. No root licence file found: treat code as all-rights-reserved until cleared."
+    upstream_path: "upstream/li-ronghui/LODGE"
+    stars_snapshot: 178
+    forks_snapshot: 21
+    private: false
+    pipeline_stages: ["pose", "body-model"]
+    tags: ["lodge", "dance-generation", "diffusion", "music-to-dance"]
+  - slug: "NetEase-GameAI/ChoreoMaster"
+    url: "https://github.com/NetEase-GameAI/ChoreoMaster"
+    category: "datasets-interaction"
+    tier: "specialized"
+    language: null
+    license: "none found in repo root (checked 2026-10-28; treat as all-rights-reserved)"
+    updated_snapshot: "2026-05-17 (live API 2026-10-28)"
+    description: "ChoreoMaster (ACM TOG 2021) - choreography-oriented, music-driven dance synthesis dataset and code (FBX motion units + music + labels); only ~1.48 h of the 9.91 h corpus is public"
+    notes: "True-mocap dance material for movement-library/prior work; the public subset is copyright-free, the wider corpus is non-commercial. GitHub reports no primary language (checked 2026-10-28)."
+    upstream_path: "upstream/NetEase-GameAI/ChoreoMaster"
+    stars_snapshot: 120
+    forks_snapshot: 10
+    private: false
+    pipeline_stages: ["dataset", "pose"]
+    tags: ["choreomaster", "dance", "mocap", "music-driven"]
+  - slug: "simonalexanderson/MotoricaDanceDataset"
+    url: "https://github.com/simonalexanderson/MotoricaDanceDataset"
+    category: "datasets-interaction"
+    tier: "specialized"
+    language: "Python"
+    license: "NOASSERTION - custom Motorica AB copyright terms (LICENSE.txt; not an open-source licence)"
+    updated_snapshot: "2026-09-23 (live API 2026-10-28)"
+    description: "Motorica Dance Dataset - 6 h of OptiTrack motion capture (17 cameras, 120 fps) across 8 dance styles; BVH plus retargeted skeletons, finger capture in some sessions, paired audio"
+    notes: "One of the few true-mocap (not video-reconstructed) dance corpora - candidate prior/stress-test data close to ground truth. Commercial copyright terms; licence audit mandatory before any product use."
+    upstream_path: "upstream/simonalexanderson/MotoricaDanceDataset"
+    stars_snapshot: 113
+    forks_snapshot: 8
+    private: false
+    pipeline_stages: ["dataset", "pose"]
+    tags: ["motorica", "dance", "mocap", "optitrack"]
+  - slug: "Lars-DHondt-KUL/3dpredictsim"
+    url: "https://github.com/Lars-DHondt-KUL/3dpredictsim"
+    category: "musculoskeletal-sim"
+    tier: "extended"
+    language: "C++"
+    license: "MIT"
+    updated_snapshot: "2025-07-17 (live API 2026-10-28)"
+    description: "Framework generating 3D muscle-driven predictive simulations of human movement via direct collocation and algorithmic differentiation (KU Leuven); hosts the four-segment foot model with longitudinal arch used for predictive gait simulations"
+    notes: "Predictive-simulation framework behind the 4-segment arch foot adopted in docs/research-detailed-anatomy-models.md. Research code with a very small community - pin commits and validate before use."
+    upstream_path: "upstream/Lars-DHondt-KUL/3dpredictsim"
+    stars_snapshot: 4
+    forks_snapshot: 3
+    private: false
+    pipeline_stages: ["biomechanics", "muscle-sim"]
+    tags: ["predictive-simulation", "opensim", "foot-model", "direct-collocation", "gait"]
+  - slug: "MicheleConconi/Synergy-Based-Foot-Model"
+    url: "https://github.com/MicheleConconi/Synergy-Based-Foot-Model"
+    category: "anatomy-models"
+    tier: "specialized"
+    language: "MATLAB"
+    license: "none found in repo root (checked 2026-10-28; treat as all-rights-reserved)"
+    updated_snapshot: "2026-04-09 (live API 2026-10-28)"
+    description: "Multi-body foot model tracking the spatial kinematics of all foot bones with only 5 DOF, exploiting experimentally derived bone-motion coupling (synergies) measured from weight-bearing CT"
+    notes: "Source model for the synergy-based arch foot recommended in docs/research-detailed-anatomy-models.md (arch as an explicit DOF). The referenced OpenSim port did not resolve on GitHub at check time - verify before planning on it. No root licence file: all-rights-reserved until cleared."
+    upstream_path: "upstream/MicheleConconi/Synergy-Based-Foot-Model"
+    stars_snapshot: 0
+    forks_snapshot: 0
+    private: false
+    pipeline_stages: ["skeleton", "biomechanics"]
+    tags: ["foot", "synergy", "arch", "weight-bearing-ct", "multi-body"]
+  - slug: "OllieBoyne/Foot3D"
+    url: "https://github.com/OllieBoyne/Foot3D"
+    category: "anatomy-models"
+    tier: "specialized"
+    language: null
+    license: "MIT"
+    updated_snapshot: "2026-09-20 (live API 2026-10-28)"
+    description: "Foot3D - dataset of scanned 3D feet behind the FIND articulated foot model; external foot-shape/scan data for fitting the digital twin's foot surface"
+    notes: "Surface-shape foot data only - silent about arch mechanics and fascia strain; pair with the synergy-based or four-segment models for dynamics. GitHub reports no primary language (checked 2026-10-28)."
+    upstream_path: "upstream/OllieBoyne/Foot3D"
+    stars_snapshot: 47
+    forks_snapshot: 2
+    private: false
+    pipeline_stages: ["body-model", "dataset"]
+    tags: ["foot3d", "foot-scans", "statistical-shape", "find"]
   - slug: "utahmobl/opencap-monocular"
     url: "https://github.com/utahmobl/opencap-monocular"
     category: "pose-mocap"
-    tier: "core"
+    tier: "experimental"
     language: "Python"
-    updated_snapshot: "2026-06-12 (git, 2026-10-21)"
-    description: "OpenCap Monocular — 3D human kinematics and musculoskeletal dynamics from a single smartphone video (WHAM pose, camera/pose optimisation, OpenSim IK and export)"
-    notes: "Best-validated single-phone path to OpenSim found so far: preprint arXiv 2603.24733 reports 4.8 deg mean absolute error vs marker mocap for walking, squats and sit-to-stand. Its validation code reads the OpenCap LabValidation dataset (videos + marker-mocap IK). License: PolyForm Noncommercial 1.0.0; needs SMPL weights (MPI, non-commercial). Benchmark rehabtwin's monocular front-ends against it."
+    license: "PolyForm-Noncommercial-1.0.0"
+    updated_snapshot: "2026-10-28 (GitHub API, fetched by the HarmannBitte session 2026-10-28)"
+    description: "OpenCap Monocular: 3D kinematics and dynamics from a single smartphone video (WHAM 3D pose, then OpenSim inverse kinematics), validated against marker mocap"
+    notes: "Everyday-mode front-end candidate (one phone); its walking, squat and sit-to-stand validation is the comparison in docs/validation-results.md. Non-commercial only, and it needs SMPL model files (MPI licence, non-commercial). Not wired into pipeline/ yet: needs an evaluation slot."
     upstream_path: "upstream/utahmobl/opencap-monocular"
-    stars_snapshot: null
-    forks_snapshot: null
+    stars_snapshot: 243
+    forks_snapshot: 33
     private: false
-    pipeline_stages: ["pose", "body-model", "biomechanics"]
-    tags: ["opencap", "monocular", "smartphone", "wham", "opensim", "validation"]
+    pipeline_stages: ["capture", "pose", "biomechanics"]
+    tags: ["opencap", "monocular", "smartphone", "wham", "smpl"]
   - slug: "davidpagnon/Sports2D"
     url: "https://github.com/davidpagnon/Sports2D"
     category: "pose-mocap"
     tier: "extended"
     language: "Python"
-    updated_snapshot: "2026-10-20 (git, 2026-10-21)"
-    description: "Sports2D — joint and segment angles from a single video (RTMPose), with optional OpenSim inverse kinematics"
-    notes: "Same author as Pose2Sim; BSD-3-Clause. Planar (2D) angles are only valid when the movement plane faces the camera — useful for quick sagittal screening, not for frontal/transverse posture. Ships a demo video."
+    license: "BSD-3-Clause"
+    updated_snapshot: "2026-10-28 (GitHub API, fetched by the HarmannBitte session 2026-10-28)"
+    description: "Sports2D: 2D keypoint trajectories and joint and segment angles from a single video or webcam, by the author of Pose2Sim; can export OpenSim kinematics"
+    notes: "Monocular companion to Pose2Sim, cloned under upstream/ for reference; not called by pipeline/. Angles in the camera plane from one view, so Tier C screening at best."
     upstream_path: "upstream/davidpagnon/Sports2D"
-    stars_snapshot: null
-    forks_snapshot: null
+    stars_snapshot: 336
+    forks_snapshot: 46
     private: false
     pipeline_stages: ["pose", "biomechanics"]
-    tags: ["sports2d", "monocular", "2d-angles", "rtmpose", "opensim"]
+    tags: ["sports2d", "pose2sim", "monocular", "2d-angles"]
