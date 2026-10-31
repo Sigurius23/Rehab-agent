@@ -111,3 +111,38 @@ Results on the 9 complete heads, prediction minus MRI, mm:
 - **Nine hips from one cohort, lying down.** Read these as the size of the problem, not as a predictor's accuracy.
 - **These hips stay held out.** They can check the joint centres of a predictor trained later on the 317 training
   subjects (with the 10 mm floor attached), provided nothing about them enters its training or calibration.
+
+## Leg priors side by side (`leg_priors.py`)
+
+No ground truth here decides between the leg priors, but how far they disagree about the same leg still matters:
+where two differ by d, at least one is off by d/2 or more. This finds the hip, knee and ankle centres of every leg
+with the same geometry on every mesh, from the dense bone surface. The hip is the femoral head sphere. The knee is the
+midpoint of the femoral epicondyles, and the ankle the midpoint of the malleoli. The femur is its label's largest
+piece, because OSSO's thigh part also holds the patella. These are not the joint centres SKEL itself regresses, which
+`person bones` uses.
+
+```bash
+python -I leg_priors.py run           # same paths as run_bench.py; under a minute on 4 cores
+python -I leg_priors.py summarize $WORK/mri_bones_3dbones/leg_subjects.json ../../results/mri_bones_3dbones_legs.json
+```
+
+Segment lengths on 72 legs, absolute difference, mean (90th percentile):
+
+| | thigh | shank | hip width (36 pelves) |
+|---|---|---|---|
+| SKEL vs SKEL-J | 4.5 mm, 1.1 % (7.7 mm) | 2.5 mm, 0.6 % (5.4 mm) | level |
+| SKEL vs OSSO | 12.9 mm, 3.0 % (29.2 mm, 6.9 %) | 12.5 mm, 3.1 % (18.0 mm, 4.5 %) | OSSO 8.7 mm wider |
+| SKEL vs floor | 10.0 mm, 2.4 % (21.8 mm) | 12.9 mm, 3.1 % (26.9 mm) | SKEL 4.3 mm narrower |
+| OSSO vs floor | 10.8 mm, 2.6 % (25.6 mm) | 13.7 mm, 3.5 % (25.7 mm) | OSSO 4.4 mm wider |
+
+- **SKEL and SKEL-J are near-twins on lengths**, so the choice is between the SKEL family and OSSO.
+- **SKEL against OSSO is part offset, part scatter.** OSSO's shank is 12 mm longer (±6 mm, p < 10⁻¹²) and its
+  pelvis 9 mm wider, consistently. Those offsets could be calibrated, on separate data. Their thighs disagree by up to
+  29 mm with no consistent sign, and that scatter cannot be calibrated.
+- **Neither is closer to the skeleton fitted to the bones.** Both miss it by about 10–14 mm per segment; OSSO with
+  less bias, SKEL with a little less scatter. The floor fills in where the MRI stops short, so it is a reference, not
+  truth.
+- **Centre positions are mostly pose.** SKEL's knee sits 29 mm (SD 7) anterior of OSSO's while their thigh lengths
+  agree within 6 mm on average: each method poses its skeleton inside the lying body its own way. The world-frame
+  disagreement is 24 mm at the hip, 31 mm at the knee and 24 mm at the ankle on average. Lengths and widths are what
+  scaling uses.
