@@ -5,7 +5,9 @@ the twin.)
 The synthetic squat person (SYNTHETIC-NOT-A-PATIENT) is copied with its thigh, shank or hip width scaled by the
 SKEL-vs-OSSO disagreement: the typical one (OSSO's mean offset) and the 90th-percentile thigh and shank ones. Each copy
 is processed on the same synthetic markers (IK with those bones), checked against the synthetic truth, and run through
-the muscle stage with knee joint load and a +/-0.10 ground-force split.
+the muscle stage with knee joint load and a +/-0.10 ground-force split. Then the joint-load scenarios (fat -5 kg from
+an illustrative DXA table, quadriceps at 120 %) run on the base and the OSSO-typical bones: the twin reports changes
+within one person, so the question is whether those survive a change of leg prior.
 
     python -I leg_prior_downstream.py REPO OUT
 
@@ -30,7 +32,8 @@ def variants(legs):
     typical = {k: round(1 - p[f"{k}_length"]["difference_mm"]["mean"] / seg[k]["mean"], 4) for k in ("thigh", "shank")}
     typical["hip_width"] = round(1 - p["hip_width"]["difference_mm"]["mean"] / seg["hip_width"]["mean"], 4)
     th, sh = p["thigh_length"]["abs_difference_pct"]["p90"] / 100, p["shank_length"]["abs_difference_pct"]["p90"] / 100
-    return {"base": {}, "osso_typical": typical, "thigh_plus_p90": {"thigh": round(1 + th, 4)},
+    return {"base": {}, "osso_typical": typical, "hip_width_typical": {"hip_width": typical["hip_width"]},
+            "thigh_plus_p90": {"thigh": round(1 + th, 4)},
             "thigh_minus_p90": {"thigh": round(1 - th, 4)}, "shank_plus_p90": {"shank": round(1 + sh, 4)},
             "shank_minus_p90": {"shank": round(1 - sh, 4)}}
 
@@ -53,6 +56,8 @@ def main():
     sys.path.insert(0, str(repo / "pipeline"))
     from rehabtwin import cli, person, skel_bones, tiers
     from rehabtwin.config import resolve
+    sys.path.insert(0, str(Path(__file__).parent))
+    from joint_load_synthetic import DXA          # the same illustrative DXA table as the joint-load run
     legs = json.loads((repo / "validation/results/mri_bones_3dbones_legs.json").read_text())
     calib = out / "calibration"
     if not (calib / "session.json").exists():
@@ -67,11 +72,15 @@ def main():
     person.build_from_session(base, calib, allow_synthetic=True)
     rec0 = person.load(base)
     generic = resolve(rec0["model"]["generic_model"])
-    results = {"note": __doc__.split("\n\n")[1].replace("\n", " "), "variants": {}}
-    for name, change in variants(legs).items():
-        pdir, sdir = out / f"person_{name}", out / name
+    path = out / "leg_prior_downstream.json"
+    results = json.loads(path.read_text()) if path.exists() else {}      # resumes: finished variants are kept
+    results["note"] = __doc__.split("\n\n")[1].replace("\n", " ")
+    results.setdefault("variants", {})
+    results.setdefault("scenarios", {})
+
+    def person_for(name, change, dxa=False):
+        pdir = out / f"person_{name}"
         shutil.rmtree(pdir, ignore_errors=True)
-        shutil.rmtree(sdir, ignore_errors=True)
         shutil.copytree(base, pdir)
         if change:
             rec = person.load(pdir)
@@ -79,8 +88,24 @@ def main():
             skel_bones.scale_model(generic, factors, rec["anthropometrics"]["mass_kg"]["value"], pdir / "model.osim")
             rec["model"].update(scale_set=factors, sha256=tiers.sha256(pdir / "model.osim"))
             person.save(pdir, rec, f"leg prior variant {name}: {change}")
+        if dxa:
+            (out / "dxa.json").write_text(json.dumps(DXA))
+            person.set_dxa(pdir, out / "dxa.json")
+        return pdir
+
+    def processed(name, pdir):
+        sdir = out / name
+        shutil.rmtree(sdir, ignore_errors=True)
         res = cli.process(seq_path, sdir, exercise="squat", reference=truth_mot, reference_model=truth_model,
                           reference_system="synthetic truth (rehabtwin.synthetic)", person=pdir)
+        return sdir, res
+
+    all_variants = variants(legs)
+    for name, change in all_variants.items():
+        if name in results["variants"]:
+            continue
+        pdir = person_for(name, change)
+        sdir, res = processed(name, pdir)
         study, _ = cli.muscle_study(sdir, view_3d=False, person=pdir, joint_load=True, grf_sensitivity=0.10)
         per = res["validation"]["per_coordinate"]
         jl = study["joint_load"]
@@ -90,8 +115,21 @@ def main():
             "marker_rms_mm": {k: round(1000 * v, 2) for k, v in sqc["ik"]["marker_rms_m"].items()},
             "knee_load": jl["baseline"], "diagnostics": jl.get("baseline_diagnostics"),
             "band_over_grf_split": jl.get("baseline_band_over_grf_split")}
-        (out / "leg_prior_downstream.json").write_text(json.dumps(results, indent=1, default=str))
+        path.write_text(json.dumps(results, indent=1, default=str))
         print(name, "done", flush=True)
+    # what the twin reports are changes within one person: do they survive a change of leg prior?
+    for name in ("base", "osso_typical"):
+        if name in results["scenarios"]:
+            continue
+        pdir = person_for(f"{name}_scenarios", all_variants[name], dxa=True)
+        sdir, _ = processed(f"{name}_scenarios", pdir)
+        study, _ = cli.muscle_study(sdir, view_3d=False, person=pdir, joint_load=True, fat_change_kg=-5.0,
+                                    strengthen=["quadriceps_r=1.2", "quadriceps_l=1.2"], grf_sensitivity=0.10)
+        jl = study["joint_load"]
+        results["scenarios"][name] = {"change": all_variants[name], "baseline": jl["baseline"],
+                                      "scenarios": {k: v.get("knee") for k, v in jl["scenarios"].items()}}
+        path.write_text(json.dumps(results, indent=1, default=str))
+        print(name, "scenarios done", flush=True)
 
 
 if __name__ == "__main__":       # the study's worker processes import this file again
