@@ -420,7 +420,7 @@ def route_copper(sole, tail, regs, copper, paths, seeds, tail_start, tail_end, t
     C = CONTACT
     lan = build_lanes({n: paths[n] for n in regs if paths.get(n)}, 0.25, tail_start, tail_dir, tail_end, seeds,
                       FAB["pitch"], FAB["ffc_pitch"], C["pad_len"], C["edge_gap"], n_pins,
-                      track_w=C["sense_w"], via_d=C["via_d"], clear=C["clear"])
+                      track_w=C["sense_w"], via_d=C["via_d"], clear=C["clear"], regions=regs)
     allowed = sole.union(tail).buffer(-0.3)                        # copper-to-edge 0.3 mm
     keepout = unary_union(list(regs.values()))                        # no B.Cu under the sensing regions
     order = lan["pin_order"][1:-1]

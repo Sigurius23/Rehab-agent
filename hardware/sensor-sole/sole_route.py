@@ -24,7 +24,7 @@ from shapely.ops import nearest_points
 
 
 def build_lanes(paths, res, tail_start, tail_dir, tail_end, seeds, pitch, pad_pitch, pad_len, edge_gap, n_pins,
-                fan_len=3.0, track_w=0.12, via_d=0.45, clear=0.15):
+                fan_len=3.0, track_w=0.12, via_d=0.45, clear=0.15, regions=None):
     """Lane polylines for every sense net, from its via to its contact. Returns lanes, vias, pin order."""
     key = lambda p: (round(p[0] / res), round(p[1] / res))
     nets = [n for n, p in paths.items() if p]
@@ -86,7 +86,14 @@ def build_lanes(paths, res, tail_start, tail_dir, tail_end, seeds, pitch, pad_pi
         items.sort(key=lambda t: -t[0])                   # leftmost branch first
         left, right = [], []
         for n in ends.get(node, []):
-            (left if cross(din, np.asarray(seeds[n]) - P(node)) > 0 else right).append(n)
+            # a line ending here goes to the side where its region's nearest edge is (the anchor point can lie
+            # almost straight ahead along the bundle, which makes its side unreliable)
+            if regions is not None and n in regions:
+                q = nearest_points(Point(P(node)), regions[n])[1]
+                side = np.array([q.x, q.y]) - P(node)
+            else:
+                side = np.asarray(seeds[n]) - P(node)
+            (left if cross(din, side) > 0 else right).append(n)
         return left + [x for _, o in items for x in o] + right
 
     def order(sid):
