@@ -614,16 +614,20 @@ def test_live_chain_posture_to_suit_payloads(tmp_path):
     sig = {"knee_fppa_r": np.where((t > 1) & (t < 2), 18.0, 2.0), "torso.sagittal": np.full_like(t, 10.0)}
     res = {}
     transport = suit.DryRunTransport()
+    # Each link waits for the next: the engine reads posture only once the suit bridge listens to its cues, and the
+    # replay starts only once the engine reads. LSL drops what is pushed before a listener connects, and finding a
+    # new stream takes up to a resolver round (~0.5 s, longer under load), which left the cue racing the bridge.
     threads = [
         threading.Thread(target=lambda: res.update(eng=lsl_bridge.run_live(      # stands at 2 deg (lsl-live: --session's)
-            spec, "A", ["knee_r.frontal"], duration_s=15, source="rt_chain_posture", baselines={"knee_fppa_r": 2.0}))),
+            spec, "A", ["knee_r.frontal"], duration_s=30, source="rt_chain_posture", baselines={"knee_fppa_r": 2.0},
+            wait_for_cue_consumer_s=20.0))),
         threading.Thread(target=lambda: suit.run_bridge(suit.SuitDriver("suit_bhaptics", header=hdr), transport,
-                                                        duration_s=4.0, rate_hz=50)),
+                                                        duration_s=6.0, rate_hz=50)),
     ]
     for th in threads:
         th.start()
     time.sleep(0.5)
-    lsl_bridge.stream_posture(t, sig, speed=2.0, name="rt_chain_posture")
+    lsl_bridge.stream_posture(t, sig, speed=2.0, name="rt_chain_posture", wait_for_consumer_s=30.0)
     for th in threads:
         th.join()
     sent = [e for e in res["eng"].log if e.get("decision") == "cue"]

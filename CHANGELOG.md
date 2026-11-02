@@ -1,6 +1,16 @@
 # Changelog
 
 ## Unreleased
+- **Flaky live-chain test fixed** (`test_live_chain_posture_to_suit_payloads`). It had failed in CI on nearly every
+  run since 2026-10-24, and once in a local full-suite run.
+  - The engine sent its cue correctly, but the suit bridge sometimes had not yet connected to the cue stream. LSL
+    drops what is pushed before a listener connects, and finding a new stream takes a resolver round, about 0.5 s
+    or longer under load. Timed locally, the bridge connected only about 0.12 s before the first cue.
+  - `run_live` has a new `wait_for_cue_consumer_s` option (default 0, so behaviour is unchanged). It waits for a
+    listener on the cue stream before reading posture.
+  - The test now chains the links: the engine waits for the bridge, and the replay waits up to 30 s for the engine.
+  - With the suit bridge started 3 s late, the old chain failed 3 of 3 runs and the new one passed 3 of 3. The test
+    passed 10 of 10 runs with all four cores busy.
 - **Catalog stars and forks for the foot repos (#118–#136).** The GitHub API is still not open to this session, so 16
   of the 19 pending snapshots were filled from the ecosyste.ms mirror of GitHub metadata. Each entry's notes give the
   mirror's sync date, which ranges from 2023-05-01 to 2026-11-01.

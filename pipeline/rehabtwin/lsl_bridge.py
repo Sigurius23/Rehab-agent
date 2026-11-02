@@ -99,10 +99,14 @@ def stream_tags(inlet):
 
 def run_live(spec, tier, allowed_joint_planes, duration_s=None, source=POSTURE_STREAM, publish_would_cue=False,
              resolve_timeout=10.0, idle_timeout=2.0, expect_session=None, expect_front_end=None, baselines=None,
-             holds=None, safety=None):
+             holds=None, safety=None, wait_for_cue_consumer_s=0.0):
     """Real-time loop: posture stream in, cue markers out. Returns the engine (log in ``engine.log``).
     ``baselines``/``holds``/``safety``: the person's standing values, screening holds and clinician safety flags
     (rehabtwin/feedback.py).
+
+    ``wait_for_cue_consumer_s``: wait up to this long for a listener (e.g. the suit bridge) on the cue stream before
+    reading posture. LSL delivers only what is pushed after a listener connects, so without the wait a cue sent
+    before the listener has found the stream is lost. Default 0: start at once, as before.
 
     With ``expect_session``/``expect_front_end`` the posture stream must carry the same tags,
     otherwise the engine runs at Tier C (nothing is sent) and the mismatch is logged.
@@ -120,6 +124,8 @@ def run_live(spec, tier, allowed_joint_planes, duration_s=None, source=POSTURE_S
         tier, allowed_joint_planes = "C", ()
     out = pylsl.StreamOutlet(pylsl.StreamInfo(CUE_STREAM, "Markers", 1, pylsl.IRREGULAR_RATE, "string",
                                               f"{CUE_STREAM}:{expect_session or sid}"))
+    if wait_for_cue_consumer_s > 0:
+        out.wait_for_consumers(wait_for_cue_consumer_s)
     eng = CueEngine(spec, tier=tier, allowed_joint_planes=tuple(allowed_joint_planes), baselines=dict(baselines or {}),
                     holds=dict(holds or {}), safety=dict(safety or {}))
     if mismatch:
