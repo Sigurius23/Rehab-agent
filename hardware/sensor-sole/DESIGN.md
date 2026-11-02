@@ -104,13 +104,17 @@ cover only 9 % of the sole and put three vias in the bend zone. The regions also
   along the outline as a perimeter channel.
   - The lines form one tree rooted at the tail. Regions are added farthest first, and each new line joins the
     existing tree, so lines share bundles instead of running side by side.
-  - Each bundle has a fixed left-to-right order that is the same at every branch, so no two lines cross. The
-    order at the root is the connector's pin order.
+  - Each bundle has a fixed left-to-right order, so no two lines cross. Branches are ranked by where their lines
+    are 6 mm beyond the branch point, and a planarity search fixes the side of any line that ends where its
+    bundle continues. The order at the root is the connector's pin order.
   - Lines are 0.12 mm wide at a 0.40 mm pitch. The bundle is carved out of the neighbouring regions at its true
-    width plus 0.5 mm, with extra room at each via.
+    width plus 0.8 mm, with extra room at each via. A path along the sole's edge keeps room for a full
+    bundle.
   - Turns use concentric fillets, which keep the pitch exact through any angle.
-  - A final pass re-routes each line on a 0.06 mm grid, guided by its planned lane, with every other line and
-    via as an obstacle at full clearance. That resolves conflicts at closely spaced branches.
+  - A final, negotiated pass re-routes all lines together on a 0.06 mm grid, each guided by its planned lane.
+    Lines may overlap at a price that rises every round until none do (the PathFinder method); vias, regions
+    and the edge are hard obstacles.
+  - A crossing that the order cannot avoid would be bridged by a short F.Cu jumper. None is needed at EU 42.
   - Nothing runs under a sensing region: B.Cu stays clear there, so each region has an even backing.
 - **Vias.** Each region's via sits on the border of its sense comb nearest the tail. A short F.Cu stub
   joins the via to the comb, and no via falls within 12 mm of the toe-joint bend line.
@@ -245,9 +249,29 @@ Pod v1 (custom board, bare nRF52840 module) adds 32 channels, more storage and a
   shapely, matplotlib and ezdxf.
 - `person_example.json`: the personalisation format.
 - `out/` (not committed; regenerate it): previews and exports of any run.
+- `sole_route.py`: the copper routing the generator uses (section 4).
+- `kicad_export.py`: board file to KiCad 7 board. Run it with the Python that ships KiCad's `pcbnew`.
+- `make_fab.sh`: generator, then KiCad, then Gerbers, drill file and a zip. Usage: `./make_fab.sh 42 R`.
+- `kicad/`: the EU 42 boards (right, left), their design-rule reports and a render.
+
+**Design-rule check (KiCad 7.0.11, 2026-11-02).** Both EU 42 boards (right and left) result in:
+
+| Check | Result |
+|---|---|
+| Clearance, edge clearance, slivers, solder-mask bridges, keep-outs | 0 violations |
+| Unconnected items | 0 |
+| Footprint not in a library (generated footprints) | 17 warnings, expected |
+
+The routing itself:
+- 16 regions at 77.9 % coverage; the smallest share of its tile a region keeps is 77 % (heel_med);
+- 18 vias, no jumpers, nothing past the copper-free margin;
+- about 3.5 minutes per foot.
+
+Known issue: toe2's via lands near the tip of its toe tab, so its line splits the toe2 region. It is legal but
+wastes sensing area; the via should sit at the tab's base.
 
 Next steps (not started):
-- export the sole to KiCad, with the combs as custom-shaped pads and the tail as a connector footprint;
+- route-check the other sizes and the personal example the same way;
 - draw the pod carrier schematic;
 - design the coupon board.
 
