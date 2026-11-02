@@ -1688,7 +1688,7 @@ repos:
     license: "MIT"
     updated_snapshot: "2025-07-17 (live API 2026-10-28)"
     description: "Framework generating 3D muscle-driven predictive simulations of human movement via direct collocation and algorithmic differentiation (KU Leuven); hosts the four-segment foot model with longitudinal arch used for predictive gait simulations"
-    notes: "Predictive-simulation framework behind the 4-segment arch foot adopted in docs/research-detailed-anatomy-models.md. Research code with a very small community - pin commits and validate before use."
+    notes: "Hosts candidate 3- and 4-segment arch foot models (D'Hondt et al.): a candidate, not adopted; selection follows the foot-model comparison and validation (impact assessment, foot research plan). Repository MIT; the four-segment_foot_model branch (2024-07) is newer than master (2024-03). Check each model asset's and dependency's terms; the successor PredSim is AGPL-3.0 (separate entry). Research code with a very small community - pin commits and validate before use."
     upstream_path: "upstream/Lars-DHondt-KUL/3dpredictsim"
     stars_snapshot: 4
     forks_snapshot: 3
@@ -1703,7 +1703,7 @@ repos:
     license: "none found in repo root (checked 2026-10-28; treat as all-rights-reserved)"
     updated_snapshot: "2026-04-09 (live API 2026-10-28)"
     description: "Multi-body foot model tracking the spatial kinematics of all foot bones with only 5 DOF, exploiting experimentally derived bone-motion coupling (synergies) measured from weight-bearing CT"
-    notes: "Source model for the synergy-based arch foot recommended in docs/research-detailed-anatomy-models.md (arch as an explicit DOF). The referenced OpenSim port did not resolve on GitHub at check time - verify before planning on it. No root licence file: all-rights-reserved until cleared."
+    notes: "Candidate synergy-based arch foot (arch as an explicit DOF), not recommended or selected: it enters the foot-model comparison. The referenced OpenSim port did not resolve on GitHub at check time - verify before planning on it. No root licence file: all-rights-reserved until cleared."
     upstream_path: "upstream/MicheleConconi/Synergy-Based-Foot-Model"
     stars_snapshot: 0
     forks_snapshot: 0
@@ -1718,7 +1718,7 @@ repos:
     license: "MIT"
     updated_snapshot: "2026-09-20 (live API 2026-10-28)"
     description: "Foot3D - dataset of scanned 3D feet behind the FIND articulated foot model; external foot-shape/scan data for fitting the digital twin's foot surface"
-    notes: "Surface-shape foot data only - silent about arch mechanics and fascia strain; pair with the synergy-based or four-segment models for dynamics. GitHub reports no primary language (checked 2026-10-28). The dataset itself comes through a request form; the README states copyright and a disclaimer but grants no licence for the data (checked 2026-11-02)."
+    notes: "Surface-shape foot data only - silent about arch mechanics and fascia strain; pair with a multi-segment foot model (candidates: four-segment, synergy-based) for dynamics. GitHub reports no primary language (checked 2026-10-28). The dataset itself comes through a request form; the README states copyright and a disclaimer but grants no licence for the data (checked 2026-11-02)."
     upstream_path: "upstream/OllieBoyne/Foot3D"
     stars_snapshot: 47
     forks_snapshot: 2
@@ -2025,3 +2025,18 @@ repos:
     private: false
     pipeline_stages: ["tooling"]
     tags: ["shoe-recommendation", "foot", "prototype"]
+  - slug: "KULeuvenNeuromechanics/PredSim"
+    url: "https://github.com/KULeuvenNeuromechanics/PredSim"
+    category: "musculoskeletal-sim"
+    tier: "extended"
+    language: "MATLAB"
+    license: "AGPL-3.0"
+    updated_snapshot: "2026-09-29 (last commit, git clone 2026-11-02)"
+    description: "PredSim - KU Leuven framework for muscle-driven predictive simulations of gait (MATLAB, CasADi, opensimAD), the successor 3dpredictsim points new work to"
+    notes: "Stars/forks not fetched (GitHub API not reachable 2026-11-02): run scripts/enrich_metadata.py where it is. Language estimated from file counts in a clone. Carries the candidate DHondt_et_al_2024 3- and 4-segment foot models (a candidate, not selected). AGPL-3.0, unlike 3dpredictsim's MIT: keep the two licences separate and check each model asset and dependency (CasADi, opensimAD, OpenSim) before use."
+    upstream_path: "upstream/KULeuvenNeuromechanics/PredSim"
+    stars_snapshot: null
+    forks_snapshot: null
+    private: false
+    pipeline_stages: ["biomechanics", "muscle-sim"]
+    tags: ["predictive-simulation", "opensim", "foot-model", "casadi"]

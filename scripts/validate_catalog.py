@@ -23,7 +23,7 @@ SNAPSHOT_PENDING={s.lower() for s in ("OllieBoyne/FOCUS","OllieBoyne/FOUND","Oll
     "StandardCyborg/StandardCyborgCocoa","OpenScan-org/OpenScan3","OllieBoyne/SynFoot","MiniDraco/footscan",
     "JoshKirk800/insole-pipeline","DuduPiglet/insole-3Designer","tobiasfs/openshoedesigner","Vesuvan/openshoedesigner",
     "ishaanko/archy","colmap/colmap","cdcseacave/openMVS","cnr-isti-vclab/meshlab","cnr-isti-vclab/PyMeshLab",
-    "javeriafateh-rph/SoleFit")}
+    "javeriafateh-rph/SoleFit","KULeuvenNeuromechanics/PredSim")}
 for r in D["repos"]:
     s=r["slug"]
     if r["url"]!=f"https://github.com/{s}": errs.append(f"url mismatch: {s}")

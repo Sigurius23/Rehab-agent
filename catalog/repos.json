@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "generated_for": "Rehab Agent meta-repo",
-  "snapshot_note": "Live GitHub API metadata: repos 71-108 fetched 2026-10-21; repos 1-52 plus 62/66 refreshed 2026-10-28; repos 116-117 fetched 2026-10-28 by the HarmannBitte session (licenses for all public repos verified from GitHub API or the repo-root license file on 2026-10-28). Stars/forks/updated are snapshots, not live data. Refresh with scripts/enrich_metadata.py. Repos 118-135 (foot personalisation) added 2026-11-02 from git clones: licences read from each repo's licence file, last-commit dates from the clone, stars/forks not fetched (null) because the GitHub API was not reachable from that session.",
+  "snapshot_note": "Live GitHub API metadata: repos 71-108 fetched 2026-10-21; repos 1-52 plus 62/66 refreshed 2026-10-28; repos 116-117 fetched 2026-10-28 by the HarmannBitte session (licenses for all public repos verified from GitHub API or the repo-root license file on 2026-10-28). Stars/forks/updated are snapshots, not live data. Refresh with scripts/enrich_metadata.py. Repos 118-136 (foot personalisation) added 2026-11-02 from git clones: licences read from each repo's licence file, last-commit dates from the clone, stars/forks not fetched (null) because the GitHub API was not reachable from that session.",
   "categories": {
     "body-models": "Parametric body & skeleton models (SMPL/SMPL-X, SKEL, OSSO, tissues)",
     "anatomy-models": "Anatomy & personalised model generation",
@@ -38,7 +38,7 @@
     "needs-review": "Needs review — source list gave no usable description",
     "private": "Private — listed but not publicly cloneable"
   },
-  "count": 135,
+  "count": 136,
   "repos": [
     {
       "id": 1,
@@ -3270,7 +3270,7 @@
         "direct-collocation",
         "gait"
       ],
-      "notes": "Predictive-simulation framework behind the 4-segment arch foot adopted in docs/research-detailed-anatomy-models.md. Research code with a very small community - pin commits and validate before use.",
+      "notes": "Hosts candidate 3- and 4-segment arch foot models (D'Hondt et al.): a candidate, not adopted; selection follows the foot-model comparison and validation (impact assessment, foot research plan). Repository MIT; the four-segment_foot_model branch (2024-07) is newer than master (2024-03). Check each model asset's and dependency's terms; the successor PredSim is AGPL-3.0 (separate entry). Research code with a very small community - pin commits and validate before use.",
       "upstream_path": "upstream/Lars-DHondt-KUL/3dpredictsim"
     },
     {
@@ -3300,7 +3300,7 @@
         "weight-bearing-ct",
         "multi-body"
       ],
-      "notes": "Source model for the synergy-based arch foot recommended in docs/research-detailed-anatomy-models.md (arch as an explicit DOF). The referenced OpenSim port did not resolve on GitHub at check time - verify before planning on it. No root licence file: all-rights-reserved until cleared.",
+      "notes": "Candidate synergy-based arch foot (arch as an explicit DOF), not recommended or selected: it enters the foot-model comparison. The referenced OpenSim port did not resolve on GitHub at check time - verify before planning on it. No root licence file: all-rights-reserved until cleared.",
       "upstream_path": "upstream/MicheleConconi/Synergy-Based-Foot-Model"
     },
     {
@@ -3329,7 +3329,7 @@
         "statistical-shape",
         "find"
       ],
-      "notes": "Surface-shape foot data only - silent about arch mechanics and fascia strain; pair with the synergy-based or four-segment models for dynamics. GitHub reports no primary language (checked 2026-10-28). The dataset itself comes through a request form; the README states copyright and a disclaimer but grants no licence for the data (checked 2026-11-02).",
+      "notes": "Surface-shape foot data only - silent about arch mechanics and fascia strain; pair with a multi-segment foot model (candidates: four-segment, synergy-based) for dynamics. GitHub reports no primary language (checked 2026-10-28). The dataset itself comes through a request form; the README states copyright and a disclaimer but grants no licence for the data (checked 2026-11-02).",
       "upstream_path": "upstream/OllieBoyne/Foot3D"
     },
     {
@@ -3897,6 +3897,35 @@
       ],
       "notes": "Stars/forks not fetched (GitHub API not reachable 2026-11-02): run scripts/enrich_metadata.py where it is. Language estimated from file counts in a clone. Heuristic recommendations over a small catalog. No licence file: all-rights-reserved until cleared.",
       "upstream_path": "upstream/javeriafateh-rph/SoleFit"
+    },
+    {
+      "id": 136,
+      "slug": "KULeuvenNeuromechanics/PredSim",
+      "owner": "KULeuvenNeuromechanics",
+      "name": "PredSim",
+      "url": "https://github.com/KULeuvenNeuromechanics/PredSim",
+      "description": "PredSim - KU Leuven framework for muscle-driven predictive simulations of gait (MATLAB, CasADi, opensimAD), the successor 3dpredictsim points new work to",
+      "language": "MATLAB",
+      "license": "AGPL-3.0",
+      "license_source": "repo licence file read via git clone 2026-11-02 (GitHub API not reachable from that session)",
+      "stars_snapshot": null,
+      "forks_snapshot": null,
+      "updated_snapshot": "2026-09-29 (last commit, git clone 2026-11-02)",
+      "private": false,
+      "category": "musculoskeletal-sim",
+      "pipeline_stages": [
+        "biomechanics",
+        "muscle-sim"
+      ],
+      "tier": "extended",
+      "tags": [
+        "predictive-simulation",
+        "opensim",
+        "foot-model",
+        "casadi"
+      ],
+      "notes": "Stars/forks not fetched (GitHub API not reachable 2026-11-02): run scripts/enrich_metadata.py where it is. Language estimated from file counts in a clone. Carries the candidate DHondt_et_al_2024 3- and 4-segment foot models (a candidate, not selected). AGPL-3.0, unlike 3dpredictsim's MIT: keep the two licences separate and check each model asset and dependency (CasADi, opensimAD, OpenSim) before use.",
+      "upstream_path": "upstream/KULeuvenNeuromechanics/PredSim"
     }
   ],
   "documentation_standard": "Every repo entry MUST document: slug, url, description (>=40 chars, factual), category, tier, pipeline_stages (>=1), tags (>=2), language (or an explicit no-primary-language note), license + license_source, stars/forks/updated snapshots (private repo exempt), notes (>=30 chars: role in this project + caveats), upstream_path. Enforced by scripts/validate_catalog.py and tests/test_catalog.py.",

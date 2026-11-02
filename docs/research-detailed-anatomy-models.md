@@ -8,12 +8,17 @@
 > The twin can adopt the biomechanics models; it cannot get these from
 > SMPL/SMPL-X, which treat the foot as one rigid piece, the trunk as three
 > lumped spine joints, and do not breathe at all.
+>
+> **Corrected 2026-11-02 (foot):** the multi-segment foot models below are *candidates*, not adopted or recommended
+> models. Selection follows a comparison against explicit requirements and validation on our data (impact assessment,
+> foot research plan). Repository licences and the licences of individual model assets and dependencies are checked
+> separately.
 
 ## Verdict table
 
 | Detail | Modelled? | Best existing models | Open code? | Twin readiness |
 |---|---|---|---|---|
-| Foot arch height (dynamic) | Yes | Multi-segment foot models (Oxford/Milwaukee/Ghent); synergy-based foot model (arch as an explicit DOF); 4-segment OpenSim foot with longitudinal arch | Partly (see §1) | Adoptable at the OpenSim stage |
+| Foot arch height (dynamic) | Yes | Multi-segment foot models (Oxford/Milwaukee/Ghent); synergy-based foot model (arch as an explicit DOF); 4-segment OpenSim foot with longitudinal arch | Partly (see §1) | Candidates for the OpenSim stage; selection follows comparison and validation |
 | Flat feet (pes planus) | Yes | Subject-specific muscle-driven FE flatfoot models (CT/MRI-built); orthosis-design variants | Rarely; research-built per subject | Reference/method only |
 | Spine bending (per-vertebra) | Yes, extensively | Bruno et al. fully articulated thoracolumbar spine + rib cage (OpenSim); lumbar-spine models; scoliosis personalisation pipelines | Yes (SimTK/OpenSim) | **Adopt — posture correction is our core claim** |
 | Ribcage expansion + diaphragm (breathing) | Yes, in radiotherapy | Patient-specific FE diaphragm + rib-kinematics models from 4D CT (≤~2 mm error); PCA respiratory-motion models linking body surface → internal motion | Mostly no; method papers | Port the method, not the code |
@@ -34,15 +39,28 @@
   reduced to 5 DOF — ankle flexion; foot adduction, pronation, **arching**;
   toe flexion — while still predicting bone-level kinematics.
   Code: `MicheleConconi/Synergy-Based-Foot-Model` (verified on GitHub
-  2026-10-28). An OpenSim port is referenced in the preprint
-  (`modenaxe/SynergyFootModel-OpenSim`) but did **not** resolve on GitHub
-  at check time — verify before planning on it.
+  2026-10-28; MATLAB). The repository has **no licence file**, so it is
+  all-rights-reserved until the authors grant one. An OpenSim port is
+  referenced in the preprint (`modenaxe/SynergyFootModel-OpenSim`) but did
+  **not** resolve on GitHub at check time — verify before planning on it.
 - **OpenSim ankle-foot models:** a four-segment foot with a longitudinal
   arch, plantar fascia and intrinsic foot muscle, built for predictive
-  gait simulations (KU Leuven; code in `Lars-DHondt-KUL/3dpredictsim`,
-  `four-segment_foot_model` branch, MIT — verified 2026-10-28); and an
+  gait simulations (D'Hondt, De Groote and Afschrift, KU Leuven); and an
   open-source 24-DOF ankle-foot model with 66 ligaments/fasciae elements
-  for connective-tissue strain (SimTK).
+  for connective-tissue strain (SimTK). Two separate homes for the KU Leuven
+  foot, with separate licences (licence files read 2026-11-02):
+  - `Lars-DHondt-KUL/3dpredictsim`: repository licence **MIT** (copyright
+    antoinefalisse 2019). Master holds `DHondt_2023` 3- and 4-segment foot
+    files (last commit 2024-03); the `four-segment_foot_model` branch is
+    newer (2024-07, `DHondt_2024` files).
+  - `KULeuvenNeuromechanics/PredSim`, which 3dpredictsim's README points
+    new work to: repository licence **AGPL-3.0**; carries
+    `DHondt_et_al_2024_3seg` and `DHondt_et_al_2024_4seg`; MATLAB, needs
+    CasADi and the opensimAD submodule.
+  - A repository licence does not settle each model file: check every
+    `.osim` asset (which may derive from earlier OpenSim models with their
+    own terms) and every dependency (CasADi, opensimAD, OpenSim) before use,
+    and ask the authors which file is current under which licence.
 - **Arch measurement (clinical metrics, for our session schema):** Arch
   Height Index, navicular drop/height, arch index (footprint), Foot
   Posture Index. These are the quantities to *store*, whichever model
@@ -61,8 +79,9 @@
   `OllieBoyne/Foot3D` scan dataset behind the FIND articulated-foot model)
   — useful for fitting the twin's foot surface, silent about fascia strain.
 
-**For the twin:** an iPhone LiDAR foot scan can give a *static external*
-arch index only (and only barefoot, weight-bearing state noted). Bone-level
+**For the twin:** a phone foot scan (photos, or depth-assisted) can give a
+*static external* arch measure only (barefoot, with the loading condition
+recorded). Bone-level
 arch behaviour needs the kinematic models above driven by gait data; FE
 flatfoot analysis is a Tier-A, per-subject, imaging-based offline study —
 exactly analogous to the fat layer's Tier A/B split.
@@ -149,9 +168,12 @@ implementation, session metrics, red lines):
 
 1. **Spine:** Bruno thoracolumbar full-body OpenSim model as the posture
    stage default; per-vertebra angles in the session schema.
-2. **Foot:** synergy-based or 4-segment arch OpenSim foot for gait work;
-   store Arch Height Index / navicular drop per session; FE flatfoot only
-   as an imaging-based Tier-A study path.
+2. **Foot (corrected 2026-11-02: candidates, not an adoption):** the
+   synergy-based model and the 4-segment arch foot (3dpredictsim; PredSim)
+   enter a comparison against explicit requirements and a validation on our
+   data; selection follows that work. Store Arch Height Index / navicular
+   drop per session with its loading condition; FE flatfoot only as an
+   imaging-based Tier-A study path.
 3. **Breathing:** new twin layer per §3 — measured breathing signal in,
    calibrated rib/diaphragm motion out, labelled inferred.
 4. Add the OpenSim spine/foot models to the main catalog (they are *models

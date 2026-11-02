@@ -1,6 +1,11 @@
 # Changelog
 
 ## Unreleased
+- **Foot models are candidates, not adoptions** (`docs/research-detailed-anatomy-models.md`, catalog #113–#115): the
+  four-segment arch foot and the synergy-based foot enter a comparison and validation; selection follows that work.
+  3dpredictsim (MIT; its `four-segment_foot_model` branch is newer than master) and PredSim (AGPL-3.0, now catalog
+  #136) keep separate licences, and each model asset and dependency is checked on its own. The synergy model has no
+  licence file. Catalog: 136 repos.
 - **Catalog: 135 repos.** 18 foot-personalisation repositories added (ids 118–135): foot capture and reconstruction
   (FOCUS, FOUND, FIND, AR_footcapture, StandardCyborgCocoa, OpenScan3, SynFoot, FootScan), insole and shoe design
   (insole-pipeline, insole-3Designer, both OpenShoeDesigners, archy, SoleFit) and general reconstruction and mesh tools

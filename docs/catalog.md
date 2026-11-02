@@ -1,4 +1,4 @@
-# Full catalog — all 135 repositories
+# Full catalog — all 136 repositories
 
 Generated from `catalog/repos.json` by `scripts/generate_catalog.py`. Do not hand-edit this file; edit the JSON and regenerate.
 
@@ -84,7 +84,7 @@ Stars/forks/updated are dated snapshots, **not live data** (see the `snapshot_no
 | 90 | [mitkof6/OpenSimRT](https://github.com/mitkof6/OpenSimRT) | extended | capture, biomechanics | C++ | GPL-3.0 | 82 | OpenSimRT — real-time musculoskeletal kinematics and dynamics analysis using marker- and IMU-based solutions |
 | 91 | [CEINMS/CEINMS](https://github.com/CEINMS/CEINMS) | core | biomechanics, muscle-sim | C++ | Apache-2.0 | 33 | CEINMS — Calibrated EMG-Informed Neuromusculoskeletal Modelling Toolbox; estimates muscle forces and joint moments calibrated to the individual, OpenSim-compatible |
 
-## musculoskeletal-sim — Musculoskeletal simulation, humanoid control & RL (13)
+## musculoskeletal-sim — Musculoskeletal simulation, humanoid control & RL (14)
 
 | # | Repository | Tier | Stages | Lang | License | ★ snapshot | Description |
 |---:|---|---|---|---|---|---:|---|
@@ -101,6 +101,7 @@ Stars/forks/updated are dated snapshots, **not live data** (see the `snapshot_no
 | 54 | [lsw9021/MASS](https://github.com/lsw9021/MASS) | specialized | muscle-sim, control-rl | Mathematica | Apache-2.0 | 638 | MASS (Muscle-Actuated Skeletal System) — simulation and control of a full-body musculoskeletal system driven by muscle activations, with Python/PyTorch deep-RL interfacing (SIGGRAPH 2019) |
 | 92 | [sofa-framework/sofa](https://github.com/sofa-framework/sofa) | specialized | muscle-sim, visualization | C++ | none found in repo root | 1279 | SOFA — real-time multi-physics simulation with emphasis on medical simulation; FEM soft-tissue modelling |
 | 113 | [Lars-DHondt-KUL/3dpredictsim](https://github.com/Lars-DHondt-KUL/3dpredictsim) | extended | biomechanics, muscle-sim | C++ | MIT | 4 | Framework generating 3D muscle-driven predictive simulations of human movement via direct collocation and algorithmic differentiation (KU Leuven); hosts the four-segment foot model with longitudinal arch used for predictive gait simulations |
+| 136 | [KULeuvenNeuromechanics/PredSim](https://github.com/KULeuvenNeuromechanics/PredSim) | extended | biomechanics, muscle-sim | MATLAB | AGPL-3.0 | — | PredSim - KU Leuven framework for muscle-driven predictive simulations of gait (MATLAB, CasADi, opensimAD), the successor 3dpredictsim points new work to |
 
 ## visualization-tools — Visualization, viewers & editing tools (10)
 
@@ -1557,7 +1558,7 @@ Stars/forks/updated are dated snapshots, **not live data** (see the `snapshot_no
 ### 113. [Lars-DHondt-KUL/3dpredictsim](https://github.com/Lars-DHondt-KUL/3dpredictsim)
 
 - **What it is:** Framework generating 3D muscle-driven predictive simulations of human movement via direct collocation and algorithmic differentiation (KU Leuven); hosts the four-segment foot model with longitudinal arch used for predictive gait simulations
-- **Why it's in this catalog:** Predictive-simulation framework behind the 4-segment arch foot adopted in docs/research-detailed-anatomy-models.md. Research code with a very small community - pin commits and validate before use.
+- **Why it's in this catalog:** Hosts candidate 3- and 4-segment arch foot models (D'Hondt et al.): a candidate, not adopted; selection follows the foot-model comparison and validation (impact assessment, foot research plan). Repository MIT; the four-segment_foot_model branch (2024-07) is newer than master (2024-03). Check each model asset's and dependency's terms; the successor PredSim is AGPL-3.0 (separate entry). Research code with a very small community - pin commits and validate before use.
 - **Category / tier:** musculoskeletal-sim / extended
 - **Pipeline stages:** biomechanics, muscle-sim
 - **Tags:** predictive-simulation, opensim, foot-model, direct-collocation, gait
@@ -1569,7 +1570,7 @@ Stars/forks/updated are dated snapshots, **not live data** (see the `snapshot_no
 ### 114. [MicheleConconi/Synergy-Based-Foot-Model](https://github.com/MicheleConconi/Synergy-Based-Foot-Model)
 
 - **What it is:** Multi-body foot model tracking the spatial kinematics of all foot bones with only 5 DOF, exploiting experimentally derived bone-motion coupling (synergies) measured from weight-bearing CT
-- **Why it's in this catalog:** Source model for the synergy-based arch foot recommended in docs/research-detailed-anatomy-models.md (arch as an explicit DOF). The referenced OpenSim port did not resolve on GitHub at check time - verify before planning on it. No root licence file: all-rights-reserved until cleared.
+- **Why it's in this catalog:** Candidate synergy-based arch foot (arch as an explicit DOF), not recommended or selected: it enters the foot-model comparison. The referenced OpenSim port did not resolve on GitHub at check time - verify before planning on it. No root licence file: all-rights-reserved until cleared.
 - **Category / tier:** anatomy-models / specialized
 - **Pipeline stages:** skeleton, biomechanics
 - **Tags:** foot, synergy, arch, weight-bearing-ct, multi-body
@@ -1581,7 +1582,7 @@ Stars/forks/updated are dated snapshots, **not live data** (see the `snapshot_no
 ### 115. [OllieBoyne/Foot3D](https://github.com/OllieBoyne/Foot3D)
 
 - **What it is:** Foot3D - dataset of scanned 3D feet behind the FIND articulated foot model; external foot-shape/scan data for fitting the digital twin's foot surface
-- **Why it's in this catalog:** Surface-shape foot data only - silent about arch mechanics and fascia strain; pair with the synergy-based or four-segment models for dynamics. GitHub reports no primary language (checked 2026-10-28). The dataset itself comes through a request form; the README states copyright and a disclaimer but grants no licence for the data (checked 2026-11-02).
+- **Why it's in this catalog:** Surface-shape foot data only - silent about arch mechanics and fascia strain; pair with a multi-segment foot model (candidates: four-segment, synergy-based) for dynamics. GitHub reports no primary language (checked 2026-10-28). The dataset itself comes through a request form; the README states copyright and a disclaimer but grants no licence for the data (checked 2026-11-02).
 - **Category / tier:** anatomy-models / specialized
 - **Pipeline stages:** body-model, dataset
 - **Tags:** foot3d, foot-scans, statistical-shape, find
@@ -1829,3 +1830,15 @@ Stars/forks/updated are dated snapshots, **not live data** (see the `snapshot_no
 - **License:** none found in repo root (checked 2026-11-02; treat as all-rights-reserved) _(source: repo licence file read via git clone 2026-11-02 (GitHub API not reachable from that session))_
 - **Snapshot:** ★ not recorded · forks not recorded · upstream updated 2026-08-16 (last commit, git clone 2026-11-02)
 - **Clone target when vendored:** `upstream/javeriafateh-rph/SoleFit` (never commit upstream code to this repo)
+
+### 136. [KULeuvenNeuromechanics/PredSim](https://github.com/KULeuvenNeuromechanics/PredSim)
+
+- **What it is:** PredSim - KU Leuven framework for muscle-driven predictive simulations of gait (MATLAB, CasADi, opensimAD), the successor 3dpredictsim points new work to
+- **Why it's in this catalog:** Stars/forks not fetched (GitHub API not reachable 2026-11-02): run scripts/enrich_metadata.py where it is. Language estimated from file counts in a clone. Carries the candidate DHondt_et_al_2024 3- and 4-segment foot models (a candidate, not selected). AGPL-3.0, unlike 3dpredictsim's MIT: keep the two licences separate and check each model asset and dependency (CasADi, opensimAD, OpenSim) before use.
+- **Category / tier:** musculoskeletal-sim / extended
+- **Pipeline stages:** biomechanics, muscle-sim
+- **Tags:** predictive-simulation, opensim, foot-model, casadi
+- **Primary language (GitHub):** MATLAB
+- **License:** AGPL-3.0 _(source: repo licence file read via git clone 2026-11-02 (GitHub API not reachable from that session))_
+- **Snapshot:** ★ not recorded · forks not recorded · upstream updated 2026-09-29 (last commit, git clone 2026-11-02)
+- **Clone target when vendored:** `upstream/KULeuvenNeuromechanics/PredSim` (never commit upstream code to this repo)
