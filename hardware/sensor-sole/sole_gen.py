@@ -443,17 +443,31 @@ def route_copper(sole, tail, regs, copper, paths, seeds, tail_start, tail_end, t
         c = A.intersection(B)
         c = c if c.geom_type == "Point" else list(getattr(c, "geoms", [c]))[0]
         L = B.length; sc = B.project(c if c.geom_type == "Point" else c.centroid)
-        need = C["via_d"] / 2 + C["clear"] + C["sense_w"] / 2
-        for d in np.arange(0.8, 3.01, 0.1):
-            s1, s2 = max(0.05, sc - d), min(L - 0.05, sc + d)
+        need = C["via_d"] / 2 + C["clear"] + C["sense_w"] / 2       # via to any other line
+        need_v = C["via_d"] + C["clear"]                               # via to any other via
+        others = unary_union([LineString(lanes[k][:-2]) for k in lanes if k != m] +
+                             [LineString(v) for k, v in extra if k != m])
+        placed = [np.asarray(v) for k, v in lan["vias"].items() if k != m] + \
+                 [np.asarray(v) for j in jumpers for v in j["vias"]]
+        ok_via = lambda p: others.distance(p) >= need and all(np.linalg.norm(q - (p.x, p.y)) >= need_v
+                                                              for q in placed)
+        start_jump = sc < C["via_d"] + C["clear"] + 0.8              # crossing right at its own via
+        for d in np.arange(0.8, 4.01, 0.1):
+            s1 = 0.0 if start_jump else max(0.05, sc - d)
+            s2 = min(L - 0.05, sc + d)
             p1, p2 = B.interpolate(s1), B.interpolate(s2)
-            if A.distance(p1) >= need and A.distance(p2) >= need:
+            if (start_jump or ok_via(p1)) and ok_via(p2):
                 break
         from shapely.ops import substring as _sub
-        head, tail_ = _sub(B, 0, s1), _sub(B, s2, L)
-        lanes[m] = list(head.coords)
+        tail_ = _sub(B, s2, L)
+        if start_jump:                                   # the region's own via starts the jumper on F.Cu
+            lanes[m] = [lanes[m][0]]
+            jvias = [(p2.x, p2.y)]
+        else:
+            lanes[m] = list(_sub(B, 0, s1).coords)
+            jvias = [(p1.x, p1.y), (p2.x, p2.y)]
         extra.append((m, list(tail_.coords) + list(lanes_full_end(planned, m))))
-        jumpers.append(dict(net=m, over=n, fcu=[(p1.x, p1.y), (p2.x, p2.y)], vias=[(p1.x, p1.y), (p2.x, p2.y)]))
+        jumpers.append(dict(net=m, over=n, fcu=[(p1.x, p1.y), (p2.x, p2.y)], vias=jvias))
     lan["lanes"] = lanes
     common = {n: copper[n][0] for n in copper}; sense = {n: copper[n][1] for n in copper}
     stubs, near_common = stubs_to_combs(lan["vias"], sense, common, C["sense_w"], C["clear"])
@@ -477,7 +491,7 @@ def route_copper(sole, tail, regs, copper, paths, seeds, tail_start, tail_end, t
         jumpers=[(j["net"], j["over"]) for j in jumpers],
         common_unreached=unreached, stubs_near_common=near_common,
         longest_stub_mm=round(max((LineString(v).length for v in stubs.values()), default=0), 2),
-        vias=len(lan["vias"]) + 2 + 2 * len(jumpers))
+        vias=len(lan["vias"]) + 2 + sum(len(j["vias"]) for j in jumpers))
     return dict(lanes=lan["lanes"], vias=lan["vias"], stubs=stubs, com=com_lines + com_tail,
                 com_vias=[tuple(v1), tuple(vN)], com_pin_stubs=[[tuple(v1), pads[0][1]], [tuple(vN), pads[-1][1]]],
                 pin_order=lan["pin_order"], pads=pads, lanes_extra=extra, jumpers=jumpers)

@@ -217,7 +217,8 @@ def build(board_json, out_pcb):
     # common net (F.Cu) and its two vias to contacts 1 and N (B.Cu)
     if R:
         for n, pts in R["lanes"].items():
-            track(b, pts, pcbnew.B_Cu, nets[n], C["sense_w"])
+            if len(pts) > 1:                                 # a line can start on F.Cu (jumper from its via)
+                track(b, pts, pcbnew.B_Cu, nets[n], C["sense_w"])
         for n, p in R["vias"].items():
             via(b, p, nets[n], C["via_d"], C["via_drill"])
         for n, pts in R["stubs"].items():
