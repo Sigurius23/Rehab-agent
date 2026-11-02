@@ -218,10 +218,11 @@ def route(sole, regs, tail_start, res=0.25, sense=None, band=None):
         return m.reshape(ny, nx)
     # bundles may run along the sole's edge (a perimeter channel), so their centre line keeps half the widest
     # bundle plus clearance inside the copper-free margin
-    # Hard inset: room for a small bundle along the edge. A full-width inset closed narrow edges (the medial
-    # forefoot) and forced long detours; the soft cost below keeps wide bundles off the edge where there is room.
+    # Inset from the edge: room for a full-width bundle wherever a path runs along the edge. (A small inset
+    # plus a soft edge cost was tried: a weak cost let wide bundles spill past the copper-free margin, a strong
+    # one sent the heel lines on a detour through the midfoot that tangled them with other lines.)
     half = (len(regs) + 1) * FAB["pitch"] / 2 + FAB["route_clear"]
-    hard = FAB["route_clear"] + FAB["pitch"]
+    hard = half                                      # a full-width bundle fits along any edge it uses
     inner = rast(sole.buffer(-FAB["edge_margin"] - hard))
     d_edge = ndimage.distance_transform_edt(inner) * res + hard     # distance to the copper-free margin
     names = [n for n, r in regs.items() if not r.is_empty]
@@ -236,7 +237,7 @@ def route(sole, regs, tail_start, res=0.25, sense=None, band=None):
         ninner = np.roll(np.roll(inner, sh[0], 0), sh[1], 1)
         edge |= free & ((nb != lab) | ~ninner)
     bd = ndimage.distance_transform_edt(~edge) * res                  # mm from the nearest border
-    cost = np.where(free, 1.0 + 15.0 * bd + 25.0 * np.clip(half - d_edge, 0, None), np.inf)
+    cost = np.where(free, 1.0 + 15.0 * bd, np.inf)
     idx = -np.ones((ny, nx), int); fi = np.flatnonzero(free.ravel()); idx.ravel()[fi] = np.arange(len(fi))
     rows, cols, w = [], [], []
     for dy, dx in ((0, 1), (1, 0), (1, 1), (1, -1)):                 # 8-connected grid, each edge once
@@ -420,11 +421,28 @@ def route_copper(sole, tail, regs, copper, paths, seeds, tail_start, tail_end, t
     here = str(Path(__file__).resolve().parent)
     if here not in sys.path:                                  # also under `python -I`
         sys.path.insert(0, here)
-    from sole_route import build_lanes, crossings, maze_refine, route_common, stubs_to_combs
+    from sole_route import build_lanes, crossings, maze_refine, odd_crossings, route_common, stubs_to_combs
     C = CONTACT
-    lan = build_lanes({n: paths[n] for n in regs if paths.get(n)}, 0.25, tail_start, tail_dir, tail_end, seeds,
-                      FAB["pitch"], FAB["ffc_pitch"], C["pad_len"], C["edge_gap"], n_pins,
-                      track_w=C["sense_w"], via_d=C["via_d"], clear=C["clear"], regions=regs)
+    plan = lambda flips: build_lanes({n: paths[n] for n in regs if paths.get(n)}, 0.25, tail_start, tail_dir,
+                                     tail_end, seeds, FAB["pitch"], FAB["ffc_pitch"], C["pad_len"], C["edge_gap"],
+                                     n_pins, track_w=C["sense_w"], via_d=C["via_d"], clear=C["clear"],
+                                     regions=regs, flips=flips)
+    # planarity search: a line ending where its bundle continues may sit on either side of it; flip sides
+    # while that reduces the pairs that cross an odd number of times (crossings no router can remove)
+    flips = set()
+    lan = plan(flips); odd = odd_crossings(lan["lanes"])
+    for _ in range(12):
+        if not odd:
+            break
+        best = None
+        for n in sorted({x for pair in odd for x in pair}):
+            f2 = flips ^ {n}
+            l2 = plan(f2); o2 = odd_crossings(l2["lanes"])
+            if len(o2) < len(odd) and (best is None or len(o2) < len(best[2])):
+                best = (f2, l2, o2)
+        if best is None:
+            break
+        flips, lan, odd = best
     allowed = sole.union(tail).buffer(-0.3)                        # copper-to-edge 0.3 mm
     keepout = unary_union(list(regs.values()))                        # no B.Cu under the sensing regions
     order = lan["pin_order"][1:-1]
@@ -437,7 +455,7 @@ def route_copper(sole, tail, regs, copper, paths, seeds, tail_start, tail_end, t
                                      track_w=C["sense_w"], clear=C["clear"], via_d=C["via_d"],
                                      no_go=contact_zone)
     # a crossing forced by where two vias sit: one line hops over the other on F.Cu (two vias, one jumper)
-    jumpers, extra = [], []
+    jumpers, extra, no_region_via = [], [], set()
     for n, m in crossings(lanes):
         A, B = LineString(lanes[n][:-2]), LineString(lanes[m][:-2])
         c = A.intersection(B)
@@ -445,8 +463,8 @@ def route_copper(sole, tail, regs, copper, paths, seeds, tail_start, tail_end, t
         L = B.length; sc = B.project(c if c.geom_type == "Point" else c.centroid)
         need = C["via_d"] / 2 + C["clear"] + C["sense_w"] / 2       # via to any other line
         need_v = C["via_d"] + C["clear"]                               # via to any other via
-        others = unary_union([LineString(lanes[k][:-2]) for k in lanes if k != m] +
-                             [LineString(v) for k, v in extra if k != m])
+        others = unary_union([LineString(lanes[k][:-2]) for k in lanes if k != m and len(lanes[k]) > 3] +
+                             [LineString(v) for k, v in extra if k != m and len(v) > 1])
         placed = [np.asarray(v) for k, v in lan["vias"].items() if k != m] + \
                  [np.asarray(v) for j in jumpers for v in j["vias"]]
         ok_via = lambda p: others.distance(p) >= need and all(np.linalg.norm(q - (p.x, p.y)) >= need_v
@@ -460,9 +478,10 @@ def route_copper(sole, tail, regs, copper, paths, seeds, tail_start, tail_end, t
                 break
         from shapely.ops import substring as _sub
         tail_ = _sub(B, s2, L)
-        if start_jump:                                   # the region's own via starts the jumper on F.Cu
-            lanes[m] = [lanes[m][0]]
+        if start_jump:                                   # the jumper starts on F.Cu right at the comb stub:
+            lanes[m] = [lanes[m][0]]                     # the region via is not needed
             jvias = [(p2.x, p2.y)]
+            no_region_via.add(m)
         else:
             lanes[m] = list(_sub(B, 0, s1).coords)
             jvias = [(p1.x, p1.y), (p2.x, p2.y)]
@@ -488,11 +507,13 @@ def route_copper(sole, tail, regs, copper, paths, seeds, tail_start, tail_end, t
     checks["routing"] = dict(
         sense_routed=len(lan["lanes"]) - len(maze_failed), maze_failed=maze_failed,
         negotiation_rounds=getattr(maze_refine, "rounds_used", None),
-        jumpers=[(j["net"], j["over"]) for j in jumpers],
+        jumpers=[(j["net"], j["over"]) for j in jumpers], side_flips=sorted(flips),
+        planned_odd_crossings=odd,
         common_unreached=unreached, stubs_near_common=near_common,
         longest_stub_mm=round(max((LineString(v).length for v in stubs.values()), default=0), 2),
         vias=len(lan["vias"]) + 2 + sum(len(j["vias"]) for j in jumpers))
-    return dict(lanes=lan["lanes"], vias=lan["vias"], stubs=stubs, com=com_lines + com_tail,
+    return dict(lanes=lan["lanes"], vias={k: v for k, v in lan["vias"].items() if k not in no_region_via},
+                stubs=stubs, com=com_lines + com_tail,
                 com_vias=[tuple(v1), tuple(vN)], com_pin_stubs=[[tuple(v1), pads[0][1]], [tuple(vN), pads[-1][1]]],
                 pin_order=lan["pin_order"], pads=pads, lanes_extra=extra, jumpers=jumpers)
 

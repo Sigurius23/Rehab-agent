@@ -24,7 +24,7 @@ from shapely.ops import nearest_points
 
 
 def build_lanes(paths, res, tail_start, tail_dir, tail_end, seeds, pitch, pad_pitch, pad_len, edge_gap, n_pins,
-                fan_len=3.0, track_w=0.12, via_d=0.45, clear=0.15, regions=None):
+                fan_len=3.0, track_w=0.12, via_d=0.45, clear=0.15, regions=None, flips=()):
     """Lane polylines for every sense net, from its via to its contact. Returns lanes, vias, pin order."""
     key = lambda p: (round(p[0] / res), round(p[1] / res))
     nets = [n for n, p in paths.items() if p]
@@ -78,10 +78,23 @@ def build_lanes(paths, res, tail_start, tail_dir, tail_end, seeds, pitch, pad_pi
 
     memo = {}
 
+    def ahead(sid, node, dist=6.0):
+        """Direction from `node` to where the branch's lines are `dist` mm along. Branches often leave a node
+        together and separate only later, so their first few cells rank them unreliably."""
+        rep = order(sid)[0]
+        path = seq[rep]
+        k = path.index(node) if node in path else 0
+        a = P(path[k]); acc = 0.0; q = a
+        for c in path[k + 1:]:
+            b = P(c); acc += float(np.linalg.norm(b - q)); q = b
+            if acc >= dist:
+                break
+        return unit(q - a)
+
     def order_at(node, din, kids):
         items = []
         for sid in kids:
-            dc = d_out(segs[sid]["cells"])
+            dc = ahead(sid, node)
             items.append((math.atan2(cross(din, dc), float(np.dot(din, dc))), order(sid)))
         items.sort(key=lambda t: -t[0])                   # leftmost branch first
         left, right = [], []
@@ -93,7 +106,10 @@ def build_lanes(paths, res, tail_start, tail_dir, tail_end, seeds, pitch, pad_pi
                 side = np.array([q.x, q.y]) - P(node)
             else:
                 side = np.asarray(seeds[n]) - P(node)
-            (left if cross(din, side) > 0 else right).append(n)
+            is_left = cross(din, side) > 0
+            if n in flips:                                   # chosen by the planarity search
+                is_left = not is_left
+            (left if is_left else right).append(n)
         return left + [x for _, o in items for x in o] + right
 
     def order(sid):
@@ -553,5 +569,20 @@ def crossings(lanes, ends_trim=2):
         a = LineString(lanes[n][:-ends_trim])
         for m in names[i + 1:]:
             if a.crosses(LineString(lanes[m][:-ends_trim])):
+                out.append((n, m))
+    return out
+
+
+def odd_crossings(lanes, ends_trim=2):
+    """Pairs of lines that cross an odd number of times: a crossing that routing cannot remove."""
+    names = list(lanes)
+    out = []
+    for i, n in enumerate(names):
+        a = LineString(lanes[n][:-ends_trim])
+        for m in names[i + 1:]:
+            x = a.intersection(LineString(lanes[m][:-ends_trim]))
+            k = 0 if x.is_empty else (1 if x.geom_type == "Point" else
+                                      sum(1 for g in getattr(x, "geoms", []) if g.geom_type == "Point"))
+            if k % 2 == 1:
                 out.append((n, m))
     return out
