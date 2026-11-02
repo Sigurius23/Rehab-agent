@@ -218,8 +218,12 @@ def route(sole, regs, tail_start, res=0.25, sense=None, band=None):
         return m.reshape(ny, nx)
     # bundles may run along the sole's edge (a perimeter channel), so their centre line keeps half the widest
     # bundle plus clearance inside the copper-free margin
+    # Hard inset: room for a small bundle along the edge. A full-width inset closed narrow edges (the medial
+    # forefoot) and forced long detours; the soft cost below keeps wide bundles off the edge where there is room.
     half = (len(regs) + 1) * FAB["pitch"] / 2 + FAB["route_clear"]
-    inner = rast(sole.buffer(-FAB["edge_margin"] - half))
+    hard = FAB["route_clear"] + FAB["pitch"]
+    inner = rast(sole.buffer(-FAB["edge_margin"] - hard))
+    d_edge = ndimage.distance_transform_edt(inner) * res + hard     # distance to the copper-free margin
     names = [n for n, r in regs.items() if not r.is_empty]
     lab = np.full((ny, nx), -1, int)
     for k, n in enumerate(names):
@@ -232,7 +236,7 @@ def route(sole, regs, tail_start, res=0.25, sense=None, band=None):
         ninner = np.roll(np.roll(inner, sh[0], 0), sh[1], 1)
         edge |= free & ((nb != lab) | ~ninner)
     bd = ndimage.distance_transform_edt(~edge) * res                  # mm from the nearest border
-    cost = np.where(free, 1.0 + 15.0 * bd, np.inf)
+    cost = np.where(free, 1.0 + 15.0 * bd + 4.0 * np.clip(half - d_edge, 0, None), np.inf)
     idx = -np.ones((ny, nx), int); fi = np.flatnonzero(free.ravel()); idx.ravel()[fi] = np.arange(len(fi))
     rows, cols, w = [], [], []
     for dy, dx in ((0, 1), (1, 0), (1, 1), (1, -1)):                 # 8-connected grid, each edge once
