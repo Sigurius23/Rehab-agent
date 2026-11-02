@@ -1,4 +1,4 @@
-# Full catalog — all 117 repositories
+# Full catalog — all 135 repositories
 
 Generated from `catalog/repos.json` by `scripts/generate_catalog.py`. Do not hand-edit this file; edit the JSON and regenerate.
 
@@ -8,7 +8,7 @@ Every repo entry MUST document: slug, url, description (>=40 chars, factual), ca
 
 Stars/forks/updated are dated snapshots, **not live data** (see the `snapshot_note` in `catalog/repos.json`). Licenses were verified against the GitHub API or the repo-root license file on the date in each entry's `license_source`; a repo with **no license file is all-rights-reserved by default** and must not be copied/redistributed until cleared. Model weights and datasets frequently carry separate terms from code — the entry's notes flag known cases.
 
-## body-models — Parametric body & skeleton models (SMPL/SMPL-X, SKEL, OSSO, tissues) (10)
+## body-models — Parametric body & skeleton models (SMPL/SMPL-X, SKEL, OSSO, tissues) (11)
 
 | # | Repository | Tier | Stages | Lang | License | ★ snapshot | Description |
 |---:|---|---|---|---|---|---:|---|
@@ -22,6 +22,7 @@ Stars/forks/updated are dated snapshots, **not live data** (see the `snapshot_no
 | 60 | [hailsong/RC-SMPL](https://github.com/hailsong/RC-SMPL) | specialized | body-model, visualization | C# | none found in repo root | 10 | RC-SMPL — Real-time Cumulative SMPL-based Avatar Body Generation (IEEE ISMAR 2023); cumulatively updates avatar texture and normal maps from images/video in real time |
 | 71 | [muelea/shapy](https://github.com/muelea/shapy) | core | body-model | Python | none found in repo root | 389 | SHAPY — accurate 3D body shape regression using metric and semantic attributes; predicts SMPL-X shape plus height/weight/chest/waist/hip measurements from an image |
 | 73 | [yfeng95/PIXIE](https://github.com/yfeng95/PIXIE) | extended | body-model | Python | NOASSERTION | 517 | PIXIE — collaborative regression of expressive bodies: whole-body SMPL-X with detailed face and hand articulation from a single image |
+| 120 | [OllieBoyne/FIND](https://github.com/OllieBoyne/FIND) | specialized | body-model | Python | MIT | — | FIND - parameterised, articulated model of the external foot shape (an implicit neural deformation field) learned from the Foot3D scans |
 
 ## anatomy-models — Anatomy & personalised model generation (9)
 
@@ -101,7 +102,7 @@ Stars/forks/updated are dated snapshots, **not live data** (see the `snapshot_no
 | 92 | [sofa-framework/sofa](https://github.com/sofa-framework/sofa) | specialized | muscle-sim, visualization | C++ | none found in repo root | 1279 | SOFA — real-time multi-physics simulation with emphasis on medical simulation; FEM soft-tissue modelling |
 | 113 | [Lars-DHondt-KUL/3dpredictsim](https://github.com/Lars-DHondt-KUL/3dpredictsim) | extended | biomechanics, muscle-sim | C++ | MIT | 4 | Framework generating 3D muscle-driven predictive simulations of human movement via direct collocation and algorithmic differentiation (KU Leuven); hosts the four-segment foot model with longitudinal arch used for predictive gait simulations |
 
-## visualization-tools — Visualization, viewers & editing tools (8)
+## visualization-tools — Visualization, viewers & editing tools (10)
 
 | # | Repository | Tier | Stages | Lang | License | ★ snapshot | Description |
 |---:|---|---|---|---|---|---:|---|
@@ -113,8 +114,10 @@ Stars/forks/updated are dated snapshots, **not live data** (see the `snapshot_no
 | 41 | [tgeijten/scone-studio](https://github.com/tgeijten/scone-studio) | extended | visualization, biomechanics | C++ | GPL-3.0 | 46 | SCONE Studio — graphical user interface for SCONE |
 | 58 | [strayrobots/3d-annotation-tool](https://github.com/strayrobots/3d-annotation-tool) | specialized | visualization, tooling | C++ | MIT | 94 | A graphical user interface to annotate point clouds and 3D data |
 | 85 | [sangho0n/Realtime_SMPLX_Unity](https://github.com/sangho0n/Realtime_SMPLX_Unity) | specialized | visualization, body-model | C# | MIT | 50 | Real-time SMPL-X in Unity — shape reconstruction via a Python server plus MediaPipe pose in Unity, animating SMPL-X live |
+| 133 | [cnr-isti-vclab/meshlab](https://github.com/cnr-isti-vclab/meshlab) | extended | tooling, visualization | C++ | GPL-3.0 | — | MeshLab - open-source system for inspecting, cleaning, repairing and processing 3D triangle meshes |
+| 134 | [cnr-isti-vclab/PyMeshLab](https://github.com/cnr-isti-vclab/PyMeshLab) | extended | tooling | C++ | GPL-3.0 | — | PyMeshLab - Python interface to MeshLab's mesh-processing filters for scripted cleaning and remeshing |
 
-## data-capture — RGB-D / sensor capture (8)
+## data-capture — RGB-D / sensor capture (11)
 
 | # | Repository | Tier | Stages | Lang | License | ★ snapshot | Description |
 |---:|---|---|---|---|---|---:|---|
@@ -126,6 +129,9 @@ Stars/forks/updated are dated snapshots, **not live data** (see the `snapshot_no
 | 105 | [realsenseai/librealsense](https://github.com/realsenseai/librealsense) | core | capture, tooling | C++ | Apache-2.0 | 9060 | RealSense SDK 2.0 (librealsense) — official cross-platform driver/library for RealSense depth cameras including the D455; includes pyrealsense2 and ROS wrappers |
 | 106 | [ethz-asl/kalibr](https://github.com/ethz-asl/kalibr) | specialized | capture, tooling | C++ | BSD-3-Clause | 5770 | Kalibr — visual-inertial calibration toolbox for cameras and IMUs |
 | 107 | [AprilRobotics/apriltag](https://github.com/AprilRobotics/apriltag) | specialized | capture, tooling | C | BSD-2-Clause | 2578 | AprilTag — visual fiducial marker system for robotics (pose of tagged objects from camera images) |
+| 121 | [ValentinKhanBlouki/AR_footcapture](https://github.com/ValentinKhanBlouki/AR_footcapture) | experimental | capture | Swift | MIT | — | Guided iPhone app capturing foot photos and ARKit depth for later 3D foot reconstruction (FootCapture) |
+| 122 | [StandardCyborg/StandardCyborgCocoa](https://github.com/StandardCyborg/StandardCyborgCocoa) | specialized | capture | C++ | varies by subdirectory | — | Standard Cyborg iOS SDK for 3D scanning with the TrueDepth camera: capture, fusion and mesh export |
+| 123 | [OpenScan-org/OpenScan3](https://github.com/OpenScan-org/OpenScan3) | specialized | capture, tooling | Python | GPL-3.0 | — | OpenScan3 - firmware for OpenScan DIY photogrammetry scanners (turntable and camera control) |
 
 ## datasets-interaction — Datasets & human-object/scene interaction (5)
 
@@ -137,7 +143,7 @@ Stars/forks/updated are dated snapshots, **not live data** (see the `snapshot_no
 | 111 | [NetEase-GameAI/ChoreoMaster](https://github.com/NetEase-GameAI/ChoreoMaster) | specialized | dataset, pose | — | none found in repo root | 120 | ChoreoMaster (ACM TOG 2021) - choreography-oriented, music-driven dance synthesis dataset and code (FBX motion units + music + labels); only ~1.48 h of the 9.91 h corpus is public |
 | 112 | [simonalexanderson/MotoricaDanceDataset](https://github.com/simonalexanderson/MotoricaDanceDataset) | specialized | dataset, pose | Python | NOASSERTION - custom Motorica AB copyright terms | 113 | Motorica Dance Dataset - 6 h of OptiTrack motion capture (17 cameras, 120 fps) across 8 dance styles; BVH plus retargeted skeletons, finger capture in some sessions, paired audio |
 
-## rehab-assistive — Rehab, gait & assistive-device specific projects (5)
+## rehab-assistive — Rehab, gait & assistive-device specific projects (11)
 
 | # | Repository | Tier | Stages | Lang | License | ★ snapshot | Description |
 |---:|---|---|---|---|---|---:|---|
@@ -146,8 +152,14 @@ Stars/forks/updated are dated snapshots, **not live data** (see the `snapshot_no
 | 53 | [rohwalia/MyoBack](https://github.com/rohwalia/MyoBack) | specialized | muscle-sim, biomechanics | Python | none found in repo root | 7 | MyoBack — simulation of a neuromusculoskeletal model of the back with an exoskeleton; a MyoSuite back model derived from a physiologically accurate OpenSim model, validated with a passive back exoskeleton |
 | 55 | [neumovelab/myoassist](https://github.com/neumovelab/myoassist) | specialized | muscle-sim, control-rl | Jupyter Notebook | Apache-2.0 | 62 | MyoAssist (assistive musculoskeletal simulation; details in upstream repo) |
 | 56 | [hzm2016/mass-dart-exo](https://github.com/hzm2016/mass-dart-exo) | specialized | muscle-sim, control-rl | Mathematica | Apache-2.0 | 2 | MASS/DART exoskeleton variant — upstream README presents the MASS muscle-actuated full-body skeletal simulation system; exoskeleton-specific changes are not documented in the README |
+| 126 | [JoshKirk800/insole-pipeline](https://github.com/JoshKirk800/insole-pipeline) | experimental | tooling | Python | GPL-3.0 | — | Turns authorised Volumental or Fleet Feet foot-scan data into printable insoles, with optional pressure maps |
+| 127 | [DuduPiglet/insole-3Designer](https://github.com/DuduPiglet/insole-3Designer) | experimental | tooling | Python | none found in repo root | — | Scripts that process 3D scans of foot imprints into orthotic insole geometry with PyMeshLab |
+| 128 | [tobiasfs/openshoedesigner](https://github.com/tobiasfs/openshoedesigner) | experimental | tooling | C++ | GPL-3.0 | — | OpenShoeDesigner - manufacturing-oriented design of shoes and lasts from foot measurements or scans |
+| 129 | [Vesuvan/openshoedesigner](https://github.com/Vesuvan/openshoedesigner) | experimental | tooling | C++ | GPL-3.0 | — | OpenShoeDesigner (Vesuvan) - shoe and last design from foot measurements or scans |
+| 130 | [ishaanko/archy](https://github.com/ishaanko/archy) | experimental | capture, tooling | Swift | MIT | — | archy - experimental phone foot scan, optional DIY pressure sensors and printable-insole workflow (iOS app and services) |
+| 135 | [javeriafateh-rph/SoleFit](https://github.com/javeriafateh-rph/SoleFit) | experimental | tooling | Python | none found in repo root | — | SoleFit - photo-assisted foot-shape estimate and shoe recommendation prototype (Streamlit app) |
 
-## 3d-reconstruction — 3D reconstruction, mesh generation & world models (9)
+## 3d-reconstruction — 3D reconstruction, mesh generation & world models (15)
 
 | # | Repository | Tier | Stages | Lang | License | ★ snapshot | Description |
 |---:|---|---|---|---|---|---:|---|
@@ -159,7 +171,13 @@ Stars/forks/updated are dated snapshots, **not live data** (see the `snapshot_no
 | 69 | [xibushu/UniForge3D](https://github.com/xibushu/UniForge3D) | experimental | body-model | Python | MIT | 373 | UniForge3D: Joint 3D Reconstruction and Generation in a Shared Anchor-Guided Space |
 | 70 | [Net-Maker/GaussiAnimate](https://github.com/Net-Maker/GaussiAnimate) | experimental | body-model, visualization | Python | MIT | 157 | GaussiAnimate: Reconstruct and Rig Animatable Categories with Level of Dynamics |
 | 72 | [YuliangXiu/ECON](https://github.com/YuliangXiu/ECON) | extended | capture, body-model | Python | NOASSERTION | 1213 | ECON — explicit clothed humans optimised via normal integration; high-fidelity 3D clothed human from a single image, SMPL-X animatable |
-| 108 | [alicevision/Meshroom](https://github.com/alicevision/Meshroom) | extended | capture, body-model | Python | none found in repo root | 13028 | Meshroom — node-based photogrammetry toolbox (AliceVision) for 3D reconstruction from photos |
+| 108 | [alicevision/Meshroom](https://github.com/alicevision/Meshroom) | extended | capture, body-model | Python | MPL-2.0 | 13028 | Meshroom — node-based photogrammetry toolbox (AliceVision) for 3D reconstruction from photos |
+| 118 | [OllieBoyne/FOCUS](https://github.com/OllieBoyne/FOCUS) | experimental | capture, body-model | Python | MIT | — | FOCUS - reconstructs a 3D foot surface from several photos or a video, using predicted dense correspondences to the FIND foot model |
+| 119 | [OllieBoyne/FOUND](https://github.com/OllieBoyne/FOUND) | experimental | capture, body-model | Python | MIT | — | FOUND - foot shape reconstruction from multiview images using surface-normal and uncertainty estimates, fitted to the FIND model |
+| 124 | [OllieBoyne/SynFoot](https://github.com/OllieBoyne/SynFoot) | specialized | dataset | — | MIT | — | SynFoot - synthetic foot images with annotations, used to train the FOUND and FOCUS reconstruction methods |
+| 125 | [MiniDraco/footscan](https://github.com/MiniDraco/footscan) | experimental | capture, tooling | Python | MIT | — | FootScan - desktop photo-to-mesh foot workflow producing printable insoles, plus an offline mobile insole prototype |
+| 131 | [colmap/colmap](https://github.com/colmap/colmap) | extended | capture, body-model | C++ | BSD-3-Clause | — | COLMAP - general-purpose structure-from-motion and multi-view stereo: camera poses and 3D reconstruction from photos |
+| 132 | [cdcseacave/openMVS](https://github.com/cdcseacave/openMVS) | extended | capture, body-model | C++ | AGPL-3.0 | — | OpenMVS - dense multi-view stereo: densification, meshing and texturing from COLMAP or other camera poses |
 
 ## rehab-assessment — Rehab exercise assessment, clinical scores & movement correction (4)
 
@@ -1479,12 +1497,12 @@ Stars/forks/updated are dated snapshots, **not live data** (see the `snapshot_no
 ### 108. [alicevision/Meshroom](https://github.com/alicevision/Meshroom)
 
 - **What it is:** Meshroom — node-based photogrammetry toolbox (AliceVision) for 3D reconstruction from photos
-- **Why it's in this catalog:** Higher-resolution static surface reconstruction from the RGB cameras than iPhone LiDAR; subject must hold still — breathing/movement is the accuracy limit. License (GitHub API, 2026-10-21): NOASSERTION.
+- **Why it's in this catalog:** Higher-resolution static surface reconstruction from the RGB cameras than iPhone LiDAR; subject must hold still — breathing/movement is the accuracy limit. Licence MPL-2.0 (LICENSE-MPL2.md); COPYING.md lists third-party licences (AliceVision and others) to review.
 - **Category / tier:** 3d-reconstruction / extended
 - **Pipeline stages:** capture, body-model
 - **Tags:** meshroom, photogrammetry, alicevision, surface-reconstruction
 - **Primary language (GitHub):** Python
-- **License:** none found in repo root (checked 2026-10-28; treat as all-rights-reserved) _(source: checked repo root 2026-10-28)_
+- **License:** MPL-2.0 _(source: repo-root LICENSE-MPL2.md and COPYING.md read via git clone 2026-11-02; the 2026-10-28 check looked only for a file named LICENSE and the GitHub API reported NOASSERTION)_
 - **Snapshot:** ★ 13028 · forks 1235 · upstream updated 2026-10-20 (live API 2026-10-21)
 - **Clone target when vendored:** `upstream/alicevision/Meshroom` (never commit upstream code to this repo)
 
@@ -1563,7 +1581,7 @@ Stars/forks/updated are dated snapshots, **not live data** (see the `snapshot_no
 ### 115. [OllieBoyne/Foot3D](https://github.com/OllieBoyne/Foot3D)
 
 - **What it is:** Foot3D - dataset of scanned 3D feet behind the FIND articulated foot model; external foot-shape/scan data for fitting the digital twin's foot surface
-- **Why it's in this catalog:** Surface-shape foot data only - silent about arch mechanics and fascia strain; pair with the synergy-based or four-segment models for dynamics. GitHub reports no primary language (checked 2026-10-28).
+- **Why it's in this catalog:** Surface-shape foot data only - silent about arch mechanics and fascia strain; pair with the synergy-based or four-segment models for dynamics. GitHub reports no primary language (checked 2026-10-28). The dataset itself comes through a request form; the README states copyright and a disclaimer but grants no licence for the data (checked 2026-11-02).
 - **Category / tier:** anatomy-models / specialized
 - **Pipeline stages:** body-model, dataset
 - **Tags:** foot3d, foot-scans, statistical-shape, find
@@ -1595,3 +1613,219 @@ Stars/forks/updated are dated snapshots, **not live data** (see the `snapshot_no
 - **License:** BSD-3-Clause _(source: GitHub API, fetched by the HarmannBitte session 2026-10-28; matches the repo-root LICENSE file)_
 - **Snapshot:** ★ 336 · forks 46 · upstream updated 2026-10-28 (GitHub API, fetched by the HarmannBitte session 2026-10-28)
 - **Clone target when vendored:** `upstream/davidpagnon/Sports2D` (never commit upstream code to this repo)
+
+### 118. [OllieBoyne/FOCUS](https://github.com/OllieBoyne/FOCUS)
+
+- **What it is:** FOCUS - reconstructs a 3D foot surface from several photos or a video, using predicted dense correspondences to the FIND foot model
+- **Why it's in this catalog:** Stars/forks not fetched (GitHub API not reachable 2026-11-02): run scripts/enrich_metadata.py where it is. Language estimated from file counts in a clone. Candidate phone-only foot-surface capture (foot personalisation, impact assessment). External surface only; pretrained models carry their own terms.
+- **Category / tier:** 3d-reconstruction / experimental
+- **Pipeline stages:** capture, body-model
+- **Tags:** foot, foot-reconstruction, multiview, find
+- **Primary language (GitHub):** Python
+- **License:** MIT _(source: repo licence file read via git clone 2026-11-02 (GitHub API not reachable from that session))_
+- **Snapshot:** ★ not recorded · forks not recorded · upstream updated 2025-04-17 (last commit, git clone 2026-11-02)
+- **Clone target when vendored:** `upstream/OllieBoyne/FOCUS` (never commit upstream code to this repo)
+
+### 119. [OllieBoyne/FOUND](https://github.com/OllieBoyne/FOUND)
+
+- **What it is:** FOUND - foot shape reconstruction from multiview images using surface-normal and uncertainty estimates, fitted to the FIND model
+- **Why it's in this catalog:** Stars/forks not fetched (GitHub API not reachable 2026-11-02): run scripts/enrich_metadata.py where it is. Language estimated from file counts in a clone. Predecessor of FOCUS for foot-surface capture. Needs separately downloaded model assets with their own terms.
+- **Category / tier:** 3d-reconstruction / experimental
+- **Pipeline stages:** capture, body-model
+- **Tags:** foot, foot-reconstruction, surface-normals, find
+- **Primary language (GitHub):** Python
+- **License:** MIT _(source: repo licence file read via git clone 2026-11-02 (GitHub API not reachable from that session))_
+- **Snapshot:** ★ not recorded · forks not recorded · upstream updated 2025-02-18 (last commit, git clone 2026-11-02)
+- **Clone target when vendored:** `upstream/OllieBoyne/FOUND` (never commit upstream code to this repo)
+
+### 120. [OllieBoyne/FIND](https://github.com/OllieBoyne/FIND)
+
+- **What it is:** FIND - parameterised, articulated model of the external foot shape (an implicit neural deformation field) learned from the Foot3D scans
+- **Why it's in this catalog:** Stars/forks not fetched (GitHub API not reachable 2026-11-02): run scripts/enrich_metadata.py where it is. Language estimated from file counts in a clone. External foot shape only, no bones or arch mechanics; a candidate surface prior for the per-foot fit. Model assets separate.
+- **Category / tier:** body-models / specialized
+- **Pipeline stages:** body-model
+- **Tags:** foot, statistical-shape, articulated, foot3d
+- **Primary language (GitHub):** Python
+- **License:** MIT _(source: repo licence file read via git clone 2026-11-02 (GitHub API not reachable from that session))_
+- **Snapshot:** ★ not recorded · forks not recorded · upstream updated 2025-03-03 (last commit, git clone 2026-11-02)
+- **Clone target when vendored:** `upstream/OllieBoyne/FIND` (never commit upstream code to this repo)
+
+### 121. [ValentinKhanBlouki/AR_footcapture](https://github.com/ValentinKhanBlouki/AR_footcapture)
+
+- **What it is:** Guided iPhone app capturing foot photos and ARKit depth for later 3D foot reconstruction (FootCapture)
+- **Why it's in this catalog:** Stars/forks not fetched (GitHub API not reachable 2026-11-02): run scripts/enrich_metadata.py where it is. Language estimated from file counts in a clone. Capture front end only; reconstruction is a separate step. Candidate for the phone foot-scan protocol.
+- **Category / tier:** data-capture / experimental
+- **Pipeline stages:** capture
+- **Tags:** foot, iphone, arkit, photogrammetry
+- **Primary language (GitHub):** Swift
+- **License:** MIT _(source: repo licence file read via git clone 2026-11-02 (GitHub API not reachable from that session))_
+- **Snapshot:** ★ not recorded · forks not recorded · upstream updated 2024-05-21 (last commit, git clone 2026-11-02)
+- **Clone target when vendored:** `upstream/ValentinKhanBlouki/AR_footcapture` (never commit upstream code to this repo)
+
+### 122. [StandardCyborg/StandardCyborgCocoa](https://github.com/StandardCyborg/StandardCyborgCocoa)
+
+- **What it is:** Standard Cyborg iOS SDK for 3D scanning with the TrueDepth camera: capture, fusion and mesh export
+- **Why it's in this catalog:** Stars/forks not fetched (GitHub API not reachable 2026-11-02): run scripts/enrich_metadata.py where it is. Language estimated from file counts in a clone. Front TrueDepth camera, so a foot needs a helper or a mirror set-up. Reported no longer maintained by the original company; read each component's licence.
+- **Category / tier:** data-capture / specialized
+- **Pipeline stages:** capture
+- **Tags:** ios, truedepth, 3d-scanning, sdk
+- **Primary language (GitHub):** C++
+- **License:** varies by subdirectory (see each subdirectory's LICENSE) _(source: repo licence file read via git clone 2026-11-02 (GitHub API not reachable from that session))_
+- **Snapshot:** ★ not recorded · forks not recorded · upstream updated 2026-04-26 (last commit, git clone 2026-11-02)
+- **Clone target when vendored:** `upstream/StandardCyborg/StandardCyborgCocoa` (never commit upstream code to this repo)
+
+### 123. [OpenScan-org/OpenScan3](https://github.com/OpenScan-org/OpenScan3)
+
+- **What it is:** OpenScan3 - firmware for OpenScan DIY photogrammetry scanners (turntable and camera control)
+- **Why it's in this catalog:** Stars/forks not fetched (GitHub API not reachable 2026-11-02): run scripts/enrich_metadata.py where it is. Language estimated from file counts in a clone. Reference for a fixed-rig photogrammetry set-up; other OpenScan repositories have their own licences. GPL-3.0 if linked.
+- **Category / tier:** data-capture / specialized
+- **Pipeline stages:** capture, tooling
+- **Tags:** photogrammetry, diy-scanner, firmware, hardware
+- **Primary language (GitHub):** Python
+- **License:** GPL-3.0 _(source: repo licence file read via git clone 2026-11-02 (GitHub API not reachable from that session))_
+- **Snapshot:** ★ not recorded · forks not recorded · upstream updated 2026-10-28 (last commit, git clone 2026-11-02)
+- **Clone target when vendored:** `upstream/OpenScan-org/OpenScan3` (never commit upstream code to this repo)
+
+### 124. [OllieBoyne/SynFoot](https://github.com/OllieBoyne/SynFoot)
+
+- **What it is:** SynFoot - synthetic foot images with annotations, used to train the FOUND and FOCUS reconstruction methods
+- **Why it's in this catalog:** Stars/forks not fetched (GitHub API not reachable 2026-11-02): run scripts/enrich_metadata.py where it is. Language estimated from file counts in a clone. Repository holds layout notes and samples, no code. The downloaded data's terms and provenance need checking separately.
+- **Category / tier:** 3d-reconstruction / specialized
+- **Pipeline stages:** dataset
+- **Tags:** foot, synthetic-data, dataset, find
+- **Primary language (GitHub):** none reported
+- **License:** MIT _(source: repo licence file read via git clone 2026-11-02 (GitHub API not reachable from that session))_
+- **Snapshot:** ★ not recorded · forks not recorded · upstream updated 2025-02-12 (last commit, git clone 2026-11-02)
+- **Clone target when vendored:** `upstream/OllieBoyne/SynFoot` (never commit upstream code to this repo)
+
+### 125. [MiniDraco/footscan](https://github.com/MiniDraco/footscan)
+
+- **What it is:** FootScan - desktop photo-to-mesh foot workflow producing printable insoles, plus an offline mobile insole prototype
+- **Why it's in this catalog:** Stars/forks not fetched (GitHub API not reachable 2026-11-02): run scripts/enrich_metadata.py where it is. Language estimated from file counts in a clone. Its mobile README: outline and size are measured, the arch/heel contour is parametric; depth capture is the next milestone. MIT with a disclaimer.
+- **Category / tier:** 3d-reconstruction / experimental
+- **Pipeline stages:** capture, tooling
+- **Tags:** foot, insole, photogrammetry, 3d-printing
+- **Primary language (GitHub):** Python
+- **License:** MIT _(source: repo licence file read via git clone 2026-11-02 (GitHub API not reachable from that session))_
+- **Snapshot:** ★ not recorded · forks not recorded · upstream updated 2026-06-19 (last commit, git clone 2026-11-02)
+- **Clone target when vendored:** `upstream/MiniDraco/footscan` (never commit upstream code to this repo)
+
+### 126. [JoshKirk800/insole-pipeline](https://github.com/JoshKirk800/insole-pipeline)
+
+- **What it is:** Turns authorised Volumental or Fleet Feet foot-scan data into printable insoles, with optional pressure maps
+- **Why it's in this catalog:** Stars/forks not fetched (GitHub API not reachable 2026-11-02): run scripts/enrich_metadata.py where it is. Language estimated from file counts in a clone. Personal prototype, not clinically validated. The author flags a non-commercial dependency (triangle); review before reuse.
+- **Category / tier:** rehab-assistive / experimental
+- **Pipeline stages:** tooling
+- **Tags:** insole, foot-scan, volumental, 3d-printing
+- **Primary language (GitHub):** Python
+- **License:** GPL-3.0 _(source: repo licence file read via git clone 2026-11-02 (GitHub API not reachable from that session))_
+- **Snapshot:** ★ not recorded · forks not recorded · upstream updated 2026-10-06 (last commit, git clone 2026-11-02)
+- **Clone target when vendored:** `upstream/JoshKirk800/insole-pipeline` (never commit upstream code to this repo)
+
+### 127. [DuduPiglet/insole-3Designer](https://github.com/DuduPiglet/insole-3Designer)
+
+- **What it is:** Scripts that process 3D scans of foot imprints into orthotic insole geometry with PyMeshLab
+- **Why it's in this catalog:** Stars/forks not fetched (GitHub API not reachable 2026-11-02): run scripts/enrich_metadata.py where it is. Language estimated from file counts in a clone. Small script set, last updated 2023. No licence file: all-rights-reserved until cleared.
+- **Category / tier:** rehab-assistive / experimental
+- **Pipeline stages:** tooling
+- **Tags:** insole, orthotic, pymeshlab
+- **Primary language (GitHub):** Python
+- **License:** none found in repo root (checked 2026-11-02; treat as all-rights-reserved) _(source: repo licence file read via git clone 2026-11-02 (GitHub API not reachable from that session))_
+- **Snapshot:** ★ not recorded · forks not recorded · upstream updated 2023-06-06 (last commit, git clone 2026-11-02)
+- **Clone target when vendored:** `upstream/DuduPiglet/insole-3Designer` (never commit upstream code to this repo)
+
+### 128. [tobiasfs/openshoedesigner](https://github.com/tobiasfs/openshoedesigner)
+
+- **What it is:** OpenShoeDesigner - manufacturing-oriented design of shoes and lasts from foot measurements or scans
+- **Why it's in this catalog:** Stars/forks not fetched (GitHub API not reachable 2026-11-02): run scripts/enrich_metadata.py where it is. Language estimated from file counts in a clone. Author says the MVP is not complete (reported). Active fork; compare with Vesuvan/openshoedesigner before choosing.
+- **Category / tier:** rehab-assistive / experimental
+- **Pipeline stages:** tooling
+- **Tags:** shoe-design, last, footwear, cad
+- **Primary language (GitHub):** C++
+- **License:** GPL-3.0 _(source: repo licence file read via git clone 2026-11-02 (GitHub API not reachable from that session))_
+- **Snapshot:** ★ not recorded · forks not recorded · upstream updated 2026-10-05 (last commit, git clone 2026-11-02)
+- **Clone target when vendored:** `upstream/tobiasfs/openshoedesigner` (never commit upstream code to this repo)
+
+### 129. [Vesuvan/openshoedesigner](https://github.com/Vesuvan/openshoedesigner)
+
+- **What it is:** OpenShoeDesigner (Vesuvan) - shoe and last design from foot measurements or scans
+- **Why it's in this catalog:** Stars/forks not fetched (GitHub API not reachable 2026-11-02): run scripts/enrich_metadata.py where it is. Language estimated from file counts in a clone. Same project name, last commit 2022; the tobiasfs repository is the active one. Check their relationship before using either.
+- **Category / tier:** rehab-assistive / experimental
+- **Pipeline stages:** tooling
+- **Tags:** shoe-design, last, footwear, cad
+- **Primary language (GitHub):** C++
+- **License:** GPL-3.0 _(source: repo licence file read via git clone 2026-11-02 (GitHub API not reachable from that session))_
+- **Snapshot:** ★ not recorded · forks not recorded · upstream updated 2022-09-22 (last commit, git clone 2026-11-02)
+- **Clone target when vendored:** `upstream/Vesuvan/openshoedesigner` (never commit upstream code to this repo)
+
+### 130. [ishaanko/archy](https://github.com/ishaanko/archy)
+
+- **What it is:** archy - experimental phone foot scan, optional DIY pressure sensors and printable-insole workflow (iOS app and services)
+- **Why it's in this catalog:** Stars/forks not fetched (GitHub API not reachable 2026-11-02): run scripts/enrich_metadata.py where it is. Language estimated from file counts in a clone. Prototype, not clinically validated. Pressure from a scan alone is estimated, not measured.
+- **Category / tier:** rehab-assistive / experimental
+- **Pipeline stages:** capture, tooling
+- **Tags:** foot, insole, pressure-sensor, iphone
+- **Primary language (GitHub):** Swift
+- **License:** MIT _(source: repo licence file read via git clone 2026-11-02 (GitHub API not reachable from that session))_
+- **Snapshot:** ★ not recorded · forks not recorded · upstream updated 2026-10-27 (last commit, git clone 2026-11-02)
+- **Clone target when vendored:** `upstream/ishaanko/archy` (never commit upstream code to this repo)
+
+### 131. [colmap/colmap](https://github.com/colmap/colmap)
+
+- **What it is:** COLMAP - general-purpose structure-from-motion and multi-view stereo: camera poses and 3D reconstruction from photos
+- **Why it's in this catalog:** Stars/forks not fetched (GitHub API not reachable 2026-11-02): run scripts/enrich_metadata.py where it is. Language estimated from file counts in a clone. Path A of the foot-capture research note (with OpenMVS). Audit dependency licences for the build used.
+- **Category / tier:** 3d-reconstruction / extended
+- **Pipeline stages:** capture, body-model
+- **Tags:** photogrammetry, structure-from-motion, multiview
+- **Primary language (GitHub):** C++
+- **License:** BSD-3-Clause (core; see LICENSE for dependencies) _(source: repo licence file read via git clone 2026-11-02 (GitHub API not reachable from that session))_
+- **Snapshot:** ★ not recorded · forks not recorded · upstream updated 2026-11-02 (last commit, git clone 2026-11-02)
+- **Clone target when vendored:** `upstream/colmap/colmap` (never commit upstream code to this repo)
+
+### 132. [cdcseacave/openMVS](https://github.com/cdcseacave/openMVS)
+
+- **What it is:** OpenMVS - dense multi-view stereo: densification, meshing and texturing from COLMAP or other camera poses
+- **Why it's in this catalog:** Stars/forks not fetched (GitHub API not reachable 2026-11-02): run scripts/enrich_metadata.py where it is. Language estimated from file counts in a clone. AGPL-3.0: obligations extend to software used over a network; keep as an offline research tool unless cleared. Has InterfaceCOLMAP.
+- **Category / tier:** 3d-reconstruction / extended
+- **Pipeline stages:** capture, body-model
+- **Tags:** photogrammetry, multiview-stereo, meshing
+- **Primary language (GitHub):** C++
+- **License:** AGPL-3.0 _(source: repo licence file read via git clone 2026-11-02 (GitHub API not reachable from that session))_
+- **Snapshot:** ★ not recorded · forks not recorded · upstream updated 2026-10-14 (last commit, git clone 2026-11-02)
+- **Clone target when vendored:** `upstream/cdcseacave/openMVS` (never commit upstream code to this repo)
+
+### 133. [cnr-isti-vclab/meshlab](https://github.com/cnr-isti-vclab/meshlab)
+
+- **What it is:** MeshLab - open-source system for inspecting, cleaning, repairing and processing 3D triangle meshes
+- **Why it's in this catalog:** Stars/forks not fetched (GitHub API not reachable 2026-11-02): run scripts/enrich_metadata.py where it is. Language estimated from file counts in a clone. Manual inspection and cleaning of foot scans. GPL-3.0; fine as a separate tool, not to be linked into the product.
+- **Category / tier:** visualization-tools / extended
+- **Pipeline stages:** tooling, visualization
+- **Tags:** mesh-processing, mesh-cleaning, 3d-viewer
+- **Primary language (GitHub):** C++
+- **License:** GPL-3.0 _(source: repo licence file read via git clone 2026-11-02 (GitHub API not reachable from that session))_
+- **Snapshot:** ★ not recorded · forks not recorded · upstream updated 2026-07-24 (last commit, git clone 2026-11-02)
+- **Clone target when vendored:** `upstream/cnr-isti-vclab/meshlab` (never commit upstream code to this repo)
+
+### 134. [cnr-isti-vclab/PyMeshLab](https://github.com/cnr-isti-vclab/PyMeshLab)
+
+- **What it is:** PyMeshLab - Python interface to MeshLab's mesh-processing filters for scripted cleaning and remeshing
+- **Why it's in this catalog:** Stars/forks not fetched (GitHub API not reachable 2026-11-02): run scripts/enrich_metadata.py where it is. Language estimated from file counts in a clone. Scripted scan cleaning in research pipelines. GPL-3.0 applies to code that imports it.
+- **Category / tier:** visualization-tools / extended
+- **Pipeline stages:** tooling
+- **Tags:** mesh-processing, python, meshlab
+- **Primary language (GitHub):** C++
+- **License:** GPL-3.0 _(source: repo licence file read via git clone 2026-11-02 (GitHub API not reachable from that session))_
+- **Snapshot:** ★ not recorded · forks not recorded · upstream updated 2026-02-03 (last commit, git clone 2026-11-02)
+- **Clone target when vendored:** `upstream/cnr-isti-vclab/PyMeshLab` (never commit upstream code to this repo)
+
+### 135. [javeriafateh-rph/SoleFit](https://github.com/javeriafateh-rph/SoleFit)
+
+- **What it is:** SoleFit - photo-assisted foot-shape estimate and shoe recommendation prototype (Streamlit app)
+- **Why it's in this catalog:** Stars/forks not fetched (GitHub API not reachable 2026-11-02): run scripts/enrich_metadata.py where it is. Language estimated from file counts in a clone. Heuristic recommendations over a small catalog. No licence file: all-rights-reserved until cleared.
+- **Category / tier:** rehab-assistive / experimental
+- **Pipeline stages:** tooling
+- **Tags:** shoe-recommendation, foot, prototype
+- **Primary language (GitHub):** Python
+- **License:** none found in repo root (checked 2026-11-02; treat as all-rights-reserved) _(source: repo licence file read via git clone 2026-11-02 (GitHub API not reachable from that session))_
+- **Snapshot:** ★ not recorded · forks not recorded · upstream updated 2026-08-16 (last commit, git clone 2026-11-02)
+- **Clone target when vendored:** `upstream/javeriafateh-rph/SoleFit` (never commit upstream code to this repo)

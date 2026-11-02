@@ -1,6 +1,14 @@
 # Changelog
 
 ## Unreleased
+- **Catalog: 135 repos.** 18 foot-personalisation repositories added (ids 118–135): foot capture and reconstruction
+  (FOCUS, FOUND, FIND, AR_footcapture, StandardCyborgCocoa, OpenScan3, SynFoot, FootScan), insole and shoe design
+  (insole-pipeline, insole-3Designer, both OpenShoeDesigners, archy, SoleFit) and general reconstruction and mesh tools
+  (COLMAP, OpenMVS, MeshLab, PyMeshLab). Licences were read from each repository's licence file in a git clone on
+  2026-11-02. The GitHub API was not reachable then, so stars and forks are null and say so in each entry's notes; the
+  validator and test accept that only when stated (`scripts/enrich_metadata.py` fills them where the API is
+  reachable). Meshroom's licence corrected to MPL-2.0 (`LICENSE-MPL2.md`, missed by the earlier check). Foot3D's
+  notes now say its dataset comes by request form with no data licence in the README.
 - **Leg-bone models compared** (`validation/runs/mri_bones_3dbones/leg_priors.py`, `validation/runs/leg_prior_downstream.py`,
   `docs/joint-load.md`):
   - SKEL, SKEL-J and OSSO on the same 72 MRI legs, with the same geometry on every mesh. SKEL and SKEL-J agree
