@@ -522,25 +522,36 @@ def maze_refine(planned, vias, order, allowed, keepout, res=0.06, track_w=0.12, 
             path = LineString(pts).simplify(0.03)
             paths[n] = path
             near[n] = (edt(_draw([list(path.coords)], [], X, Y)) < block_line).astype(np.float32)
-        # conflicts: a line passing within clearance of another line
-        failed = []
-        for n in nets:
-            if n not in paths:
-                failed.append(n); continue
-            mark = _draw([list(paths[n].coords)], [], X, Y)
-            other = np.zeros((ny, nx), np.float32)
-            for m, nm in near.items():
-                if m != n:
-                    other += nm
-            hit = mark & (other > 0)
-            if hit.any():
-                failed.append(n)
-                hist[ndimage.binary_dilation(hit, iterations=3)] += 1.0
+        # conflicts, judged on exact geometry against the real rule (centre-to-centre track + clearance)
+        failed = sorted(set(n for n in nets if n not in paths))
+        conflict_pts = []
+        routed_n = [n for n in nets if n in paths]
+        for i, n in enumerate(routed_n):
+            for m in routed_n[i + 1:]:
+                if paths[n].distance(paths[m]) < track_w + clear + 0.005:
+                    failed += [n, m]
+                    a_, b_ = nearest_points(paths[n], paths[m])
+                    conflict_pts += [(a_.x, a_.y), (b_.x, b_.y)]
+        failed = sorted(set(failed))
         if not failed:
             break
+        if conflict_pts:
+            hist[edt(_draw([], conflict_pts, X, Y)) < 1.0] += 1.0
         pres *= 2.0
     lanes = {}
     for n in nets:
         lanes[n] = (list(paths[n].coords) + list(planned[n][-2:])) if n in paths else planned[n]
     maze_refine.rounds_used = rnd + 1
     return lanes, failed
+
+
+def crossings(lanes, ends_trim=2):
+    """Pairs of sense lines whose routed paths (fan-out excluded) cross each other."""
+    names = list(lanes)
+    out = []
+    for i, n in enumerate(names):
+        a = LineString(lanes[n][:-ends_trim])
+        for m in names[i + 1:]:
+            if a.crosses(LineString(lanes[m][:-ends_trim])):
+                out.append((n, m))
+    return out

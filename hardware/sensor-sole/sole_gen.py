@@ -420,7 +420,7 @@ def route_copper(sole, tail, regs, copper, paths, seeds, tail_start, tail_end, t
     here = str(Path(__file__).resolve().parent)
     if here not in sys.path:                                  # also under `python -I`
         sys.path.insert(0, here)
-    from sole_route import build_lanes, maze_refine, route_common, stubs_to_combs
+    from sole_route import build_lanes, crossings, maze_refine, route_common, stubs_to_combs
     C = CONTACT
     lan = build_lanes({n: paths[n] for n in regs if paths.get(n)}, 0.25, tail_start, tail_dir, tail_end, seeds,
                       FAB["pitch"], FAB["ffc_pitch"], C["pad_len"], C["edge_gap"], n_pins,
@@ -433,9 +433,19 @@ def route_copper(sole, tail, regs, copper, paths, seeds, tail_start, tail_end, t
     fs = np.asarray(tail_end, float) - tdv * (C["edge_gap"] + C["pad_len"] + 3.0)     # fan start line
     contact_zone = Polygon([fs - acv * 20 + tdv * 0.05, fs + acv * 20 + tdv * 0.05,
                             fs + acv * 20 + tdv * 30, fs - acv * 20 + tdv * 30])
-    lanes, maze_failed = maze_refine(planned, lan["vias"], order, allowed, keepout,
-                                     track_w=C["sense_w"], clear=C["clear"], via_d=C["via_d"],
-                                     no_go=contact_zone)
+    swaps = []
+    for _ in range(3):
+        lanes, maze_failed = maze_refine(planned, lan["vias"], order, allowed, keepout,
+                                         track_w=C["sense_w"], clear=C["clear"], via_d=C["via_d"],
+                                         no_go=contact_zone)
+        cross = crossings(lanes)
+        if not cross:
+            break
+        # two lines whose fixed ends force a crossing: swap their contacts (fan-out and pin), route again
+        for n, m in cross:
+            planned[n], planned[m] = planned[n][:-3] + planned[m][-3:], planned[m][:-3] + planned[n][-3:]
+            po = lan["pin_order"]; i, j = po.index(n), po.index(m); po[i], po[j] = po[j], po[i]
+            swaps.append((n, m))
     lan["lanes"] = lanes
     common = {n: copper[n][0] for n in copper}; sense = {n: copper[n][1] for n in copper}
     stubs, near_common = stubs_to_combs(lan["vias"], sense, common, C["sense_w"], C["clear"])
@@ -453,7 +463,8 @@ def route_copper(sole, tail, regs, copper, paths, seeds, tail_start, tail_end, t
     com_tail[0][0] = start_xy                                   # the tail run starts where the tree starts
     checks["routing"] = dict(
         sense_routed=len(lan["lanes"]) - len(maze_failed), maze_failed=maze_failed,
-        negotiation_rounds=getattr(maze_refine, "rounds_used", None),
+        negotiation_rounds=getattr(maze_refine, "rounds_used", None), pin_swaps=swaps,
+        crossings_left=crossings(lanes),
         common_unreached=unreached, stubs_near_common=near_common,
         longest_stub_mm=round(max((LineString(v).length for v in stubs.values()), default=0), 2),
         vias=len(lan["vias"]) + 2)
