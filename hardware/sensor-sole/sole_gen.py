@@ -1,0 +1,530 @@
+#!/usr/bin/env python3
+# SPDX-FileCopyrightText: 2026 Rehab Agent meta-repo contributors
+# SPDX-License-Identifier: CERN-OHL-S-2.0
+"""Sensor sole v0: a five-toe pressure-sensing sole, generated from the foot.
+
+One passive flex circuit lies in the shoe; the electronics sit in a pod outside it. This script makes
+the sole's geometry for any size and any foot:
+
+  foot spec  -> outline with five toe tabs (or a toe-less variant)
+             -> sensing regions anchored to anatomy (heel, midfoot, five metatarsal heads, five toes)
+             -> a flex tail leaving the sole at the medial arch (default) or the heel
+             -> a routing plan: every region's signal line to the tail, through channels between regions,
+                with the channels widened where the bundle needs it
+             -> checks (fit, clearances, toe widths, bundle capacity, bend zone)
+             -> SVG, DXF (for KiCad), JSON and a PNG preview
+
+Frame: the foot frame of the twin. x runs from the heel point along the heel -> 2nd-toe axis; z is the
+foot's own rightward axis. A right foot is generated (lateral = +z); a left foot is its mirror.
+All lengths are millimetres. Proportions are population defaults, every one of them overridable by
+a person's scan landmarks (--foot). They are a starting shape, not a measurement.
+
+Usage:
+  sole_gen.py --size 42 --out OUT/            # EU 42, default proportions
+  sole_gen.py --length 268 --width 103 ...    # measured foot
+  sole_gen.py --foot person.json ...          # landmarks and sensor choices from a scan
+"""
+import argparse, json, math
+from pathlib import Path
+
+import numpy as np
+from scipy import ndimage
+from scipy.sparse import csr_matrix
+from scipy.sparse.csgraph import dijkstra
+from shapely import affinity
+from shapely.geometry import LineString, MultiPolygon, Point, Polygon, box
+from shapely.ops import unary_union, voronoi_diagram
+
+# ----------------------------------------------------------------------------------------------- defaults
+FAB = dict(                      # flex-circuit rules (conservative for 2-layer polyimide)
+    edge_margin=2.0,             # copper-free border along the outline
+    region_gap=1.2,              # minimum gap between two sensing regions
+    pitch=0.30,                  # trace + space in a bundle (0.15 / 0.15)
+    route_clear=0.4,             # bundle to region clearance
+    min_toe_region=6.0,          # narrowest toe region worth sensing
+    comb_finger=0.20, comb_gap=0.20,   # interdigitated electrode (shunt-mode sensor) finger / gap
+    ffc_pitch=0.5,               # connector pitch at the end of the tail
+    tail_len=70.0,               # tail length outside the sole, to the pod
+    bend_band=12.0,              # half-width of the metatarsophalangeal bend zone (no vias)
+)
+
+DEFAULT_SENSORS = [             # name, zone, anchor (see seeds()); 16 channels like OpenGo
+    "heel_post", "heel_med", "heel_lat",
+    "arch_med", "mid_lat_prox", "mid_lat_dist",
+    "mt1", "mt2", "mt3", "mt4", "mt5",
+    "toe1", "toe2", "toe3", "toe4", "toe5",
+]
+
+
+def eu_to_length(eu):
+    """EU size -> foot length (mm). An approximation (Vibram EU 42 fits ~264-273 mm); measure when you can."""
+    return 6.67 * eu - 10.0
+
+
+def foot_spec(length=None, width=None, size=None, over=None):
+    """Landmarks of a right foot in the foot frame. `over` replaces any default (from a scan)."""
+    L = length or eu_to_length(size or 42)
+    W = width or 0.385 * L                     # ball width
+    Wh = 0.255 * L                             # heel width
+    s = dict(L=L, W=W, Wh=Wh,
+             mt1=(0.725 * L, -0.40 * W), mt5=(0.635 * L, 0.60 * W),        # medial / lateral ball edges
+             # toes: tip x (fraction of L), width (fraction of W), web x behind the toe's medial side
+             toes=[dict(tip=1.000, w=0.250), dict(tip=0.985, w=0.155), dict(tip=0.955, w=0.145),
+                   dict(tip=0.920, w=0.140), dict(tip=0.870, w=0.140)],
+             webs=[0.775, 0.790, 0.775, 0.745],                            # web x / L between toes i, i+1
+             toe_gap=2.0,                                                  # slit width between toe tabs
+             toe_tabs=[True] * 5)                                          # False: stop at the web
+    if over:
+        for k, v in over.items():
+            s[k] = v
+    return s
+
+
+# ------------------------------------------------------------------------------------------------ outline
+def outline(s):
+    """Sole outline (shapely Polygon), toe tab polygons and the web points."""
+    L, W, Wh = s["L"], s["W"], s["Wh"]
+    zmed_ball, zlat_ball = s["mt1"][1], s["mt5"][1]
+    # toe tabs: laid side by side from the medial ball edge, each a rounded strip from its web to its tip
+    widths = [t["w"] * W for t in s["toes"]]
+    span = sum(widths) + s["toe_gap"] * 4
+    z0 = zmed_ball + 0.02 * W                       # hallux medial edge just inside the ball edge
+    if z0 + span > zlat_ball:                       # keep the toes within the ball width
+        z0 = zlat_ball - span
+    toes, centers, z = [], [], z0
+    web_x = [w * L for w in s["webs"]]
+    for i, (t, w) in enumerate(zip(s["toes"], widths)):
+        base = min(web_x[max(0, i - 1)], web_x[min(i, 3)]) - 12.0      # overlaps the body: no gap
+        tip = t["tip"] * L
+        r = w / 2
+        strip = box(base, z, tip - r, z + w).union(Point(tip - r, z + r).buffer(r, 32))
+        toes.append(strip); centers.append(z + r); z += w + s["toe_gap"]
+    # body: one ordered loop -- heel arc (lateral half), lateral edge, front at the toe bases, medial edge,
+    # heel arc (medial half). Straight segments, then rounded by an open/close buffer (no spline overshoot).
+    hc = Wh / 2
+    arc = lambda a0, a1: [(hc + hc * math.cos(a), hc * math.sin(a)) for a in np.linspace(a0, a1, 10)]
+    lat = [(0.30 * L, Wh / 2 + 0.05 * W), (0.48 * L, 0.46 * W), (s["mt5"][0], zlat_ball)]
+    lat_front = (web_x[3] - 2, z0 + span)                          # lateral side of the 5th toe base
+    med_front = (web_x[0] - 2, zmed_ball + 0.01 * W)               # medial side of the hallux base
+    med = [(s["mt1"][0], zmed_ball), (0.50 * L, -0.33 * W), (0.30 * L, -Wh / 2 - 0.01 * W)]
+    pts = arc(math.pi, math.pi / 2) + lat + [lat_front, med_front] + med + arc(-math.pi / 2, -math.pi)
+    body = Polygon(pts).buffer(0).buffer(8, 32).buffer(-8, 32)
+    # webs: the sole between two toe tabs ends at the web; cut a slit from the web forward
+    sole = body
+    for i, t in enumerate(toes):
+        sole = sole.union(t) if s["toe_tabs"][i] else sole
+    for i in range(4):
+        if not (s["toe_tabs"][i] and s["toe_tabs"][i + 1]):
+            continue
+        zg = centers[i] + widths[i] / 2 + s["toe_gap"] / 2
+        sole = sole.difference(box(web_x[i], zg - s["toe_gap"] / 2, L + 5, zg + s["toe_gap"] / 2))
+    front_cut = box(max(web_x) + 1, -W, L + 10, W)      # nothing beyond the webs except toe tabs
+    keep = unary_union([t for t, on in zip(toes, s["toe_tabs"]) if on] + [box(-10, -W, max(web_x) + 1, W)])
+    sole = sole.difference(front_cut.difference(keep))
+    sole = sole.buffer(1.0).buffer(-1.0)               # round off corners
+    if isinstance(sole, MultiPolygon):
+        sole = max(sole.geoms, key=lambda g: g.area)
+    return sole, [t if on else None for t, on in zip(toes, s["toe_tabs"])], centers, web_x
+
+
+# ------------------------------------------------------------------------------------------------ sensors
+def seeds(s, centers):
+    """Anatomical anchor of every sensing region (right foot)."""
+    L, W, Wh = s["L"], s["W"], s["Wh"]
+    (x1, z1), (x5, z5) = s["mt1"], s["mt5"]
+    mt = {f"mt{k}": (x1 + (x5 - x1) * f, z1 + (z5 - z1) * f) for k, f in zip(range(1, 6), (0.13, 0.33, 0.52, 0.70, 0.87))}
+    mt = {k: (x - 0.035 * L, z) for k, (x, z) in mt.items()}            # head centres, behind the ball edge line
+    out = dict(heel_post=(0.055 * L, 0.0), heel_med=(0.15 * L, -0.22 * Wh), heel_lat=(0.15 * L, 0.22 * Wh),
+               arch_med=(0.42 * L, -0.17 * W), mid_lat_prox=(0.36 * L, 0.33 * W), mid_lat_dist=(0.52 * L, 0.40 * W),
+               **mt)
+    for i, t in enumerate(s["toes"]):
+        out[f"toe{i + 1}"] = (t["tip"] * L - (0.55 if i == 0 else 0.6) * t["w"] * W, centers[i])
+    return out
+
+
+def regions(sole, toes, web_x, s, names, mode="region", disc=None):
+    """Sensing regions: Voronoi tiles of the anchors clipped to the sole (region mode) or discs (point mode)."""
+    sd = seeds(s, [c for c in s["_centers"]])
+    inner = sole.buffer(-FAB["edge_margin"])
+    own_web = [max(web_x[max(0, i - 1)], web_x[min(i, 3)]) for i in range(5)]   # a toe starts at its higher web
+    toe_zone = {f"toe{i + 1}": t.intersection(box(own_web[i] + 2, -999, 999, 999)).buffer(0) if t is not None else None
+                for i, t in enumerate(toes)}
+    body_zone = inner.difference(unary_union([z.buffer(0.5) for z in toe_zone.values() if z is not None]))
+    out = {}
+    if mode == "point":
+        d = disc or {}
+        for n in names:
+            r = d.get(n, 16 if "heel" in n else 14 if n.startswith("mt") or "mid" in n or "arch" in n else 12) / 2
+            out[n] = Point(sd[n]).buffer(r, 48).intersection(inner)
+        return out, sd
+    body_names = [n for n in names if not n.startswith("toe")]
+    from shapely.geometry import MultiPoint
+    vor = voronoi_diagram(MultiPoint([sd[n] for n in body_names]), envelope=box(-50, -200, 400, 200))
+    for cell in vor.geoms:                       # full cells, no gaps yet: routing runs along their borders
+        for n in body_names:
+            if cell.contains(Point(sd[n])):
+                out[n] = cell.intersection(body_zone)
+    for n in names:
+        if n.startswith("toe"):
+            z = toe_zone.get(n)
+            if z is not None and not z.is_empty:
+                out[n] = z.intersection(inner)
+    return out, sd
+
+
+# ------------------------------------------------------------------------------------------------ routing
+def tail_geometry(sole, s, n_lines, exit="arch"):
+    """Tail strip leaving the sole perpendicular to its edge; width from the conductor count."""
+    L = s["L"]
+    w = n_lines * FAB["ffc_pitch"] + 2 * 1.5
+    if exit == "heel":
+        p, d = np.array([0.0, 0.0]), np.array([-1.0, 0.0])
+    else:                                            # medial arch: highest point of the arch, least load
+        x = 0.42 * L
+        line = LineString([(x, 0), (x, -400)])
+        q = line.intersection(sole.exterior)
+        q = min([q] if q.geom_type == "Point" else list(q.geoms), key=lambda g: abs(g.y))
+        p, d = np.array([q.x, q.y]), np.array([0.0, -1.0])
+    a = p - d * 4                                    # start a little inside the sole
+    b = p + d * FAB["tail_len"]
+    n = np.array([-d[1], d[0]]) * w / 2
+    strip = Polygon([a + n, b + n, b - n, a - n])
+    return strip, tuple(a), tuple(p), w
+
+
+def route(sole, regs, tail_start, res=0.25):
+    """Route every region's signal line to the tail along region borders; carve the bundles out.
+
+    A label raster of the regions gives the borders (and the sole edge). The path cost rises steeply with
+    distance from a border, so lines run in the seams between regions, as on a hand-routed insole, and
+    bundles form where seams meet. One Dijkstra from the tail entry gives every region's shortest path; each
+    path ends at the border point of its own region nearest the tail (the via). Bundles are then carved out of
+    the regions at their real width: n lines x pitch + clearance on both sides.
+    """
+    from matplotlib.path import Path as MP
+    minx, miny, maxx, maxy = sole.bounds
+    nx, ny = int((maxx - minx) / res) + 3, int((maxy - miny) / res) + 3
+    X = minx - res + np.arange(nx) * res; Y = miny - res + np.arange(ny) * res
+    gx, gy = np.meshgrid(X, Y); pts_all = np.c_[gx.ravel(), gy.ravel()]
+    def rast(geom):
+        m = np.zeros(ny * nx, bool)
+        for g in ([geom] if geom.geom_type == "Polygon" else list(getattr(geom, "geoms", []))):
+            if g.is_empty:
+                continue
+            inside = MP(np.asarray(g.exterior.coords)).contains_points(pts_all)
+            for h in g.interiors:
+                inside &= ~MP(np.asarray(h.coords)).contains_points(pts_all)
+            m |= inside
+        return m.reshape(ny, nx)
+    # bundles may run along the sole's edge (a perimeter channel), so their centre line keeps half the widest
+    # bundle plus clearance inside the copper-free margin
+    half = (len(regs) + 1) * FAB["pitch"] / 2 + FAB["route_clear"]
+    inner = rast(sole.buffer(-FAB["edge_margin"] - half))
+    names = [n for n, r in regs.items() if not r.is_empty]
+    lab = np.full((ny, nx), -1, int)
+    for k, n in enumerate(names):
+        lab[rast(regs[n]) & inner] = k
+    free = inner.copy()
+    # borders: label changes between neighbours, or the edge of the usable sole
+    edge = np.zeros_like(free)
+    for sh in ((0, 1), (1, 0), (0, -1), (-1, 0)):
+        nb = np.roll(np.roll(lab, sh[0], 0), sh[1], 1)
+        ninner = np.roll(np.roll(inner, sh[0], 0), sh[1], 1)
+        edge |= free & ((nb != lab) | ~ninner)
+    bd = ndimage.distance_transform_edt(~edge) * res                  # mm from the nearest border
+    cost = np.where(free, 1.0 + 15.0 * bd, np.inf)
+    idx = -np.ones((ny, nx), int); fi = np.flatnonzero(free.ravel()); idx.ravel()[fi] = np.arange(len(fi))
+    rows, cols, w = [], [], []
+    for dy, dx in ((0, 1), (1, 0), (1, 1), (1, -1)):                 # 8-connected grid, each edge once
+        a = idx[0:ny - dy, max(0, -dx):nx - max(0, dx)]
+        b = idx[dy:ny, max(0, dx):nx - max(0, -dx)]
+        ok = (a >= 0) & (b >= 0)
+        ai, bi = a[ok], b[ok]
+        cw = 0.5 * (cost.ravel()[fi[ai]] + cost.ravel()[fi[bi]]) * res * math.hypot(dx, dy)
+        rows += [ai, bi]; cols += [bi, ai]; w += [cw, cw]
+    G = csr_matrix((np.concatenate(w), (np.concatenate(rows), np.concatenate(cols))), shape=(len(fi), len(fi)))
+    cand = np.argwhere(free)
+    i0, j0 = (tail_start[1] - Y[0]) / res, (tail_start[0] - X[0]) / res
+    src = idx[tuple(cand[np.argmin((cand[:, 0] - i0) ** 2 + (cand[:, 1] - j0) ** 2)])]
+    D, pred = dijkstra(G, indices=src, return_predecessors=True)
+    yy, xx = np.unravel_index(fi, (ny, nx))
+    paths, load = {}, np.zeros((ny, nx), int)
+    for k, n in enumerate(names):
+        ends = idx[(lab == k) & (bd <= 0.6) & free]
+        ends = ends[np.isfinite(D[ends])]
+        if len(ends) == 0:
+            paths[n] = None; continue
+        e = ends[np.argmin(D[ends])]
+        seq = [e]
+        while seq[-1] != src and pred[seq[-1]] >= 0:
+            seq.append(pred[seq[-1]])
+        paths[n] = [(X[xx[q]], Y[yy[q]]) for q in seq]
+        load[yy[seq], xx[seq]] += 1
+    # bundle corridors at their true width; how much each region gives up to them
+    disks = []
+    for n, pts in paths.items():
+        if not pts:
+            continue
+        for p in pts[::3]:
+            i, j = round((p[1] - Y[0]) / res), round((p[0] - X[0]) / res)
+            disks.append(Point(p).buffer(load[i, j] * FAB["pitch"] / 2 + FAB["route_clear"], 8))
+    carve = unary_union(disks) if disks else Polygon()
+    # capacity: the corridor must stay inside the usable sole wherever it runs
+    usable = sole.buffer(-FAB["edge_margin"] + FAB["route_clear"])
+    spill = carve.difference(usable).area
+    worst = {"corridor_outside_sole_mm2": round(spill, 1)}
+    return paths, load, worst, carve, (X, Y, res)
+
+
+# ------------------------------------------------------------------------------------------------ build
+def build(s, names, mode, exit, side="R"):
+    sole, toes, centers, web_x = outline(s)
+    s["_centers"] = centers
+    regs, sd = regions(sole, toes, web_x, s, names, mode)
+    # names whose toe tab is off or too narrow are dropped with a reason
+    dropped = {}
+    for n in list(regs):
+        r = regs[n]
+        if r is None or r.is_empty:
+            dropped[n] = "no room (toe tab off or region empty)"; regs.pop(n); continue
+        if n.startswith("toe"):
+            w = float(np.ptp(np.asarray(r.minimum_rotated_rectangle.exterior.coords)[:, 1]))
+            if w < FAB["min_toe_region"]:
+                dropped[n] = f"toe region {w:.1f} mm wide < {FAB['min_toe_region']} mm"; regs.pop(n)
+    n_lines = len(regs) + 2                          # one signal per region + common + spare
+    tail, tail_start, tail_exit, tail_w = tail_geometry(sole, s, n_lines, exit)
+    paths, load, spill, carve, _grid = route(sole, regs, tail_start)
+    # final regions: the gap between neighbours, then room for the bundles; keep the largest piece
+    before = {n: r.area for n, r in regs.items()}
+    regs = {n: r.buffer(-FAB["region_gap"] / 2) for n, r in regs.items()}
+    if not carve.is_empty:
+        regs = {n: r.difference(carve) for n, r in regs.items()}
+    for n, r in list(regs.items()):
+        if isinstance(r, MultiPolygon):
+            regs[n] = max(r.geoms, key=lambda g: g.area)
+    plate = sole.union(tail)
+    # checks
+    m1, m5 = np.array(sd["mt1"]), np.array(sd["mt5"])          # metatarsophalangeal bend line: through the
+    t = (m1 - m5) / np.linalg.norm(m1 - m5); nrm = np.array([t[1], -t[0]])   # MT heads, 8 mm distal
+    if nrm[0] < 0:
+        nrm = -nrm
+    bend_pt = m5 + nrm * 8.0
+    vias = {n: pts[0] for n, pts in paths.items() if pts}
+    in_bend = [n for n, v in vias.items() if abs(np.dot(np.array(v) - bend_pt, nrm)) < FAB["bend_band"]]
+    cover = sum(r.area for r in regs.values()) / sole.area
+    kept = {n: r.area / before[n] for n, r in regs.items() if before.get(n)}
+    unrouted = [n for n, p in paths.items() if not p]
+    checks = dict(
+        regions=len(regs), dropped=dropped, unrouted=unrouted,
+        coverage_pct=round(100 * cover, 1),
+        max_bundle=int(load.max()),
+        corridor_outside_sole_mm2=spill["corridor_outside_sole_mm2"],
+        smallest_region=min(((n, round(r.area)) for n, r in regs.items()), key=lambda x: x[1]),
+        least_area_kept=min(((n, round(100 * v)) for n, v in kept.items()), key=lambda x: x[1]),
+        vias_in_bend_zone=in_bend,
+        tail_width_mm=round(tail_w, 1), connector_pins=n_lines,
+        regions_inside=all(sole.buffer(-FAB["edge_margin"] + 0.05).contains(r) for r in regs.values()),
+        min_region_gap_mm=round(min((a.distance(b) for i, a in enumerate(regs.values()) for b in list(regs.values())[i + 1:]), default=0), 2),
+    )
+    copper = {n: combs(r, t) for n, r in regs.items()} if mode == "region" else {}
+    if copper:
+        checks["comb_connected"] = all(getattr(a, 'geom_type', '') == 'Polygon' and getattr(b, 'geom_type', '') == 'Polygon'
+                                         for a, b in copper.values())
+        checks["comb_min_spacing_mm"] = round(min(a.distance(b) for a, b in copper.values()), 3)
+        fill = {n: (a.area + b.area) / regs[n].area for n, (a, b) in copper.items()}
+        checks["comb_copper_fill_pct"] = [round(100 * min(fill.values())), round(100 * max(fill.values()))]
+    geo = dict(sole=sole, tail=tail, plate=plate, regions=regs, seeds=sd, paths=paths, toes=toes, web_x=web_x,
+               bend=(bend_pt, t), tail_exit=tail_exit, copper=copper)
+    if side == "L":                                   # mirror: z -> -z
+        m = lambda g: affinity.scale(g, 1, -1, origin=(0, 0))
+        geo = dict(geo, mirrored=True, sole=m(sole), tail=m(tail), plate=m(plate), regions={k: m(v) for k, v in regs.items()},
+                   copper={k: (m(a), m(b)) for k, (a, b) in copper.items()},
+                   seeds={k: (v[0], -v[1]) for k, v in sd.items()},
+                   paths={k: [(p[0], -p[1]) for p in v] if v else v for k, v in paths.items()},
+                   tail_exit=(tail_exit[0], -tail_exit[1]))
+    return geo, checks
+
+
+# ------------------------------------------------------------------------------------------------ copper
+def combs(region, bend_dir, finger=None, gap=None, spine=0.3):
+    """Two interleaved electrode combs filling a region (shunt-mode force-sensing resistor).
+
+    Fingers run parallel to the bend line (`bend_dir`), so bending at the toe joints strains them least.
+    Returns (sense, common): sense fingers join a spine on one side, common fingers a spine on the other.
+    A piezoresistive film over the region bridges the two combs; its conductance rises with load.
+    """
+    finger = finger or FAB["comb_finger"]; gap = gap or FAB["comb_gap"]
+    ang = math.degrees(math.atan2(bend_dir[1], bend_dir[0]))
+    R = affinity.rotate(region, -ang, origin=(0, 0))           # fingers along the local x axis
+    if R.is_empty or R.area < 4:
+        return Polygon(), Polygon()
+    minx, miny, maxx, maxy = R.bounds
+    band = R.difference(R.buffer(-(spine + gap)))                # outer band holds the two spines
+    # spines on opposite ends of the fingers (low x / high x halves of the band)
+    xc = R.centroid.x
+    spA = band.intersection(box(minx - 1, miny - 1, xc - gap / 2, maxy + 1))
+    spB = band.intersection(box(xc + gap / 2, miny - 1, maxx + 1, maxy + 1))
+    core = R.buffer(-(spine + gap))
+    fa, fb = [], []
+    y, k = miny, 0
+    while y < maxy:
+        strip = box(minx - 1, y, maxx + 1, y + finger)
+        if k % 2 == 0:
+            fa.append(strip.intersection(R).difference(spB.buffer(gap)).intersection(core.union(spA)))
+        else:
+            fb.append(strip.intersection(R).difference(spA.buffer(gap)).intersection(core.union(spB)))
+        y += finger + gap; k += 1
+    A = unary_union([spA] + fa); B = unary_union([spB] + fb)
+    # fingers that cannot reach their spine (sloping or concave corners) would float: keep the connected comb
+    big = lambda g: max(g.geoms, key=lambda q: q.area) if g.geom_type == "MultiPolygon" else g
+    back = lambda g: affinity.rotate(g, ang, origin=(0, 0))
+    return back(big(A)), back(big(B))
+
+
+# ------------------------------------------------------------------------------------------------ export
+COL = dict(sole="#1f2937", tail="#6b7280", region="#2f6f8f", route="#c2410c", seed="#111827", bend="#a16207")
+
+
+def _poly_paths(g):
+    gs = [g] if g.geom_type == "Polygon" else list(getattr(g, "geoms", []))
+    out = []
+    for p in gs:
+        for ring in [p.exterior] + list(p.interiors):
+            c = np.asarray(ring.coords)
+            out.append("M" + " L".join(f"{x:.2f},{-y:.2f}" for x, y in c) + " Z")
+    return " ".join(out)
+
+
+def to_svg(geo, path, title):
+    minx, miny, maxx, maxy = geo["plate"].bounds
+    pad = 6
+    vb = f"{minx - pad:.1f} {-maxy - pad:.1f} {maxx - minx + 2 * pad:.1f} {maxy - miny + 2 * pad + 8:.1f}"
+    el = [f'<path d="{_poly_paths(geo["plate"])}" fill="#f3f4f6" stroke="{COL["sole"]}" stroke-width="0.3"/>']
+    for n, r in geo["regions"].items():
+        el.append(f'<path d="{_poly_paths(r)}" fill="{COL["region"]}" fill-opacity="0.35" stroke="{COL["region"]}" stroke-width="0.2"><title>{n}</title></path>')
+    for n, pts in geo["paths"].items():
+        if pts:
+            el.append('<polyline points="' + " ".join(f"{x:.2f},{-y:.2f}" for x, y in pts[::2]) +
+                      f'" fill="none" stroke="{COL["route"]}" stroke-width="0.25" stroke-opacity="0.8"/>')
+    for n, (x, z) in geo["seeds"].items():
+        if n in geo["regions"]:
+            el.append(f'<text x="{x:.1f}" y="{-z + 1:.1f}" font-size="3" text-anchor="middle" font-family="sans-serif" fill="{COL["seed"]}">{n}</text>')
+    el.append(f'<text x="{minx:.1f}" y="{-miny + pad + 4:.1f}" font-size="4" font-family="sans-serif">{title}</text>')
+    path.write_text(f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="{vb}" width="{(maxx - minx + 2 * pad):.0f}mm" '
+                    f'height="{(maxy - miny + 2 * pad + 8):.0f}mm">' + "".join(el) + "</svg>")
+
+
+def to_dxf(geo, path):
+    import ezdxf
+    doc = ezdxf.new(); msp = doc.modelspace()
+    for layer in ("Edge.Cuts", "F.Cu.regions", "F.Cu.common", "F.Cu.sense", "Routing.plan", "Seeds"):
+        doc.layers.add(layer)
+    def add(g, layer):
+        gs = [g] if g.geom_type == "Polygon" else list(getattr(g, "geoms", []))
+        for p in gs:
+            for ring in [p.exterior] + list(p.interiors):
+                msp.add_lwpolyline(list(ring.coords), close=True, dxfattribs={"layer": layer})
+    add(geo["plate"], "Edge.Cuts")
+    for r in geo["regions"].values():
+        add(r, "F.Cu.regions")
+    for a, b in geo.get("copper", {}).values():
+        add(a, "F.Cu.common"); add(b, "F.Cu.sense")
+    for pts in geo["paths"].values():
+        if pts:
+            msp.add_lwpolyline(pts[::2], dxfattribs={"layer": "Routing.plan"})
+    for n, (x, z) in geo["seeds"].items():
+        if n in geo["regions"]:
+            msp.add_text(n, dxfattribs={"layer": "Seeds", "height": 2}).set_placement((x, z))
+    doc.saveas(path)
+
+
+def to_json(geo, checks, s, args, path):
+    poly = lambda g: [list(map(lambda c: [round(c[0], 2), round(c[1], 2)], np.asarray(p.exterior.coords)))
+                      for p in ([g] if g.geom_type == "Polygon" else list(g.geoms))]
+    out = dict(
+        generator="sole_gen v0", frame="foot frame: x heel->2nd toe, z rightward; mm",
+        side=args.side, mode=args.mode, tail_exit=args.exit,
+        foot={k: v for k, v in s.items() if not k.startswith("_")},
+        fab=FAB, checks=checks,
+        regions={n: dict(seed=[round(v, 2) for v in geo["seeds"][n]], area_mm2=round(r.area, 1), polygon=poly(r))
+                 for n, r in geo["regions"].items()},
+        outline=poly(geo["plate"]),
+        routing_plan={n: [[round(x, 2), round(y, 2)] for x, y in pts[::2]] for n, pts in geo["paths"].items() if pts},
+    )
+    path.write_text(json.dumps(out, indent=1))
+
+
+def to_png(geo, checks, path, title):
+    import matplotlib; matplotlib.use("Agg"); import matplotlib.pyplot as plt
+    fig, ax = plt.subplots(figsize=(11, 5.2))
+    def fill(g, **kw):
+        for p in ([g] if g.geom_type == "Polygon" else list(getattr(g, "geoms", []))):
+            ax.fill(*p.exterior.xy, **kw)
+    fill(geo["plate"], fc="#f3f4f6", ec=COL["sole"], lw=0.8)
+    for n, r in geo["regions"].items():
+        fill(r, fc=COL["region"], alpha=0.45, ec=COL["region"], lw=0.5)
+        x, z = geo["seeds"][n]; ax.text(x, z, n, fontsize=6, ha="center", va="center")
+    for pts in geo["paths"].values():
+        if pts:
+            a = np.asarray(pts); ax.plot(a[:, 0], a[:, 1], color=COL["route"], lw=0.6, alpha=0.8)
+    (bp, bt) = geo["bend"]
+    if geo.get("mirrored"):
+        bp, bt = np.array([bp[0], -bp[1]]), np.array([bt[0], -bt[1]])
+    seg = np.array([bp - bt * 45, bp + bt * 45])
+    ax.plot(seg[:, 0], seg[:, 1], color=COL["bend"], ls=":", lw=0.9)
+    ax.set_aspect("equal"); ax.set_title(title, fontsize=9)
+    ax.text(0.01, 0.01, ", ".join(f"{k}={v}" for k, v in checks.items() if k in
+            ("regions", "coverage_pct", "max_bundle", "least_area_kept", "tail_width_mm", "vias_in_bend_zone")),
+            transform=ax.transAxes, fontsize=7)
+    fig.tight_layout(); fig.savefig(path, dpi=110); plt.close(fig)
+
+
+def to_png_zoom(geo, path, name="mt2", half=9.0):
+    import matplotlib; matplotlib.use("Agg"); import matplotlib.pyplot as plt
+    if name not in geo.get("copper", {}):
+        return
+    a, b = geo["copper"][name]; c = geo["regions"][name].centroid
+    fig, ax = plt.subplots(figsize=(6, 6))
+    for g, col in ((a, "#2f6f8f"), (b, "#c2410c")):
+        for p in ([g] if g.geom_type == "Polygon" else list(g.geoms)):
+            ax.fill(*p.exterior.xy, fc=col, ec="none")
+            for h in p.interiors:
+                ax.fill(*h.xy, fc="white", ec="none")
+    ax.set_xlim(c.x - half, c.x + half); ax.set_ylim(c.y - half, c.y + half); ax.set_aspect("equal")
+    ax.set_title(f"{name}: common comb (blue) and sense comb (orange), finger/gap {FAB['comb_finger']}/{FAB['comb_gap']} mm", fontsize=8)
+    fig.tight_layout(); fig.savefig(path, dpi=120); plt.close(fig)
+
+
+def main():
+    ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
+    ap.add_argument("--size", type=float, default=42, help="EU size (used when --length is not given)")
+    ap.add_argument("--length", type=float, help="measured foot length, mm")
+    ap.add_argument("--width", type=float, help="measured ball width, mm")
+    ap.add_argument("--foot", help="JSON with landmark overrides and sensor choices (from a scan)")
+    ap.add_argument("--side", choices=("R", "L"), default="R")
+    ap.add_argument("--mode", choices=("region", "point"), default="region")
+    ap.add_argument("--exit", choices=("arch", "heel"), default="arch")
+    ap.add_argument("--out", required=True)
+    ap.add_argument("--name", default=None)
+    a = ap.parse_args()
+    over, names = {}, list(DEFAULT_SENSORS)
+    if a.foot:
+        cfg = json.loads(Path(a.foot).read_text())
+        over = cfg.get("landmarks", {})
+        names = cfg.get("sensors", names)
+        for k in ("length", "width", "side", "mode", "exit"):
+            if k in cfg and getattr(a, k) in (None, ap.get_default(k)):
+                setattr(a, k, cfg[k])
+    s = foot_spec(a.length, a.width, a.size, over)
+    geo, checks = build(s, names, a.mode, a.exit, a.side)
+    out = Path(a.out); out.mkdir(parents=True, exist_ok=True)
+    stem = a.name or f"sole_{f'EU{a.size:g}' if not a.length else f'L{a.length:.0f}'}_{a.side}_{a.mode}"
+    title = f"{stem}: foot length {s['L']:.0f} mm, ball width {s['W']:.0f} mm, {len(geo['regions'])} regions, tail exit {a.exit}"
+    to_svg(geo, out / f"{stem}.svg", title); to_dxf(geo, out / f"{stem}.dxf")
+    to_json(geo, checks, s, a, out / f"{stem}.json"); to_png(geo, checks, out / f"{stem}.png", title)
+    to_png_zoom(geo, out / f"{stem}_comb_mt2.png")
+    print(json.dumps(dict(stem=stem, **checks), indent=1))
+
+
+if __name__ == "__main__":
+    main()

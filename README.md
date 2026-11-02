@@ -228,5 +228,7 @@ See [`CONTRIBUTING.md`](CONTRIBUTING.md). Adding a repo = one JSON entry + regen
 ## License
 
 This meta-repo's own docs and scripts: MIT (see `LICENSE`).
+Exception: the open hardware in [`hardware/sensor-sole/`](hardware/sensor-sole/) is licensed under
+CERN-OHL-S-2.0 (see that folder's `LICENSE`).
 **Upstream repositories and model weights keep their own licenses** — this repo
 grants you no rights to them.

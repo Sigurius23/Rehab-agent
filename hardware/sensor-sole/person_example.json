@@ -1,0 +1,13 @@
+{
+  "_comment": "Example person: values a phone foot scan would supply (illustrative, not a real person).",
+  "length": 262, "width": 108, "side": "R",
+  "landmarks": {
+    "mt1": [192.0, -43.0],
+    "mt5": [166.0, 63.0],
+    "toes": [{"tip": 0.975, "w": 0.245}, {"tip": 1.000, "w": 0.150}, {"tip": 0.965, "w": 0.140},
+             {"tip": 0.925, "w": 0.135}, {"tip": 0.870, "w": 0.135}],
+    "webs": [0.770, 0.795, 0.780, 0.745]
+  },
+  "sensors": ["heel_post", "heel_med", "heel_lat", "mid_lat_prox", "mid_lat_dist",
+              "mt1", "mt2", "mt3", "mt4", "mt5", "toe1", "toe2", "toe3", "toe4"]
+}
