@@ -269,7 +269,8 @@ as mean ± SD:
 - **From the skin, the hip is about 2 cm off, mostly vertically, and it varies from person to person.** All three
   predictors err together in each subject, from about 30 mm too low to 41 mm too high. Calibration would not remove
   that. OSSO adds a consistent 21 mm anterior offset and is worse than SKEL in all 9 hips. A calibration of that
-  offset would count only if fitted on separate data, never on these hips. SKEL-J and SKEL cannot be told apart.
+  offset would count only if fitted on separate data and judged on data that has not shaped this work. SKEL-J and
+  SKEL cannot be told apart.
 - **The 9 look like the rest.** Their body volume, bone depth and share of women do not differ detectably from the
   other 27 subjects (body volume p = 0.58), though nine subjects would show only a large difference.
 - **For `person bones`:** SKEL's hip centre from a perfect skin surface is off by about 5 % of femur length on
@@ -280,8 +281,8 @@ as mean ± SD:
 and shank length within about 1 %. SKEL and OSSO differ by about 3 %: OSSO's shank is 12 mm longer and its pelvis
 9 mm wider, consistently, and their thighs disagree by up to 29 mm in either direction. Neither is closer to the
 skeleton fitted to the MRI bones (10–14 mm per segment). Put into the synthetic squat
-(`validation/runs/leg_prior_downstream.py`), the OSSO-typical differences move the absolute knee load by 12–14 % but
-the within-person scenario changes by at most 1 percentage point (`docs/joint-load.md`).
+(`validation/runs/leg_prior_downstream.py`), the OSSO-typical differences moved the absolute knee load by 12–14 % but
+the within-person scenario changes by at most 1 percentage point, on that synthetic squat only (`docs/joint-load.md`).
 
 **On a real person: OpenCap subject 2** (1.96 m, 78.2 kg; sex not recorded, taken as male). There is no body
 scan, so SKEL used height and mass. Joint-centre segment lengths, m:

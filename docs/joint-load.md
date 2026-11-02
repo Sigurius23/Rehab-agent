@@ -173,18 +173,20 @@ knee load.
 | as scaled from the markers | 3,794 N | −6.79 % | +3.13 % | −3.87 % |
 | OSSO-typical (thigh +1.5 %, shank +3.1 %, hip width +5.2 %) | 4,321 N (+13.9 %) | −6.75 % | +4.06 % | −3.10 % |
 
-- **The absolute load depends on the bone model, the changes within one person hardly do.** The peak moves by
-  12–14 %, two-thirds of the ground-force split's band. A within-person change moves by at most 1 percentage point and
-  keeps its sign and its robustness to the ground-force split. This is one more reason the slice states changes
-  within a person, not absolute loads. The right knee, not reportable here (a muscle at capacity), shows the same
-  pattern.
+- **On this squat, the absolute load depended on the bone model and the changes within one person hardly did.** The
+  peak moved by 12–14 %: about two-thirds of the right knee's ground-force split band (±18 %) and about half of the
+  left's (±26–27 %) on the synthetic squat. A within-person change moved by at most 1 percentage point and kept its
+  sign and its robustness to the ground-force split. That supports stating changes within a person for this tested
+  squat; other tasks, people and loads are untested. The right knee, not reportable here (a muscle at capacity),
+  shows the same pattern.
 - **Single changes:** thigh ±6.9 % moves the peak −3 to +6 %, shank ±4.5 % moves it +2 to +6 %, and hip width +5.2 %
   moves it +1 to +4 %. The OSSO-typical combination (+12 %) is more than these parts add up to.
 - **Joint angles barely move.** Knee angle error against the synthetic truth rises by at most 0.2°. The wrong lengths go
   into pelvis tilt and hip flexion instead, up to 2.5° worse.
 - **The markers notice a wrong thigh, not a wrong hip width.** Marker fit worsens by up to 2 mm RMS at ±7 % thigh and
   stays at 8.4 mm at +5 % hip width. Marker capture could help choose leg bones; phone-video noise would likely hide it.
-- **One synthetic person, one squat,** with absolute loads above the in-vivo band (model-limited).
+- **One synthetic person, one squat,** with absolute loads above the in-vivo band (model-limited). Nothing here
+  carries over to other tasks or people without testing.
 
 ## Red lines (from the design, applied)
 

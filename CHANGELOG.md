@@ -1,6 +1,13 @@
 # Changelog
 
 ## Unreleased
+- **Documentation corrections:**
+  - The leg-model downstream results are limited to the tested synthetic squat.
+  - The split sensitivity is quoted for both knees: right about ±18 %, not reportable in the illustrative-DXA run;
+    left about ±26–27 %, reportable.
+  - The nine complete MRI hips have informed this work and are described as a development check, not a pristine
+    test set.
+  - Calibrations are to be judged on data that has not shaped the work. No code, schema or results changed.
 - **Foot models are candidates, not adoptions** (`docs/research-detailed-anatomy-models.md`, catalog #113–#115): the
   four-segment arch foot and the synergy-based foot enter a comparison and validation; selection follows that work.
   3dpredictsim (MIT; its `four-segment_foot_model` branch is newer than master) and PredSim (AGPL-3.0, now catalog

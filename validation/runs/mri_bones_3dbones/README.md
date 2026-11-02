@@ -104,13 +104,16 @@ Results on the 9 complete heads, prediction minus MRI, mm:
   same vertical direction by a similar amount in each subject (from 30 mm too low to 41 mm too high). The floor stays
   within about 11 mm vertically. Calibration would not remove this.
 - **OSSO adds a consistent anterior offset** (+21 mm, SD 7). A calibration could remove it only if fitted on
-  separate data and then scored here: fitting it on these 9 hips would fit the test set, and with SD 7 the result
-  would look deceptively good. Even uncalibrated, the comparison is plain: OSSO's hip is
+  separate data and judged on data that has not shaped this work: fitted on these 9 hips, with SD 7, the result would
+  look deceptively good. Even uncalibrated, the comparison is plain: OSSO's hip is
   worse than SKEL's in all 9 heads (p = 0.004) and worse than SKEL-J's in 8 (p = 0.008). SKEL-J and SKEL cannot be told
   apart (p = 0.36).
 - **Nine hips from one cohort, lying down.** Read these as the size of the problem, not as a predictor's accuracy.
-- **These hips stay held out.** They can check the joint centres of a predictor trained later on the 317 training
-  subjects (with the 10 mm floor attached), provided nothing about them enters its training or calibration.
+- **These hips are not a pristine test set.** They have already informed this work: the completeness gate, the
+  leg-model recommendation and the review of these results. They can serve as a development check for a predictor
+  trained later on the 317 training subjects (with the 10 mm floor attached), provided nothing about them enters its
+  training or calibration; a final test needs data that has not shaped any decision. The summary JSON's notes still
+  say "test set" and "held out" (written by `hip_centres.py`); read them with this correction.
 
 ## Leg priors side by side (`leg_priors.py`)
 
@@ -146,6 +149,6 @@ Segment lengths on 72 legs, absolute difference, mean (90th percentile):
   agree within 6 mm on average: each method poses its skeleton inside the lying body its own way. The world-frame
   disagreement is 24 mm at the hip, 31 mm at the knee and 24 mm at the ankle on average. Lengths and widths are what
   scaling uses.
-- **Downstream** (`../leg_prior_downstream.py`, synthetic squat): the OSSO-typical differences move the absolute peak
-  knee compression by 12–14 %. The within-person changes the twin reports (fat −5 kg, quadriceps at 120 %) move by at
-  most 1 percentage point. See `docs/joint-load.md`.
+- **Downstream** (`../leg_prior_downstream.py`, the synthetic squat only): the OSSO-typical differences moved the
+  absolute peak knee compression by 12–14 %, and the within-person changes the twin reports (fat −5 kg, quadriceps at
+  120 %) by at most 1 percentage point. Other tasks and people are untested. See `docs/joint-load.md`.
