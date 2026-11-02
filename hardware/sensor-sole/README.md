@@ -11,15 +11,19 @@ foot. A thin passive flex circuit with 16 sensing regions lies in the shoe; a sm
 | File | What it is |
 |---|---|
 | `DESIGN.md` | Design specification: fit, layer stack, sensing, routing, scaling, pod, calibration, decisions |
-| `sole_gen.py` | Generator: foot spec → outline with toe tabs, sensing regions, electrode combs, routing plan, tail, checks; exports SVG, DXF, JSON and previews |
+| `sole_gen.py` | Generator: foot spec → outline with toe tabs, sensing regions, electrode combs, routed copper, tail, checks; exports SVG, DXF, JSON, a board file and previews |
+| `sole_route.py` | Copper routing used by the generator: sense lines (B.Cu) as a planar tree, guided fine-grid pass, common net (F.Cu), vias, stubs |
+| `kicad_export.py` | Board file → KiCad 7 board (`.kicad_pcb`); run with the Python that ships KiCad's `pcbnew` |
+| `kicad/` | The generated EU 42 boards (right and left) and their design-rule reports |
 | `person_example.json` | Personalisation format (illustrative values, not a real person) |
 | `requirements.txt` | Python packages the generator needs |
 
 ```
 pip install -r requirements.txt
-python sole_gen.py --size 42 --out out/                  # EU 42, right foot
+python sole_gen.py --size 42 --out out/                  # EU 42, right foot (a few minutes: routing)
 python sole_gen.py --size 42 --side L --out out/         # left foot
 python sole_gen.py --foot person_example.json --out out/ # a person's foot
+python3 kicad_export.py out/sole_EU42_R_region.board.json kicad/sole_EU42_R.kicad_pcb   # KiCad's Python
 ```
 
 ## Licence

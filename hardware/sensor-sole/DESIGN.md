@@ -27,21 +27,36 @@ Its sensing regions are anchored to the wearer's own anatomy. It has two parts:
 | Calibration | Factory, lifetime | Per region on our bench; zeroed during each swing phase |
 | Sizes | 9 double sizes | Any length and width; personal outlines from a foot scan |
 
-## 2. Fitting a size-42 FiveFingers
+## 2. Fitting a size-42 FiveFingers KSO Trek
+
+The target shoe is the **Vibram FiveFingers KSO Trek** (kangaroo leather) in EU 42.
 
 - **Length.** Vibram EU 42 fits a foot of about 264–273 mm; sources differ (section 11). The generator
   defaults to 270 mm and takes the measured length when there is one.
-- **Thickness.** FiveFingers have a 2 mm EVA insole on a rubber sole of 2.7–3 mm (KSO EVO), or a thicker stack
-  on running models (V-Run: 2 mm EVA insole, 4 mm EVA midsole, 2.5 mm rubber).
-  - The sensor stack targets **≤ 0.4 mm** (section 4), which is less than a thin sock. It can lie on the EVA
-    insole, or be laminated to a 1.6 mm carrier and replace the insole where that insole comes out.
-  - Whether the insole comes out depends on the model. It still has to be checked on your pair.
+- **What the sole sits on.** The KSO Trek is built as follows (section 11):
+  - a kangaroo-leather footbed;
+  - a 4 mm EVA midsole;
+  - a 4 mm Vibram rubber outsole.
+
+  The outsole is bonded to the shoe, and the leather footbed is not made to come out. So the sensor sole
+  **lies on top of the leather footbed**; nothing is replaced.
+  - The sensor stack targets **≤ 0.4 mm** (section 4), which is less than a thin sock.
+  - Leather takes up sweat. Both faces of the sole are therefore sealed: coverlay underneath, the cover film
+    on top. Humidity is part of the coupon test (section 8).
+  - Fix the sole to the footbed without adhesive, or with a residue-free tape at the heel only. The toe
+    tabs and the tail keep it in place, and the leather is left unmarked.
+  - Other FiveFingers models have a 2 mm EVA insole instead (KSO EVO, V-Run). There the sole can also lie on
+    top, or replace the insole where it comes out.
 - **Toe pockets.** The pockets are walled off down to the sole. The RiverFamily toe shoe we inspected (CC0,
   used only as a stand-in) has 1.2 mm of sole and toe dividers about 30 mm high. The sole therefore has five
   thin toe tabs that slide into the pockets, separated by 2 mm slits. A toe-less variant (no tabs, or the big
   toe only) is one setting away.
 - **Tail exit.** The default exit is at the **medial arch**, the highest and least-loaded point of the
-  sole's edge, where the FiveFingers collar is low. A heel exit is available.
+  sole's edge. A heel exit is available.
+  - The KSO upper rides higher than low-cut models. The tail must reach from the arch, up the inside of the
+    upper, over the collar and on to the pod on the instep strap.
+  - The default tail is 70 mm (`tail_len`). Measure the collar height at the arch on your pair and lengthen
+    the tail if needed.
 
 ## 3. Architecture
 
@@ -84,11 +99,34 @@ coverage is what makes total force and centre of pressure usable. Small discs ("
 cover only 9 % of the sole and put three vias in the bend zone. The regions also map onto foot segments
 (hindfoot, midfoot, forefoot, big toe, lesser toes), which is what the multi-segment foot model needs.
 
-**Routing.** Every sense line runs from its region to the tail along the seams between regions, or along the
-outline as a perimeter channel. The bundle is carved out of the neighbouring regions at its true width
-(lines × 0.3 mm pitch plus 0.4 mm clearance each side). Each region's via sits on its border nearest the
-tail, and the generator checks that no via falls within 12 mm of the toe-joint bend line. The tail carries
-16 sense lines, the common net and a spare, at 0.5 mm connector pitch, so it is 12 mm wide.
+**Routing.** The sole is routed in copper by the generator itself (`sole_route.py`).
+- **Sense lines (B.Cu).** Every line runs from its region to the tail along the seams between regions, or
+  along the outline as a perimeter channel.
+  - The lines form one tree rooted at the tail. Regions are added farthest first, and each new line joins the
+    existing tree, so lines share bundles instead of running side by side.
+  - Each bundle has a fixed left-to-right order that is the same at every branch, so no two lines cross. The
+    order at the root is the connector's pin order.
+  - Lines are 0.12 mm wide at a 0.40 mm pitch. The bundle is carved out of the neighbouring regions at its true
+    width plus 0.5 mm, with extra room at each via.
+  - Turns use concentric fillets, which keep the pitch exact through any angle.
+  - A final pass re-routes each line on a 0.06 mm grid, guided by its planned lane, with every other line and
+    via as an obstacle at full clearance. That resolves conflicts at closely spaced branches.
+  - Nothing runs under a sensing region: B.Cu stays clear there, so each region has an even backing.
+- **Vias.** Each region's via sits on the border of its sense comb nearest the tail. A short F.Cu stub
+  joins the via to the comb, and no via falls within 12 mm of the toe-joint bend line.
+- **Common net (F.Cu).** It runs in the channels, which are empty on F.Cu, as a tree reaching every region's
+  common comb. Two vias near the contacts take it to pins 1 and 18.
+- **Tail and contacts.** The tail carries 16 sense lines, the common net and a spare and is 12 mm wide. The
+  contacts are on B.Cu at 0.5 mm pitch for a bottom-contact ZIF connector, with a stiffener to 0.3 mm total.
+
+**KiCad.** `kicad_export.py` turns the generator's board file into a two-layer KiCad 7 board:
+- the outline;
+- each region as a footprint whose two combs are custom-shaped pads, exposed for the film;
+- the tracks, vias and contacts;
+- keep-out rule areas under every region and across the bend band;
+- the routing plan on `Cmts.User`, and fabrication notes, the licence and the source location on `F.Fab`.
+
+Design-rule results are reported in section 10.
 
 **Material (open; decided by a coupon test, section 8).** Options:
 - carbon-loaded polyolefin film (Velostat class): cheap and 0.1 mm, but known for hysteresis, creep and
@@ -192,8 +230,9 @@ Pod v1 (custom board, bare nRF52840 module) adds 32 channels, more storage and a
 
 1. **Where the design lives.** Decided 2026-11-02: open hardware in the public repository
    `Sigurius23/rehab-agent`, folder `hardware/sensor-sole/`, under CERN-OHL-S-2.0 (see `README.md`).
-2. **Which FiveFingers model**, and whether its insole comes out. This decides between lying on top and
-   replacing the insole.
+2. **Which FiveFingers model.** Decided 2026-11-02: KSO Trek, kangaroo leather, EU 42. Its leather footbed
+   is not removable, so the sole lies on top (section 2). Still open: the collar height at the arch, which
+   sets the tail length.
 3. **Pod position.** Instep (recommended: the IMU then measures the foot) or ankle.
 4. **Channels.** 16 on the XIAO prototype now, or go straight to a 32-channel custom pod.
 5. **Materials for the coupon test**, and the budget and fabricator for the flex boards.
@@ -219,7 +258,11 @@ Next steps (not started):
   - [Grivet Outdoors conversion](https://grivetoutdoors.com/products/vibram-five-fingers-mens-cvt-hemp-minimalist-casual-walking-shoe) (27.1 cm);
   - [Feetus](https://feetus.co.uk/?p=1156) (a 26.4 cm foot takes a 42);
   - Vibram's own [sizing guide](https://www.vibram.com/rw/sizing-guide-navigation/sizing-guide.html).
-- FiveFingers sole and insole:
+- KSO Trek build (kangaroo-leather footbed, 4 mm EVA midsole, 4 mm Vibram rubber outsole):
+  - the project owner's product information, 2026-11-02;
+  - [BirthdayShoes KSO Trek review](https://birthdayshoes.com/vibram-five-fingers-kso-trek-review);
+  - [shop4runners product page](https://shop4runners.eu/fivefingers-kso-trek-7975).
+- Other FiveFingers soles and insoles:
   - [V-Run specification](https://www.altitude-sports.com/p/vibram-fivefingers-vrun-barefoot-running-shoes-mens-vff-ff-26m70);
   - [KSO EVO 2014](https://feetus.co.uk/blog/2013/08/27/vibram-fivefingers-2014-sneak-peak-1-the-kso-evo/);
   - [KSO EVO review, 2021](https://trailrunningspain.com/2021/03/15/vibram-fivefingers-kso-evo-minimalist-off-road-training-mountain-urban-or-gym/).

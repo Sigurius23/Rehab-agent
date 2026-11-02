@@ -39,8 +39,8 @@ from shapely.ops import unary_union, voronoi_diagram
 FAB = dict(                      # flex-circuit rules (conservative for 2-layer polyimide)
     edge_margin=2.0,             # copper-free border along the outline
     region_gap=1.2,              # minimum gap between two sensing regions
-    pitch=0.30,                  # trace + space in a bundle (0.15 / 0.15)
-    route_clear=0.4,             # bundle to region clearance
+    pitch=0.40,                  # lane pitch in a bundle (0.12 mm track + 0.28 mm space; >= the router's clearance incl. grid error)
+    route_clear=0.8,             # bundle to region clearance (room for vias and for lines that must bend)
     min_toe_region=6.0,          # narrowest toe region worth sensing
     comb_finger=0.20, comb_gap=0.20,   # interdigitated electrode (shunt-mode sensor) finger / gap
     ffc_pitch=0.5,               # connector pitch at the end of the tail
@@ -189,10 +189,10 @@ def tail_geometry(sole, s, n_lines, exit="arch"):
     b = p + d * FAB["tail_len"]
     n = np.array([-d[1], d[0]]) * w / 2
     strip = Polygon([a + n, b + n, b - n, a - n])
-    return strip, tuple(a), tuple(p), w
+    return strip, tuple(a), tuple(p), w, (tuple(b), tuple(d))
 
 
-def route(sole, regs, tail_start, res=0.25):
+def route(sole, regs, tail_start, res=0.25, sense=None, band=None):
     """Route every region's signal line to the tail along region borders; carve the bundles out.
 
     A label raster of the regions gives the borders (and the sole edge). The path cost rises steeply with
@@ -242,24 +242,74 @@ def route(sole, regs, tail_start, res=0.25):
         ai, bi = a[ok], b[ok]
         cw = 0.5 * (cost.ravel()[fi[ai]] + cost.ravel()[fi[bi]]) * res * math.hypot(dx, dy)
         rows += [ai, bi]; cols += [bi, ai]; w += [cw, cw]
-    G = csr_matrix((np.concatenate(w), (np.concatenate(rows), np.concatenate(cols))), shape=(len(fi), len(fi)))
+    rows, cols, w0 = np.concatenate(rows), np.concatenate(cols), np.concatenate(w)
+    G = csr_matrix((w0, (rows, cols)), shape=(len(fi), len(fi)))
     cand = np.argwhere(free)
     i0, j0 = (tail_start[1] - Y[0]) / res, (tail_start[0] - X[0]) / res
     src = idx[tuple(cand[np.argmin((cand[:, 0] - i0) ** 2 + (cand[:, 1] - j0) ** 2)])]
     D, pred = dijkstra(G, indices=src, return_predecessors=True)
     yy, xx = np.unravel_index(fi, (ny, nx))
-    paths, load = {}, np.zeros((ny, nx), int)
-    for k, n in enumerate(names):
+
+    def endpoints(k, n):
         ends = idx[(lab == k) & (bd <= 0.6) & free]
         ends = ends[np.isfinite(D[ends])]
+        ex, ey = X[xx[ends]], Y[yy[ends]]
+        keep = np.ones(len(ends), bool)
+        if band is not None:                         # no via in the toe-joint bend band
+            bp, nrm, hw = band
+            keep &= np.abs((ex - bp[0]) * nrm[0] + (ey - bp[1]) * nrm[1]) >= hw
+        if sense is not None and n in sense:         # the via sits beside the sense comb's spine
+            t, split = sense[n]
+            for margin in (1.5, 0.5, -1e9):
+                ok = keep & ((ex * t[0] + ey * t[1]) >= split + margin)
+                if ok.any():
+                    keep = ok; break
+        return ends[keep] if keep.any() else ends
+
+    # Grow one tree from the tail, farthest region first. Each new path runs to the nearest point of the
+    # tree (every tree cell is a source at distance 0) and is penalised for running close beside it without
+    # joining, so parallel lines share one bundle instead of shadowing each other. Vias stay off the tree.
+    order_k = sorted(range(len(names)), key=lambda k: -float(np.min(D[endpoints(k, names[k])], initial=np.inf))
+                     if len(endpoints(k, names[k])) else 0)
+    parent = {src: -1}
+    via_cells = set()
+    paths, load = {}, np.zeros((ny, nx), int)
+    near_r = 1.5                                     # mm: "beside the tree"
+    for k in order_k:
+        n = names[k]
+        ends = endpoints(k, n)
         if len(ends) == 0:
             paths[n] = None; continue
-        e = ends[np.argmin(D[ends])]
+        tree_mask = np.zeros((ny, nx), bool)
+        tl = np.fromiter(parent.keys(), int)
+        tree_mask[yy[tl], xx[tl]] = True
+        near = (ndimage.distance_transform_edt(~tree_mask) * res <= near_r) & ~tree_mask
+        f = np.where(near[yy, xx], 3.0, 1.0)
+        Gk = csr_matrix((w0 * np.maximum(f[rows], f[cols]), (rows, cols)), shape=(len(fi), len(fi)))
+        blocked_via = set()
+        for v in via_cells:                          # never join the tree at (or right next to) a via
+            vy, vx = yy[v], xx[v]
+            for dy in range(-3, 4):
+                for dx in range(-3, 4):
+                    j = idx[min(max(vy + dy, 0), ny - 1), min(max(vx + dx, 0), nx - 1)]
+                    if j >= 0:
+                        blocked_via.add(int(j))
+        sources = [c for c in parent if c not in blocked_via]
+        Dk, pk, _ = dijkstra(Gk, indices=sources, return_predecessors=True, min_only=True)
+        e = ends[np.argmin(Dk[ends])]
+        if not np.isfinite(Dk[e]):
+            paths[n] = None; continue
         seq = [e]
-        while seq[-1] != src and pred[seq[-1]] >= 0:
-            seq.append(pred[seq[-1]])
-        paths[n] = [(X[xx[q]], Y[yy[q]]) for q in seq]
-        load[yy[seq], xx[seq]] += 1
+        while seq[-1] not in parent and pk[seq[-1]] >= 0:
+            seq.append(pk[seq[-1]])
+        for a, b2 in zip(seq[:-1], seq[1:]):
+            parent.setdefault(a, b2)
+        full = list(seq)
+        while parent.get(full[-1], -1) >= 0:          # down the existing tree to the tail
+            full.append(parent[full[-1]])
+        via_cells.add(e)
+        paths[n] = [(X[xx[q]], Y[yy[q]]) for q in full]
+        load[yy[full], xx[full]] += 1
     # bundle corridors at their true width; how much each region gives up to them
     disks = []
     for n, pts in paths.items():
@@ -268,6 +318,9 @@ def route(sole, regs, tail_start, res=0.25):
         for p in pts[::3]:
             i, j = round((p[1] - Y[0]) / res), round((p[0] - X[0]) / res)
             disks.append(Point(p).buffer(load[i, j] * FAB["pitch"] / 2 + FAB["route_clear"], 8))
+    for n, pts in paths.items():                     # room for each via beside its bundle
+        if pts:
+            disks.append(Point(pts[0]).buffer(0.45 / 2 + 0.15 + FAB["pitch"] + FAB["route_clear"], 16))
     carve = unary_union(disks) if disks else Polygon()
     # capacity: the corridor must stay inside the usable sole wherever it runs
     usable = sole.buffer(-FAB["edge_margin"] + FAB["route_clear"])
@@ -292,8 +345,15 @@ def build(s, names, mode, exit, side="R"):
             if w < FAB["min_toe_region"]:
                 dropped[n] = f"toe region {w:.1f} mm wide < {FAB['min_toe_region']} mm"; regs.pop(n)
     n_lines = len(regs) + 2                          # one signal per region + common + spare
-    tail, tail_start, tail_exit, tail_w = tail_geometry(sole, s, n_lines, exit)
-    paths, load, spill, carve, _grid = route(sole, regs, tail_start)
+    tail, tail_start, tail_exit, tail_w, (tail_end, tail_dir) = tail_geometry(sole, s, n_lines, exit)
+    m1, m5 = np.array(sd["mt1"]), np.array(sd["mt5"])          # metatarsophalangeal bend line: through the
+    t = (m1 - m5) / np.linalg.norm(m1 - m5); nrm = np.array([t[1], -t[0]])   # MT heads, 8 mm distal
+    if nrm[0] < 0:
+        nrm = -nrm
+    bend_pt = m5 + nrm * 8.0
+    split = {n: float(np.dot(np.asarray(r.centroid.coords[0]), t)) for n, r in regs.items()}
+    paths, load, spill, carve, _grid = route(sole, regs, tail_start, sense={n: (t, split[n]) for n in regs},
+                                             band=(bend_pt, nrm, FAB["bend_band"]))
     # final regions: the gap between neighbours, then room for the bundles; keep the largest piece
     before = {n: r.area for n, r in regs.items()}
     regs = {n: r.buffer(-FAB["region_gap"] / 2) for n, r in regs.items()}
@@ -304,11 +364,6 @@ def build(s, names, mode, exit, side="R"):
             regs[n] = max(r.geoms, key=lambda g: g.area)
     plate = sole.union(tail)
     # checks
-    m1, m5 = np.array(sd["mt1"]), np.array(sd["mt5"])          # metatarsophalangeal bend line: through the
-    t = (m1 - m5) / np.linalg.norm(m1 - m5); nrm = np.array([t[1], -t[0]])   # MT heads, 8 mm distal
-    if nrm[0] < 0:
-        nrm = -nrm
-    bend_pt = m5 + nrm * 8.0
     vias = {n: pts[0] for n, pts in paths.items() if pts}
     in_bend = [n for n, v in vias.items() if abs(np.dot(np.array(v) - bend_pt, nrm)) < FAB["bend_band"]]
     cover = sum(r.area for r in regs.values()) / sole.area
@@ -326,27 +381,100 @@ def build(s, names, mode, exit, side="R"):
         regions_inside=all(sole.buffer(-FAB["edge_margin"] + 0.05).contains(r) for r in regs.values()),
         min_region_gap_mm=round(min((a.distance(b) for i, a in enumerate(regs.values()) for b in list(regs.values())[i + 1:]), default=0), 2),
     )
-    copper = {n: combs(r, t) for n, r in regs.items()} if mode == "region" else {}
+    copper = {n: combs(r, t, split=split[n]) for n, r in regs.items()} if mode == "region" else {}
     if copper:
         checks["comb_connected"] = all(getattr(a, 'geom_type', '') == 'Polygon' and getattr(b, 'geom_type', '') == 'Polygon'
                                          for a, b in copper.values())
         checks["comb_min_spacing_mm"] = round(min(a.distance(b) for a, b in copper.values()), 3)
         fill = {n: (a.area + b.area) / regs[n].area for n, (a, b) in copper.items()}
         checks["comb_copper_fill_pct"] = [round(100 * min(fill.values())), round(100 * max(fill.values()))]
+    routing = route_copper(sole, tail, regs, copper, paths, sd, tail_start, tail_end, tail_dir, n_lines, checks) \
+        if copper else None
     geo = dict(sole=sole, tail=tail, plate=plate, regions=regs, seeds=sd, paths=paths, toes=toes, web_x=web_x,
-               bend=(bend_pt, t), tail_exit=tail_exit, copper=copper)
+               bend=(bend_pt, t), tail_exit=tail_exit, copper=copper, routing=routing,
+               tail_info=dict(end=tail_end, dir=tail_dir, width=tail_w, lines=n_lines))
     if side == "L":                                   # mirror: z -> -z
         m = lambda g: affinity.scale(g, 1, -1, origin=(0, 0))
         geo = dict(geo, mirrored=True, sole=m(sole), tail=m(tail), plate=m(plate), regions={k: m(v) for k, v in regs.items()},
                    copper={k: (m(a), m(b)) for k, (a, b) in copper.items()},
+                   tail_info=dict(end=(tail_end[0], -tail_end[1]), dir=(tail_dir[0], -tail_dir[1]), width=tail_w,
+                                  lines=n_lines),
+                   bend=((bend_pt[0], -bend_pt[1]), np.array([t[0], -t[1]])),
                    seeds={k: (v[0], -v[1]) for k, v in sd.items()},
                    paths={k: [(p[0], -p[1]) for p in v] if v else v for k, v in paths.items()},
-                   tail_exit=(tail_exit[0], -tail_exit[1]))
+                   tail_exit=(tail_exit[0], -tail_exit[1]),
+                   routing=_mirror_routing(routing))
     return geo, checks
 
 
+CONTACT = dict(pad_len=4.0, pad_w=0.30, edge_gap=0.5, sense_w=0.12, com_w=0.20, via_d=0.45, via_drill=0.20, clear=0.15)
+
+
+def route_copper(sole, tail, regs, copper, paths, seeds, tail_start, tail_end, tail_dir, n_pins, checks):
+    """Real copper: sense lanes on B.Cu, stubs and the common net on F.Cu, vias, contact pads (sole_route.py)."""
+    import sys
+    here = str(Path(__file__).resolve().parent)
+    if here not in sys.path:                                  # also under `python -I`
+        sys.path.insert(0, here)
+    from sole_route import build_lanes, maze_refine, route_common, stubs_to_combs
+    C = CONTACT
+    lan = build_lanes({n: paths[n] for n in regs if paths.get(n)}, 0.25, tail_start, tail_dir, tail_end, seeds,
+                      FAB["pitch"], FAB["ffc_pitch"], C["pad_len"], C["edge_gap"], n_pins,
+                      track_w=C["sense_w"], via_d=C["via_d"], clear=C["clear"])
+    allowed = sole.union(tail).buffer(-0.3)                        # copper-to-edge 0.3 mm
+    keepout = unary_union(list(regs.values()))                        # no B.Cu under the sensing regions
+    order = lan["pin_order"][1:-1]
+    planned = lan["lanes"]
+    tdv = np.asarray(tail_dir, float); acv = np.asarray(lan["across"])
+    fs = np.asarray(tail_end, float) - tdv * (C["edge_gap"] + C["pad_len"] + 3.0)     # fan start line
+    contact_zone = Polygon([fs - acv * 20 + tdv * 0.05, fs + acv * 20 + tdv * 0.05,
+                            fs + acv * 20 + tdv * 30, fs - acv * 20 + tdv * 30])
+    for _ in range(3):                                # rip up and retry: failed lines go first next time
+        lanes, maze_failed = maze_refine(planned, lan["vias"], order, allowed, keepout,
+                                         track_w=C["sense_w"], clear=C["clear"], via_d=C["via_d"],
+                                         no_go=contact_zone)
+        if not maze_failed:
+            break
+        order = maze_failed + [n for n in order if n not in maze_failed]
+    lan["lanes"] = lanes
+    common = {n: copper[n][0] for n in copper}; sense = {n: copper[n][1] for n in copper}
+    stubs, near_common = stubs_to_combs(lan["vias"], sense, common, C["sense_w"], C["clear"])
+    td, pm, ac = np.asarray(tail_dir, float), np.asarray(lan["pad_mid"]), np.asarray(lan["across"])
+    half = (n_pins - 1) / 2 * FAB["ffc_pitch"]
+    pads = [(k + 1, tuple(pm + ac * ((k - (n_pins - 1) / 2) * FAB["ffc_pitch"]))) for k in range(n_pins)]
+    lvl = pm - td * (C["pad_len"] / 2 + 0.8)                   # common vias just above the contacts
+    v1, vN = lvl - ac * (half + 0.35), lvl + ac * (half + 0.35)
+    ts = np.asarray(tail_start, float)
+    com_tail = [[tuple(ts), tuple(lvl)], [tuple(lvl), tuple(v1)], [tuple(lvl), tuple(vN)]]
+    obstacles = [Point(v).buffer(C["via_d"] / 2, 16) for v in lan["vias"].values()] + \
+                [LineString(st).buffer(C["sense_w"] / 2) for st in stubs.values() if LineString(st).length > 0]
+    com_lines, unreached, start_xy = route_common(sole.buffer(-FAB["edge_margin"]), sense.values(), common,
+                                                  obstacles, tuple(ts), C["com_w"], C["clear"])
+    com_tail[0][0] = start_xy                                   # the tail run starts where the tree starts
+    checks["routing"] = dict(
+        sense_routed=len(lan["lanes"]) - len(maze_failed), maze_failed=maze_failed,
+        maze_blocked_at=getattr(maze_refine, "why", {}),
+        common_unreached=unreached, stubs_near_common=near_common,
+        longest_stub_mm=round(max((LineString(v).length for v in stubs.values()), default=0), 2),
+        vias=len(lan["vias"]) + 2)
+    return dict(lanes=lan["lanes"], vias=lan["vias"], stubs=stubs, com=com_lines + com_tail,
+                com_vias=[tuple(v1), tuple(vN)], com_pin_stubs=[[tuple(v1), pads[0][1]], [tuple(vN), pads[-1][1]]],
+                pin_order=lan["pin_order"], pads=pads)
+
+
+def _mirror_routing(r):
+    if not r:
+        return r
+    mp = lambda p: (p[0], -p[1])
+    ml = lambda pts: [mp(p) for p in pts]
+    return dict(r, lanes={k: ml(v) for k, v in r["lanes"].items()}, vias={k: mp(v) for k, v in r["vias"].items()},
+                stubs={k: ml(v) for k, v in r["stubs"].items()}, com=[ml(v) for v in r["com"]],
+                com_vias=ml(r["com_vias"]), com_pin_stubs=[ml(v) for v in r["com_pin_stubs"]],
+                pads=[(k, mp(p)) for k, p in r["pads"]])
+
+
 # ------------------------------------------------------------------------------------------------ copper
-def combs(region, bend_dir, finger=None, gap=None, spine=0.3):
+def combs(region, bend_dir, finger=None, gap=None, spine=0.3, split=None):
     """Two interleaved electrode combs filling a region (shunt-mode force-sensing resistor).
 
     Fingers run parallel to the bend line (`bend_dir`), so bending at the toe joints strains them least.
@@ -361,7 +489,7 @@ def combs(region, bend_dir, finger=None, gap=None, spine=0.3):
     minx, miny, maxx, maxy = R.bounds
     band = R.difference(R.buffer(-(spine + gap)))                # outer band holds the two spines
     # spines on opposite ends of the fingers (low x / high x halves of the band)
-    xc = R.centroid.x
+    xc = R.centroid.x if split is None else split    # the routing put each via on the sense side
     spA = band.intersection(box(minx - 1, miny - 1, xc - gap / 2, maxy + 1))
     spB = band.intersection(box(xc + gap / 2, miny - 1, maxx + 1, maxy + 1))
     core = R.buffer(-(spine + gap))
@@ -377,8 +505,11 @@ def combs(region, bend_dir, finger=None, gap=None, spine=0.3):
     A = unary_union([spA] + fa); B = unary_union([spB] + fb)
     # fingers that cannot reach their spine (sloping or concave corners) would float: keep the connected comb
     big = lambda g: max(g.geoms, key=lambda q: q.area) if g.geom_type == "MultiPolygon" else g
+    # trim copper slivers: anything narrower than 0.1 mm (acute finger tips at slanted borders) cannot be
+    # etched reliably and may lift off a flexing sole
+    trim = lambda g: big(big(g).buffer(-0.05, 16).buffer(0.05, 16))
     back = lambda g: affinity.rotate(g, ang, origin=(0, 0))
-    return back(big(A)), back(big(B))
+    return back(trim(A)), back(trim(B))
 
 
 # ------------------------------------------------------------------------------------------------ export
@@ -467,9 +598,7 @@ def to_png(geo, checks, path, title):
     for pts in geo["paths"].values():
         if pts:
             a = np.asarray(pts); ax.plot(a[:, 0], a[:, 1], color=COL["route"], lw=0.6, alpha=0.8)
-    (bp, bt) = geo["bend"]
-    if geo.get("mirrored"):
-        bp, bt = np.array([bp[0], -bp[1]]), np.array([bt[0], -bt[1]])
+    bp, bt = np.asarray(geo["bend"][0]), np.asarray(geo["bend"][1])
     seg = np.array([bp - bt * 45, bp + bt * 45])
     ax.plot(seg[:, 0], seg[:, 1], color=COL["bend"], ls=":", lw=0.9)
     ax.set_aspect("equal"); ax.set_title(title, fontsize=9)
@@ -477,6 +606,65 @@ def to_png(geo, checks, path, title):
             ("regions", "coverage_pct", "max_bundle", "least_area_kept", "tail_width_mm", "vias_in_bend_zone")),
             transform=ax.transAxes, fontsize=7)
     fig.tight_layout(); fig.savefig(path, dpi=110); plt.close(fig)
+
+
+def fracture(poly):
+    """Split a polygon with holes into hole-free pieces (KiCad custom pads need hole-free outlines).
+    Each split runs through a hole, so no copper is lost; the pieces touch and stay one net."""
+    from shapely.ops import split
+    if poly.is_empty:
+        return []
+    if not poly.interiors:
+        return [poly]
+    x = Polygon(poly.interiors[0]).representative_point().x
+    minx, miny, maxx, maxy = poly.bounds
+    out = []
+    for part in split(poly, LineString([(x, miny - 1), (x, maxy + 1)])).geoms:
+        if part.geom_type == "Polygon" and part.area > 1e-4:
+            out += fracture(part)
+    return out
+
+
+def pad_pieces(poly, overlap=0.02):
+    """Hole-free pieces that overlap by `overlap` mm, so KiCad sees one connected copper shape."""
+    out = []
+    for p in fracture(poly):
+        q = p.buffer(overlap, 8).intersection(poly)          # overlap only inside the comb: spacing unchanged
+        for g in ([q] if q.geom_type == "Polygon" else list(getattr(q, "geoms", []))):
+            if g.geom_type == "Polygon" and not g.interiors and g.area > 1e-4:
+                out.append(g)
+            elif g.geom_type == "Polygon":
+                out += fracture(g)
+    return out
+
+
+def to_board_json(geo, s, args, path):
+    """Everything the KiCad exporter needs, in the foot frame (mm)."""
+    ring = lambda r: [[round(x, 4), round(y, 4)] for x, y in np.asarray(r.coords)[:-1]]
+    regions = {}
+    for n, r in geo["regions"].items():
+        common, sense = geo["copper"].get(n, (Polygon(), Polygon()))
+        via = geo["paths"].get(n)
+        regions[n] = dict(
+            outline=ring(r.exterior),
+            common=[dict(pts=ring(p.exterior), anchor=list(p.representative_point().coords[0])) for p in pad_pieces(common)],
+            sense=[dict(pts=ring(p.exterior), anchor=list(p.representative_point().coords[0])) for p in pad_pieces(sense)],
+            via_hint=[round(v, 3) for v in via[0]] if via else None)
+    bp, bt = geo["bend"]
+    bp, bt = np.asarray(bp, float), np.asarray(bt, float)
+    nrm = np.array([bt[1], -bt[0]]); hw = FAB["bend_band"]; ext = 400.0
+    band = Polygon([bp - bt * ext - nrm * hw, bp + bt * ext - nrm * hw, bp + bt * ext + nrm * hw, bp - bt * ext + nrm * hw])
+    band = band.intersection(geo["sole"].buffer(1.0))
+    band = max(band.geoms, key=lambda g: g.area) if band.geom_type == "MultiPolygon" else band
+    out = dict(generator="sole_gen v0", side=args.side, foot_length=s["L"], ball_width=s["W"],
+               outline=ring(geo["plate"].exterior), fab=FAB, regions=regions,
+               bend=dict(point=[float(bp[0]), float(bp[1])], dir=[float(bt[0]), float(bt[1])], half_width=FAB["bend_band"],
+                         band=ring(band.exterior)),
+               tail=dict(end=list(geo["tail_info"]["end"]), dir=list(geo["tail_info"]["dir"]),
+                         width=geo["tail_info"]["width"], lines=geo["tail_info"]["lines"]),
+               routing_plan={n: [[round(x, 3), round(y, 3)] for x, y in pts[::2]] for n, pts in geo["paths"].items() if pts},
+               contact=CONTACT, copper_routing=geo.get("routing"))
+    path.write_text(json.dumps(out))
 
 
 def to_png_zoom(geo, path, name="mt2", half=9.0):
@@ -523,6 +711,8 @@ def main():
     to_svg(geo, out / f"{stem}.svg", title); to_dxf(geo, out / f"{stem}.dxf")
     to_json(geo, checks, s, a, out / f"{stem}.json"); to_png(geo, checks, out / f"{stem}.png", title)
     to_png_zoom(geo, out / f"{stem}_comb_mt2.png")
+    if a.mode == "region":
+        to_board_json(geo, s, a, out / f"{stem}.board.json")
     print(json.dumps(dict(stem=stem, **checks), indent=1))
 
 

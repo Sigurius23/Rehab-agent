@@ -1,3 +1,6 @@
-# Generated previews and exports (regenerate with sole_gen.py)
+# Generated previews and exports (regenerate with sole_gen.py / make_fab.sh)
 out/
 sweep/
+fab/
+# KiCad local view settings
+*.kicad_prl
