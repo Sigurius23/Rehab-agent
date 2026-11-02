@@ -433,19 +433,27 @@ def route_copper(sole, tail, regs, copper, paths, seeds, tail_start, tail_end, t
     fs = np.asarray(tail_end, float) - tdv * (C["edge_gap"] + C["pad_len"] + 3.0)     # fan start line
     contact_zone = Polygon([fs - acv * 20 + tdv * 0.05, fs + acv * 20 + tdv * 0.05,
                             fs + acv * 20 + tdv * 30, fs - acv * 20 + tdv * 30])
-    swaps = []
-    for _ in range(3):
-        lanes, maze_failed = maze_refine(planned, lan["vias"], order, allowed, keepout,
-                                         track_w=C["sense_w"], clear=C["clear"], via_d=C["via_d"],
-                                         no_go=contact_zone)
-        cross = crossings(lanes)
-        if not cross:
-            break
-        # two lines whose fixed ends force a crossing: swap their contacts (fan-out and pin), route again
-        for n, m in cross:
-            planned[n], planned[m] = planned[n][:-3] + planned[m][-3:], planned[m][:-3] + planned[n][-3:]
-            po = lan["pin_order"]; i, j = po.index(n), po.index(m); po[i], po[j] = po[j], po[i]
-            swaps.append((n, m))
+    lanes, maze_failed = maze_refine(planned, lan["vias"], order, allowed, keepout,
+                                     track_w=C["sense_w"], clear=C["clear"], via_d=C["via_d"],
+                                     no_go=contact_zone)
+    # a crossing forced by where two vias sit: one line hops over the other on F.Cu (two vias, one jumper)
+    jumpers, extra = [], []
+    for n, m in crossings(lanes):
+        A, B = LineString(lanes[n][:-2]), LineString(lanes[m][:-2])
+        c = A.intersection(B)
+        c = c if c.geom_type == "Point" else list(getattr(c, "geoms", [c]))[0]
+        L = B.length; sc = B.project(c if c.geom_type == "Point" else c.centroid)
+        need = C["via_d"] / 2 + C["clear"] + C["sense_w"] / 2
+        for d in np.arange(0.8, 3.01, 0.1):
+            s1, s2 = max(0.05, sc - d), min(L - 0.05, sc + d)
+            p1, p2 = B.interpolate(s1), B.interpolate(s2)
+            if A.distance(p1) >= need and A.distance(p2) >= need:
+                break
+        from shapely.ops import substring as _sub
+        head, tail_ = _sub(B, 0, s1), _sub(B, s2, L)
+        lanes[m] = list(head.coords)
+        extra.append((m, list(tail_.coords) + list(lanes_full_end(planned, m))))
+        jumpers.append(dict(net=m, over=n, fcu=[(p1.x, p1.y), (p2.x, p2.y)], vias=[(p1.x, p1.y), (p2.x, p2.y)]))
     lan["lanes"] = lanes
     common = {n: copper[n][0] for n in copper}; sense = {n: copper[n][1] for n in copper}
     stubs, near_common = stubs_to_combs(lan["vias"], sense, common, C["sense_w"], C["clear"])
@@ -456,21 +464,28 @@ def route_copper(sole, tail, regs, copper, paths, seeds, tail_start, tail_end, t
     v1, vN = lvl - ac * (half + 0.35), lvl + ac * (half + 0.35)
     ts = np.asarray(tail_start, float)
     com_tail = [[tuple(ts), tuple(lvl)], [tuple(lvl), tuple(v1)], [tuple(lvl), tuple(vN)]]
-    obstacles = [Point(v).buffer(C["via_d"] / 2, 16) for v in lan["vias"].values()] + \
+    obstacles = [Point(v).buffer(C["via_d"] / 2, 16) for j in jumpers for v in j["vias"]] + \
+                [LineString(j["fcu"]).buffer(C["sense_w"] / 2) for j in jumpers] + \
+                [Point(v).buffer(C["via_d"] / 2, 16) for v in lan["vias"].values()] + \
                 [LineString(st).buffer(C["sense_w"] / 2) for st in stubs.values() if LineString(st).length > 0]
     com_lines, unreached, start_xy = route_common(sole.buffer(-FAB["edge_margin"]), sense.values(), common,
                                                   obstacles, tuple(ts), C["com_w"], C["clear"])
     com_tail[0][0] = start_xy                                   # the tail run starts where the tree starts
     checks["routing"] = dict(
         sense_routed=len(lan["lanes"]) - len(maze_failed), maze_failed=maze_failed,
-        negotiation_rounds=getattr(maze_refine, "rounds_used", None), pin_swaps=swaps,
-        crossings_left=crossings(lanes),
+        negotiation_rounds=getattr(maze_refine, "rounds_used", None),
+        jumpers=[(j["net"], j["over"]) for j in jumpers],
         common_unreached=unreached, stubs_near_common=near_common,
         longest_stub_mm=round(max((LineString(v).length for v in stubs.values()), default=0), 2),
-        vias=len(lan["vias"]) + 2)
+        vias=len(lan["vias"]) + 2 + 2 * len(jumpers))
     return dict(lanes=lan["lanes"], vias=lan["vias"], stubs=stubs, com=com_lines + com_tail,
                 com_vias=[tuple(v1), tuple(vN)], com_pin_stubs=[[tuple(v1), pads[0][1]], [tuple(vN), pads[-1][1]]],
-                pin_order=lan["pin_order"], pads=pads)
+                pin_order=lan["pin_order"], pads=pads, lanes_extra=extra, jumpers=jumpers)
+
+
+def lanes_full_end(planned, n):
+    """The fixed fan-out and contact of a planned lane (its last two points)."""
+    return planned[n][-2:]
 
 
 def _mirror_routing(r):
@@ -481,7 +496,9 @@ def _mirror_routing(r):
     return dict(r, lanes={k: ml(v) for k, v in r["lanes"].items()}, vias={k: mp(v) for k, v in r["vias"].items()},
                 stubs={k: ml(v) for k, v in r["stubs"].items()}, com=[ml(v) for v in r["com"]],
                 com_vias=ml(r["com_vias"]), com_pin_stubs=[ml(v) for v in r["com_pin_stubs"]],
-                pads=[(k, mp(p)) for k, p in r["pads"]])
+                pads=[(k, mp(p)) for k, p in r["pads"]],
+                lanes_extra=[(n, ml(v)) for n, v in r.get("lanes_extra", [])],
+                jumpers=[dict(j, fcu=ml(j["fcu"]), vias=ml(j["vias"])) for j in r.get("jumpers", [])])
 
 
 # ------------------------------------------------------------------------------------------------ copper

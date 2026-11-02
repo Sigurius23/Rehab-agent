@@ -228,6 +228,12 @@ def build(board_json, out_pcb):
             via(b, p, com, C["via_d"], C["via_drill"])
         for pts in R["com_pin_stubs"]:
             track(b, pts, pcbnew.B_Cu, com, C["com_w"])
+        for n, pts in R.get("lanes_extra", []):             # sense lines continued after a jumper
+            track(b, pts, pcbnew.B_Cu, nets[n], C["sense_w"])
+        for j in R.get("jumpers", []):                       # one line hops over another on F.Cu
+            track(b, j["fcu"], pcbnew.F_Cu, nets[j["net"]], C["sense_w"])
+            for p in j["vias"]:
+                via(b, p, nets[j["net"]], C["via_d"], C["via_drill"])
 
     # routing plan (guide only) and fabrication notes
     for n, pts in d["routing_plan"].items():
