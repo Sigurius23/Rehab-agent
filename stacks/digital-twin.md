@@ -27,7 +27,8 @@ LOWER TIERS (screening only, labelled, no corrections/exo from these)
   Tier B: photos/scan ──► shapy / ECON / PIXIE ──► SMPL-X ──► SKEL/OSSO ──► scaled OpenSim
   Tier C: video/IMU only on a generic model (adherence, rep counting)
 
-CORRECTION VIEW (Tier A only)
+CORRECTION VIEW (Tier A only; implemented as `rehabtwin correct` + `rehabtwin muscles`, see pipeline/README.md —
+                 on Tier B/C it only produces labelled illustrations)
   measured motion ──► STGCN-rehab / UI-PRMD (quality score)
                   ──► corrected target computed on the patient's joint geometry/limits
                       (motion-diffusion-model may propose; OpenSim validates)

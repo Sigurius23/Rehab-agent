@@ -1,0 +1,350 @@
+{
+  "name": "skel105_pose2sim",
+  "description": "SKEL/HSMR skin markers (105 BSM vertex markers) + 12 SKEL joint centres -> Pose2Sim full-body model (Lai-Uhlrich-derived, 5 lumbar levels, 318 muscles).",
+  "model": "upstream:perfanalytics/pose2sim/Pose2Sim/OpenSim_Setup/Model_Pose2Sim_muscles_flex.osim",
+  "marker_set": "upstream:perfanalytics/pose2sim/Pose2Sim/OpenSim_Setup/Markers_SKEL.xml",
+  "marker_fixes": [
+    {
+      "markers": [
+        "CHIN",
+        "LBHD",
+        "LFHD",
+        "NOSE",
+        "RBHD",
+        "RFHD",
+        "THD"
+      ],
+      "expressed_in": "torso",
+      "why": "Pose2Sim Markers_SKEL.xml attaches these to /bodyset/head but their coordinates are torso-frame values (top of head lands at ~2.2 m on a ~1.75 m model). Re-expressed so their ground position is unchanged from the torso-frame reading."
+    }
+  ],
+  "marker_fixed_policy": "all_free",
+  "joint_centre_markers": {
+    "femur_r": {
+      "body": "femur_r"
+    },
+    "femur_l": {
+      "body": "femur_l"
+    },
+    "tibia_r": {
+      "body": "tibia_r"
+    },
+    "tibia_l": {
+      "body": "tibia_l"
+    },
+    "talus_r": {
+      "body": "talus_r"
+    },
+    "talus_l": {
+      "body": "talus_l"
+    },
+    "humerus_r": {
+      "body": "humerus_r"
+    },
+    "humerus_l": {
+      "body": "humerus_l"
+    },
+    "ulna_r": {
+      "body": "ulna_r"
+    },
+    "ulna_l": {
+      "body": "ulna_l"
+    },
+    "hand_r": {
+      "body": "hand_r"
+    },
+    "hand_l": {
+      "body": "hand_l"
+    }
+  },
+  "frames": {
+    "up": "auto",
+    "foot_markers": [
+      "RHEE",
+      "LHEE",
+      "RHEB",
+      "LHEB",
+      "RTOE",
+      "LTOE",
+      "RMT5",
+      "LMT5"
+    ],
+    "right_left_pairs": [
+      [
+        "RFWT",
+        "LFWT"
+      ],
+      [
+        "RBWT",
+        "LBWT"
+      ],
+      [
+        "JC_femur_r",
+        "JC_femur_l"
+      ]
+    ],
+    "floor_max_rms_m": 0.02,
+    "floor_max_tilt_deg": 20.0
+  },
+  "filter": {
+    "cutoff_hz": 6.0,
+    "order": 4,
+    "max_gap_s": 0.2,
+    "min_segment_s": 1.0
+  },
+  "static": {
+    "window_s": 0.5,
+    "registration_markers": [
+      "RFWT",
+      "LFWT",
+      "RBWT",
+      "LBWT",
+      "C7",
+      "CLAV",
+      "LUMB",
+      "RSHO",
+      "LSHO",
+      "RKNE",
+      "LKNE",
+      "RKNI",
+      "LKNI",
+      "RANK",
+      "LANK",
+      "RHEE",
+      "LHEE",
+      "RTOE",
+      "LTOE",
+      "JC_femur_r",
+      "JC_femur_l",
+      "JC_tibia_r",
+      "JC_tibia_l",
+      "JC_talus_r",
+      "JC_talus_l"
+    ],
+    "coordinate_pins": {
+      "hip_flexion_r": 1.0,
+      "hip_adduction_r": 1.0,
+      "hip_rotation_r": 1.0,
+      "knee_angle_r": 1.0,
+      "ankle_angle_r": 1.0,
+      "hip_flexion_l": 1.0,
+      "hip_adduction_l": 1.0,
+      "hip_rotation_l": 1.0,
+      "knee_angle_l": 1.0,
+      "ankle_angle_l": 1.0,
+      "L5_S1_Flex_Ext": 1.0,
+      "L5_S1_Lat_Bending": 1.0,
+      "L5_S1_axial_rotation": 1.0,
+      "neck_flexion": 1.0,
+      "neck_bending": 1.0,
+      "neck_rotation": 1.0,
+      "subtalar_angle_r": 10.0,
+      "subtalar_angle_l": 10.0,
+      "mtp_angle_r": 10.0,
+      "mtp_angle_l": 10.0
+    },
+    "coordinate_pins_note": "Soft pins (weight per rad^2) for the static solve. The SKEL q = 0 neutral pose is the BSM/OpenSim default pose for legs and spine; subtalar/mtp are pinned as in the OpenSim scaling tutorial. Arms are left free because SKEL's scapula/shoulder parametrisation does not map 1:1.",
+    "coordinate_pins_measured": {
+      "subtalar_angle_r": 10.0,
+      "subtalar_angle_l": 10.0,
+      "mtp_angle_r": 10.0,
+      "mtp_angle_l": 10.0
+    }
+  },
+  "scaling": {
+    "note": "Prefer SKEL joint-centre pairs: they are anatomical points of the subject's own SKEL body, while skin-marker pairs inherit marker-set discrepancies (synthetic test: pelvis from skin pairs was off by 4%).",
+    "marker_placer": true,
+    "max_marker_movement_m": 0.05,
+    "measurements": [
+      {
+        "name": "pelvis",
+        "pairs": [
+          [
+            "JC_femur_r",
+            "JC_femur_l"
+          ]
+        ],
+        "bodies": {
+          "pelvis": "X Y Z",
+          "sacrum": "X Y Z"
+        }
+      },
+      {
+        "name": "thigh",
+        "pairs": [
+          [
+            "JC_femur_r",
+            "JC_tibia_r"
+          ],
+          [
+            "JC_femur_l",
+            "JC_tibia_l"
+          ]
+        ],
+        "bodies": {
+          "femur_r": "X Y Z",
+          "patella_r": "X Y Z",
+          "femur_l": "X Y Z",
+          "patella_l": "X Y Z"
+        }
+      },
+      {
+        "name": "shank",
+        "pairs": [
+          [
+            "JC_tibia_r",
+            "JC_talus_r"
+          ],
+          [
+            "JC_tibia_l",
+            "JC_talus_l"
+          ]
+        ],
+        "bodies": {
+          "tibia_r": "X Y Z",
+          "tibia_l": "X Y Z"
+        }
+      },
+      {
+        "name": "foot",
+        "pairs": [
+          [
+            "RHEE",
+            "RTOE"
+          ],
+          [
+            "LHEE",
+            "LTOE"
+          ]
+        ],
+        "bodies": {
+          "talus_r": "X Y Z",
+          "calcn_r": "X Y Z",
+          "toes_r": "X Y Z",
+          "talus_l": "X Y Z",
+          "calcn_l": "X Y Z",
+          "toes_l": "X Y Z"
+        }
+      },
+      {
+        "name": "torso",
+        "pairs": [
+          [
+            "JC_humerus_r",
+            "JC_femur_r"
+          ],
+          [
+            "JC_humerus_l",
+            "JC_femur_l"
+          ]
+        ],
+        "bodies": {
+          "torso": "X Y Z",
+          "lumbar1": "X Y Z",
+          "lumbar2": "X Y Z",
+          "lumbar3": "X Y Z",
+          "lumbar4": "X Y Z",
+          "lumbar5": "X Y Z",
+          "Abdomen": "X Y Z"
+        }
+      },
+      {
+        "name": "head",
+        "pairs": [
+          [
+            "C7",
+            "THD"
+          ],
+          [
+            "RBHD",
+            "LFHD"
+          ],
+          [
+            "LBHD",
+            "RFHD"
+          ]
+        ],
+        "bodies": {
+          "head": "X Y Z"
+        }
+      },
+      {
+        "name": "upper_arm",
+        "pairs": [
+          [
+            "JC_humerus_r",
+            "JC_ulna_r"
+          ],
+          [
+            "JC_humerus_l",
+            "JC_ulna_l"
+          ]
+        ],
+        "bodies": {
+          "humerus_r": "X Y Z",
+          "humerus_l": "X Y Z"
+        }
+      },
+      {
+        "name": "forearm",
+        "pairs": [
+          [
+            "JC_ulna_r",
+            "JC_hand_r"
+          ],
+          [
+            "JC_ulna_l",
+            "JC_hand_l"
+          ]
+        ],
+        "bodies": {
+          "ulna_r": "X Y Z",
+          "radius_r": "X Y Z",
+          "ulna_l": "X Y Z",
+          "radius_l": "X Y Z"
+        }
+      },
+      {
+        "name": "hand",
+        "pairs": [
+          [
+            "JC_hand_r",
+            "RFIN"
+          ],
+          [
+            "JC_hand_l",
+            "LFIN"
+          ]
+        ],
+        "bodies": {
+          "hand_r": "X Y Z",
+          "hand_l": "X Y Z"
+        }
+      }
+    ]
+  },
+  "ik": {
+    "default_weight": 1.0,
+    "weights": {
+      "JC_femur_r": 2.0,
+      "JC_femur_l": 2.0,
+      "JC_tibia_r": 2.0,
+      "JC_tibia_l": 2.0,
+      "JC_talus_r": 2.0,
+      "JC_talus_l": 2.0,
+      "JC_humerus_r": 1.0,
+      "JC_humerus_l": 1.0,
+      "JC_ulna_r": 1.0,
+      "JC_ulna_l": 1.0,
+      "JC_hand_r": 1.0,
+      "JC_hand_l": 1.0
+    },
+    "accuracy": 1e-05,
+    "constraint_weight": "Inf"
+  },
+  "skel_coordinate_tasks": null,
+  "qc": {
+    "max_rms_m": 0.04
+  },
+  "default_mass_kg": 70.0
+}

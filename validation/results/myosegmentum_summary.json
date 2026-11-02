@@ -1,0 +1,295 @@
+{
+ "what": "MyoSegmenTUM thigh MRI + dynamometry (adapters/myosegmentum.py), summary only (no per-person rows)",
+ "reference_volumes_cm3": {
+  "QF": 1854.4629606557378,
+  "HS": 759.3408721311481,
+  "SA": 167.5224754098358,
+  "GR": 106.80459016393442
+ },
+ "summary": {
+  "size": {
+   "quadriceps": {
+    "healthy": {
+     "n": 30,
+     "ratio_mean": 0.75,
+     "ratio_cv": 0.154,
+     "r": 0.522,
+     "rms_after_bias_pct": 15.2
+    },
+    "healthy HV001-HV011 (sequence A)": {
+     "n": 22,
+     "ratio_mean": 0.749,
+     "ratio_cv": 0.167,
+     "r": 0.386,
+     "rms_after_bias_pct": 16.3
+    },
+    "healthy HV012-HV015 (sequence B)": {
+     "n": 8,
+     "ratio_mean": 0.753,
+     "ratio_cv": 0.122,
+     "r": 0.829,
+     "rms_after_bias_pct": 11.4
+    },
+    "patients": {
+     "n": 8,
+     "ratio_mean": 0.487,
+     "ratio_cv": 0.239,
+     "r": 0.667,
+     "rms_after_bias_pct": 22.4
+    }
+   },
+   "hamstrings": {
+    "healthy": {
+     "n": 30,
+     "ratio_mean": 0.702,
+     "ratio_cv": 0.209,
+     "r": 0.565,
+     "rms_after_bias_pct": 20.6
+    },
+    "healthy HV001-HV011 (sequence A)": {
+     "n": 22,
+     "ratio_mean": 0.746,
+     "ratio_cv": 0.168,
+     "r": 0.374,
+     "rms_after_bias_pct": 16.4
+    },
+    "healthy HV012-HV015 (sequence B)": {
+     "n": 8,
+     "ratio_mean": 0.58,
+     "ratio_cv": 0.239,
+     "r": 0.684,
+     "rms_after_bias_pct": 22.3
+    },
+    "patients": {
+     "n": 8,
+     "ratio_mean": 0.551,
+     "ratio_cv": 0.144,
+     "r": 0.934,
+     "rms_after_bias_pct": 13.5
+    }
+   },
+   "sartorius": {
+    "healthy": {
+     "n": 30,
+     "ratio_mean": 0.523,
+     "ratio_cv": 0.372,
+     "r": 0.474,
+     "rms_after_bias_pct": 36.6
+    },
+    "healthy HV001-HV011 (sequence A)": {
+     "n": 22,
+     "ratio_mean": 0.601,
+     "ratio_cv": 0.268,
+     "r": 0.345,
+     "rms_after_bias_pct": 26.2
+    },
+    "healthy HV012-HV015 (sequence B)": {
+     "n": 8,
+     "ratio_mean": 0.311,
+     "ratio_cv": 0.306,
+     "r": -0.441,
+     "rms_after_bias_pct": 28.6
+    },
+    "patients": {
+     "n": 8,
+     "ratio_mean": 0.374,
+     "ratio_cv": 0.371,
+     "r": 0.484,
+     "rms_after_bias_pct": 34.7
+    }
+   },
+   "gracilis": {
+    "healthy": {
+     "n": 30,
+     "ratio_mean": 0.594,
+     "ratio_cv": 0.364,
+     "r": 0.371,
+     "rms_after_bias_pct": 35.8
+    },
+    "healthy HV001-HV011 (sequence A)": {
+     "n": 22,
+     "ratio_mean": 0.663,
+     "ratio_cv": 0.291,
+     "r": 0.18,
+     "rms_after_bias_pct": 28.5
+    },
+    "healthy HV012-HV015 (sequence B)": {
+     "n": 8,
+     "ratio_mean": 0.403,
+     "ratio_cv": 0.391,
+     "r": -0.139,
+     "rms_after_bias_pct": 36.6
+    },
+    "patients": {
+     "n": 8,
+     "ratio_mean": 0.505,
+     "ratio_cv": 0.348,
+     "r": -0.132,
+     "rms_after_bias_pct": 32.6
+    }
+   }
+  },
+  "strength": {
+   "knee 60\u00b0, HV001-HV011": {
+    "generic": {
+     "n": 11,
+     "ratio_mean": 0.901,
+     "ratio_cv": 0.175,
+     "r": 0.503,
+     "rms_after_bias_pct": 16.7
+    },
+    "regression": {
+     "n": 11,
+     "ratio_mean": 0.795,
+     "ratio_cv": 0.163,
+     "r": 0.437,
+     "rms_after_bias_pct": 15.6
+    },
+    "imaging": {
+     "n": 11,
+     "ratio_mean": 1.121,
+     "ratio_cv": 0.099,
+     "r": 0.86,
+     "rms_after_bias_pct": 9.4
+    }
+   },
+   "knee 90\u00b0, HV001-HV011": {
+    "generic": {
+     "n": 11,
+     "ratio_mean": 1.126,
+     "ratio_cv": 0.245,
+     "r": 0.411,
+     "rms_after_bias_pct": 23.3
+    },
+    "regression": {
+     "n": 11,
+     "ratio_mean": 0.982,
+     "ratio_cv": 0.191,
+     "r": 0.62,
+     "rms_after_bias_pct": 18.2
+    },
+    "imaging": {
+     "n": 11,
+     "ratio_mean": 1.394,
+     "ratio_cv": 0.17,
+     "r": 0.756,
+     "rms_after_bias_pct": 16.2
+    }
+   },
+   "knee 60\u00b0, + HV012-HV015 read as 60\u00b0": {
+    "generic": {
+     "n": 15,
+     "ratio_mean": 0.845,
+     "ratio_cv": 0.199,
+     "r": 0.575,
+     "rms_after_bias_pct": 19.2
+    },
+    "regression": {
+     "n": 15,
+     "ratio_mean": 0.763,
+     "ratio_cv": 0.169,
+     "r": 0.57,
+     "rms_after_bias_pct": 16.3
+    },
+    "imaging": {
+     "n": 15,
+     "ratio_mean": 1.061,
+     "ratio_cv": 0.163,
+     "r": 0.666,
+     "rms_after_bias_pct": 15.8
+    }
+   },
+   "knee 90\u00b0, + HV012-HV015 read as 90\u00b0": {
+    "generic": {
+     "n": 15,
+     "ratio_mean": 1.14,
+     "ratio_cv": 0.212,
+     "r": 0.365,
+     "rms_after_bias_pct": 20.5
+    },
+    "regression": {
+     "n": 15,
+     "ratio_mean": 1.028,
+     "ratio_cv": 0.185,
+     "r": 0.545,
+     "rms_after_bias_pct": 17.8
+    },
+    "imaging": {
+     "n": 15,
+     "ratio_mean": 1.43,
+     "ratio_cv": 0.192,
+     "r": 0.634,
+     "rms_after_bias_pct": 18.5
+    }
+   }
+  },
+  "test_retest": {
+   "quadriceps": {
+    "subjects": 3,
+    "volume_cv_pct": 2.2
+   },
+   "hamstrings": {
+    "subjects": 3,
+    "volume_cv_pct": 5.9
+   },
+   "sartorius": {
+    "subjects": 3,
+    "volume_cv_pct": 8.3
+   },
+   "gracilis": {
+    "subjects": 3,
+    "volume_cv_pct": 4.0
+   }
+  },
+  "fat_fraction": {
+   "quadriceps": {
+    "healthy": {
+     "mean_pct": 3.8,
+     "min_pct": 1.0,
+     "max_pct": 7.0
+    },
+    "patients": {
+     "mean_pct": 13.0,
+     "min_pct": 9.4,
+     "max_pct": 16.9
+    }
+   },
+   "hamstrings": {
+    "healthy": {
+     "mean_pct": 4.0,
+     "min_pct": 0.5,
+     "max_pct": 10.2
+    },
+    "patients": {
+     "mean_pct": 25.6,
+     "min_pct": 10.0,
+     "max_pct": 65.6
+    }
+   },
+   "sartorius": {
+    "healthy": {
+     "mean_pct": 5.8,
+     "min_pct": 2.6,
+     "max_pct": 9.6
+    },
+    "patients": {
+     "mean_pct": 13.2,
+     "min_pct": 10.2,
+     "max_pct": 18.7
+    }
+   },
+   "gracilis": {
+    "healthy": {
+     "mean_pct": 4.0,
+     "min_pct": 1.0,
+     "max_pct": 6.7
+    },
+    "patients": {
+     "mean_pct": 8.2,
+     "min_pct": 6.3,
+     "max_pct": 11.6
+    }
+   }
+  }
+ }
+}

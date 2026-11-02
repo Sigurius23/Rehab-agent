@@ -1,0 +1,10 @@
+# Fat-distribution model repos — one URL per line (clone manually or with git).
+# This folder is separate from the main catalog; scripts/clone.py does not read this file.
+https://github.com/wasserth/TotalSegmentator
+https://github.com/rsummers11/NIH_CADLab_Body_Composition
+https://github.com/maxdiefenbach/vatsatseg
+https://github.com/HoldenWuLab/AT_Seg_3DCNN
+https://github.com/tobihaui/WholeBodyATQuantification
+https://github.com/bogdanneamtu76/Adipose_Tissue_Segmentation
+https://github.com/LambertLeong/Pseudo-DXA
+https://github.com/broadinstitute/ml4h

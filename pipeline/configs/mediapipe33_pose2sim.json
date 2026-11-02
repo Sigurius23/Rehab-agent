@@ -1,0 +1,50 @@
+{
+  "name": "mediapipe33_pose2sim",
+  "description": "MediaPipe Pose (33 landmarks, Pose2Sim 'Mediapipe' marker names) -> Pose2Sim full-body model. Non-gated Tier-C front-end; marker set, scaling pairs and IK weights follow Pose2Sim's Mediapipe setup files.",
+  "model": "upstream:perfanalytics/pose2sim/Pose2Sim/OpenSim_Setup/Model_Pose2Sim_muscles_flex.osim",
+  "marker_set": "upstream:perfanalytics/pose2sim/Pose2Sim/OpenSim_Setup/Markers_Mediapipe.xml",
+  "marker_fixes": [],
+  "marker_fixed_policy": "keep",
+  "joint_centre_markers": {},
+  "frames": {
+    "up": "auto",
+    "foot_markers": ["RHeel", "LHeel", "RBigToe", "LBigToe"],
+    "right_left_pairs": [["RHip", "LHip"], ["RShoulder", "LShoulder"]],
+    "floor_max_rms_m": 0.03,
+    "floor_max_tilt_deg": 20.0
+  },
+  "filter": {"cutoff_hz": 6.0, "order": 4, "max_gap_s": 0.2, "min_segment_s": 1.0},
+  "static": {
+    "window_s": 0.25,
+    "registration_markers": ["RHip", "LHip", "RShoulder", "LShoulder", "RKnee", "LKnee", "RAnkle", "LAnkle", "RHeel", "LHeel", "RBigToe", "LBigToe"],
+    "coordinate_pins_measured": {"subtalar_angle_r": 10.0, "subtalar_angle_l": 10.0, "mtp_angle_r": 10.0, "mtp_angle_l": 10.0,
+                                 "wrist_flex_r": 1.0, "wrist_flex_l": 1.0, "wrist_dev_r": 1.0, "wrist_dev_l": 1.0}
+  },
+  "scaling": {
+    "marker_placer": false,
+    "measurements": [
+      {"name": "pelvis", "pairs": [["RHip", "LHip"]], "bodies": {"pelvis": "X Y Z", "sacrum": "X Y Z"}},
+      {"name": "thigh", "pairs": [["LHip", "LKnee"], ["RHip", "RKnee"]],
+       "bodies": {"femur_r": "X Y Z", "patella_r": "X Y Z", "femur_l": "X Y Z", "patella_l": "X Y Z"}},
+      {"name": "shank", "pairs": [["LKnee", "LAnkle"], ["RKnee", "RAnkle"]], "bodies": {"tibia_r": "X Y Z", "tibia_l": "X Y Z"}},
+      {"name": "foot", "pairs": [["LHeel", "LBigToe"], ["RHeel", "RBigToe"]],
+       "bodies": {"talus_r": "X Y Z", "calcn_r": "X Y Z", "toes_r": "X Y Z", "talus_l": "X Y Z", "calcn_l": "X Y Z", "toes_l": "X Y Z"}},
+      {"name": "torso", "pairs": [["LShoulder", "LHip"], ["RShoulder", "RHip"]],
+       "bodies": {"torso": "X Y Z", "lumbar1": "X Y Z", "lumbar2": "X Y Z", "lumbar3": "X Y Z", "lumbar4": "X Y Z",
+                  "lumbar5": "X Y Z", "Abdomen": "X Y Z", "head": "X Y Z"}},
+      {"name": "arm", "pairs": [["LShoulder", "LElbow"], ["RShoulder", "RElbow"]], "bodies": {"humerus_r": "X Y Z", "humerus_l": "X Y Z"}},
+      {"name": "forearm", "pairs": [["LElbow", "LWrist"], ["RElbow", "RWrist"]],
+       "bodies": {"ulna_r": "X Y Z", "radius_r": "X Y Z", "hand_r": "X Y Z", "ulna_l": "X Y Z", "radius_l": "X Y Z", "hand_l": "X Y Z"}}
+    ]
+  },
+  "ik": {
+    "default_weight": 1.0,
+    "weights": {"Nose": 0.1, "LEye": 0.05, "REye": 0.05, "LShoulder": 2.0, "RShoulder": 2.0, "LHip": 2.0, "RHip": 2.0,
+                "RThumb": 0.05, "LThumb": 0.05, "LPinky": 0.05, "RPinky": 0.05, "LIndex": 0.05, "RIndex": 0.05},
+    "accuracy": 1e-5,
+    "constraint_weight": "Inf"
+  },
+  "skel_coordinate_tasks": null,
+  "qc": {"max_rms_m": 0.05},
+  "default_mass_kg": 70.0
+}

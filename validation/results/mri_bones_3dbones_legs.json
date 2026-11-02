@@ -1,0 +1,927 @@
+{
+ "n_subjects": 36,
+ "n_legs": 72,
+ "n_failed": 0,
+ "notes": [
+  "Leg priors side by side: the same geometry on every mesh (hip: femoral head sphere; knee: femoral epicondyle midpoint; ankle: malleolus midpoint), from each released skin-only prediction and from the floor.",
+  "No ground truth decides between the priors here; where two differ by d, at least one is off by d/2 or more.",
+  "skel_mri (the floor) saw the MRI bones but fills in where the segmentation stops short (femoral heads, tibia ends); it is a reference, not truth.",
+  "Differences are first minus second, mm: anterior, medial (toward the midline), superior, distance.",
+  "These centres are geometric, not the joint centres SKEL regresses (which person bones uses).",
+  "One cohort, lying down, arms overhead; SKEL-J was trained on this cohort, SKEL and OSSO were not."
+ ],
+ "segments_mm": {
+  "skel": {
+   "thigh": {
+    "mean": 407.81,
+    "sd": 17.38,
+    "median": 410.0,
+    "p90": 426.58
+   },
+   "shank": {
+    "mean": 397.76,
+    "sd": 27.83,
+    "median": 393.3,
+    "p90": 438.42
+   },
+   "hip_width": {
+    "mean": 167.38,
+    "sd": 12.56,
+    "median": 168.65,
+    "p90": 183.35
+   },
+   "head_fit_rms_mm": {
+    "mean": 0.9,
+    "sd": 0.02,
+    "median": 0.9,
+    "p90": 0.92
+   }
+  },
+  "skel_j": {
+   "thigh": {
+    "mean": 406.28,
+    "sd": 20.51,
+    "median": 405.35,
+    "p90": 429.92
+   },
+   "shank": {
+    "mean": 398.3,
+    "sd": 25.66,
+    "median": 394.7,
+    "p90": 437.09
+   },
+   "hip_width": {
+    "mean": 168.42,
+    "sd": 12.46,
+    "median": 168.25,
+    "p90": 184.1
+   },
+   "head_fit_rms_mm": {
+    "mean": 0.89,
+    "sd": 0.02,
+    "median": 0.89,
+    "p90": 0.92
+   }
+  },
+  "osso": {
+   "thigh": {
+    "mean": 413.89,
+    "sd": 28.85,
+    "median": 406.2,
+    "p90": 452.52
+   },
+   "shank": {
+    "mean": 409.93,
+    "sd": 25.68,
+    "median": 406.5,
+    "p90": 441.87
+   },
+   "hip_width": {
+    "mean": 176.06,
+    "sd": 7.43,
+    "median": 175.75,
+    "p90": 185.45
+   },
+   "head_fit_rms_mm": {
+    "mean": 0.62,
+    "sd": 0.03,
+    "median": 0.61,
+    "p90": 0.65
+   }
+  },
+  "skel_mri": {
+   "thigh": {
+    "mean": 412.39,
+    "sd": 23.34,
+    "median": 408.1,
+    "p90": 440.48
+   },
+   "shank": {
+    "mean": 406.14,
+    "sd": 36.4,
+    "median": 392.5,
+    "p90": 454.78
+   },
+   "hip_width": {
+    "mean": 171.7,
+    "sd": 11.92,
+    "median": 173.1,
+    "p90": 187.15
+   },
+   "head_fit_rms_mm": {
+    "mean": 0.9,
+    "sd": 0.03,
+    "median": 0.9,
+    "p90": 0.92
+   }
+  }
+ },
+ "pairs": {
+  "skel - skel_j": {
+   "hip": {
+    "distance": {
+     "mean": 5.11,
+     "sd": 2.64,
+     "median": 4.84,
+     "p90": 7.81
+    },
+    "anterior": {
+     "mean": 0.99,
+     "sd": 2.98,
+     "median": 0.97,
+     "p90": 3.5
+    },
+    "medial": {
+     "mean": 0.44,
+     "sd": 3.72,
+     "median": 0.03,
+     "p90": 5.54
+    },
+    "superior": {
+     "mean": -0.03,
+     "sd": 3.1,
+     "median": 0.6,
+     "p90": 3.31
+    }
+   },
+   "knee": {
+    "distance": {
+     "mean": 5.48,
+     "sd": 2.61,
+     "median": 4.83,
+     "p90": 8.71
+    },
+    "anterior": {
+     "mean": 1.82,
+     "sd": 3.08,
+     "median": 1.88,
+     "p90": 6.45
+    },
+    "medial": {
+     "mean": -0.23,
+     "sd": 2.09,
+     "median": -0.43,
+     "p90": 2.71
+    },
+    "superior": {
+     "mean": -1.38,
+     "sd": 4.26,
+     "median": -1.82,
+     "p90": 4.21
+    }
+   },
+   "ankle": {
+    "distance": {
+     "mean": 2.73,
+     "sd": 1.45,
+     "median": 2.27,
+     "p90": 4.73
+    },
+    "anterior": {
+     "mean": -1.04,
+     "sd": 1.89,
+     "median": -1.17,
+     "p90": 1.18
+    },
+    "medial": {
+     "mean": -0.18,
+     "sd": 1.09,
+     "median": -0.15,
+     "p90": 1.09
+    },
+    "superior": {
+     "mean": -0.13,
+     "sd": 1.94,
+     "median": 0.14,
+     "p90": 1.76
+    }
+   },
+   "thigh_length": {
+    "difference_mm": {
+     "mean": 1.53,
+     "sd": 4.72,
+     "median": 3.5,
+     "p90": 6.57
+    },
+    "abs_difference_mm": {
+     "mean": 4.48,
+     "sd": 2.07,
+     "median": 4.05,
+     "p90": 7.67
+    },
+    "abs_difference_pct": {
+     "mean": 1.11,
+     "sd": 0.52,
+     "median": 1.0,
+     "p90": 1.96
+    },
+    "wilcoxon_p": 0.0012
+   },
+   "shank_length": {
+    "difference_mm": {
+     "mean": -0.54,
+     "sd": 3.24,
+     "median": -1.2,
+     "p90": 2.6
+    },
+    "abs_difference_mm": {
+     "mean": 2.53,
+     "sd": 2.08,
+     "median": 1.8,
+     "p90": 5.39
+    },
+    "abs_difference_pct": {
+     "mean": 0.64,
+     "sd": 0.53,
+     "median": 0.45,
+     "p90": 1.45
+    },
+    "wilcoxon_p": 0.17
+   },
+   "hip_width": {
+    "difference_mm": {
+     "mean": -1.04,
+     "sd": 3.87,
+     "median": -2.3,
+     "p90": 3.85
+    },
+    "wilcoxon_p": 0.11
+   }
+  },
+  "skel - osso": {
+   "hip": {
+    "distance": {
+     "mean": 22.66,
+     "sd": 11.62,
+     "median": 18.76,
+     "p90": 38.27
+    },
+    "anterior": {
+     "mean": -14.0,
+     "sd": 9.19,
+     "median": -12.78,
+     "p90": -3.97
+    },
+    "medial": {
+     "mean": 4.37,
+     "sd": 9.65,
+     "median": 2.72,
+     "p90": 18.89
+    },
+    "superior": {
+     "mean": -8.43,
+     "sd": 13.71,
+     "median": -5.77,
+     "p90": 4.97
+    }
+   },
+   "knee": {
+    "distance": {
+     "mean": 30.42,
+     "sd": 7.23,
+     "median": 29.52,
+     "p90": 38.0
+    },
+    "anterior": {
+     "mean": 28.72,
+     "sd": 7.24,
+     "median": 28.01,
+     "p90": 37.84
+    },
+    "medial": {
+     "mean": 0.87,
+     "sd": 5.35,
+     "median": 0.57,
+     "p90": 8.09
+    },
+    "superior": {
+     "mean": 0.12,
+     "sd": 8.52,
+     "median": -0.72,
+     "p90": 12.52
+    }
+   },
+   "ankle": {
+    "distance": {
+     "mean": 23.55,
+     "sd": 6.45,
+     "median": 24.3,
+     "p90": 30.72
+    },
+    "anterior": {
+     "mean": -9.65,
+     "sd": 8.5,
+     "median": -10.75,
+     "p90": 1.77
+    },
+    "medial": {
+     "mean": 2.7,
+     "sd": 6.43,
+     "median": 1.85,
+     "p90": 11.5
+    },
+    "superior": {
+     "mean": 18.74,
+     "sd": 5.7,
+     "median": 18.2,
+     "p90": 25.95
+    }
+   },
+   "thigh_length": {
+    "difference_mm": {
+     "mean": -6.08,
+     "sd": 16.22,
+     "median": 1.8,
+     "p90": 9.04
+    },
+    "abs_difference_mm": {
+     "mean": 12.85,
+     "sd": 11.54,
+     "median": 8.05,
+     "p90": 29.23
+    },
+    "abs_difference_pct": {
+     "mean": 2.98,
+     "sd": 2.5,
+     "median": 2.02,
+     "p90": 6.86
+    },
+    "wilcoxon_p": 0.087
+   },
+   "shank_length": {
+    "difference_mm": {
+     "mean": -12.17,
+     "sd": 5.6,
+     "median": -13.05,
+     "p90": -4.81
+    },
+    "abs_difference_mm": {
+     "mean": 12.46,
+     "sd": 4.92,
+     "median": 13.05,
+     "p90": 18.0
+    },
+    "abs_difference_pct": {
+     "mean": 3.07,
+     "sd": 1.25,
+     "median": 3.27,
+     "p90": 4.51
+    },
+    "wilcoxon_p": 3.4e-13
+   },
+   "hip_width": {
+    "difference_mm": {
+     "mean": -8.68,
+     "sd": 7.57,
+     "median": -7.0,
+     "p90": 0.05
+    },
+    "wilcoxon_p": 1.1e-06
+   }
+  },
+  "skel - skel_mri": {
+   "hip": {
+    "distance": {
+     "mean": 22.22,
+     "sd": 10.22,
+     "median": 20.05,
+     "p90": 38.83
+    },
+    "anterior": {
+     "mean": 9.92,
+     "sd": 8.16,
+     "median": 10.16,
+     "p90": 17.47
+    },
+    "medial": {
+     "mean": 2.23,
+     "sd": 6.26,
+     "median": 2.47,
+     "p90": 10.16
+    },
+    "superior": {
+     "mean": 4.81,
+     "sd": 19.26,
+     "median": 3.57,
+     "p90": 28.24
+    }
+   },
+   "knee": {
+    "distance": {
+     "mean": 27.38,
+     "sd": 10.93,
+     "median": 25.45,
+     "p90": 39.86
+    },
+    "anterior": {
+     "mean": 17.37,
+     "sd": 9.21,
+     "median": 17.96,
+     "p90": 30.28
+    },
+    "medial": {
+     "mean": -0.21,
+     "sd": 6.3,
+     "median": -1.08,
+     "p90": 8.38
+    },
+    "superior": {
+     "mean": 9.98,
+     "sd": 18.66,
+     "median": 7.81,
+     "p90": 33.62
+    }
+   },
+   "ankle": {
+    "distance": {
+     "mean": 35.89,
+     "sd": 16.2,
+     "median": 32.34,
+     "p90": 55.66
+    },
+    "anterior": {
+     "mean": -16.05,
+     "sd": 8.72,
+     "median": -15.34,
+     "p90": -4.71
+    },
+    "medial": {
+     "mean": 10.0,
+     "sd": 5.9,
+     "median": 9.74,
+     "p90": 16.0
+    },
+    "superior": {
+     "mean": 24.52,
+     "sd": 22.04,
+     "median": 21.11,
+     "p90": 51.59
+    }
+   },
+   "thigh_length": {
+    "difference_mm": {
+     "mean": -4.58,
+     "sd": 11.66,
+     "median": -4.3,
+     "p90": 8.54
+    },
+    "abs_difference_mm": {
+     "mean": 10.01,
+     "sd": 7.46,
+     "median": 7.8,
+     "p90": 21.81
+    },
+    "abs_difference_pct": {
+     "mean": 2.39,
+     "sd": 1.74,
+     "median": 1.87,
+     "p90": 5.07
+    },
+    "wilcoxon_p": 0.0027
+   },
+   "shank_length": {
+    "difference_mm": {
+     "mean": -8.38,
+     "sd": 14.09,
+     "median": -7.4,
+     "p90": 9.07
+    },
+    "abs_difference_mm": {
+     "mean": 12.94,
+     "sd": 9.99,
+     "median": 12.05,
+     "p90": 26.88
+    },
+    "abs_difference_pct": {
+     "mean": 3.09,
+     "sd": 2.26,
+     "median": 3.1,
+     "p90": 5.82
+    },
+    "wilcoxon_p": 1.8e-05
+   },
+   "hip_width": {
+    "difference_mm": {
+     "mean": -4.32,
+     "sd": 5.51,
+     "median": -5.5,
+     "p90": 1.45
+    },
+    "wilcoxon_p": 0.00025
+   }
+  },
+  "skel_j - osso": {
+   "hip": {
+    "distance": {
+     "mean": 22.99,
+     "sd": 10.41,
+     "median": 20.11,
+     "p90": 36.86
+    },
+    "anterior": {
+     "mean": -14.99,
+     "sd": 9.11,
+     "median": -15.27,
+     "p90": -3.93
+    },
+    "medial": {
+     "mean": 3.93,
+     "sd": 9.78,
+     "median": 3.76,
+     "p90": 18.68
+    },
+    "superior": {
+     "mean": -8.4,
+     "sd": 12.27,
+     "median": -5.11,
+     "p90": 3.85
+    }
+   },
+   "knee": {
+    "distance": {
+     "mean": 28.19,
+     "sd": 6.93,
+     "median": 27.62,
+     "p90": 35.26
+    },
+    "anterior": {
+     "mean": 26.9,
+     "sd": 6.95,
+     "median": 26.51,
+     "p90": 33.81
+    },
+    "medial": {
+     "mean": 1.1,
+     "sd": 4.59,
+     "median": 1.35,
+     "p90": 6.35
+    },
+    "superior": {
+     "mean": 1.5,
+     "sd": 6.88,
+     "median": 1.52,
+     "p90": 11.28
+    }
+   },
+   "ankle": {
+    "distance": {
+     "mean": 23.7,
+     "sd": 5.84,
+     "median": 24.43,
+     "p90": 30.16
+    },
+    "anterior": {
+     "mean": -8.61,
+     "sd": 9.49,
+     "median": -8.51,
+     "p90": 3.46
+    },
+    "medial": {
+     "mean": 2.88,
+     "sd": 6.24,
+     "median": 1.94,
+     "p90": 11.8
+    },
+    "superior": {
+     "mean": 18.87,
+     "sd": 5.48,
+     "median": 18.12,
+     "p90": 28.17
+    }
+   },
+   "thigh_length": {
+    "difference_mm": {
+     "mean": -7.61,
+     "sd": 12.56,
+     "median": -3.25,
+     "p90": 3.7
+    },
+    "abs_difference_mm": {
+     "mean": 9.92,
+     "sd": 10.8,
+     "median": 4.6,
+     "p90": 26.18
+    },
+    "abs_difference_pct": {
+     "mean": 2.28,
+     "sd": 2.36,
+     "median": 1.12,
+     "p90": 6.06
+    },
+    "wilcoxon_p": 7.1e-05
+   },
+   "shank_length": {
+    "difference_mm": {
+     "mean": -11.63,
+     "sd": 5.58,
+     "median": -12.65,
+     "p90": -4.77
+    },
+    "abs_difference_mm": {
+     "mean": 11.83,
+     "sd": 5.13,
+     "median": 12.65,
+     "p90": 17.29
+    },
+    "abs_difference_pct": {
+     "mean": 2.89,
+     "sd": 1.23,
+     "median": 3.04,
+     "p90": 4.13
+    },
+    "wilcoxon_p": 2.7e-13
+   },
+   "hip_width": {
+    "difference_mm": {
+     "mean": -7.64,
+     "sd": 8.93,
+     "median": -7.3,
+     "p90": 4.7
+    },
+    "wilcoxon_p": 9.2e-05
+   }
+  },
+  "skel_j - skel_mri": {
+   "hip": {
+    "distance": {
+     "mean": 21.05,
+     "sd": 10.29,
+     "median": 19.77,
+     "p90": 33.67
+    },
+    "anterior": {
+     "mean": 8.93,
+     "sd": 8.64,
+     "median": 9.71,
+     "p90": 19.17
+    },
+    "medial": {
+     "mean": 1.79,
+     "sd": 5.79,
+     "median": 1.17,
+     "p90": 8.84
+    },
+    "superior": {
+     "mean": 4.85,
+     "sd": 18.42,
+     "median": 3.85,
+     "p90": 28.37
+    }
+   },
+   "knee": {
+    "distance": {
+     "mean": 26.68,
+     "sd": 10.81,
+     "median": 24.44,
+     "p90": 39.77
+    },
+    "anterior": {
+     "mean": 15.55,
+     "sd": 8.28,
+     "median": 16.5,
+     "p90": 25.62
+    },
+    "medial": {
+     "mean": 0.02,
+     "sd": 6.06,
+     "median": -0.82,
+     "p90": 7.63
+    },
+    "superior": {
+     "mean": 11.37,
+     "sd": 18.9,
+     "median": 9.16,
+     "p90": 35.24
+    }
+   },
+   "ankle": {
+    "distance": {
+     "mean": 35.43,
+     "sd": 16.37,
+     "median": 32.01,
+     "p90": 56.2
+    },
+    "anterior": {
+     "mean": -15.01,
+     "sd": 8.93,
+     "median": -14.47,
+     "p90": -3.22
+    },
+    "medial": {
+     "mean": 10.18,
+     "sd": 5.58,
+     "median": 9.84,
+     "p90": 15.75
+    },
+    "superior": {
+     "mean": 24.65,
+     "sd": 21.92,
+     "median": 19.77,
+     "p90": 52.78
+    }
+   },
+   "thigh_length": {
+    "difference_mm": {
+     "mean": -6.1,
+     "sd": 9.84,
+     "median": -5.05,
+     "p90": 2.76
+    },
+    "abs_difference_mm": {
+     "mean": 8.82,
+     "sd": 7.47,
+     "median": 6.2,
+     "p90": 20.96
+    },
+    "abs_difference_pct": {
+     "mean": 2.11,
+     "sd": 1.75,
+     "median": 1.5,
+     "p90": 4.88
+    },
+    "wilcoxon_p": 5.9e-07
+   },
+   "shank_length": {
+    "difference_mm": {
+     "mean": -7.84,
+     "sd": 15.88,
+     "median": -7.45,
+     "p90": 11.9
+    },
+    "abs_difference_mm": {
+     "mean": 14.34,
+     "sd": 10.3,
+     "median": 13.6,
+     "p90": 28.18
+    },
+    "abs_difference_pct": {
+     "mean": 3.43,
+     "sd": 2.32,
+     "median": 3.43,
+     "p90": 6.44
+    },
+    "wilcoxon_p": 0.00024
+   },
+   "hip_width": {
+    "difference_mm": {
+     "mean": -3.28,
+     "sd": 6.04,
+     "median": -3.85,
+     "p90": 5.55
+    },
+    "wilcoxon_p": 0.0047
+   }
+  },
+  "osso - skel_mri": {
+   "hip": {
+    "distance": {
+     "mean": 32.8,
+     "sd": 11.72,
+     "median": 32.34,
+     "p90": 47.63
+    },
+    "anterior": {
+     "mean": 23.91,
+     "sd": 12.47,
+     "median": 23.18,
+     "p90": 38.68
+    },
+    "medial": {
+     "mean": -2.14,
+     "sd": 6.84,
+     "median": -0.15,
+     "p90": 4.54
+    },
+    "superior": {
+     "mean": 13.25,
+     "sd": 16.23,
+     "median": 12.99,
+     "p90": 30.97
+    }
+   },
+   "knee": {
+    "distance": {
+     "mean": 23.47,
+     "sd": 11.84,
+     "median": 21.45,
+     "p90": 39.3
+    },
+    "anterior": {
+     "mean": -11.35,
+     "sd": 7.73,
+     "median": -10.29,
+     "p90": -1.97
+    },
+    "medial": {
+     "mean": -1.07,
+     "sd": 7.3,
+     "median": -2.31,
+     "p90": 7.82
+    },
+    "superior": {
+     "mean": 9.86,
+     "sd": 18.84,
+     "median": 8.57,
+     "p90": 35.22
+    }
+   },
+   "ankle": {
+    "distance": {
+     "mean": 25.3,
+     "sd": 11.29,
+     "median": 24.8,
+     "p90": 38.91
+    },
+    "anterior": {
+     "mean": -6.4,
+     "sd": 10.6,
+     "median": -6.6,
+     "p90": 6.89
+    },
+    "medial": {
+     "mean": 7.3,
+     "sd": 7.98,
+     "median": 8.02,
+     "p90": 16.27
+    },
+    "superior": {
+     "mean": 5.78,
+     "sd": 21.7,
+     "median": 2.41,
+     "p90": 34.41
+    }
+   },
+   "thigh_length": {
+    "difference_mm": {
+     "mean": 1.51,
+     "sd": 14.7,
+     "median": 1.0,
+     "p90": 19.16
+    },
+    "abs_difference_mm": {
+     "mean": 10.83,
+     "sd": 9.97,
+     "median": 7.6,
+     "p90": 25.57
+    },
+    "abs_difference_pct": {
+     "mean": 2.58,
+     "sd": 2.35,
+     "median": 1.82,
+     "p90": 5.9
+    },
+    "wilcoxon_p": 0.3
+   },
+   "shank_length": {
+    "difference_mm": {
+     "mean": 3.79,
+     "sd": 16.0,
+     "median": 3.9,
+     "p90": 24.66
+    },
+    "abs_difference_mm": {
+     "mean": 13.68,
+     "sd": 8.99,
+     "median": 11.45,
+     "p90": 25.74
+    },
+    "abs_difference_pct": {
+     "mean": 3.46,
+     "sd": 2.4,
+     "median": 2.68,
+     "p90": 6.82
+    },
+    "wilcoxon_p": 0.052
+   },
+   "hip_width": {
+    "difference_mm": {
+     "mean": 4.36,
+     "sd": 7.9,
+     "median": 3.6,
+     "p90": 15.45
+    },
+    "wilcoxon_p": 0.0046
+   }
+  }
+ },
+ "largest_disagreement_among_priors_mm": {
+  "hip": {
+   "mean": 23.95,
+   "sd": 11.15,
+   "median": 21.01,
+   "p90": 38.48
+  },
+  "knee": {
+   "mean": 30.88,
+   "sd": 7.0,
+   "median": 29.56,
+   "p90": 38.01
+  },
+  "ankle": {
+   "mean": 24.32,
+   "sd": 6.05,
+   "median": 25.23,
+   "p90": 30.71
+  }
+ }
+}

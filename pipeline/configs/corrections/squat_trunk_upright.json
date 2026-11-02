@@ -1,0 +1,66 @@
+{
+  "name": "squat_trunk_upright",
+  "exercise": "squat",
+  "author": "TEMPLATE - must be authored or approved by the treating clinician before any use",
+  "rationale": "Excessive lumbar flexion at the bottom of the squat: halve lumbar flexion with the knee pattern and both feet unchanged, and show what that does to trunk inclination and the rest of the body.",
+  "targets": [
+    {
+      "coordinate": "L5_S1_Flex_Ext",
+      "mode": "scale",
+      "factor": 0.5
+    },
+    {
+      "coordinate": "knee_angle_r",
+      "mode": "offset",
+      "delta": 0.0
+    },
+    {
+      "coordinate": "knee_angle_l",
+      "mode": "offset",
+      "delta": 0.0
+    }
+  ],
+  "anchors": [
+    {
+      "name": "heel_r",
+      "body": "calcn_r"
+    },
+    {
+      "name": "toes_r",
+      "body": "toes_r"
+    },
+    {
+      "name": "midfoot_r",
+      "body": "calcn_r",
+      "location": [
+        0.1,
+        0.0,
+        0.04
+      ]
+    },
+    {
+      "name": "heel_l",
+      "body": "calcn_l"
+    },
+    {
+      "name": "toes_l",
+      "body": "toes_l"
+    },
+    {
+      "name": "midfoot_l",
+      "body": "calcn_l",
+      "location": [
+        0.1,
+        0.0,
+        -0.04
+      ]
+    }
+  ],
+  "weights": {
+    "anchor": 1000.0,
+    "target": 10.0,
+    "other": 0.1,
+    "translation": 100.0
+  },
+  "check_rules": "squat_posture"
+}

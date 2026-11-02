@@ -21,5 +21,14 @@
     "joint_centres": {"status": "generic", "error": "scaled model, unvalidated"},
     "surface_shape": {"status": "personalised", "error": "iPhone LiDAR scan, cm-level (Tier B)"},
     "kinematics": {"status": "unvalidated", "error": "pending docs/validation-protocol.md run"}
+  },
+  "breathing": {
+    "signal_source": "depth-camera",
+    "respiratory_rate_bpm": 14.0,
+    "ie_ratio": 0.67,
+    "compartment_volume_share_pct": {"pulmonary_ribcage": 45.0, "abdominal_ribcage": 20.0, "abdomen": 35.0},
+    "thoracoabdominal_phase_angle_deg": 12.0,
+    "diaphragm_status": "inferred",
+    "screening_flags": []
   }
 }

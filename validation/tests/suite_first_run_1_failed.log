@@ -1,0 +1,212 @@
+============================= test session starts ==============================
+platform linux -- Python 3.13.16, pytest-9.1.1, pluggy-1.7.0 -- ${BIO_PY:-python}
+rootdir: $REPO/pipeline
+configfile: pyproject.toml
+collecting ... collected 170 items
+
+tests/test_dxa.py::test_dxa_record_checks PASSED                         [  0%]
+tests/test_dxa.py::test_leg_muscle_ladder_without_opensim PASSED         [  1%]
+tests/test_dxa.py::test_person_age_sex_and_dxa PASSED                    [  1%]
+tests/test_dxa.py::test_cli_person_dxa PASSED                            [  2%]
+tests/test_dxa.py::test_muscle_study_takes_age_sex_and_dxa_from_the_person PASSED [  2%]
+tests/test_imaging.py::test_bone_density_categories_follow_the_score_the_person_needs PASSED [  3%]
+tests/test_imaging.py::test_bone_density_refuses_what_is_not_a_calibrated_density PASSED [  4%]
+tests/test_imaging.py::test_imaging_labels_map_to_model_muscles_without_overlap PASSED [  4%]
+tests/test_imaging.py::test_person_records_imaging_and_bone_density PASSED [  5%]
+tests/test_imaging.py::test_muscle_study_uses_the_persons_imaging_and_shows_bone_density PASSED [  5%]
+tests/test_kinect.py::test_lifted_keypoints_land_on_joint_centres_and_gravity_is_the_floor PASSED [  6%]
+tests/test_kinect.py::test_an_occluded_joint_is_left_empty_not_given_the_occluders_depth PASSED [  7%]
+tests/test_kinect.py::test_a_mirrored_stream_is_detected_and_undone PASSED [  7%]
+tests/test_kinect.py::test_capture_reader_refuses_truncated_or_foreign_recordings PASSED [  8%]
+tests/test_kinect.py::test_kinect_cli_writes_a_sequence_the_pipeline_reads PASSED [  8%]
+tests/test_kinect.py::test_kinect_cli_takes_height_mass_and_thigh_lengths_from_the_person_model PASSED [  9%]
+tests/test_kinect.py::test_shape_frames_are_the_persons_pixels_in_standing_frames PASSED [ 10%]
+tests/test_kinect.py::test_person_shape_stores_a_fit_that_agrees_with_the_measurements PASSED [ 10%]
+tests/test_kinect.py::test_csharp_recorder_output_reads_back FAILED      [ 11%]
+tests/test_kinect.py::test_skin_to_centre_grows_with_bmi_and_is_recorded PASSED [ 11%]
+tests/test_kinect.py::test_bedlam2_adapter_geometry_on_known_shapes PASSED [ 12%]
+tests/test_kinect.py::test_bedlam2_posing_and_line_of_sight_on_a_toy_body PASSED [ 12%]
+tests/test_kinect.py::test_a_hip_hidden_behind_the_thigh_is_placed_at_thigh_length_from_the_knee PASSED [ 13%]
+tests/test_kinect.py::test_place_on_ray_picks_the_side_the_pose_predicts PASSED [ 14%]
+tests/test_myosegmentum.py::test_volumes_use_the_scanners_geometry_and_count_overlap_once PASSED [ 14%]
+tests/test_myosegmentum.py::test_tables_parse_with_decimal_commas_and_stack_rows PASSED [ 15%]
+tests/test_person.py::test_init_versions_and_history PASSED              [ 15%]
+tests/test_person.py::test_assumed_mass_is_not_used_as_measured PASSED   [ 16%]
+tests/test_person.py::test_load_refuses_a_changed_model_or_format PASSED [ 17%]
+tests/test_person.py::test_for_session_refusals_and_contents PASSED      [ 17%]
+tests/test_person.py::test_build_refusals PASSED                         [ 18%]
+tests/test_person.py::test_attach_refuses_records_that_do_not_bind PASSED [ 18%]
+tests/test_person.py::test_cli_person_init_set_show PASSED               [ 19%]
+tests/test_pipeline.py::test_selftest_round_trip_within_limits PASSED    [ 20%]
+tests/test_pipeline.py::test_selftest_scale_factors_recovered PASSED     [ 20%]
+tests/test_pipeline.py::test_selftest_records_are_schema_valid_and_honest PASSED [ 21%]
+tests/test_pipeline.py::test_selftest_gravity_from_floor_fit PASSED      [ 21%]
+tests/test_pipeline.py::test_selftest_detects_right_knee_valgus PASSED   [ 22%]
+tests/test_pipeline.py::test_hsmr_adapter_emulated_round_trip PASSED     [ 22%]
+tests/test_pipeline.py::test_validate_cli PASSED                         [ 23%]
+tests/test_pipeline.py::test_correction_view_on_synthetic_valgus PASSED  [ 24%]
+tests/test_pipeline.py::test_muscle_effects_and_weakness_what_if PASSED  [ 24%]
+tests/test_pipeline.py::test_cue_replay_blocked_on_tier_c PASSED         [ 25%]
+tests/test_pipeline.py::test_strength_calibration_reproduces_measured_torques PASSED [ 25%]
+tests/test_pipeline.py::test_progress_between_two_synthetic_sessions PASSED [ 26%]
+tests/test_pipeline.py::test_trunk_devices_use_physical_units PASSED     [ 27%]
+tests/test_pipeline.py::test_augmenter_adds_plausible_anatomical_markers PASSED [ 27%]
+tests/test_pipeline.py::test_lstm_path_splits_at_a_lost_knee_instead_of_freezing_it PASSED [ 28%]
+tests/test_pipeline.py::test_person_model_keeps_the_bones_across_sessions PASSED [ 28%]
+tests/test_pipeline.py::test_marker_rescale_and_marker_to_joint PASSED   [ 29%]
+tests/test_pipeline.py::test_person_bones_from_skel_joint_centres PASSED [ 30%]
+tests/test_pipeline.py::test_personalised_person_model_is_used_as_it_is PASSED [ 30%]
+tests/test_pipeline.py::test_leg_capacity_scales_with_body_size PASSED   [ 31%]
+tests/test_pipeline.py::test_measured_muscle_size_and_fat_fraction_set_capacity PASSED [ 31%]
+tests/test_pipeline.py::test_dxa_sizes_each_leg_and_age_sex_sizes_the_default PASSED [ 32%]
+tests/test_pipeline.py::test_dxa_scan_sets_segment_masses_in_the_muscle_model PASSED [ 32%]
+tests/test_shape.py::test_posing_matches_the_bedlam2_reference_skinning PASSED [ 33%]
+tests/test_shape.py::test_rendered_depth_is_the_analytic_depth_of_a_sphere PASSED [ 34%]
+tests/test_shape.py::test_kinect_noise_grows_with_the_square_of_depth_and_drops_edges PASSED [ 34%]
+tests/test_shape.py::test_closest_point_on_a_triangle_matches_dense_sampling PASSED [ 35%]
+tests/test_shape.py::test_fit_recovers_known_shape_from_noise_free_depth PASSED [ 35%]
+tests/test_shape.py::test_body_measures_of_a_sphere_and_segment_and_offset_helpers PASSED [ 36%]
+tests/test_skel_bones.py::test_measures_scale_set_and_segments PASSED    [ 37%]
+tests/test_skel_bones.py::test_joints_need_smpl_topology PASSED          [ 37%]
+tests/test_skel_bones.py::test_betas_for_height_mass_and_refusal PASSED  [ 38%]
+tests/test_skel_bones.py::test_load_refuses_a_file_that_is_not_converted PASSED [ 38%]
+tests/test_skel_bones.py::test_converter_builds_arrays_and_refuses_code PASSED [ 39%]
+tests/test_skel_bones.py::test_person_bones_refusals PASSED              [ 40%]
+tests/test_units.py::test_trc_roundtrip_with_missing PASSED              [ 40%]
+tests/test_units.py::test_mot_roundtrip PASSED                           [ 41%]
+tests/test_units.py::test_sequence_roundtrip_and_checks PASSED           [ 41%]
+tests/test_units.py::test_rotation_between_and_kabsch PASSED             [ 42%]
+tests/test_units.py::test_floor_fit_recovers_camera_pitch PASSED         [ 42%]
+tests/test_units.py::test_floor_fit_ignores_a_raised_foot PASSED         [ 43%]
+tests/test_units.py::test_floor_fit_rejects_collinear_feet PASSED        [ 44%]
+tests/test_units.py::test_to_opensim_ground_heading PASSED               [ 44%]
+tests/test_units.py::test_plan_segments_bridges_short_gaps_and_splits_long PASSED [ 45%]
+tests/test_units.py::test_lowpass_cutoff_is_minus_3db PASSED             [ 45%]
+tests/test_units.py::test_interpolate_gaps PASSED                        [ 46%]
+tests/test_units.py::test_classify[hip_flexion_r-expect0] PASSED         [ 47%]
+tests/test_units.py::test_classify[hip_adduction_l-expect1] PASSED       [ 47%]
+tests/test_units.py::test_classify[knee_angle_r-expect2] PASSED          [ 48%]
+tests/test_units.py::test_classify[L5_S1_Lat_Bending-expect3] PASSED     [ 48%]
+tests/test_units.py::test_classify[L1_T12_axial_rotation-expect4] PASSED [ 49%]
+tests/test_units.py::test_classify[pelvis_tx-expect5] PASSED             [ 50%]
+tests/test_units.py::test_classify[pro_sup_l-expect6] PASSED             [ 50%]
+tests/test_units.py::test_classify[knee_angle_r_beta-expect7] PASSED     [ 51%]
+tests/test_units.py::test_fppa_valgus_positive_both_legs PASSED          [ 51%]
+tests/test_units.py::test_segment_reps_counts_peaks PASSED               [ 52%]
+tests/test_units.py::test_validation_bias_gates_and_synthetic_never_approves PASSED [ 52%]
+tests/test_units.py::test_validation_finds_time_lag PASSED               [ 53%]
+tests/test_units.py::test_validation_of_a_fragment_tests_nothing PASSED  [ 54%]
+tests/test_units.py::test_hsmr_input_size_replicates_upstream_resize PASSED [ 54%]
+tests/test_units.py::test_full_image_cam_t_matches_upstream_formula PASSED [ 55%]
+tests/test_units.py::test_select_track_follows_person_and_rejects_jumps PASSED [ 55%]
+tests/test_units.py::test_validation_aliases_lumbar_total_to_single_joint_models PASSED [ 56%]
+tests/test_units.py::test_device_gravity_overrides_image_estimates PASSED [ 57%]
+tests/test_units.py::test_correction_target_modes PASSED                 [ 57%]
+tests/test_units.py::test_correction_specs_load PASSED                   [ 58%]
+tests/test_units.py::test_cue_engine_hysteresis_min_duration_and_gate PASSED [ 58%]
+tests/test_units.py::test_cue_engine_faded_schedule_and_refractory PASSED [ 59%]
+tests/test_units.py::test_feedback_rules_template_loads PASSED           [ 60%]
+tests/test_units.py::test_lsl_live_loop_matches_offline_replay PASSED    [ 60%]
+tests/test_units.py::test_vmc_forward_kinematics_and_posture_signals PASSED [ 61%]
+tests/test_units.py::test_vmc_over_udp PASSED                            [ 61%]
+tests/test_units.py::test_suit_payload_encoding_and_patterns PASSED      [ 62%]
+tests/test_units.py::test_live_chain_posture_to_suit_payloads PASSED     [ 62%]
+tests/test_units.py::test_parse_assist PASSED                            [ 63%]
+tests/test_units.py::test_grf_sensitivity_bands_and_robustness PASSED    [ 64%]
+tests/test_units.py::test_strength_symmetry_index PASSED                 [ 64%]
+tests/test_units.py::test_passive_spring_spec_and_torque PASSED          [ 65%]
+tests/test_units.py::test_progress_verdicts PASSED                       [ 65%]
+tests/test_units.py::test_markerless_reference_approves_nothing PASSED   [ 66%]
+tests/test_units.py::test_camera_sync_recovers_frame_offsets PASSED      [ 67%]
+tests/test_units.py::test_opencap_calibration_reader_is_numpy_only PASSED [ 67%]
+tests/test_units.py::test_suit_caps_and_all_off_on_any_exit PASSED       [ 68%]
+tests/test_units.py::test_rules_report_unevaluated_signals PASSED        [ 68%]
+tests/test_units.py::test_tier_needs_provenance_bound_to_model PASSED    [ 69%]
+tests/test_units.py::test_session_gate_fails_closed PASSED               [ 70%]
+tests/test_units.py::test_live_loop_refuses_foreign_or_ambiguous_posture_streams PASSED [ 70%]
+tests/test_units.py::test_to_degrees_converts_angles_only PASSED         [ 71%]
+tests/test_units.py::test_validation_radian_reference_matches_identical_degree_motion PASSED [ 71%]
+tests/test_units.py::test_derived_signals_and_with_signals_independent_of_file_units PASSED [ 72%]
+tests/test_units.py::test_rotational_mask_follows_model_motion_types PASSED [ 72%]
+tests/test_units.py::test_cue_replay_fires_identically_for_radian_motion PASSED [ 73%]
+tests/test_units.py::test_camera_sync_refuses_offsets_beyond_the_window PASSED [ 74%]
+tests/test_units.py::test_camera_sync_refuses_periodic_motion_offset_beyond_the_window PASSED [ 74%]
+tests/test_units.py::test_camera_sync_flags_periodic_motion_as_ambiguous PASSED [ 75%]
+tests/test_units.py::test_camera_sync_reports_diagnostics PASSED         [ 75%]
+tests/test_units.py::test_camera_sync_refusal_names_the_actual_cause PASSED [ 76%]
+tests/test_units.py::test_mp_multiview_sync_refuses_or_warns PASSED      [ 77%]
+tests/test_units.py::test_unmirror_is_self_inverse_pure_and_swaps_named_pairs PASSED [ 77%]
+tests/test_units.py::test_unmirror_recovers_the_raised_right_wrist_of_a_selfie_clip PASSED [ 78%]
+tests/test_units.py::test_unmirror_negates_world_x PASSED                [ 78%]
+tests/test_units.py::test_mirrored_flag_in_adapter_and_mp_mono PASSED    [ 79%]
+tests/test_units.py::test_rep_peak_sd_is_sample_sd PASSED                [ 80%]
+tests/test_units.py::test_progress_rep_scatter_false_positive_rate PASSED [ 80%]
+tests/test_units.py::test_progress_one_rep_is_never_a_real_change PASSED [ 81%]
+tests/test_units.py::test_progress_mdc_only_from_marker_mocap PASSED     [ 81%]
+tests/test_units.py::test_progress_zero_rep_session_and_recording_order PASSED [ 82%]
+tests/test_units.py::test_session_record_started_at PASSED               [ 82%]
+tests/test_units.py::test_interpolate_gaps_bridges_only_up_to_max_gap PASSED [ 83%]
+tests/test_units.py::test_interpolate_gaps_holds_edges_only_up_to_max_gap PASSED [ 84%]
+tests/test_units.py::test_lowpass_filters_each_finite_stretch_and_keeps_nan PASSED [ 84%]
+tests/test_units.py::test_condition_markers_bridges_short_marker_gaps_and_reports_long_ones PASSED [ 85%]
+tests/test_units.py::test_augmenter_masks_outputs_where_inputs_had_long_gaps PASSED [ 85%]
+tests/test_units.py::test_report_lists_marker_gaps PASSED                [ 86%]
+tests/test_units.py::test_trc_missing_last_marker_and_whole_rows_are_read_by_opensim PASSED [ 87%]
+tests/test_units.py::test_condition_markers_splits_where_too_little_ik_weight_has_a_target PASSED [ 87%]
+tests/test_units.py::test_metrics_flag_reps_with_missing_markers PASSED  [ 88%]
+tests/test_units.py::test_report_flags_missing_markers_and_unsolved_frames PASSED [ 88%]
+tests/test_units.py::test_subject_mass_is_measured_only_when_given PASSED [ 89%]
+tests/test_units.py::test_muscles_and_strength_refuse_an_assumed_body_mass PASSED [ 90%]
+tests/test_units.py::test_muscle_caveat_follows_the_muscle_model PASSED  [ 90%]
+tests/test_units.py::test_recording_scale_against_the_person_and_which_front_ends_measure_scale PASSED [ 91%]
+tests/test_units.py::test_capacity_regression_and_caveats PASSED         [ 91%]
+tests/test_units.py::test_capacity_scaling_needs_a_measured_mass_and_a_height PASSED [ 92%]
+tests/test_units.py::test_processing_stamp_tracks_model_motion_tier_and_exercise PASSED [ 92%]
+tests/test_units.py::test_index_marks_derived_results_from_an_earlier_processing_stale PASSED [ 93%]
+tests/test_units.py::test_muscles_refuses_a_strength_calibration_of_an_earlier_processing PASSED [ 94%]
+tests/test_units.py::test_feedback_gate_ignores_a_validation_report_of_another_processing PASSED [ 94%]
+tests/test_units.py::test_failed_reprocessing_leaves_earlier_derived_results_stale PASSED [ 95%]
+tests/test_units.py::test_strength_refusal_on_a_prestamp_session_points_at_process PASSED [ 95%]
+tests/test_units.py::test_progress_sizes_changes_only_with_validations_the_feedback_gate_trusts PASSED [ 96%]
+tests/test_units.py::test_unfinished_reprocessing_refuses_derived_work PASSED [ 97%]
+tests/test_units.py::test_refused_reprocessing_leaves_the_session_intact PASSED [ 97%]
+tests/test_units.py::test_reprocessing_keeps_a_given_recording_time PASSED [ 98%]
+tests/test_units.py::test_device_what_if_on_an_assumed_mass_is_illustrative_even_at_tier_a PASSED [ 98%]
+tests/test_units.py::test_stage_refuses_augmenter_gap_limit_other_than_the_config PASSED [ 99%]
+tests/test_units.py::test_multiview_records_each_cameras_mirroring PASSED [100%]
+
+=================================== FAILURES ===================================
+____________________ test_csharp_recorder_output_reads_back ____________________
+
+tmp_path = PosixPath('/tmp/pytest-of-root/pytest-228/test_csharp_recorder_output_re0')
+
+    @pytest.mark.skipif(not (shutil.which("mcs") and shutil.which("mono")), reason="needs Mono (mcs + mono)")
+    def test_csharp_recorder_output_reads_back(tmp_path):
+        """KinectCapture.cs against the SDK stub's fake sensor: the C# writer and this reader agree on the format."""
+        stub, exe = tmp_path / "Microsoft.Kinect.dll", tmp_path / "KinectCapture.exe"
+        for args in (["-target:library", f"-out:{stub}", str(CAPTURE_DIR / "api_stub" / "MicrosoftKinectStub.cs")],
+                     ["-warnaserror+", f"-r:{stub}", "-r:System.Drawing.dll", f"-out:{exe}", str(CAPTURE_DIR / "KinectCapture.cs")]):
+            subprocess.run(["mcs", "-langversion:5", *args], check=True, capture_output=True)   # C# 5: Windows' own csc
+        rec = tmp_path / "rec"
+        run = subprocess.run(["mono", str(exe), str(rec), "--seconds", "1.5", "--countdown", "0"], capture_output=True,
+                             text=True, timeout=60, check=False, env={**os.environ, "REHABTWIN_FAKE_KINECT": "1"})
+        assert run.returncode == 0, run.stderr
+        cap = kinect.read_capture(rec)
+        T = cap["T"]
+        assert T >= 20 and cap["meta"]["frames"] == T and len(list((rec / "colour").glob("*.jpg"))) == T
+        assert (rec / "colour" / "000000.jpg").read_bytes()[:2] == b"\xff\xd8"
+        raw_d, reg = np.asarray(cap["depth_raw"][0]), np.asarray(cap["depth"][0])
+        assert (raw_d[:, :4] == 0).all() and (raw_d[:, 4:] > 0).all()
+        np.testing.assert_array_equal(reg[:, 8 + 4:], raw_d[:, 4:-8])     # the fake registers depth 8 px to the right
+        assert (reg[:, :12] == 0).all()
+        gaps = np.diff(cap["frames"]["colour_frame_number"])
+>       assert set(gaps) <= {1, 2} and 2 in gaps and cap["meta"]["sensor_frames_missed"] == int((gaps - 1).sum())
+E       assert ({np.float64(-....float64(2.0)} <= {1, 2}
+E         
+E         Extra items in the left set:
+E         np.float64(-1.0))
+
+tests/test_kinect.py:390: AssertionError
+=========================== short test summary info ============================
+FAILED tests/test_kinect.py::test_csharp_recorder_output_reads_back - assert ...
+================== 1 failed, 169 passed in 988.02s (0:16:28) ===================

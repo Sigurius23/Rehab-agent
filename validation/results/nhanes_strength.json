@@ -1,0 +1,275 @@
+{
+ "cohort": {
+  "1999-2000": 1053,
+  "2001-2002": 1051
+ },
+ "proportional": {
+  "all": {
+   "v_regression": {
+    "n": 2104,
+    "r": 0.652,
+    "ratio_mean": 0.0601,
+    "spread_cv_pct": 28.0
+   },
+   "v_anthropometry": {
+    "n": 2104,
+    "r": 0.752,
+    "ratio_mean": 0.0224,
+    "spread_cv_pct": 23.7
+   },
+   "v_dxa_r": {
+    "n": 2104,
+    "r": 0.787,
+    "ratio_mean": 0.0223,
+    "spread_cv_pct": 22.3
+   },
+   "v_dxa_l": {
+    "n": 2104,
+    "r": 0.773,
+    "ratio_mean": 0.0227,
+    "spread_cv_pct": 22.7
+   },
+   "v_dxa_mean": {
+    "n": 2104,
+    "r": 0.783,
+    "ratio_mean": 0.0225,
+    "spread_cv_pct": 22.4
+   }
+  },
+  "women": {
+   "v_regression": {
+    "n": 983,
+    "r": 0.51,
+    "ratio_mean": 0.0514,
+    "spread_cv_pct": 24.4
+   },
+   "v_anthropometry": {
+    "n": 983,
+    "r": 0.561,
+    "ratio_mean": 0.0213,
+    "spread_cv_pct": 23.5
+   },
+   "v_dxa_r": {
+    "n": 983,
+    "r": 0.616,
+    "ratio_mean": 0.0213,
+    "spread_cv_pct": 22.4
+   },
+   "v_dxa_l": {
+    "n": 983,
+    "r": 0.601,
+    "ratio_mean": 0.0217,
+    "spread_cv_pct": 22.9
+   },
+   "v_dxa_mean": {
+    "n": 983,
+    "r": 0.613,
+    "ratio_mean": 0.0215,
+    "spread_cv_pct": 22.5
+   }
+  },
+  "men": {
+   "v_regression": {
+    "n": 1121,
+    "r": 0.51,
+    "ratio_mean": 0.0677,
+    "spread_cv_pct": 24.3
+   },
+   "v_anthropometry": {
+    "n": 1121,
+    "r": 0.577,
+    "ratio_mean": 0.0234,
+    "spread_cv_pct": 23.0
+   },
+   "v_dxa_r": {
+    "n": 1121,
+    "r": 0.647,
+    "ratio_mean": 0.0232,
+    "spread_cv_pct": 21.5
+   },
+   "v_dxa_l": {
+    "n": 1121,
+    "r": 0.619,
+    "ratio_mean": 0.0236,
+    "spread_cv_pct": 22.0
+   },
+   "v_dxa_mean": {
+    "n": 1121,
+    "r": 0.637,
+    "ratio_mean": 0.0233,
+    "spread_cv_pct": 21.7
+   }
+  },
+  "age 50-64": {
+   "v_regression": {
+    "n": 1107,
+    "r": 0.654,
+    "ratio_mean": 0.0651,
+    "spread_cv_pct": 26.2
+   },
+   "v_anthropometry": {
+    "n": 1107,
+    "r": 0.76,
+    "ratio_mean": 0.0238,
+    "spread_cv_pct": 22.1
+   },
+   "v_dxa_r": {
+    "n": 1107,
+    "r": 0.796,
+    "ratio_mean": 0.0238,
+    "spread_cv_pct": 20.4
+   },
+   "v_dxa_l": {
+    "n": 1107,
+    "r": 0.783,
+    "ratio_mean": 0.0242,
+    "spread_cv_pct": 20.8
+   },
+   "v_dxa_mean": {
+    "n": 1107,
+    "r": 0.792,
+    "ratio_mean": 0.024,
+    "spread_cv_pct": 20.5
+   }
+  },
+  "age 65+": {
+   "v_regression": {
+    "n": 997,
+    "r": 0.635,
+    "ratio_mean": 0.0544,
+    "spread_cv_pct": 26.9
+   },
+   "v_anthropometry": {
+    "n": 997,
+    "r": 0.723,
+    "ratio_mean": 0.0208,
+    "spread_cv_pct": 23.5
+   },
+   "v_dxa_r": {
+    "n": 997,
+    "r": 0.766,
+    "ratio_mean": 0.0206,
+    "spread_cv_pct": 22.1
+   },
+   "v_dxa_l": {
+    "n": 997,
+    "r": 0.748,
+    "ratio_mean": 0.0211,
+    "spread_cv_pct": 22.8
+   },
+   "v_dxa_mean": {
+    "n": 997,
+    "r": 0.76,
+    "ratio_mean": 0.0208,
+    "spread_cv_pct": 22.3
+   }
+  },
+  "BMI >= 30": {
+   "v_regression": {
+    "n": 563,
+    "r": 0.659,
+    "ratio_mean": 0.0552,
+    "spread_cv_pct": 27.6
+   },
+   "v_anthropometry": {
+    "n": 563,
+    "r": 0.745,
+    "ratio_mean": 0.0208,
+    "spread_cv_pct": 23.6
+   },
+   "v_dxa_r": {
+    "n": 563,
+    "r": 0.779,
+    "ratio_mean": 0.021,
+    "spread_cv_pct": 22.1
+   },
+   "v_dxa_l": {
+    "n": 563,
+    "r": 0.756,
+    "ratio_mean": 0.0213,
+    "spread_cv_pct": 22.7
+   },
+   "v_dxa_mean": {
+    "n": 563,
+    "r": 0.771,
+    "ratio_mean": 0.0211,
+    "spread_cv_pct": 22.3
+   }
+  }
+ },
+ "fitted": {
+  "anthropometry": {
+   "features": [
+    "age",
+    "male",
+    "height_m",
+    "mass_kg",
+    "male_age",
+    "male_height"
+   ],
+   "test_r2": 0.658,
+   "test_mae_Nm": 18.7,
+   "test_mae_pct": 18.5
+  },
+  "anthropometry + right leg lean": {
+   "features": [
+    "age",
+    "male",
+    "height_m",
+    "mass_kg",
+    "male_age",
+    "male_height",
+    "lean_r_kg"
+   ],
+   "test_r2": 0.699,
+   "test_mae_Nm": 17.8,
+   "test_mae_pct": 17.2
+  },
+  "anthropometry + left leg lean": {
+   "features": [
+    "age",
+    "male",
+    "height_m",
+    "mass_kg",
+    "male_age",
+    "male_height",
+    "lean_l_kg"
+   ],
+   "test_r2": 0.688,
+   "test_mae_Nm": 18.0,
+   "test_mae_pct": 17.5
+  },
+  "anthropometry + both leg lean": {
+   "features": [
+    "age",
+    "male",
+    "height_m",
+    "mass_kg",
+    "male_age",
+    "male_height",
+    "lean_r_kg",
+    "lean_l_kg"
+   ],
+   "test_r2": 0.698,
+   "test_mae_Nm": 17.9,
+   "test_mae_pct": 17.2
+  },
+  "anthropometry + both leg lean and fat": {
+   "features": [
+    "age",
+    "male",
+    "height_m",
+    "mass_kg",
+    "male_age",
+    "male_height",
+    "lean_r_kg",
+    "lean_l_kg",
+    "fat_r_kg",
+    "fat_l_kg"
+   ],
+   "test_r2": 0.699,
+   "test_mae_Nm": 17.8,
+   "test_mae_pct": 17.2
+  }
+ }
+}

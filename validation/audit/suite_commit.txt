@@ -1,0 +1,1 @@
+6b3501a Correct Pose2Sim's augmenter marker set for the Pose2Sim model's bones

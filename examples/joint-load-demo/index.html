@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Joint load scenario demo — ILLUSTRATIVE</title>
+<style>
+  body{font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;margin:0;background:#0f172a;color:#e2e8f0}
+  .wrap{max-width:880px;margin:0 auto;padding:20px}
+  .warn{background:#7f1d1d;border:1px solid #ef4444;border-radius:10px;padding:10px 14px;font-weight:600}
+  .card{background:#1e293b;border:1px solid #334155;border-radius:12px;padding:16px;margin-top:14px}
+  label{display:block;margin:12px 0 4px;font-size:14px}
+  input[type=range]{width:100%}
+  .val{color:#38bdf8;font-weight:700}
+  .row{display:grid;grid-template-columns:110px 1fr 90px;gap:10px;align-items:center;margin:8px 0}
+  .bar{height:16px;border-radius:6px;background:#334155;position:relative}
+  .fill{height:100%;border-radius:6px}
+  .base{position:absolute;top:-3px;bottom:-3px;width:2px;background:#f8fafc;opacity:.7}
+  small{color:#94a3b8}
+  .grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+  @media(max-width:640px){.grid{grid-template-columns:1fr}}
+  .num{font-size:20px;font-weight:700}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Joint load &amp; stress model — scenario demo</h1>
+  <div class="warn">ILLUSTRATIVE ONLY — simplified scenario arithmetic from docs/design-joint-load-stress-model.md. Not validated, not medical advice, not a prescription. Real outputs require the OpenSim pipeline on a validated twin.</div>
+
+  <div class="card">
+    <label>Current body mass: <span class="val" id="massVal"></span> kg</label>
+    <input type="range" id="mass" min="50" max="130" value="95" step="1">
+    <label>Fat-mass change scenario: <span class="val" id="fatVal"></span> kg (negative = loss)</label>
+    <input type="range" id="fat" min="-15" max="5" value="-5" step="0.5">
+    <label>Quadriceps strength change: <span class="val" id="quadVal"></span>%</label>
+    <input type="range" id="quad" min="-30" max="50" value="20" step="5">
+    <label>Hip abductor strength change: <span class="val" id="hipVal"></span>%</label>
+    <input type="range" id="hip" min="-30" max="50" value="20" step="5">
+    <label>Steps per day: <span class="val" id="stepsVal"></span></label>
+    <input type="range" id="steps" min="1000" max="15000" value="6000" step="500">
+  </div>
+
+  <div class="card">
+    <h2>Peak joint load per step — baseline (white tick) vs scenario</h2>
+    <div id="joints"></div>
+    <small>Baseline multiples of body weight used for illustration: hip 2.4×, knee 2.6×, ankle 3.2×, L4/L5 2.0×. Knee scenario delta uses the Messier anchor (1 kg lost ≈ 4 kgf less per step); other joints scale with mass (stated assumption). Colour = scenario load relative to baseline.</small>
+  </div>
+
+  <div class="grid">
+    <div class="card">
+      <h2>Muscle side (the honest part)</h2>
+      <p>Effort for the same task: <span class="num" id="effort"></span></p>
+      <p>Stability margin index: <span class="num" id="stability"></span></p>
+      <small>Stronger muscles mainly cut <i>effort</i> (% of capacity) and improve stability/distribution — total knee compression stays flat or rises slightly, because muscle tension itself compresses the joint. This demo shows that instead of hiding it.</small>
+    </div>
+    <div class="card">
+      <h2>Cumulative knee load saved</h2>
+      <p><span class="num" id="cumDay"></span> tonnes-force per day</p>
+      <p><span class="num" id="cumKm"></span> kg-force per km walked (per knee)</p>
+      <small>From the Messier 4:1 per-step anchor; per-knee steps/km assumed 650. Muscle training does not add to this number — its benefits are in the left panel.</small>
+    </div>
+  </div>
+
+  <div class="card">
+    <small>Design: docs/design-joint-load-stress-model.md · Inputs in the real system: twin manifest (fat distribution, muscle parameters, alignment, bone quality, safety flags) + measured motion/GRF → OpenSim Joint Reaction Analysis → optional Tier-A FE stress. Scenario deltas within the same person are the trustworthy output; absolute numbers carry joint-specific validation status.</small>
+  </div>
+</div>
+<script>
+const $=id=>document.getElementById(id);
+const JOINTS=[["Hip",2.4],["Knee",2.6],["Ankle",3.2],["Spine L4/L5",2.0]];
+function color(r){return r<0.9?"#22c55e":r<1.0?"#84cc16":r<1.05?"#eab308":"#ef4444"}
+function calc(){
+  const m=+$("mass").value, fat=+$("fat").value, q=+$("quad").value, h=+$("hip").value, steps=+$("steps").value;
+  $("massVal").textContent=m; $("fatVal").textContent=fat; $("quadVal").textContent=(q>0?"+":"")+q;
+  $("hipVal").textContent=(h>0?"+":"")+h; $("stepsVal").textContent=steps;
+  const g=9.81, m2=m+fat;
+  let html="";
+  for(const [name,mult] of JOINTS){
+    const base=mult*m*g;
+    let scen;
+    if(name==="Knee"){
+      scen=base - (-fat)*4*g;                 // Messier: 1 kg lost -> ~4 kgf less/step
+      scen*= 1 + 0.0015*q;                    // stronger quads: compression ~flat/slightly up
+    } else {
+      scen=mult*m2*g;
+    }
+    const r=scen/base, w=Math.min(100, scen/(3.4*130*g)*100), bw=Math.min(100, base/(3.4*130*g)*100);
+    html+=`<div class="row"><div>${name}</div><div class="bar"><div class="fill" style="width:${w}%;background:${color(r)}"></div><div class="base" style="left:${bw}%"></div></div><div>${Math.round(scen)} N</div></div>`;
+  }
+  $("joints").innerHTML=html;
+  const effort=Math.round(60/(1+q/100));
+  $("effort").textContent=effort+"% of max capacity (from an assumed 60%)";
+  $("stability").textContent=Math.min(160, Math.round(100 + h*0.8 + q*0.4))+" (baseline 100)";
+  const savedPerStep=(-fat)*4; // kgf
+  $("cumDay").textContent=(savedPerStep*steps/1000).toFixed(1);
+  $("cumKm").textContent=Math.round(savedPerStep*650);
+}
+document.querySelectorAll("input").forEach(e=>e.addEventListener("input",calc));
+calc();
+</script>
+</body>
+</html>

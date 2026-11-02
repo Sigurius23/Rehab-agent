@@ -1,0 +1,16 @@
+{
+  "_comment": "Illustrative numbers in a plausible adult range, not a measurement of anyone. Torque = force x lever arm (joint centre to dynamometer pad); give torque_Nm, or force_N and lever_arm_m. posture_deg overrides the action's default test posture (configs/strength_actions.json).",
+  "device": "hand-held dynamometer (make shown here)",
+  "protocol": "make test, best of 3 maximal isometric contractions, 3 s each",
+  "tests": [
+    {"action": "hip_abduction_r", "force_N": 98, "lever_arm_m": 0.80},
+    {"action": "hip_abduction_l", "force_N": 132, "lever_arm_m": 0.80},
+    {"action": "hip_extension_r", "torque_Nm": 150},
+    {"action": "hip_extension_l", "torque_Nm": 158},
+    {"action": "knee_extension_r", "torque_Nm": 178, "posture_deg": {"hip_flexion_r": 90, "knee_angle_r": 60}},
+    {"action": "knee_extension_l", "torque_Nm": 186, "posture_deg": {"hip_flexion_l": 90, "knee_angle_l": 60}},
+    {"action": "ankle_plantarflexion_r", "torque_Nm": 105},
+    {"action": "ankle_plantarflexion_l", "torque_Nm": 110},
+    {"action": "trunk_extension", "torque_Nm": 210}
+  ]
+}
