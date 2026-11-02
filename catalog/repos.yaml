@@ -1763,10 +1763,10 @@ repos:
     license: "MIT"
     updated_snapshot: "2025-04-17 (last commit, git clone 2026-11-02)"
     description: "FOCUS - reconstructs a 3D foot surface from several photos or a video, using predicted dense correspondences to the FIND foot model"
-    notes: "Stars/forks not fetched (GitHub API not reachable 2026-11-02): run scripts/enrich_metadata.py where it is. Language estimated from file counts in a clone. Candidate phone-only foot-surface capture (foot personalisation, impact assessment). External surface only; pretrained models carry their own terms."
+    notes: "Stars, forks and language from the ecosyste.ms mirror of GitHub metadata (synced 2026-10-16, read 2026-11-02), because the GitHub API is not open to this session; language Python, matching the clone's file counts. Rerun scripts/enrich_metadata.py for live values. Candidate phone-only foot-surface capture (foot personalisation, impact assessment). External surface only; pretrained models carry their own terms."
     upstream_path: "upstream/OllieBoyne/FOCUS"
-    stars_snapshot: null
-    forks_snapshot: null
+    stars_snapshot: 19
+    forks_snapshot: 5
     private: false
     pipeline_stages: ["capture", "body-model"]
     tags: ["foot", "foot-reconstruction", "multiview", "find"]
@@ -1778,10 +1778,10 @@ repos:
     license: "MIT"
     updated_snapshot: "2025-02-18 (last commit, git clone 2026-11-02)"
     description: "FOUND - foot shape reconstruction from multiview images using surface-normal and uncertainty estimates, fitted to the FIND model"
-    notes: "Stars/forks not fetched (GitHub API not reachable 2026-11-02): run scripts/enrich_metadata.py where it is. Language estimated from file counts in a clone. Predecessor of FOCUS for foot-surface capture. Needs separately downloaded model assets with their own terms."
+    notes: "Stars, forks and language from the ecosyste.ms mirror of GitHub metadata (synced 2026-10-16, read 2026-11-02), because the GitHub API is not open to this session; language Python, matching the clone's file counts. Rerun scripts/enrich_metadata.py for live values. Predecessor of FOCUS for foot-surface capture. Needs separately downloaded model assets with their own terms."
     upstream_path: "upstream/OllieBoyne/FOUND"
-    stars_snapshot: null
-    forks_snapshot: null
+    stars_snapshot: 63
+    forks_snapshot: 7
     private: false
     pipeline_stages: ["capture", "body-model"]
     tags: ["foot", "foot-reconstruction", "surface-normals", "find"]
@@ -1793,10 +1793,10 @@ repos:
     license: "MIT"
     updated_snapshot: "2025-03-03 (last commit, git clone 2026-11-02)"
     description: "FIND - parameterised, articulated model of the external foot shape (an implicit neural deformation field) learned from the Foot3D scans"
-    notes: "Stars/forks not fetched (GitHub API not reachable 2026-11-02): run scripts/enrich_metadata.py where it is. Language estimated from file counts in a clone. External foot shape only, no bones or arch mechanics; a candidate surface prior for the per-foot fit. Model assets separate."
+    notes: "Stars, forks and language from the ecosyste.ms mirror of GitHub metadata (synced 2026-10-18, read 2026-11-02), because the GitHub API is not open to this session; language Python, matching the clone's file counts. Rerun scripts/enrich_metadata.py for live values. External foot shape only, no bones or arch mechanics; a candidate surface prior for the per-foot fit. Model assets separate."
     upstream_path: "upstream/OllieBoyne/FIND"
-    stars_snapshot: null
-    forks_snapshot: null
+    stars_snapshot: 43
+    forks_snapshot: 9
     private: false
     pipeline_stages: ["body-model"]
     tags: ["foot", "statistical-shape", "articulated", "foot3d"]
@@ -1808,10 +1808,10 @@ repos:
     license: "MIT"
     updated_snapshot: "2024-05-21 (last commit, git clone 2026-11-02)"
     description: "Guided iPhone app capturing foot photos and ARKit depth for later 3D foot reconstruction (FootCapture)"
-    notes: "Stars/forks not fetched (GitHub API not reachable 2026-11-02): run scripts/enrich_metadata.py where it is. Language estimated from file counts in a clone. Capture front end only; reconstruction is a separate step. Candidate for the phone foot-scan protocol."
+    notes: "Stars, forks and language from the ecosyste.ms mirror of GitHub metadata (synced 2024-05-21, read 2026-11-02), because the GitHub API is not open to this session; language Swift, matching the clone's file counts. Rerun scripts/enrich_metadata.py for live values. Capture front end only; reconstruction is a separate step. Candidate for the phone foot-scan protocol."
     upstream_path: "upstream/ValentinKhanBlouki/AR_footcapture"
-    stars_snapshot: null
-    forks_snapshot: null
+    stars_snapshot: 0
+    forks_snapshot: 0
     private: false
     pipeline_stages: ["capture"]
     tags: ["foot", "iphone", "arkit", "photogrammetry"]
@@ -1823,10 +1823,10 @@ repos:
     license: "varies by subdirectory (see each subdirectory's LICENSE)"
     updated_snapshot: "2026-04-26 (last commit, git clone 2026-11-02)"
     description: "Standard Cyborg iOS SDK for 3D scanning with the TrueDepth camera: capture, fusion and mesh export"
-    notes: "Stars/forks not fetched (GitHub API not reachable 2026-11-02): run scripts/enrich_metadata.py where it is. Language estimated from file counts in a clone. Front TrueDepth camera, so a foot needs a helper or a mirror set-up. Reported no longer maintained by the original company; read each component's licence."
+    notes: "Stars, forks and language from the ecosyste.ms mirror of GitHub metadata (synced 2026-10-22, read 2026-11-02), because the GitHub API is not open to this session; language C++, matching the clone's file counts. Rerun scripts/enrich_metadata.py for live values. Front TrueDepth camera, so a foot needs a helper or a mirror set-up. Reported no longer maintained by the original company; read each component's licence."
     upstream_path: "upstream/StandardCyborg/StandardCyborgCocoa"
-    stars_snapshot: null
-    forks_snapshot: null
+    stars_snapshot: 182
+    forks_snapshot: 69
     private: false
     pipeline_stages: ["capture"]
     tags: ["ios", "truedepth", "3d-scanning", "sdk"]
@@ -1838,10 +1838,10 @@ repos:
     license: "GPL-3.0"
     updated_snapshot: "2026-10-28 (last commit, git clone 2026-11-02)"
     description: "OpenScan3 - firmware for OpenScan DIY photogrammetry scanners (turntable and camera control)"
-    notes: "Stars/forks not fetched (GitHub API not reachable 2026-11-02): run scripts/enrich_metadata.py where it is. Language estimated from file counts in a clone. Reference for a fixed-rig photogrammetry set-up; other OpenScan repositories have their own licences. GPL-3.0 if linked."
+    notes: "Stars, forks and language from the ecosyste.ms mirror of GitHub metadata (synced 2026-07-24, read 2026-11-02), because the GitHub API is not open to this session; language Python, matching the clone's file counts. Rerun scripts/enrich_metadata.py for live values. Reference for a fixed-rig photogrammetry set-up; other OpenScan repositories have their own licences. GPL-3.0 if linked."
     upstream_path: "upstream/OpenScan-org/OpenScan3"
-    stars_snapshot: null
-    forks_snapshot: null
+    stars_snapshot: 97
+    forks_snapshot: 25
     private: false
     pipeline_stages: ["capture", "tooling"]
     tags: ["photogrammetry", "diy-scanner", "firmware", "hardware"]
@@ -1853,10 +1853,10 @@ repos:
     license: "MIT"
     updated_snapshot: "2025-02-12 (last commit, git clone 2026-11-02)"
     description: "SynFoot - synthetic foot images with annotations, used to train the FOUND and FOCUS reconstruction methods"
-    notes: "Stars/forks not fetched (GitHub API not reachable 2026-11-02): run scripts/enrich_metadata.py where it is. Language estimated from file counts in a clone. Repository holds layout notes and samples, no code. The downloaded data's terms and provenance need checking separately."
+    notes: "Stars, forks and language from the ecosyste.ms mirror of GitHub metadata (synced 2026-01-31, read 2026-11-02), because the GitHub API is not open to this session; language none, matching the clone's file counts. Rerun scripts/enrich_metadata.py for live values. Repository holds layout notes and samples, no code. The downloaded data's terms and provenance need checking separately."
     upstream_path: "upstream/OllieBoyne/SynFoot"
-    stars_snapshot: null
-    forks_snapshot: null
+    stars_snapshot: 14
+    forks_snapshot: 2
     private: false
     pipeline_stages: ["dataset"]
     tags: ["foot", "synthetic-data", "dataset", "find"]
@@ -1868,7 +1868,7 @@ repos:
     license: "MIT"
     updated_snapshot: "2026-06-19 (last commit, git clone 2026-11-02)"
     description: "FootScan - desktop photo-to-mesh foot workflow producing printable insoles, plus an offline mobile insole prototype"
-    notes: "Stars/forks not fetched (GitHub API not reachable 2026-11-02): run scripts/enrich_metadata.py where it is. Language estimated from file counts in a clone. Its mobile README: outline and size are measured, the arch/heel contour is parametric; depth capture is the next milestone. MIT with a disclaimer."
+    notes: "Stars/forks not fetched: the GitHub API is not open to this session and the ecosyste.ms mirror has no record (both checked 2026-11-02); run scripts/enrich_metadata.py where the API is reachable. Language estimated from file counts in a clone. Its mobile README: outline and size are measured, the arch/heel contour is parametric; depth capture is the next milestone. MIT with a disclaimer."
     upstream_path: "upstream/MiniDraco/footscan"
     stars_snapshot: null
     forks_snapshot: null
@@ -1883,7 +1883,7 @@ repos:
     license: "GPL-3.0"
     updated_snapshot: "2026-10-06 (last commit, git clone 2026-11-02)"
     description: "Turns authorised Volumental or Fleet Feet foot-scan data into printable insoles, with optional pressure maps"
-    notes: "Stars/forks not fetched (GitHub API not reachable 2026-11-02): run scripts/enrich_metadata.py where it is. Language estimated from file counts in a clone. Personal prototype, not clinically validated. The author flags a non-commercial dependency (triangle); review before reuse."
+    notes: "Stars/forks not fetched: the GitHub API is not open to this session and the ecosyste.ms mirror has no record (both checked 2026-11-02); run scripts/enrich_metadata.py where the API is reachable. Language estimated from file counts in a clone. Personal prototype, not clinically validated. The author flags a non-commercial dependency (triangle); review before reuse."
     upstream_path: "upstream/JoshKirk800/insole-pipeline"
     stars_snapshot: null
     forks_snapshot: null
@@ -1898,10 +1898,10 @@ repos:
     license: "none found in repo root (checked 2026-11-02; treat as all-rights-reserved)"
     updated_snapshot: "2023-06-06 (last commit, git clone 2026-11-02)"
     description: "Scripts that process 3D scans of foot imprints into orthotic insole geometry with PyMeshLab"
-    notes: "Stars/forks not fetched (GitHub API not reachable 2026-11-02): run scripts/enrich_metadata.py where it is. Language estimated from file counts in a clone. Small script set, last updated 2023. No licence file: all-rights-reserved until cleared."
+    notes: "Stars, forks and language from the ecosyste.ms mirror of GitHub metadata (synced 2025-08-30, read 2026-11-02), because the GitHub API is not open to this session; the mirror reports language none; the catalog keeps Python from the clone's file counts. Rerun scripts/enrich_metadata.py for live values. A fork of Polycron/orthotic-3D-insoles (per the mirror), which has no licence file either (git clone 2026-11-02). Small script set, last updated 2023. No licence file: all-rights-reserved until cleared."
     upstream_path: "upstream/DuduPiglet/insole-3Designer"
-    stars_snapshot: null
-    forks_snapshot: null
+    stars_snapshot: 0
+    forks_snapshot: 0
     private: false
     pipeline_stages: ["tooling"]
     tags: ["insole", "orthotic", "pymeshlab"]
@@ -1913,10 +1913,10 @@ repos:
     license: "GPL-3.0"
     updated_snapshot: "2026-10-05 (last commit, git clone 2026-11-02)"
     description: "OpenShoeDesigner - manufacturing-oriented design of shoes and lasts from foot measurements or scans"
-    notes: "Stars/forks not fetched (GitHub API not reachable 2026-11-02): run scripts/enrich_metadata.py where it is. Language estimated from file counts in a clone. Author says the MVP is not complete (reported). Active fork; compare with Vesuvan/openshoedesigner before choosing."
+    notes: "Stars, forks and language from the ecosyste.ms mirror of GitHub metadata (synced 2026-10-05, read 2026-11-02), because the GitHub API is not open to this session; language C++, matching the clone's file counts. Rerun scripts/enrich_metadata.py for live values. Author says the MVP is not complete (reported). Active fork; compare with Vesuvan/openshoedesigner before choosing."
     upstream_path: "upstream/tobiasfs/openshoedesigner"
-    stars_snapshot: null
-    forks_snapshot: null
+    stars_snapshot: 1
+    forks_snapshot: 0
     private: false
     pipeline_stages: ["tooling"]
     tags: ["shoe-design", "last", "footwear", "cad"]
@@ -1928,10 +1928,10 @@ repos:
     license: "GPL-3.0"
     updated_snapshot: "2022-09-22 (last commit, git clone 2026-11-02)"
     description: "OpenShoeDesigner (Vesuvan) - shoe and last design from foot measurements or scans"
-    notes: "Stars/forks not fetched (GitHub API not reachable 2026-11-02): run scripts/enrich_metadata.py where it is. Language estimated from file counts in a clone. Same project name, last commit 2022; the tobiasfs repository is the active one. Check their relationship before using either."
+    notes: "Stars, forks and language from the ecosyste.ms mirror of GitHub metadata (synced 2023-05-01, read 2026-11-02), because the GitHub API is not open to this session; language C++, matching the clone's file counts. Rerun scripts/enrich_metadata.py for live values. Same project name, last commit 2022; the tobiasfs repository is the active one. Check their relationship before using either."
     upstream_path: "upstream/Vesuvan/openshoedesigner"
-    stars_snapshot: null
-    forks_snapshot: null
+    stars_snapshot: 0
+    forks_snapshot: 0
     private: false
     pipeline_stages: ["tooling"]
     tags: ["shoe-design", "last", "footwear", "cad"]
@@ -1943,7 +1943,7 @@ repos:
     license: "MIT"
     updated_snapshot: "2026-10-27 (last commit, git clone 2026-11-02)"
     description: "archy - experimental phone foot scan, optional DIY pressure sensors and printable-insole workflow (iOS app and services)"
-    notes: "Stars/forks not fetched (GitHub API not reachable 2026-11-02): run scripts/enrich_metadata.py where it is. Language estimated from file counts in a clone. Prototype, not clinically validated. Pressure from a scan alone is estimated, not measured."
+    notes: "Stars/forks not fetched: the GitHub API is not open to this session and the ecosyste.ms mirror has no record (both checked 2026-11-02); run scripts/enrich_metadata.py where the API is reachable. Language estimated from file counts in a clone. Prototype, not clinically validated. Pressure from a scan alone is estimated, not measured."
     upstream_path: "upstream/ishaanko/archy"
     stars_snapshot: null
     forks_snapshot: null
@@ -1958,10 +1958,10 @@ repos:
     license: "BSD-3-Clause (core; see LICENSE for dependencies)"
     updated_snapshot: "2026-11-02 (last commit, git clone 2026-11-02)"
     description: "COLMAP - general-purpose structure-from-motion and multi-view stereo: camera poses and 3D reconstruction from photos"
-    notes: "Stars/forks not fetched (GitHub API not reachable 2026-11-02): run scripts/enrich_metadata.py where it is. Language estimated from file counts in a clone. Path A of the foot-capture research note (with OpenMVS). Audit dependency licences for the build used."
+    notes: "Stars, forks and language from the ecosyste.ms mirror of GitHub metadata (synced 2026-11-01, read 2026-11-02), because the GitHub API is not open to this session; language C++, matching the clone's file counts. Rerun scripts/enrich_metadata.py for live values. Path A of the foot-capture research note (with OpenMVS). Audit dependency licences for the build used."
     upstream_path: "upstream/colmap/colmap"
-    stars_snapshot: null
-    forks_snapshot: null
+    stars_snapshot: 13122
+    forks_snapshot: 2205
     private: false
     pipeline_stages: ["capture", "body-model"]
     tags: ["photogrammetry", "structure-from-motion", "multiview"]
@@ -1973,10 +1973,10 @@ repos:
     license: "AGPL-3.0"
     updated_snapshot: "2026-10-14 (last commit, git clone 2026-11-02)"
     description: "OpenMVS - dense multi-view stereo: densification, meshing and texturing from COLMAP or other camera poses"
-    notes: "Stars/forks not fetched (GitHub API not reachable 2026-11-02): run scripts/enrich_metadata.py where it is. Language estimated from file counts in a clone. AGPL-3.0: obligations extend to software used over a network; keep as an offline research tool unless cleared. Has InterfaceCOLMAP."
+    notes: "Stars, forks and language from the ecosyste.ms mirror of GitHub metadata (synced 2026-10-26, read 2026-11-02), because the GitHub API is not open to this session; language C++, matching the clone's file counts. Rerun scripts/enrich_metadata.py for live values. AGPL-3.0: obligations extend to software used over a network; keep as an offline research tool unless cleared. Has InterfaceCOLMAP."
     upstream_path: "upstream/cdcseacave/openMVS"
-    stars_snapshot: null
-    forks_snapshot: null
+    stars_snapshot: 4170
+    forks_snapshot: 991
     private: false
     pipeline_stages: ["capture", "body-model"]
     tags: ["photogrammetry", "multiview-stereo", "meshing"]
@@ -1988,10 +1988,10 @@ repos:
     license: "GPL-3.0"
     updated_snapshot: "2026-07-24 (last commit, git clone 2026-11-02)"
     description: "MeshLab - open-source system for inspecting, cleaning, repairing and processing 3D triangle meshes"
-    notes: "Stars/forks not fetched (GitHub API not reachable 2026-11-02): run scripts/enrich_metadata.py where it is. Language estimated from file counts in a clone. Manual inspection and cleaning of foot scans. GPL-3.0; fine as a separate tool, not to be linked into the product."
+    notes: "Stars, forks and language from the ecosyste.ms mirror of GitHub metadata (synced 2026-10-26, read 2026-11-02), because the GitHub API is not open to this session; language C++, matching the clone's file counts. Rerun scripts/enrich_metadata.py for live values. Manual inspection and cleaning of foot scans. GPL-3.0; fine as a separate tool, not to be linked into the product."
     upstream_path: "upstream/cnr-isti-vclab/meshlab"
-    stars_snapshot: null
-    forks_snapshot: null
+    stars_snapshot: 5891
+    forks_snapshot: 921
     private: false
     pipeline_stages: ["tooling", "visualization"]
     tags: ["mesh-processing", "mesh-cleaning", "3d-viewer"]
@@ -2003,10 +2003,10 @@ repos:
     license: "GPL-3.0"
     updated_snapshot: "2026-02-03 (last commit, git clone 2026-11-02)"
     description: "PyMeshLab - Python interface to MeshLab's mesh-processing filters for scripted cleaning and remeshing"
-    notes: "Stars/forks not fetched (GitHub API not reachable 2026-11-02): run scripts/enrich_metadata.py where it is. Language estimated from file counts in a clone. Scripted scan cleaning in research pipelines. GPL-3.0 applies to code that imports it."
+    notes: "Stars, forks and language from the ecosyste.ms mirror of GitHub metadata (synced 2026-10-26, read 2026-11-02), because the GitHub API is not open to this session; language C++, matching the clone's file counts. Rerun scripts/enrich_metadata.py for live values. Scripted scan cleaning in research pipelines. GPL-3.0 applies to code that imports it."
     upstream_path: "upstream/cnr-isti-vclab/PyMeshLab"
-    stars_snapshot: null
-    forks_snapshot: null
+    stars_snapshot: 984
+    forks_snapshot: 82
     private: false
     pipeline_stages: ["tooling"]
     tags: ["mesh-processing", "python", "meshlab"]
@@ -2018,10 +2018,10 @@ repos:
     license: "none found in repo root (checked 2026-11-02; treat as all-rights-reserved)"
     updated_snapshot: "2026-08-16 (last commit, git clone 2026-11-02)"
     description: "SoleFit - photo-assisted foot-shape estimate and shoe recommendation prototype (Streamlit app)"
-    notes: "Stars/forks not fetched (GitHub API not reachable 2026-11-02): run scripts/enrich_metadata.py where it is. Language estimated from file counts in a clone. Heuristic recommendations over a small catalog. No licence file: all-rights-reserved until cleared."
+    notes: "Stars, forks and language from the ecosyste.ms mirror of GitHub metadata (synced 2026-08-14, read 2026-11-02), because the GitHub API is not open to this session; language Python, matching the clone's file counts. Rerun scripts/enrich_metadata.py for live values. Heuristic recommendations over a small catalog. No licence file: all-rights-reserved until cleared."
     upstream_path: "upstream/javeriafateh-rph/SoleFit"
-    stars_snapshot: null
-    forks_snapshot: null
+    stars_snapshot: 0
+    forks_snapshot: 0
     private: false
     pipeline_stages: ["tooling"]
     tags: ["shoe-recommendation", "foot", "prototype"]
@@ -2033,10 +2033,10 @@ repos:
     license: "AGPL-3.0"
     updated_snapshot: "2026-09-29 (last commit, git clone 2026-11-02)"
     description: "PredSim - KU Leuven framework for muscle-driven predictive simulations of gait (MATLAB, CasADi, opensimAD), the successor 3dpredictsim points new work to"
-    notes: "Stars/forks not fetched (GitHub API not reachable 2026-11-02): run scripts/enrich_metadata.py where it is. Language estimated from file counts in a clone. Carries the candidate DHondt_et_al_2024 3- and 4-segment foot models (a candidate, not selected). AGPL-3.0, unlike 3dpredictsim's MIT: keep the two licences separate and check each model asset and dependency (CasADi, opensimAD, OpenSim) before use."
+    notes: "Stars, forks and language from the ecosyste.ms mirror of GitHub metadata (synced 2026-10-20, read 2026-11-02), because the GitHub API is not open to this session; language MATLAB, matching the clone's file counts. Rerun scripts/enrich_metadata.py for live values. Carries the candidate DHondt_et_al_2024 3- and 4-segment foot models (a candidate, not selected). AGPL-3.0, unlike 3dpredictsim's MIT: keep the two licences separate and check each model asset and dependency (CasADi, opensimAD, OpenSim) before use."
     upstream_path: "upstream/KULeuvenNeuromechanics/PredSim"
-    stars_snapshot: null
-    forks_snapshot: null
+    stars_snapshot: 48
+    forks_snapshot: 117
     private: false
     pipeline_stages: ["biomechanics", "muscle-sim"]
     tags: ["predictive-simulation", "opensim", "foot-model", "casadi"]

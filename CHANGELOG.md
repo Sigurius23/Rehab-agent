@@ -1,6 +1,16 @@
 # Changelog
 
 ## Unreleased
+- **Catalog stars and forks for the foot repos (#118–#136).** The GitHub API is still not open to this session, so 16
+  of the 19 pending snapshots were filled from the ecosyste.ms mirror of GitHub metadata. Each entry's notes give the
+  mirror's sync date, which ranges from 2023-05-01 to 2026-11-01.
+  - The mirror's primary language agrees with the clone-based estimate for 15 of the 16. For
+    DuduPiglet/insole-3Designer it reports none, and the catalog keeps Python from the clone.
+  - DuduPiglet/insole-3Designer is a fork of Polycron/orthotic-3D-insoles, which has no licence file either.
+  - MiniDraco/footscan, JoshKirk800/insole-pipeline and ishaanko/archy are not in the mirror. Their snapshots stay
+    null and are stated as pending (`SNAPSHOT_PENDING` in `scripts/validate_catalog.py`).
+  - Licences were not changed. The mirror's licence field agrees with the licence files read from the clones. It
+    reports "other" for colmap and StandardCyborgCocoa, whose licence files are custom or set per subdirectory.
 - **3DBones licence status recorded exactly.**
   - The project's licence page displays "License Text" but contains no licence text (checked by the project owner,
     2026-11-02), and no licence file was found in the release.

@@ -17,13 +17,10 @@ if D["count"]!=len(D["repos"]): errs.append(f"count field {D['count']} != {len(D
 # Repos where GitHub itself reports no primary language (verified via API, 2026-10-28)
 NO_LANGUAGE_OK={"andy-cheng/flex4dhuman","ntuywang103/vidihand","lnsgroup/ms-human-700","netease-gameai/choreomaster","ollieboyne/foot3d",
                "ollieboyne/synfoot"}   # SynFoot: no code files in the repository (git clone, 2026-11-02)
-# Added 2026-11-02 from git clones while the GitHub API was not reachable: stars/forks still to fetch with
+# Added 2026-11-02 from git clones while the GitHub API was not reachable. Stars/forks were then filled from the
+# ecosyste.ms mirror, except these three, which the mirror does not index: still to fetch with
 # scripts/enrich_metadata.py (each entry's notes say so). Remove a slug once its snapshot is filled.
-SNAPSHOT_PENDING={s.lower() for s in ("OllieBoyne/FOCUS","OllieBoyne/FOUND","OllieBoyne/FIND","ValentinKhanBlouki/AR_footcapture",
-    "StandardCyborg/StandardCyborgCocoa","OpenScan-org/OpenScan3","OllieBoyne/SynFoot","MiniDraco/footscan",
-    "JoshKirk800/insole-pipeline","DuduPiglet/insole-3Designer","tobiasfs/openshoedesigner","Vesuvan/openshoedesigner",
-    "ishaanko/archy","colmap/colmap","cdcseacave/openMVS","cnr-isti-vclab/meshlab","cnr-isti-vclab/PyMeshLab",
-    "javeriafateh-rph/SoleFit","KULeuvenNeuromechanics/PredSim")}
+SNAPSHOT_PENDING={s.lower() for s in ("MiniDraco/footscan","JoshKirk800/insole-pipeline","ishaanko/archy")}
 for r in D["repos"]:
     s=r["slug"]
     if r["url"]!=f"https://github.com/{s}": errs.append(f"url mismatch: {s}")
