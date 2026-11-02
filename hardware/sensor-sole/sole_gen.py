@@ -236,7 +236,7 @@ def route(sole, regs, tail_start, res=0.25, sense=None, band=None):
         ninner = np.roll(np.roll(inner, sh[0], 0), sh[1], 1)
         edge |= free & ((nb != lab) | ~ninner)
     bd = ndimage.distance_transform_edt(~edge) * res                  # mm from the nearest border
-    cost = np.where(free, 1.0 + 15.0 * bd + 4.0 * np.clip(half - d_edge, 0, None), np.inf)
+    cost = np.where(free, 1.0 + 15.0 * bd + 25.0 * np.clip(half - d_edge, 0, None), np.inf)
     idx = -np.ones((ny, nx), int); fi = np.flatnonzero(free.ravel()); idx.ravel()[fi] = np.arange(len(fi))
     rows, cols, w = [], [], []
     for dy, dx in ((0, 1), (1, 0), (1, 1), (1, -1)):                 # 8-connected grid, each edge once
