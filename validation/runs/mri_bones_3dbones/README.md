@@ -112,8 +112,9 @@ Results on the 9 complete heads, prediction minus MRI, mm:
 - **These hips are not a pristine test set.** They have already informed this work: the completeness gate, the
   leg-model recommendation and the review of these results. They can serve as a development check for a predictor
   trained later on the 317 training subjects (with the 10 mm floor attached), provided nothing about them enters its
-  training or calibration; a final test needs data that has not shaped any decision. The summary JSON's notes still
-  say "test set" and "held out" (written by `hip_centres.py`); read them with this correction.
+  training or calibration; a final test needs data that has not shaped any decision. The summary's note was reworded
+  to match on 2026-11-02. It was regenerated from the original per-subject output, and only that note changed: the
+  unmodified script first reproduced the committed summary byte for byte, and no number or case selection moved.
 
 ## Leg priors side by side (`leg_priors.py`)
 

@@ -361,9 +361,11 @@ def summarize(path, out_path, surface_path=None):
             "(selection block). With nine subjects only a large difference would show; if the complete heads skew "
             "small, the predictor errors here are optimistic, since skin-only error grows with soft tissue.")
     out["notes"].append(
-        "Any calibration of a predictor's offset (e.g. OSSO's anterior bias) must be fitted on separate data and "
-        "only then scored here; fitting it on these hips would fit the test set. Nothing about these hips may enter "
-        "the training or calibration of a predictor this bench later checks.")
+        "These hips have already informed this work (the completeness gate, the leg-model recommendation and the "
+        "review of these results), so they are a development check, not a pristine final test set. Any calibration "
+        "of a predictor's offset (e.g. OSSO's anterior bias) must be fitted on separate data and judged on data that "
+        "has not shaped the work. Nothing about these hips may enter the training or calibration of a predictor they "
+        "are later used to check.")
     fl = out["methods"]["skel_mri"]["distance_mm"]
     out["dataset_verdict"] = (
         f"On the {len(sides)} complete heads the floor (SKEL-J fitted to the MRI bones) lands {fl['mean']} mm from the "

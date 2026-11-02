@@ -1,6 +1,11 @@
 # Changelog
 
 ## Unreleased
+- **Hip summary note reworded** (`hip_centres.py`, `validation/results/mri_bones_3dbones_hip.json`). The nine
+  complete hips are now described as a development check that has informed the work, not a pristine test set.
+  - The summary was regenerated from the original per-subject output of 2026-10-29.
+  - Before the change, the unmodified script reproduced the committed summary byte for byte.
+  - After it, the only difference is that note: no number and no case selection changed.
 - **Documentation corrections:**
   - The leg-model downstream results are limited to the tested synthetic squat.
   - The split sensitivity is quoted for both knees: right about ±18 %, not reportable in the illustrative-DXA run;
