@@ -384,13 +384,13 @@ def route_common(area, sense_combs, common_combs, obstacles, start, width, clear
         poly = list(ln.coords) if ln is not None else pts
         # last hop onto the comb itself; it must not pass a sense comb
         q = nearest_points(Point(poly[0]), common_combs[n])[1]
-        hop = LineString([_into(poly[0], (q.x, q.y), 0.15), poly[0]])
+        hop = LineString([_into(poly[0], (q.x, q.y), 0.04), poly[0]])
         if hop.length > 1e-6 and hop.distance(sense_all) < width / 2 + clear:
             ok = False
             for cand in sorted(todo[n], key=lambda c: D[c])[:400]:
                 pc = (X[xx[cand]], Y[yy[cand]])
                 qc = nearest_points(Point(pc), common_combs[n])[1]
-                if LineString([_into(pc, (qc.x, qc.y), 0.15), pc]).distance(sense_all) >= width / 2 + clear:
+                if LineString([_into(pc, (qc.x, qc.y), 0.04), pc]).distance(sense_all) >= width / 2 + clear:
                     k = cand; ok = True; break
             if ok:
                 seq = [k]
@@ -401,7 +401,7 @@ def route_common(area, sense_combs, common_combs, obstacles, start, width, clear
                 poly = list(ln.coords) if ln is not None else pts
                 q = nearest_points(Point(poly[0]), common_combs[n])[1]
         tree |= set(seq)                                    # only the path actually drawn joins the tree
-        lines.append([_into(poly[0], (q.x, q.y), 0.15)] + poly)
+        lines.append([_into(poly[0], (q.x, q.y), 0.04)] + poly)
         del todo[n]
     return lines, unreached, start_xy
 
@@ -417,8 +417,9 @@ def stubs_to_combs(vias, sense_combs, common_combs, width, clear):
     out, bad = {}, []
     for n, v in vias.items():
         q = nearest_points(Point(v), sense_combs[n])[1]
-        s = LineString([v, (q.x, q.y)])
-        out[n] = [tuple(v), _into(v, (q.x, q.y), 0.15)]
+        end = _into(v, (q.x, q.y), 0.04)                    # just inside the comb: counts as connected
+        s = LineString([v, end])
+        out[n] = [tuple(v), end]
         if s.length > 0.05 and s.distance(common_combs[n]) < clear + width / 2 - 1e-3:
             bad.append(n)
     return out, bad
@@ -444,16 +445,15 @@ def _draw(lines, points, X, Y):
 
 
 def maze_refine(planned, vias, order, allowed, keepout, res=0.06, track_w=0.12, clear=0.15, via_d=0.45,
-                no_go=None):
-    """Final pass: re-route every sense line on a fine grid, guided by its planned lane.
+                no_go=None, rounds=8):
+    """Final pass: negotiated re-routing of every sense line on a fine grid (PathFinder-style).
 
-    The cost is lowest on the planned lane and rises away from it. Lines routed earlier, other nets' vias and
-    the keep-out regions are hard obstacles at full clearance, so the result meets clearance by construction.
-    Where the planned lanes are clean the route follows them; where they conflict (short segments between
-    branch points, branch points inside bends) the line bends just enough. Each line runs from its via to the
-    start of its fan-out (planned[-3]); the fan and the contact are kept as planned. Distances come from one
-    distance transform per obstacle set, not from polygon rasterisation, so a line takes about a second.
-    Returns (lanes, failed)."""
+    Each round routes every line by a shortest path whose cost is lowest on its planned lane. Cells within
+    clearance of another line are allowed but cost more: a present-congestion term that grows every round, and
+    a history term that accumulates where lines collided before. Lines therefore negotiate until none
+    overlaps another. Vias, keep-out regions, the copper-free edge and the fixed fan-outs are hard obstacles.
+    Returns (lanes, failed): failed lists lines still in conflict after the last round (or unroutable).
+    """
     minx, miny, maxx, maxy = allowed.bounds
     X = np.arange(minx - 0.5, maxx + 0.5, res); Y = np.arange(miny - 0.5, maxy + 0.5, res)
     ny, nx = len(Y), len(X)
@@ -463,61 +463,84 @@ def maze_refine(planned, vias, order, allowed, keepout, res=0.06, track_w=0.12, 
     d_edge = ndimage.distance_transform_edt(inside) * res
     d_keep = edt(_raster([keepout], X, Y))
     base = (d_edge >= track_w / 2 + grid_err) & (d_keep >= track_w / 2 + clear + grid_err)
-    if no_go is not None:                                      # e.g. the contact zone: fans are fixed there
+    if no_go is not None:                                      # the contact zone: fans are fixed there
         base &= ~_raster([no_go], X, Y)
     block_line = track_w + clear + grid_err                    # centre-to-centre to another line
     block_via = via_d / 2 + clear + track_w / 2 + grid_err
-    via_mark = {n: _draw([], [vias[n]], X, Y) for n in vias}
-    fixed_mark = {n: _draw([planned[n][-3:]], [], X, Y) for n in planned}
-    routed_mark = np.zeros((ny, nx), bool)
-    lanes, failed = {}, []
     cell = lambda p: (int(round((p[1] - Y[0]) / res)), int(round((p[0] - X[0]) / res)))
-    for n in order:
-        others_via = np.zeros((ny, nx), bool); others_line = routed_mark.copy()
-        for m in planned:
+    nets = list(order)
+    d_via = {n: edt(_draw([], [vias[n]], X, Y)) for n in nets}
+    d_fix = {n: edt(_draw([planned[n][-3:]], [], X, Y)) for n in nets}
+    hard = {}
+    for n in nets:                                             # static obstacles seen by line n
+        h = base.copy()
+        for m in nets:
             if m != n:
-                others_via |= via_mark[m]; others_line |= fixed_mark[m]
-        free = base & (edt(others_via) >= block_via) & (edt(others_line) >= block_line)
-        start, goal = cell(vias[n]), cell(planned[n][-3])
-        for c in (start, goal):                                # the end points themselves are always open
-            free[max(0, c[0] - 2):c[0] + 3, max(0, c[1] - 2):c[1] + 3] = True
-        d_plan = edt(_draw([planned[n][:-2]], [], X, Y))
-        cost = np.where(d_plan <= 0.08, 1.0, np.where(d_plan <= 0.45, 2.5, 8.0))
-        idx = -np.ones((ny, nx), int); fi = np.flatnonzero(free.ravel()); idx.ravel()[fi] = np.arange(len(fi))
-        rows, cols, w = [], [], []
-        cf = cost.ravel()
-        for dy, dx in ((0, 1), (1, 0), (1, 1), (1, -1)):
-            a = idx[0:ny - dy, max(0, -dx):nx - max(0, dx)]
-            b = idx[dy:ny, max(0, dx):nx - max(0, -dx)]
-            ok = (a >= 0) & (b >= 0)
-            ai, bi = a[ok], b[ok]
-            ww = 0.5 * (cf[fi[ai]] + cf[fi[bi]]) * res * math.hypot(dx, dy)
-            rows += [ai, bi]; cols += [bi, ai]; w += [ww, ww]
-        G = csr_matrix((np.concatenate(w), (np.concatenate(rows), np.concatenate(cols))), shape=(len(fi), len(fi)))
-        s, g = idx[start], idx[goal]
-        if s < 0 or g < 0:
-            failed.append(n); lanes[n] = planned[n]; continue
-        D, pred = dijkstra(G, indices=s, return_predecessors=True)
-        if not np.isfinite(D[g]):
-            failed.append(n); lanes[n] = planned[n]
-            # diagnosis: where along the planned lane is the grid closed, and by what
-            why = []
-            dv = edt(others_via)
-            for p in LineString(planned[n][:-2]).segmentize(0.2).coords:
-                i, j = cell(p)
-                if 0 <= i < ny and 0 <= j < nx and not free[i, j]:
-                    why.append((round(p[0], 1), round(p[1], 1),
-                                "edge" if d_edge[i, j] < track_w / 2 + grid_err else
-                                "keepout" if d_keep[i, j] < track_w / 2 + clear + grid_err else
-                                "via" if dv[i, j] < block_via else "line"))
-            maze_refine.why = getattr(maze_refine, "why", {}); maze_refine.why[n] = why[:12]
-            continue
-        seq = [g]
-        while seq[-1] != s:
-            seq.append(pred[seq[-1]])
-        yy, xx = np.unravel_index(fi[seq[::-1]], (ny, nx))
-        pts = [tuple(vias[n])] + [(X[j], Y[i]) for i, j in zip(yy, xx)][1:-1] + [tuple(planned[n][-3])]
-        path = LineString(pts).simplify(0.03)
-        routed_mark |= _draw([list(path.coords)], [], X, Y)
-        lanes[n] = list(path.coords) + list(planned[n][-2:])
+                h &= (d_via[m] >= block_via) & (d_fix[m] >= block_line)
+        for c in (cell(vias[n]), cell(planned[n][-3])):        # its own end points stay open
+            h[max(0, c[0] - 2):c[0] + 3, max(0, c[1] - 2):c[1] + 3] = True
+        hard[n] = h
+    plan_cost = {}
+    for n in nets:
+        dp = edt(_draw([planned[n][:-2]], [], X, Y))
+        plan_cost[n] = np.where(dp <= 0.08, 1.0, np.where(dp <= 0.45, 2.5, 8.0)).astype(np.float32)
+    hist = np.zeros((ny, nx), np.float32)
+    paths, near = {}, {}
+    pres = 0.5
+    failed = list(nets)
+    for rnd in range(rounds):
+        for n in nets:
+            occ = np.zeros((ny, nx), np.float32)
+            for m, nm in near.items():
+                if m != n:
+                    occ += nm
+            free = hard[n]
+            cost = plan_cost[n] * (1.0 + hist) + pres * 40.0 * occ
+            idx = -np.ones((ny, nx), np.int64); fi = np.flatnonzero(free.ravel()); idx.ravel()[fi] = np.arange(len(fi))
+            cf = cost.ravel()
+            rows, cols, w = [], [], []
+            for dy, dx in ((0, 1), (1, 0), (1, 1), (1, -1)):
+                a = idx[0:ny - dy, max(0, -dx):nx - max(0, dx)]
+                b = idx[dy:ny, max(0, dx):nx - max(0, -dx)]
+                ok = (a >= 0) & (b >= 0)
+                ai, bi = a[ok], b[ok]
+                ww = 0.5 * (cf[fi[ai]] + cf[fi[bi]]) * res * math.hypot(dx, dy)
+                rows += [ai, bi]; cols += [bi, ai]; w += [ww, ww]
+            G = csr_matrix((np.concatenate(w), (np.concatenate(rows), np.concatenate(cols))),
+                           shape=(len(fi), len(fi)))
+            s_, g_ = idx[cell(vias[n])], idx[cell(planned[n][-3])]
+            if s_ < 0 or g_ < 0:
+                continue
+            D, pred = dijkstra(G, indices=s_, return_predecessors=True)
+            if not np.isfinite(D[g_]):
+                continue
+            seq = [g_]
+            while seq[-1] != s_:
+                seq.append(pred[seq[-1]])
+            yy, xx = np.unravel_index(fi[seq[::-1]], (ny, nx))
+            pts = [tuple(vias[n])] + [(X[j], Y[i]) for i, j in zip(yy, xx)][1:-1] + [tuple(planned[n][-3])]
+            path = LineString(pts).simplify(0.03)
+            paths[n] = path
+            near[n] = (edt(_draw([list(path.coords)], [], X, Y)) < block_line).astype(np.float32)
+        # conflicts: a line passing within clearance of another line
+        failed = []
+        for n in nets:
+            if n not in paths:
+                failed.append(n); continue
+            mark = _draw([list(paths[n].coords)], [], X, Y)
+            other = np.zeros((ny, nx), np.float32)
+            for m, nm in near.items():
+                if m != n:
+                    other += nm
+            hit = mark & (other > 0)
+            if hit.any():
+                failed.append(n)
+                hist[ndimage.binary_dilation(hit, iterations=3)] += 1.0
+        if not failed:
+            break
+        pres *= 2.0
+    lanes = {}
+    for n in nets:
+        lanes[n] = (list(paths[n].coords) + list(planned[n][-2:])) if n in paths else planned[n]
+    maze_refine.rounds_used = rnd + 1
     return lanes, failed

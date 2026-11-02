@@ -433,13 +433,9 @@ def route_copper(sole, tail, regs, copper, paths, seeds, tail_start, tail_end, t
     fs = np.asarray(tail_end, float) - tdv * (C["edge_gap"] + C["pad_len"] + 3.0)     # fan start line
     contact_zone = Polygon([fs - acv * 20 + tdv * 0.05, fs + acv * 20 + tdv * 0.05,
                             fs + acv * 20 + tdv * 30, fs - acv * 20 + tdv * 30])
-    for _ in range(3):                                # rip up and retry: failed lines go first next time
-        lanes, maze_failed = maze_refine(planned, lan["vias"], order, allowed, keepout,
-                                         track_w=C["sense_w"], clear=C["clear"], via_d=C["via_d"],
-                                         no_go=contact_zone)
-        if not maze_failed:
-            break
-        order = maze_failed + [n for n in order if n not in maze_failed]
+    lanes, maze_failed = maze_refine(planned, lan["vias"], order, allowed, keepout,
+                                     track_w=C["sense_w"], clear=C["clear"], via_d=C["via_d"],
+                                     no_go=contact_zone)
     lan["lanes"] = lanes
     common = {n: copper[n][0] for n in copper}; sense = {n: copper[n][1] for n in copper}
     stubs, near_common = stubs_to_combs(lan["vias"], sense, common, C["sense_w"], C["clear"])
@@ -457,7 +453,7 @@ def route_copper(sole, tail, regs, copper, paths, seeds, tail_start, tail_end, t
     com_tail[0][0] = start_xy                                   # the tail run starts where the tree starts
     checks["routing"] = dict(
         sense_routed=len(lan["lanes"]) - len(maze_failed), maze_failed=maze_failed,
-        maze_blocked_at=getattr(maze_refine, "why", {}),
+        negotiation_rounds=getattr(maze_refine, "rounds_used", None),
         common_unreached=unreached, stubs_near_common=near_common,
         longest_stub_mm=round(max((LineString(v).length for v in stubs.values()), default=0), 2),
         vias=len(lan["vias"]) + 2)
