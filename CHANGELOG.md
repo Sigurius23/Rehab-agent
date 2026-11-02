@@ -1,6 +1,12 @@
 # Changelog
 
 ## Unreleased
+- **3DBones licence status recorded exactly.**
+  - The project's licence page displays "License Text" but contains no licence text (checked by the project owner,
+    2026-11-02), and no licence file was found in the release.
+  - Until written terms are obtained: internal research benchmarking only, no redistribution, no product training.
+  - `run_bench.py`'s data message still mentions "non-commercial research terms". That code string is left
+    unchanged and is flagged in the impact assessment.
 - **Hip summary note reworded** (`hip_centres.py`, `validation/results/mri_bones_3dbones_hip.json`). The nine
   complete hips are now described as a development check that has informed the work, not a pristine test set.
   - The summary was regenerated from the original per-subject output of 2026-10-29.

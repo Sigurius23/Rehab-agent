@@ -10,7 +10,7 @@ the person model is in `docs/person-model.md` (bones from body shape).
 
 | Input | Where it comes from | Terms |
 |---|---|---|
-| `mri_bones_release_v2.zip` (3DBones: per-bone MRI point clouds, skin, SMPL and SKEL-J fits; skin-only predictions on the test split) | register on the 3DBones project site, 3dbones.is.tue.mpg.de | The release ships no licence file. It comes from the HIT MRI data at the Max Planck Institute for Intelligent Systems and is reported as non-commercial research use; read the terms when you register. |
+| `mri_bones_release_v2.zip` (3DBones: per-bone MRI point clouds, skin, SMPL and SKEL-J fits; skin-only predictions on the test split) | register on the 3DBones project site, 3dbones.is.tue.mpg.de | No licence terms found. The project's licence page displays the heading "License Text" but contains no licence text (checked by the project owner, 2026-11-02), and no licence file was found in the release (checked here). The data come from the HIT MRI study at the Max Planck Institute for Intelligent Systems. Until written terms are obtained from the authors: internal research benchmarking only, no redistribution of the data or anything derived per subject, and no training of models for product use. |
 | `skel_female.npz`, `skel_male.npz` | your SKEL download, converted with `python -I pipeline/adapters/body_model_files.py convert DOWNLOADS/ models_npz/` | MPI non-commercial research licence |
 | `skeleton_model.npz` | your OSSO download, converted the same way | MPI non-commercial research licence (built on UK Biobank data) |
 

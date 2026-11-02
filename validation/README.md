@@ -48,7 +48,7 @@ repository) and `$OPENCAP_CORE` (a clone of `opencap-org/opencap-core` for the g
 | MyoSegmenTUM thigh MRI | `python adapters/myosegmentum.py download` | open, see the paper |
 | BEDLAM2 bodies and motions | your account on bedlam2.is.tue.mpg.de | non-commercial, no redistribution |
 | SMPL 1.1.0, SKEL 1.1, STAR, OSSO | your accounts on the MPI sites (kept in your Drive) | non-commercial, no redistribution |
-| 3DBones release v2 (MRI bones, skin, skin-only predictions) | registration on 3dbones.is.tue.mpg.de | no licence file in the release; reported non-commercial research use |
+| 3DBones release v2 (MRI bones, skin, skin-only predictions) | registration on 3dbones.is.tue.mpg.de | no terms found: the licence page displays "License Text" but contains no licence text (2026-11-02), and the release has no licence file; written terms to be requested from the authors |
 
 Convert the model downloads once with `python -I pipeline/adapters/body_model_files.py convert DOWNLOADS/ models_npz/`.
 The licensed files and the large session folders (OpenSim models, motions, muscle studies) are not in this
