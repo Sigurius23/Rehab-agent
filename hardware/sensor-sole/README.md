@@ -32,7 +32,7 @@ Everything in this folder is licensed under the **CERN Open Hardware Licence Ver
 (CERN-OHL-S-2.0)**; the full text is in [`LICENSE`](LICENSE). The rest of this repository remains under its own
 licence (MIT; see the repository root).
 
-Source Location: <https://github.com/Sigurius23/rehab-agent/tree/main/hardware/sensor-sole>
+Source Location: <https://github.com/Sigurius23/Rehab-agent/tree/main/hardware/sensor-sole>
 
 If you make or convey a sole or pod built from this design, CERN-OHL-S-2.0 section 4 applies: give each
 recipient the Complete Source or tell them this Source Location. This notice asks that the Source Location

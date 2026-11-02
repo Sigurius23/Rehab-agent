@@ -233,7 +233,7 @@ Pod v1 (custom board, bare nRF52840 module) adds 32 channels, more storage and a
 ## 9. Decisions needed
 
 1. **Where the design lives.** Decided 2026-11-02: open hardware in the public repository
-   `Sigurius23/rehab-agent`, folder `hardware/sensor-sole/`, under CERN-OHL-S-2.0 (see `README.md`).
+   `Sigurius23/Rehab-agent`, folder `hardware/sensor-sole/`, under CERN-OHL-S-2.0 (see `README.md`).
 2. **Which FiveFingers model.** Decided 2026-11-02: KSO Trek, kangaroo leather, EU 42. Its leather footbed
    is not removable, so the sole lies on top (section 2). Still open: the collar height at the arch, which
    sets the tail length.

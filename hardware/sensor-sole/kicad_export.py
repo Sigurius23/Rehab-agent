@@ -247,7 +247,7 @@ def build(board_json, out_pcb):
         "2-layer polyimide flex, ~0.15 mm; combs ENIG, exposed (no coverlay over regions); B.Cu coverlay",
         "Stiffener under J1 contacts to 0.30 mm total thickness for a ZIF connector",
         "Piezoresistive film per region, adhesive spacer frame, top cover: see DESIGN.md",
-        "CERN-OHL-S-2.0  Source: https://github.com/Sigurius23/rehab-agent/tree/main/hardware/sensor-sole",
+        "CERN-OHL-S-2.0  Source: https://github.com/Sigurius23/Rehab-agent/tree/main/hardware/sensor-sole",
     ]
     for k, s in enumerate(notes):
         text(b, s, (xmin, zmax + 22 - k * 3.0), pcbnew.F_Fab)
@@ -256,7 +256,7 @@ def build(board_json, out_pcb):
     tb.SetTitle(f"Sensor sole v0 ({d['side']}, foot {d['foot_length']:.0f} mm)")
     tb.SetCompany("Rehab Agent meta-repo contributors")
     tb.SetComment(0, "CERN-OHL-S-2.0")
-    tb.SetComment(1, "https://github.com/Sigurius23/rehab-agent/tree/main/hardware/sensor-sole")
+    tb.SetComment(1, "https://github.com/Sigurius23/Rehab-agent/tree/main/hardware/sensor-sole")
     pi = b.GetPageSettings()
     try:
         pi.SetType("A3"); pi.SetPortrait(False); b.SetPageSettings(pi)

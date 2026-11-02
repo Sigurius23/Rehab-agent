@@ -136,10 +136,7 @@ def build_lanes(paths, res, tail_start, tail_dir, tail_end, seeds, pitch, pad_pi
         o = order(sid); n = len(o)
         for i, net in enumerate(o):
             off = ((n - 1) / 2 - i) * pitch
-            ln = line if abs(off) < 1e-9 else line.offset_curve(off, quad_segs=8, join_style="round")
-            if ln.geom_type == "MultiLineString":
-                ln = max(ln.geoms, key=lambda g: g.length)
-            lane[(sid, net)] = ln
+            lane[(sid, net)] = _offset(line, off)
     left = np.array([td[1], -td[0]])                       # "left" when looking into the sole
     across = -left
     m = len(root_order)
@@ -150,7 +147,7 @@ def build_lanes(paths, res, tail_start, tail_dir, tail_end, seeds, pitch, pad_pi
     cl["tail"] = LineString([tuple(fan_start + (vroot - ts) - (vroot - ts) @ td * td), tuple(vroot)])
     for i, net in enumerate(root_order):
         off = ((m - 1) / 2 - i) * pitch
-        lane[("tail", net)] = cl["tail"].offset_curve(off) if abs(off) > 1e-9 else cl["tail"]
+        lane[("tail", net)] = _offset(cl["tail"], off)
     seg_order = lambda sid: root_order if sid == "tail" else order(sid)
     parent_of = {root: "tail"}
     kids_of = {root: root_kids}
@@ -253,6 +250,22 @@ def build_lanes(paths, res, tail_start, tail_dir, tail_end, seeds, pitch, pad_pi
     pin_order = ["COM"] + root_order + ["COM"]
     return dict(lanes=out, vias=vias, pin_order=pin_order, pad_mid=tuple(pad_mid), across=tuple(across),
                 left=tuple(left))
+
+
+def _offset(line, off):
+    """Offset curve that never comes back empty. A centre line shorter than the offset (a short segment at a
+    tight node) can collapse under shapely's offset; then the lane is the line shifted along its chord normal."""
+    if abs(off) < 1e-9:
+        return line
+    ln = line.offset_curve(off, quad_segs=8, join_style="round")
+    if ln.geom_type == "MultiLineString":
+        ln = max(ln.geoms, key=lambda g: g.length)
+    if ln.is_empty or len(ln.coords) < 2 or ln.length < 1e-6:
+        a = np.asarray(line.coords[0], float); b = np.asarray(line.coords[-1], float)
+        d = b - a; d = d / (np.linalg.norm(d) or 1.0)
+        nv = np.array([-d[1], d[0]]) * off
+        ln = LineString([tuple(np.asarray(c, float) + nv) for c in line.coords])
+    return ln
 
 
 def _smooth_line(pts, window, res):
