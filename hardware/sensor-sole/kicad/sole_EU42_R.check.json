@@ -1,21 +1,44 @@
 {
  "board": "sole_EU42_R.kicad_pcb",
- "sha256": "5e93e5d74c90f08eb777553582d890fdd47e1ddc4b9e7b69c35e210e2b37b20c",
+ "sha256": "35385b5950f04f1937c1ec6604b50521f8e979d5b7ce74a2e12726ddaef07db1",
  "project_sha256": "1440188d625db353df332d33746d1d636ba5a3f7b14a4d4002f3d0587926b5ac",
  "kicad": "7.0.11+dfsg-1build4",
  "title": "Sensor sole v0 (R, foot 270 mm)",
  "title_block": [
   "CERN-OHL-S-2.0",
   "https://github.com/Sigurius23/Rehab-agent/tree/main/hardware/sensor-sole",
-  "sole_gen bd1af8f1e187 sole_route 10804ab6f8ff kicad_export e44c53a5128b",
-  "git 12cd2b770af1; side R, size 42.0, exit arch"
+  "sole_gen d868f89c90e4 sole_route 72ed9bb8f9dd kicad_export 01499f000a7f",
+  "git 49ad079f2dce; side R, size 42.0, exit arch"
  ],
  "source_in_board": {
-  "sole_gen": "bd1af8f1e187",
-  "sole_route": "10804ab6f8ff",
-  "kicad_export": "e44c53a5128b"
+  "sole_gen": "d868f89c90e4",
+  "sole_route": "72ed9bb8f9dd",
+  "kicad_export": "01499f000a7f"
  },
  "source_matches_files": true,
+ "config": {
+  "regions": [
+   "heel_post",
+   "heel_med",
+   "heel_lat",
+   "arch_med",
+   "mid_lat_prox",
+   "mid_lat_dist",
+   "mt1",
+   "mt2",
+   "mt3",
+   "mt4",
+   "mt5",
+   "toe1",
+   "toe2",
+   "toe3",
+   "toe4",
+   "toe5"
+  ],
+  "contacts": 18,
+  "dropped": {}
+ },
+ "board_id": "EU42 R g49ad079",
  "drc": {
   "report": "sole_EU42_R.drc.rpt",
   "written": true,
@@ -25,28 +48,157 @@
   "by_type": {
    "lib_footprint_issues": 17
   },
-  "by_severity": {
-   "warning": 17
-  }
+  "library_warnings": [
+   "J1",
+   "S01",
+   "S02",
+   "S03",
+   "S04",
+   "S05",
+   "S06",
+   "S07",
+   "S08",
+   "S09",
+   "S10",
+   "S11",
+   "S12",
+   "S13",
+   "S14",
+   "S15",
+   "S16"
+  ],
+  "other_entries": []
  },
  "coverlay_openings_ok": true,
- "coverlay_opening_pct_of_region": {
-  "mid_lat_dist": 99.4,
-  "toe1": 100.0,
-  "arch_med": 99.6,
-  "mt4": 97.0,
-  "toe3": 100.0,
-  "toe4": 100.0,
-  "heel_med": 97.9,
-  "mid_lat_prox": 99.9,
-  "heel_post": 100.0,
-  "toe2": 100.0,
-  "mt2": 100.0,
-  "toe5": 99.9,
-  "mt5": 100.0,
-  "mt3": 99.9,
-  "heel_lat": 100.0,
-  "mt1": 100.0
+ "coverlay": {
+  "heel_lat": {
+   "copper_mm2": 771.9,
+   "covered_mm2": 0.15,
+   "covered_pct": 0.02,
+   "sense_covered_mm2": 0.06,
+   "common_covered_mm2": 0.09,
+   "opening_pct_of_region": 100.0
+  },
+  "mt3": {
+   "copper_mm2": 582.1,
+   "covered_mm2": 0.15,
+   "covered_pct": 0.03,
+   "sense_covered_mm2": 0.06,
+   "common_covered_mm2": 0.08,
+   "opening_pct_of_region": 100.0
+  },
+  "toe2": {
+   "copper_mm2": 294.3,
+   "covered_mm2": 0.14,
+   "covered_pct": 0.05,
+   "sense_covered_mm2": 0.06,
+   "common_covered_mm2": 0.08,
+   "opening_pct_of_region": 100.0
+  },
+  "toe5": {
+   "copper_mm2": 160.1,
+   "covered_mm2": 0.17,
+   "covered_pct": 0.11,
+   "sense_covered_mm2": 0.06,
+   "common_covered_mm2": 0.11,
+   "opening_pct_of_region": 99.9
+  },
+  "mid_lat_prox": {
+   "copper_mm2": 830.2,
+   "covered_mm2": 0.19,
+   "covered_pct": 0.02,
+   "sense_covered_mm2": 0.07,
+   "common_covered_mm2": 0.12,
+   "opening_pct_of_region": 100.0
+  },
+  "mt5": {
+   "copper_mm2": 326.9,
+   "covered_mm2": 0.15,
+   "covered_pct": 0.05,
+   "sense_covered_mm2": 0.07,
+   "common_covered_mm2": 0.08,
+   "opening_pct_of_region": 100.0
+  },
+  "heel_post": {
+   "copper_mm2": 463.7,
+   "covered_mm2": 0.14,
+   "covered_pct": 0.03,
+   "sense_covered_mm2": 0.07,
+   "common_covered_mm2": 0.07,
+   "opening_pct_of_region": 100.0
+  },
+  "mid_lat_dist": {
+   "copper_mm2": 542.3,
+   "covered_mm2": 0.16,
+   "covered_pct": 0.03,
+   "sense_covered_mm2": 0.06,
+   "common_covered_mm2": 0.09,
+   "opening_pct_of_region": 100.0
+  },
+  "mt2": {
+   "copper_mm2": 637.1,
+   "covered_mm2": 0.17,
+   "covered_pct": 0.03,
+   "sense_covered_mm2": 0.07,
+   "common_covered_mm2": 0.1,
+   "opening_pct_of_region": 100.0
+  },
+  "toe1": {
+   "copper_mm2": 559.1,
+   "covered_mm2": 0.15,
+   "covered_pct": 0.03,
+   "sense_covered_mm2": 0.07,
+   "common_covered_mm2": 0.08,
+   "opening_pct_of_region": 100.0
+  },
+  "mt4": {
+   "copper_mm2": 433.9,
+   "covered_mm2": 0.12,
+   "covered_pct": 0.03,
+   "sense_covered_mm2": 0.06,
+   "common_covered_mm2": 0.06,
+   "opening_pct_of_region": 100.0
+  },
+  "heel_med": {
+   "copper_mm2": 697.7,
+   "covered_mm2": 0.16,
+   "covered_pct": 0.02,
+   "sense_covered_mm2": 0.08,
+   "common_covered_mm2": 0.08,
+   "opening_pct_of_region": 100.0
+  },
+  "toe4": {
+   "copper_mm2": 200.0,
+   "covered_mm2": 0.17,
+   "covered_pct": 0.08,
+   "sense_covered_mm2": 0.06,
+   "common_covered_mm2": 0.11,
+   "opening_pct_of_region": 100.0
+  },
+  "toe3": {
+   "copper_mm2": 251.0,
+   "covered_mm2": 0.15,
+   "covered_pct": 0.06,
+   "sense_covered_mm2": 0.07,
+   "common_covered_mm2": 0.08,
+   "opening_pct_of_region": 100.0
+  },
+  "arch_med": {
+   "copper_mm2": 1088.7,
+   "covered_mm2": 0.18,
+   "covered_pct": 0.02,
+   "sense_covered_mm2": 0.1,
+   "common_covered_mm2": 0.08,
+   "opening_pct_of_region": 100.0
+  },
+  "mt1": {
+   "copper_mm2": 530.4,
+   "covered_mm2": 0.19,
+   "covered_pct": 0.04,
+   "sense_covered_mm2": 0.1,
+   "common_covered_mm2": 0.09,
+   "opening_pct_of_region": 100.0
+  }
  },
  "contacts_seen_from": "exposed contacts facing the viewer, tail end up; contact 1 on the left",
  "contacts_on": "B.Cu",
@@ -117,15 +269,6 @@
   },
   {
    "contact": 8,
-   "net": "S_mt4",
-   "sense_regions": [
-    "mt4"
-   ],
-   "common_regions": 0,
-   "shares_copper_with_contacts": []
-  },
-  {
-   "contact": 9,
    "net": "S_mt5",
    "sense_regions": [
     "mt5"
@@ -134,10 +277,19 @@
    "shares_copper_with_contacts": []
   },
   {
-   "contact": 10,
+   "contact": 9,
    "net": "S_toe5",
    "sense_regions": [
     "toe5"
+   ],
+   "common_regions": 0,
+   "shares_copper_with_contacts": []
+  },
+  {
+   "contact": 10,
+   "net": "S_mt4",
+   "sense_regions": [
+    "mt4"
    ],
    "common_regions": 0,
    "shares_copper_with_contacts": []
@@ -189,18 +341,18 @@
   },
   {
    "contact": 16,
-   "net": "S_mt3",
+   "net": "S_mt2",
    "sense_regions": [
-    "mt3"
+    "mt2"
    ],
    "common_regions": 0,
    "shares_copper_with_contacts": []
   },
   {
    "contact": 17,
-   "net": "S_mt2",
+   "net": "S_mt3",
    "sense_regions": [
-    "mt2"
+    "mt3"
    ],
    "common_regions": 0,
    "shares_copper_with_contacts": []
@@ -233,6 +385,31 @@
   "toe4",
   "toe5"
  ],
+ "channel_map": {
+  "board_sha256": "35385b5950f04f1937c1ec6604b50521f8e979d5b7ce74a2e12726ddaef07db1",
+  "board_id": "EU42 R g49ad079",
+  "side": "R",
+  "contact_to_region": {
+   "1": "COM",
+   "2": "heel_post",
+   "3": "heel_med",
+   "4": "heel_lat",
+   "5": "mid_lat_prox",
+   "6": "arch_med",
+   "7": "mid_lat_dist",
+   "8": "mt5",
+   "9": "toe5",
+   "10": "mt4",
+   "11": "toe4",
+   "12": "toe3",
+   "13": "toe2",
+   "14": "toe1",
+   "15": "mt1",
+   "16": "mt2",
+   "17": "mt3",
+   "18": "COM"
+  }
+ },
  "problems": [],
  "ok": true
 }
