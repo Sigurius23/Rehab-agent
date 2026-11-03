@@ -1,19 +1,19 @@
 {
  "board": "sole_EU46_R.kicad_pcb",
- "sha256": "48a71bd69e6e98210896da3d3df93bc9df692cb1c8d42e8b224c8b04d4fa8814",
+ "sha256": "1ebcc6b1bca29086ed6dcbe14e9eea04b96c25d5db422b5829ff5e6b7611132a",
  "project_sha256": "f1065e81191ef280833019188c1f6e1501ef9c6864457b1183da2ac2bc48379d",
  "kicad": "7.0.11+dfsg-1build4",
  "title": "Sensor sole v0 (R, foot 297 mm)",
  "title_block": [
   "CERN-OHL-S-2.0",
   "https://github.com/Sigurius23/Rehab-agent/tree/main/hardware/sensor-sole",
-  "sole_gen d868f89c90e4 sole_route 72ed9bb8f9dd kicad_export 01499f000a7f",
-  "git 49ad079f2dce; side R, size 46.0, exit arch"
+  "sole_gen fbcd6bb25cd8 sole_route 72ed9bb8f9dd kicad_export eb7da1c8654e",
+  "design 4fb67c089dd9fb7a; git 99c746890b24; side R, size 46.0, exit arch"
  ],
  "source_in_board": {
-  "sole_gen": "d868f89c90e4",
+  "sole_gen": "fbcd6bb25cd8",
   "sole_route": "72ed9bb8f9dd",
-  "kicad_export": "01499f000a7f"
+  "kicad_export": "eb7da1c8654e"
  },
  "source_matches_files": true,
  "config": {
@@ -36,9 +36,64 @@
    "toe5"
   ],
   "contacts": 18,
-  "dropped": {}
+  "dropped": {},
+  "board_id": "EU46 R 4fb67c089d",
+  "design_hash": "4fb67c089dd9fb7a9d5412ca46ad3ba7e3a01268cc9cb3190d70b1d229b18690",
+  "margin_keepouts": 1,
+  "tools": {
+   "python": "3.13.16",
+   "numpy": "2.5.4",
+   "scipy": "1.18.1",
+   "shapely": "2.2.0",
+   "matplotlib": "3.11.2",
+   "ezdxf": "1.4.5",
+   "kicad_export": "7.0.11+dfsg-1build4"
+  }
  },
- "board_id": "EU46 R g49ad079",
+ "board_id": "EU46 R 4fb67c089d",
+ "provenance": {
+  "design_hash": "4fb67c089dd9fb7a9d5412ca46ad3ba7e3a01268cc9cb3190d70b1d229b18690",
+  "board_id": "EU46 R 4fb67c089d",
+  "inputs": "design 4fb67c089dd9fb7a; git 99c746890b24; side R, size 46.0, exit arch",
+  "generator_files_at_run_start": "sole_gen fbcd6bb25cd8 sole_route 72ed9bb8f9dd kicad_export eb7da1c8654e",
+  "tools": {
+   "python": "3.13.16",
+   "numpy": "2.5.4",
+   "scipy": "1.18.1",
+   "shapely": "2.2.0",
+   "matplotlib": "3.11.2",
+   "ezdxf": "1.4.5",
+   "kicad_export": "7.0.11+dfsg-1build4"
+  },
+  "project_rules": {
+   "min_clearance": 0.15,
+   "min_connection": 0.0,
+   "min_copper_edge_clearance": 0.3,
+   "min_hole_clearance": 0.25,
+   "min_hole_to_hole": 0.25,
+   "min_microvia_diameter": 0.2,
+   "min_microvia_drill": 0.1,
+   "min_resolved_spokes": 2,
+   "min_silk_clearance": 0.0,
+   "min_text_height": 0.8,
+   "min_text_thickness": 0.08,
+   "min_through_hole_diameter": 0.2,
+   "min_track_width": 0.1,
+   "min_via_annular_width": 0.1,
+   "min_via_diameter": 0.4,
+   "solder_mask_to_copper_clearance": 0.15,
+   "netclass_clearance": 0.15,
+   "netclass_track_width": 0.15,
+   "netclass_via_diameter": 0.45,
+   "netclass_via_drill": 0.2
+  },
+  "board_sha256": "1ebcc6b1bca29086ed6dcbe14e9eea04b96c25d5db422b5829ff5e6b7611132a",
+  "project_sha256": "f1065e81191ef280833019188c1f6e1501ef9c6864457b1183da2ac2bc48379d",
+  "checker": {
+   "verify_board": "3815d9024f5d",
+   "kicad": "7.0.11+dfsg-1build4"
+  }
+ },
  "drc": {
   "report": "sole_EU46_R.drc.rpt",
   "written": true,
@@ -71,21 +126,21 @@
  },
  "coverlay_openings_ok": true,
  "coverlay": {
-  "mt3": {
-   "copper_mm2": 789.9,
-   "covered_mm2": 0.15,
+  "mt2": {
+   "copper_mm2": 820.8,
+   "covered_mm2": 0.17,
    "covered_pct": 0.02,
    "sense_covered_mm2": 0.06,
-   "common_covered_mm2": 0.09,
+   "common_covered_mm2": 0.11,
    "opening_pct_of_region": 100.0
   },
-  "heel_med": {
-   "copper_mm2": 868.9,
-   "covered_mm2": 0.18,
-   "covered_pct": 0.02,
-   "sense_covered_mm2": 0.08,
-   "common_covered_mm2": 0.1,
-   "opening_pct_of_region": 100.0
+  "toe5": {
+   "copper_mm2": 176.2,
+   "covered_mm2": 0.16,
+   "covered_pct": 0.09,
+   "sense_covered_mm2": 0.07,
+   "common_covered_mm2": 0.08,
+   "opening_pct_of_region": 99.9
   },
   "mt1": {
    "copper_mm2": 697.2,
@@ -95,19 +150,11 @@
    "common_covered_mm2": 0.09,
    "opening_pct_of_region": 100.0
   },
-  "mt2": {
-   "copper_mm2": 820.8,
-   "covered_mm2": 0.17,
-   "covered_pct": 0.02,
-   "sense_covered_mm2": 0.06,
-   "common_covered_mm2": 0.11,
-   "opening_pct_of_region": 100.0
-  },
-  "toe3": {
-   "copper_mm2": 310.8,
+  "arch_med": {
+   "copper_mm2": 1353.2,
    "covered_mm2": 0.15,
-   "covered_pct": 0.05,
-   "sense_covered_mm2": 0.07,
+   "covered_pct": 0.01,
+   "sense_covered_mm2": 0.06,
    "common_covered_mm2": 0.08,
    "opening_pct_of_region": 100.0
   },
@@ -119,28 +166,12 @@
    "common_covered_mm2": 0.06,
    "opening_pct_of_region": 100.0
   },
-  "toe5": {
-   "copper_mm2": 176.2,
-   "covered_mm2": 0.16,
-   "covered_pct": 0.09,
-   "sense_covered_mm2": 0.07,
-   "common_covered_mm2": 0.08,
-   "opening_pct_of_region": 99.9
-  },
-  "heel_post": {
-   "copper_mm2": 568.8,
-   "covered_mm2": 0.14,
+  "heel_med": {
+   "copper_mm2": 868.9,
+   "covered_mm2": 0.18,
    "covered_pct": 0.02,
-   "sense_covered_mm2": 0.07,
-   "common_covered_mm2": 0.07,
-   "opening_pct_of_region": 100.0
-  },
-  "heel_lat": {
-   "copper_mm2": 935.8,
-   "covered_mm2": 0.15,
-   "covered_pct": 0.02,
-   "sense_covered_mm2": 0.07,
-   "common_covered_mm2": 0.09,
+   "sense_covered_mm2": 0.08,
+   "common_covered_mm2": 0.1,
    "opening_pct_of_region": 100.0
   },
   "mid_lat_prox": {
@@ -151,20 +182,44 @@
    "common_covered_mm2": 0.1,
    "opening_pct_of_region": 100.0
   },
-  "toe4": {
-   "copper_mm2": 237.7,
-   "covered_mm2": 0.13,
-   "covered_pct": 0.06,
+  "toe1": {
+   "copper_mm2": 755.5,
+   "covered_mm2": 0.2,
+   "covered_pct": 0.03,
+   "sense_covered_mm2": 0.07,
+   "common_covered_mm2": 0.13,
+   "opening_pct_of_region": 100.0
+  },
+  "mt3": {
+   "copper_mm2": 789.9,
+   "covered_mm2": 0.15,
+   "covered_pct": 0.02,
    "sense_covered_mm2": 0.06,
+   "common_covered_mm2": 0.09,
+   "opening_pct_of_region": 100.0
+  },
+  "toe2": {
+   "copper_mm2": 414.6,
+   "covered_mm2": 0.15,
+   "covered_pct": 0.04,
+   "sense_covered_mm2": 0.07,
    "common_covered_mm2": 0.08,
    "opening_pct_of_region": 100.0
   },
-  "arch_med": {
-   "copper_mm2": 1353.2,
+  "heel_lat": {
+   "copper_mm2": 935.8,
    "covered_mm2": 0.15,
-   "covered_pct": 0.01,
-   "sense_covered_mm2": 0.06,
-   "common_covered_mm2": 0.08,
+   "covered_pct": 0.02,
+   "sense_covered_mm2": 0.07,
+   "common_covered_mm2": 0.09,
+   "opening_pct_of_region": 100.0
+  },
+  "heel_post": {
+   "copper_mm2": 568.8,
+   "covered_mm2": 0.14,
+   "covered_pct": 0.02,
+   "sense_covered_mm2": 0.07,
+   "common_covered_mm2": 0.07,
    "opening_pct_of_region": 100.0
   },
   "mt5": {
@@ -172,6 +227,14 @@
    "covered_mm2": 0.14,
    "covered_pct": 0.04,
    "sense_covered_mm2": 0.06,
+   "common_covered_mm2": 0.08,
+   "opening_pct_of_region": 100.0
+  },
+  "toe3": {
+   "copper_mm2": 310.8,
+   "covered_mm2": 0.15,
+   "covered_pct": 0.05,
+   "sense_covered_mm2": 0.07,
    "common_covered_mm2": 0.08,
    "opening_pct_of_region": 100.0
   },
@@ -183,20 +246,12 @@
    "common_covered_mm2": 0.1,
    "opening_pct_of_region": 100.0
   },
-  "toe2": {
-   "copper_mm2": 414.6,
-   "covered_mm2": 0.15,
-   "covered_pct": 0.04,
-   "sense_covered_mm2": 0.07,
+  "toe4": {
+   "copper_mm2": 237.7,
+   "covered_mm2": 0.13,
+   "covered_pct": 0.06,
+   "sense_covered_mm2": 0.06,
    "common_covered_mm2": 0.08,
-   "opening_pct_of_region": 100.0
-  },
-  "toe1": {
-   "copper_mm2": 755.5,
-   "covered_mm2": 0.2,
-   "covered_pct": 0.03,
-   "sense_covered_mm2": 0.07,
-   "common_covered_mm2": 0.13,
    "opening_pct_of_region": 100.0
   }
  },
@@ -386,8 +441,8 @@
   "toe5"
  ],
  "channel_map": {
-  "board_sha256": "48a71bd69e6e98210896da3d3df93bc9df692cb1c8d42e8b224c8b04d4fa8814",
-  "board_id": "EU46 R g49ad079",
+  "board_sha256": "1ebcc6b1bca29086ed6dcbe14e9eea04b96c25d5db422b5829ff5e6b7611132a",
+  "board_id": "EU46 R 4fb67c089d",
   "side": "R",
   "contact_to_region": {
    "1": "COM",
