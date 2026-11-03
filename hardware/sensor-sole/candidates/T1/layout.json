@@ -1,0 +1,27 @@
+{
+  "_comment": "Higher-resolution candidate T1: a targeted layout, generated beside the 16-region baseline. Design and analysis only; nothing here is fabricated, fitted or measured. Each region names the baseline regions it is derived from, so a person's sensor choices carry over (a region whose sources are switched off is left out).",
+  "name": "T1",
+  "description": "Targeted subdivisions: heel 2 x 2 (front-back and inner-outer), the three midfoot regions as in the baseline, a row behind the metatarsal heads (front-back detail in the forefoot), the five metatarsal heads, the big toe split into base and tip, and the four lesser toes.",
+  "regions": [
+    {"name": "heel_pm", "from": ["heel_post"], "anchor": {"x_L": 0.060, "z_Wh": -0.17}},
+    {"name": "heel_pl", "from": ["heel_post"], "anchor": {"x_L": 0.060, "z_Wh": 0.17}},
+    {"name": "heel_am", "from": ["heel_med"], "anchor": {"x_L": 0.155, "z_Wh": -0.20}},
+    {"name": "heel_al", "from": ["heel_lat"], "anchor": {"x_L": 0.155, "z_Wh": 0.20}},
+    {"name": "arch_med", "from": ["arch_med"]},
+    {"name": "mid_lat_prox", "from": ["mid_lat_prox"]},
+    {"name": "mid_lat_dist", "from": ["mid_lat_dist"]},
+    {"name": "ffp_med", "from": ["mt1", "mt2"], "anchor": {"behind": ["mt1", "mt2"], "back_L": 0.0926}},
+    {"name": "ffp_cen", "from": ["mt3", "mt4"], "anchor": {"behind": ["mt3", "mt4"], "back_L": 0.0926}},
+    {"name": "mt1", "from": ["mt1"]},
+    {"name": "mt2", "from": ["mt2"]},
+    {"name": "mt3", "from": ["mt3"]},
+    {"name": "mt4", "from": ["mt4"]},
+    {"name": "mt5", "from": ["mt5"]},
+    {"name": "toe1_base", "from": ["toe1"], "toe": {"index": 1, "part": "base", "split": 0.5}},
+    {"name": "toe1_tip", "from": ["toe1"], "toe": {"index": 1, "part": "tip", "split": 0.5}},
+    {"name": "toe2", "from": ["toe2"]},
+    {"name": "toe3", "from": ["toe3"]},
+    {"name": "toe4", "from": ["toe4"]},
+    {"name": "toe5", "from": ["toe5"]}
+  ]
+}

@@ -1,0 +1,5 @@
+# regenerable and large: the generator writes them, the comparison does not use them
+*.dxf
+*.svg
+*.kicad_prl
+__pycache__/
