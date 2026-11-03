@@ -50,9 +50,11 @@ below is what counts.
 - **Copper on both sides in the bend zone.** Under the regions, B.Cu is kept free, so the combs have no
   copper behind them. Where the trunk crosses the bend zone, F.Cu common lines could lie over B.Cu sense lines
   and stiffen the flex locally (the "I-beam" effect). The generator measures this per board as
-  `stacked_copper_in_bend_mm2`. It is 0 mm² on both EU 42 boards; all 14 mm² of stacked copper lies outside
-  the bend zone.
+  `stacked_copper_in_bend_mm2`. It is 0 mm² on the EU 37, EU 42 and personal-example boards and 0.43 mm² on
+  EU 46 (generator 49ad079).
 - **Vias** are kept out of a ±12 mm band around the toe-joint line (a rule area on the board).
+- **Tail root.** The outline has 5 mm fillets where the tail meets the sole, against tearing at the inside
+  corners. The tail bends at the shoe's collar; where and how sharply is still to be measured on the KSO Trek.
 - **Fingers** run parallel to the bend line, so a bend strains them along their length the least.
 
 ## Questions for the fabricator (draft enquiry, not sent)

@@ -146,7 +146,7 @@ cover only 9 % of the sole and put three vias in the bend zone. The regions also
   - toe2 at EU 42, before and after this rule (a geometric estimate, not a measured sensitivity):
     - before: the area where both combs interleave was 246 mm². That is 38 % of its 640 mm² Voronoi tile,
       or 47 % of the 521 mm² region left after gaps and bundles;
-    - after: 480 mm², 75 % of the tile or 85 % of the 563 mm² region.
+    - after: 483 mm², 76 % of the tile or 85 % of the 567 mm² region (generator 49ad079).
     How much of that area responds to pressure, and how evenly, is for the coupon test (section 8).
   - On a narrow toe the comb's default sense side can have no room near the base. The toe then takes the
     other side, and its comb swaps spines.
@@ -200,48 +200,68 @@ No material is chosen until coupons have been measured.
 | Tail exit | Medial arch | Heel |
 | Side | Right | Left is the mirror |
 
-**Copper routing and board checks per size and side** (2026-11-03). Each board was generated, exported to
-KiCad and checked with `verify_board.py`. A side marked "mirror" has the same routing as the other side;
-its KiCad board is checked separately.
+**Copper routing and board checks per size and side** (2026-11-03; generator files of commit 49ad079, the
+same in every board's title block). Each board was generated, exported to KiCad and checked with
+`verify_board.py`. A left board has the same routing as its right one (a mirror image); its KiCad board is
+checked separately.
 
-| Board | Regions | Coverage | Sensing area (geometric estimate), all / weakest region | Vias, jumpers | Re-route left unresolved | KiCad DRC errors | Contacts traced through copper | Verdict |
-|---|---|---|---|---|---|---|---|---|
-| EU 42 R | 16 | 78.1 % | 79 % / mt4 71 % | 18, none | none | 0 | 16 sense + COM, each to its own region | **passes** |
-| EU 42 L | 16 (mirror) | 78.1 % | 79 % / mt4 71 % | 18, none | none | 0 | 16 sense + COM, each to its own region | **passes** |
-| EU 37 R | 16 | 75.1 % | 76 % / mt4 69 % | 20, mt2 over mt3 | mt2, mt3, toe2, toe3 | 3 × toe2–toe3 clearance 0.127 mm (rule 0.15) | correct, no shorts | **fails** |
-| EU 37 L | 16 (mirror) | 75.1 % | 76 % / mt4 69 % | 20, mt2 over mt3 | mt2, mt3, toe2, toe3 | same 3, plus 1 copper sliver | correct, no shorts | **fails** |
-| EU 46 R | 16 | 80.0 % | 81 % / mt4 59 % | 20, mt2 over mt3 | mt1, mt2, mt3, toe1 | 3 × mt1–toe1 clearance | correct, no shorts | **fails** |
-| EU 46 L | 16 (mirror) | 80.0 % | 81 % / mt4 59 % | 20, mt2 over mt3 | mt1, mt2, mt3, toe1 | same 3 | correct, no shorts | **fails** |
-| Personal example R | 14 | 80.6 % | 80 % / mt1 74 % | 25, 5 jumpers | 9 nets; 3 crossings left | 20 clearance, 1 copper to edge | **shorts:** mt3–mt4–mt5 and mt1–mt2–toe2–toe3 | **fails** |
-| Personal example L | 14 (mirror) | 80.6 % | 80 % / mt1 74 % | 25, 5 jumpers | 9 nets; 3 crossings left | 20 clearance, 1 copper to edge, 1 sliver | **shorts:** same groups | **fails** |
+| Board | Regions | Coverage | Sensing area (geometric estimate), all / weakest region | Vias, jumpers | Fine-grid pass | DRC entries | Contacts traced through copper | Comb copper under coverlay, worst region | Verdict |
+|---|---|---|---|---|---|---|---|---|---|
+| EU 37 R | 16 | 74.9 % | 75 % / mt4 69 % | 18, none | 1 round, nothing left | 17 library warnings | each to its own region | toe5 0.17 mm² (0.15 %) | passes |
+| EU 37 L | 16 | 74.9 % | 75 % / mt4 69 % | 18, none | 1 round, nothing left | 17 library warnings | each to its own region | toe5 0.17 mm² (0.15 %) | passes |
+| EU 42 R | 16 | 77.5 % | 78 % / mt4 69 % | 18, none | 1 round, nothing left | 17 library warnings | each to its own region | toe5 0.17 mm² (0.11 %) | passes |
+| EU 42 L | 16 | 77.5 % | 78 % / mt4 69 % | 18, none | 1 round, nothing left | 17 library warnings | each to its own region | toe5 0.17 mm² (0.11 %) | passes |
+| EU 46 R | 16 | 79.5 % | 80 % / mt4 58 % | 18, none | 1 round, nothing left | 17 library warnings | each to its own region | toe5 0.16 mm² (0.09 %) | passes |
+| EU 46 L | 16 | 79.5 % | 80 % / mt4 58 % | 18, none | 1 round, nothing left | 17 library warnings | each to its own region | toe5 0.16 mm² (0.09 %) | passes |
+| Personal example R | 14 | 80.1 % | 80 % / mt1 73 % | 16, none | 1 round, nothing left | 15 library warnings | each to its own region | toe3 0.20 mm² (0.08 %) | passes |
+| Personal example L | 14 | 80.1 % | 80 % / mt1 73 % | 16, none | 1 round, nothing left | 15 library warnings | each to its own region | toe3 0.20 mm² (0.08 %) | passes |
+
+"Passes" means `verify_board.py` found nothing to object to. It does **not** mean released for fabrication:
+see FABRICATION.md and section 8.
 
 The personal example is `person_example.json`, with illustrative values, not a real person: foot 262 × 108 mm,
-metatarsal heads from "scan" landmarks, second toe longest, arch and fifth-toe sensors off.
+metatarsal heads from "scan" landmarks, second toe longest, arch and fifth-toe sensors off. Its 14 regions
+are checked as 14, from the configuration written on the board. No copper lies in the 2 mm edge margin on
+any board.
 
-The EU 37 boards were generated before the coverlay-notch change (db56d33); that change does not affect
-routing. Coverage is the share of the sole covered by region outlines. Sensing area is a geometric estimate:
+Coverage is the share of the sole covered by region outlines. Sensing area is a geometric estimate:
 the share of the regions' Voronoi tiles where both combs interleave (within one finger pitch of each). A
 film patch elsewhere touches one comb or none. It is not a measured sensitivity.
 
-**What fails, and why.** Only EU 42 routes cleanly. At the other sizes and on the personalised foot, the
-forefoot bundle (metatarsal and toe lines) does not untangle:
-- The negotiated fine-grid pass ends with lines still too close; it stops after 8 rounds.
-- On the personalised foot the planned lane order already has six crossings that no rerouting can remove.
-  The F.Cu jumpers resolve only some of them, and the rest become shorts.
+**What was wrong, and what fixed it.** Before these changes only EU 42 routed. EU 37 and EU 46 left lines
+too close at a corner of the trunk, and the personalised foot had seven sense lines shorted. Each cause was
+found by measuring the plan and the fine-grid pass, not by relaxing a rule:
+1. **Vias inside bundles.** A cell on the tree costs nothing to reach, so a via was often chosen on the trunk
+   itself, and the lines continuing past it had to squeeze by. Vias now keep clear of the tree, and of each
+   other (section 4).
+2. **Shortcuts.** The fine-grid pass could leave the plan and use the 2 mm edge margin or empty space, such as
+   the arch on a foot without an arch sensor. Lines on a shortcut keep no order, so they crossed. It now
+   stays within 3 mm of the plan and out of the margin.
+3. **Turns with a sideways shift.** One arc centre for a whole block of lanes made the outer lanes jog across
+   each other where a block shifts sideways through a turn. Each lane now has its own fillet.
+4. **The tail root.** A region carved only along the coarse path could poke into the turn into the tail, and
+   the sharp inside corners left no room within the margin. The outline now has 5 mm fillets there, and the
+   regions keep clear of the root.
 
-The KiCad DRC reports these as clearance errors. The copper trace in `verify_board.py` shows them as
-contacts joined to each other, which is decisive: such a board must not be made.
-More negotiation rounds do not help. EU 37 R with 16 rounds instead of 8 still leaves four lines unresolved
-(mt2, mt3, toe1, toe2) and needs the same jumper. The conflict is in the lane plan, not the convergence of
-the fine-grid pass, so the fix belongs in the planner: the bundle order and via placement in the forefoot.
+More negotiation rounds alone did not help: EU 37 with 16 rounds instead of 8 still failed. Every board now
+settles in one round.
+
+**Known weak points of the current routing:**
+- **heel_med and arch_med** find no via cell clear of the trunk in their region (`vias_without_clear_cell`).
+  They keep the nearest cell. The fine-grid pass and the KiCad DRC show the clearances hold, but these two
+  vias sit closer to the bundle than the planner's own margin.
+- **Personal example:** its longest via-to-comb stub on F.Cu is 8.7 mm (EU sizes: 2–3 mm).
+- **EU 46:** 0.43 mm² of copper is stacked on both layers in the toe-joint bend zone (EU 37, EU 42 and the
+  personal example: 0).
 
 **Earlier layout-only sweep.** Before copper routing existed, a sweep over EU 36–47 passed the layout
 checks: regions, routing plan, corridor inside the margin, no vias in the bend zone. That sweep says nothing
 about copper. The table above replaces it.
 
-**Weakest regions.** mt4 keeps the least sensing area at every default size (59–71 % of its tile). Comb
-ends are lost at its slanted corners, and the trunk runs along its edge. 35–66 % of each metatarsal
-region's comb lies in the toe-joint bend zone; see FABRICATION.md for what that means for the plating.
+**Weakest regions.** mt4 keeps the least sensing area at every default size (58–69 % of its tile). Comb
+ends are lost at its slanted corners, and the trunk runs along its edge. 26–66 % of each metatarsal
+region's comb lies in the toe-joint bend zone, depending on size and foot; see FABRICATION.md for what that
+means for the plating.
 
 **Manufacturing.** A personal sole is a new flex design. One sole fits a standard flex panel (EU 42:
 270 × 167 mm). Left and right together exceed one fabricator's standard panel unless nested (FABRICATION.md).
@@ -328,6 +348,10 @@ Pod v1 (custom board, bare nRF52840 module) adds 32 channels, more storage and a
   - its project file (the design rules);
   - its DRC report and check result (`.check.json`, including the contact map);
   - a preview.
+- `kicad/checks/`: DRC reports and check results of the EU 37, EU 46 and personal-example boards. The boards
+  themselves are not committed; `make_fab.sh` or the generator regenerates them exactly (the routing is
+  deterministic).
+- `tests/test_verify_drc.py`: shows that the checker fails closed on broken DRC reports (KiCad's Python).
 - `FABRICATION.md`: fabrication assumptions, open questions, draft enquiry to a fabricator.
 
 **What `verify_board.py` checks** (any failure, or anything it cannot establish, fails the board):
@@ -356,37 +380,46 @@ Pod v1 (custom board, bare nRF52840 module) adds 32 channels, more storage and a
    The channel map (`channel_map`) carries the board's sha256, side and ID. It is valid for that board file
    and for soles printed with that ID only.
 
-**EU 42 results (KiCad 7.0.11, 2026-11-03, generator 12cd2b7).** Both boards pass every check:
+**EU 42 results (KiCad 7.0.11, 2026-11-03, generator files of 49ad079).** Both boards pass every check:
 
 | Check | Right | Left |
 |---|---|---|
-| DRC errors (clearance, edge, slivers, mask bridges, keep-outs) | 0 | 0 |
+| DRC errors (clearance, edge, slivers, mask bridges, keep-outs, outline) | 0 | 0 |
 | Unconnected items | 0 | 0 |
-| Footprint not in a library (generated footprints) | 17 warnings, expected | 17 warnings, expected |
+| "Footprint not in a library" warnings | 17: one for each generated footprint, S01–S16 and J1 | the same 17 |
 | Each contact reaches its own region only; COM reaches all 16 common combs | yes | yes |
 | Contact numbering physical | yes | yes |
-| Coverlay opening, % of region area | 97–100 % | 97–100 % |
-| Generator hashes match the files | yes | yes |
+| Regions and contacts match the board's configuration (16, 18) | yes | yes |
+| Comb copper under coverlay, worst region | toe5, 0.17 mm² (0.11 %) | toe5, 0.17 mm² (0.11 %) |
+| Generator hashes in the title block match the files | yes | yes |
+| Board ID printed on the tail | `EU42 R g49ad079` | `EU42 L g49ad079` |
+| Board file sha256 (first 12) | `35385b5950f0` | `6d80435d20c2` |
 
-**Channel maps (contact → region; contacts 1 and 18 are COM):**
+The library warnings are expected. The region and connector footprints are generated by `kicad_export.py`
+and live in no KiCad library. Each one is listed by reference in the board's `.check.json`
+(`drc.library_warnings`), and any other warning or error fails the board.
 
-| Contact | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12 | 13 | 14 | 15 | 16 | 17 |
+**Channel maps (contact → region; contacts 1 and 18 are COM).** Each map is valid only for the board file
+with that sha256 and for soles printed with that ID:
+
+| Board (ID, sha256) | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12 | 13 | 14 | 15 | 16 | 17 |
 |---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
-| Right | heel_post | heel_med | heel_lat | mid_lat_prox | arch_med | mid_lat_dist | mt4 | mt5 | toe5 | toe4 | toe3 | toe2 | toe1 | mt1 | mt3 | mt2 |
-| Left | mt2 | mt3 | mt1 | toe1 | toe2 | toe3 | toe4 | toe5 | mt5 | mt4 | mid_lat_dist | arch_med | mid_lat_prox | heel_lat | heel_med | heel_post |
+| `EU42 R g49ad079`, `35385b5950f0` | heel_post | heel_med | heel_lat | mid_lat_prox | arch_med | mid_lat_dist | mt5 | toe5 | mt4 | toe4 | toe3 | toe2 | toe1 | mt1 | mt2 | mt3 |
+| `EU42 L g49ad079`, `6d80435d20c2` | mt3 | mt2 | mt1 | toe1 | toe2 | toe3 | toe4 | mt4 | toe5 | mt5 | mid_lat_dist | arch_med | mid_lat_prox | heel_lat | heel_med | heel_post |
 
-The left map is the right one reversed, because the left sole is a mirror image. The order follows the routing
-tree, so a regenerated sole can have a different map: the pod must read the map from the board's
-`.check.json`, never assume it.
+- **Left and right.** The left map is the right one reversed, because the left sole is a mirror image.
+- **Other boards.** The maps differ by size, and between revisions: the EU 42 R map changed with this
+  revision (mt5 and toe5 now come before mt4). The maps of the other six boards are in their check results
+  (`kicad/checks/`).
+- **The pod** must read the map from the check result whose ID matches the sole (section 7), never from this
+  table or from another board.
 
 **Routing and sensing (EU 42):**
-- 16 regions at 78.1 % coverage; 79 % of the tiles' area senses.
-- The weakest region is mt4, at 71 % of its tile.
-- 18 vias, no jumpers, nothing past the copper-free margin, and no copper stacked on both layers in the bend
-  zone.
-- The coverlay notches cover 14 mm² of heel_med's sensing area (1.1 %), 12 mm² of mt4's (1.5 %) and 4 mm² of
-  arch_med's (0.2 %). Common lines run along those regions' edges.
-- About 4 minutes per foot.
+- 16 regions at 77.5 % coverage; 78 % of the tiles' area senses (geometric estimate).
+- The weakest region is mt4, at 69 % of its tile.
+- 18 vias and no jumpers; the fine-grid pass settles in one round.
+- No copper in the edge margin, and none stacked on both layers in the bend zone.
+- About 4 minutes per foot to generate, plus about 2 minutes to export and check.
 
 **Provenance check of the boards committed on 2026-11-02 (f653246).** Regenerated from their generator
 revision (0c2b2df), the right board has the same footprints, pads, tracks, vias, zones and title block; only
@@ -395,7 +428,9 @@ committed reports exactly (apart from the date). Those boards are superseded: th
 left board's reversed pad numbers.
 
 Next steps (not started):
-- make the router robust at other sizes and for personal feet (section 5);
+- route-check more feet: the remaining EU sizes 36–47 and real scanned feet, not only the four configurations
+  above;
+- give heel_med and arch_med via cells clear of the trunk (section 5, known weak points);
 - send the fabricator questions (FABRICATION.md) once the project owner approves;
 - draw the pod carrier schematic;
 - design the coupon board.

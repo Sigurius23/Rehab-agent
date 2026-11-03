@@ -1,0 +1,55 @@
+** Drc report for sole_person_example_R.kicad_pcb **
+** Created on 2026-11-03 13:04:48 **
+
+** Found 15 DRC violations **
+[lib_footprint_issues]: The current configuration does not include the library 'sensor_sole'.
+    Local override; Severity: warning
+    @(292.0781 mm, 136.1436 mm): Footprint S13
+[lib_footprint_issues]: The current configuration does not include the library 'sensor_sole'.
+    Local override; Severity: warning
+    @(228.1260 mm, 155.5597 mm): Footprint S07
+[lib_footprint_issues]: The current configuration does not include the library 'sensor_sole'.
+    Local override; Severity: warning
+    @(170.0400 mm, 252.6780 mm): Footprint J1
+[lib_footprint_issues]: The current configuration does not include the library 'sensor_sole'.
+    Local override; Severity: warning
+    @(281.8006 mm, 120.4867 mm): Footprint S14
+[lib_footprint_issues]: The current configuration does not include the library 'sensor_sole'.
+    Local override; Severity: warning
+    @(80.4253 mm, 150.0629 mm): Footprint S01
+[lib_footprint_issues]: The current configuration does not include the library 'sensor_sole'.
+    Local override; Severity: warning
+    @(257.0469 mm, 174.4190 mm): Footprint S06
+[lib_footprint_issues]: The current configuration does not include the library 'sensor_sole'.
+    Local override; Severity: warning
+    @(186.7214 mm, 119.0701 mm): Footprint S05
+[lib_footprint_issues]: The current configuration does not include the library 'sensor_sole'.
+    Local override; Severity: warning
+    @(157.9766 mm, 159.8110 mm): Footprint S04
+[lib_footprint_issues]: The current configuration does not include the library 'sensor_sole'.
+    Local override; Severity: warning
+    @(295.7311 mm, 154.3617 mm): Footprint S12
+[lib_footprint_issues]: The current configuration does not include the library 'sensor_sole'.
+    Local override; Severity: warning
+    @(258.3325 mm, 110.2087 mm): Footprint S09
+[lib_footprint_issues]: The current configuration does not include the library 'sensor_sole'.
+    Local override; Severity: warning
+    @(280.9198 mm, 174.3212 mm): Footprint S11
+[lib_footprint_issues]: The current configuration does not include the library 'sensor_sole'.
+    Local override; Severity: warning
+    @(131.1504 mm, 159.4827 mm): Footprint S02
+[lib_footprint_issues]: The current configuration does not include the library 'sensor_sole'.
+    Local override; Severity: warning
+    @(251.2400 mm, 99.6626 mm): Footprint S10
+[lib_footprint_issues]: The current configuration does not include the library 'sensor_sole'.
+    Local override; Severity: warning
+    @(111.6901 mm, 146.9062 mm): Footprint S03
+[lib_footprint_issues]: The current configuration does not include the library 'sensor_sole'.
+    Local override; Severity: warning
+    @(231.2765 mm, 143.5779 mm): Footprint S08
+
+** Found 0 unconnected pads **
+
+** Found 0 Footprint errors **
+
+** End of Report **

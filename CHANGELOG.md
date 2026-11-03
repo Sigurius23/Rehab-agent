@@ -25,17 +25,30 @@
     `make_fab.sh` writes Gerbers only if the check passes.
   - **Fixes from the review:**
     - toe2's line split its comb. By geometric estimate, its combs interleaved over 38 % of its tile (47 % of
-      its region outline). Toe vias now sit at the tab base, which brings it to 75 % (85 %). This is a
+      its region outline). Toe vias now sit at the tab base, which brings it to 76 % (85 %). This is a
       geometric estimate, not a measured sensitivity.
     - The left board's contact pads were numbered opposite to the physical order. Both feet are now numbered
       physically, with one channel map per side.
     - Coverlay opened per comb piece would have left uncuttable 0.2 mm webs between fingers. There is now one
       opening per region, notched where tracks land.
     - The source stamp is taken when the generator starts.
-  - **Results.** EU 42 right and left pass every check. EU 37, EU 46 and the personalised example do not:
-    the negotiated pass leaves lines too close, and on the personalised foot seven sense lines are shorted in
-    two groups.
-    Details are in DESIGN.md, section 5.
+  - **Lane planner fixed for other sizes and personal feet**, without relaxing any rule. Four changes, each
+    found by measuring the plan and the fine-grid pass:
+    - vias kept off and clear of the trunk;
+    - the fine-grid pass kept within 3 mm of the plan and out of the 2 mm edge margin;
+    - a fillet per lane at turns;
+    - 5 mm fillets and a clear area at the tail root.
+  - **Results.** All eight checked boards pass `verify_board.py`: EU 37, EU 42, EU 46 and the 14-region
+    personalised example, each right and left. Each needs 16–18 vias and no jumpers, and the fine-grid pass
+    settles in one round. Before the fixes, EU 37 and EU 46 failed on clearance, and the personalised foot
+    had seven sense lines shorted in two groups. Passing the checks is not a release for fabrication.
+  - **Checker** (`verify_board.py`):
+    - fails closed on the DRC report (`tests/test_verify_drc.py`);
+    - lists the library warnings one per generated footprint;
+    - measures comb copper under coverlay from the pad geometry, per region;
+    - checks against the configuration written on the board;
+    - ties each channel map to the board's sha256 and the ID printed on its tail.
+    `make_fab.sh` marks its output NOT-RELEASED.
   - `FABRICATION.md` compares the assumptions with two fabricators' published flex capabilities. It lists the
     open questions and a draft enquiry, which has not been sent. Nothing is released for fabrication.
   - `DESIGN.md` covers the fit, layer stack, pod electronics (prototype on a XIAO nRF52840 Sense), data

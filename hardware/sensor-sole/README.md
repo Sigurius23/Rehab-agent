@@ -19,7 +19,9 @@ design, its targets against Moticon OpenGo, and the validation plan.
 | `kicad_export.py` | Board file → KiCad 7 board (`.kicad_pcb` + `.kicad_pro`, which holds the design rules); run with the Python that ships KiCad's `pcbnew` |
 | `verify_board.py` | Checks a board before fabrication: DRC with the project rules, the region-to-contact map traced through the copper, contact numbering, coverlay openings, provenance; writes `.drc.rpt` and `.check.json` |
 | `make_fab.sh` | Generator → KiCad → check → Gerbers and drill; writes no fabrication files if the check fails |
-| `kicad/` | The EU 42 boards (right and left) with their DRC reports, check results (including each side's contact map) and previews |
+| `kicad/` | The EU 42 boards (right and left) with their DRC reports, check results (including each side's contact map, tied to the board's sha256 and printed ID) and previews |
+| `kicad/checks/` | DRC reports and check results of the EU 37, EU 46 and personal-example boards (the boards regenerate exactly) |
+| `tests/test_verify_drc.py` | Shows that the checker fails closed on broken DRC reports (KiCad's Python) |
 | `FABRICATION.md` | Fabrication assumptions against published flex-PCB capabilities, open questions, draft enquiry (not sent) |
 | `person_example.json` | Personalisation format (illustrative values, not a real person) |
 | `requirements.txt` | Python packages the generator needs |
