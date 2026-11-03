@@ -85,7 +85,7 @@ bridges the combs, and the bridge conducts more as the load rises.
 | Top cover, thin TPU film or textile | Wear surface, moisture barrier | 0.05 |
 | Piezoresistive film, die-cut per region (0.5 mm inside the region) | Sensing; one patch per region avoids leakage between regions | 0.10 |
 | Adhesive spacer frame around each region | Defines the start of sensing, holds the film | 0.05 |
-| Two-layer polyimide flex: combs and the common net on top (ENIG, exposed), sense lines on the bottom (coverlay) | Electrodes and routing | ~0.15 |
+| Two-layer polyimide flex: combs on top, exposed through one coverlay opening per region; common net on top and sense lines on the bottom, both under coverlay | Electrodes and routing | ~0.12–0.15 |
 | Total | | ~0.35–0.40 |
 
 **Regions.** The 16 default regions are:
@@ -118,17 +118,33 @@ cover only 9 % of the sole and put three vias in the bend zone. The regions also
   - Nothing runs under a sensing region: B.Cu stays clear there, so each region has an even backing.
 - **Vias.** Each region's via sits on the border of its sense comb nearest the tail. A short F.Cu stub
   joins the via to the comb, and no via falls within 12 mm of the toe-joint bend line.
+  - A toe's via sits at the base of its tab, where the trunk passes. A line running up a toe to a via splits
+    the toe's comb, and fingers cut off from their spine stop sensing. Before this rule, toe2 at EU 42 kept
+    only 38 % of its tile as sensing area; now it keeps 75 %. On a narrow toe the comb's default sense side can
+    have no room near the base, so the toe takes the other side and its comb swaps spines.
 - **Common net (F.Cu).** It runs in the channels, which are empty on F.Cu, as a tree reaching every region's
-  common comb. Two vias near the contacts take it to pins 1 and 18.
-- **Tail and contacts.** The tail carries 16 sense lines, the common net and a spare and is 12 mm wide. The
+  common comb. Two vias near the contacts take it to contacts 1 and 18.
+- **Tail and contacts.** The tail carries the 16 sense lines and the common net, and is 12 mm wide. The
   contacts are on B.Cu at 0.5 mm pitch for a bottom-contact ZIF connector, with a stiffener to 0.3 mm total.
+  - **Contact numbers are physical and the same rule on both feet:** look at the exposed contacts with the
+    tail end pointing up; contact 1 is on the left.
+  - The left sole is the mirror of the right, so a region sits on a different contact on each foot. The pod
+    firmware needs one channel map per side. `verify_board.py` writes it for every board, traced through the
+    copper; see section 10 for EU 42.
 
 **KiCad.** `kicad_export.py` turns the generator's board file into a two-layer KiCad 7 board:
 - the outline;
-- each region as a footprint whose two combs are custom-shaped pads, exposed for the film;
+- each region as a footprint whose two combs are custom-shaped pads, exposed for the film through one
+  coverlay opening per region. Per-finger openings would leave 0.2 mm coverlay webs that can't be cut and
+  would hold the film off the copper. The opening is notched where an F.Cu track lands on a comb, so the
+  joint stays covered and other copper keeps 0.15 mm from the opening;
 - the tracks, vias and contacts;
 - keep-out rule areas under every region and across the bend band;
-- the routing plan on `Cmts.User`, and fabrication notes, the licence and the source location on `F.Fab`.
+- the routing plan on `Cmts.User`, and fabrication notes, the licence and the source location on `F.Fab`;
+- the design rules in the `.kicad_pro` beside the board. Without that file KiCad falls back to its default
+  rules: the EU 42 board then shows 75 DRC reports (vias under the default 0.5 mm minimum, among others) instead
+  of only the 17 library warnings. The title block records which
+  generator files made the board.
 
 Design-rule results are reported in section 10.
 

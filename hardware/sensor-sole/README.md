@@ -5,16 +5,22 @@
 This is an open pressure-sensing sole for five-toe barefoot shoes, made in any size and fitted to a person's own
 foot. A thin passive flex circuit with 16 sensing regions lies in the shoe; a small pod outside the shoe reads it.
 
-**Status: design only.** The layout and its generator exist; nothing has been fabricated or measured. See
-[`DESIGN.md`](DESIGN.md) for the design, its targets against Moticon OpenGo, and the validation plan.
+**Status: design only, not released for fabrication.** The layout, its generator and KiCad boards exist;
+nothing has been fabricated or measured. No fabricator has confirmed the assumptions in
+[`FABRICATION.md`](FABRICATION.md). Check results per size and side are in DESIGN.md, sections 5 and 10.
+See [`DESIGN.md`](DESIGN.md) for the
+design, its targets against Moticon OpenGo, and the validation plan.
 
 | File | What it is |
 |---|---|
 | `DESIGN.md` | Design specification: fit, layer stack, sensing, routing, scaling, pod, calibration, decisions |
 | `sole_gen.py` | Generator: foot spec → outline with toe tabs, sensing regions, electrode combs, routed copper, tail, checks; exports SVG, DXF, JSON, a board file and previews |
 | `sole_route.py` | Copper routing used by the generator: sense lines (B.Cu) as a planar tree, guided fine-grid pass, common net (F.Cu), vias, stubs |
-| `kicad_export.py` | Board file → KiCad 7 board (`.kicad_pcb`); run with the Python that ships KiCad's `pcbnew` |
-| `kicad/` | The generated EU 42 boards (right and left) and their design-rule reports |
+| `kicad_export.py` | Board file → KiCad 7 board (`.kicad_pcb` + `.kicad_pro`, which holds the design rules); run with the Python that ships KiCad's `pcbnew` |
+| `verify_board.py` | Checks a board before fabrication: DRC with the project rules, the region-to-contact map traced through the copper, contact numbering, coverlay openings, provenance; writes `.drc.rpt` and `.check.json` |
+| `make_fab.sh` | Generator → KiCad → check → Gerbers and drill; writes no fabrication files if the check fails |
+| `kicad/` | The EU 42 boards (right and left) with their DRC reports, check results (including each side's contact map) and previews |
+| `FABRICATION.md` | Fabrication assumptions against published flex-PCB capabilities, open questions, draft enquiry (not sent) |
 | `person_example.json` | Personalisation format (illustrative values, not a real person) |
 | `requirements.txt` | Python packages the generator needs |
 
@@ -23,7 +29,9 @@ pip install -r requirements.txt
 python sole_gen.py --size 42 --out out/                  # EU 42, right foot (a few minutes: routing)
 python sole_gen.py --size 42 --side L --out out/         # left foot
 python sole_gen.py --foot person_example.json --out out/ # a person's foot
-python3 kicad_export.py out/sole_EU42_R_region.board.json kicad/sole_EU42_R.kicad_pcb   # KiCad's Python
+python3 kicad_export.py out/sole_EU42_R.board.json kicad/sole_EU42_R.kicad_pcb   # KiCad's Python
+python3 verify_board.py kicad/sole_EU42_R.kicad_pcb                              # KiCad's Python
+./make_fab.sh 42 R                                       # all of the above, then Gerbers if the check passes
 ```
 
 ## Licence
