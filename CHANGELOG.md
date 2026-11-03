@@ -2,11 +2,13 @@
 
 ## Unreleased
 - **Sensor sole, open hardware** (`hardware/sensor-sole/`, CERN-OHL-S-2.0). It is a pressure-sensing sole for
-  five-toe barefoot shoes (sized for a Vibram FiveFingers EU 42), scalable in size and personalised to a foot.
-  Design only: nothing has been fabricated or measured.
+  five-toe barefoot shoes, designed for a Vibram FiveFingers EU 42. The generator can produce other sizes and
+  personal outlines; fit has not been demonstrated at any size. Design only: nothing has been fabricated or
+  measured.
   - `sole_gen.py` builds the sole from a foot spec:
     - the outline with five toe tabs;
-    - 16 sensing regions anchored to anatomy (Voronoi tiles, 78–83 % coverage across EU 36–47);
+    - 16 sensing regions anchored to anatomy (Voronoi tiles; 78–83 % of the sole outline across EU 36–47 in
+      the layout-only sweep, a geometric figure);
     - interdigitated electrode combs;
     - a routing plan along region seams, with bundles carved at their true width;
     - a flat tail and checks (fit, clearances, vias outside the toe-joint bend zone, connected combs).

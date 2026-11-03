@@ -7,8 +7,10 @@ electrical figure below is a design target or an estimate, marked as such, until
 
 ## 1. What it is
 
-A pressure-sensing sole with five toe tabs that fits a size-42 Vibram FiveFingers and scales to EU 36–47.
-Its sensing regions are anchored to the wearer's own anatomy. It has two parts:
+A pressure-sensing sole with five toe tabs, designed for a size-42 Vibram FiveFingers. Fit in the shoe has not
+been tested. The generator can produce it for other sizes (a layout-only sweep covered EU 36–47) and from a
+person's foot landmarks; so far EU 37, 42 and 46 and one synthetic foot have been generated and checked, and
+none has been fitted. Its sensing regions are anchored to the foot's anatomy. It has two parts:
 
 - **The sole:** a passive, thin flex circuit in the shoe. Each sensing region is an interdigitated electrode
   pair under a piezoresistive film (a shunt-mode force-sensing resistor). There are no components under the foot.
@@ -18,14 +20,14 @@ Its sensing regions are anchored to the wearer's own anatomy. It has two parts:
 | | OpenGo (vendor spec, from our comparison corpus) | Sensor sole v0 target |
 |---|---|---|
 | Pressure channels | 16 capacitive | 16 piezoresistive regions (pod v1: up to 32) |
-| Sensing coverage of the sole | 62.5–67.4 % | 75–80 % at EU 37, 42 and 46 (geometric estimate from the generator, section 5; not measured) |
+| Sensing coverage of the sole | 62.5–67.4 % (corpus); "65% area coverage" (current product page); definition not stated | 75–80 % at EU 37, 42 and 46: region outlines as a share of the sole outline, toe tabs included (geometric estimate, section 5). Not comparable with the vendor's figure: the definitions may differ, and neither number is a measured effect on force or centre of pressure |
 | Toes | Toe pockets and five-toe fit not documented in the corpus | Five toe tabs; big toe and four lesser toes sensed |
 | Motion sensor | 6-axis in the insole | 6-axis in the pod, worn on the instep, so it moves with the foot |
 | Rate | 10–100 Hz | 100 Hz (target) |
 | Recording | 32 MB on board | microSD in the pod (prototype); stream over Bluetooth LE |
 | Left/right sync | Timing crystals, < 0.006 % drift | 32.768 kHz crystals (±20 ppm = 0.002 %) plus post-hoc clock fit and a hardware sync input (to verify) |
 | Calibration | Factory, lifetime | Per region on our bench; zeroed during each swing phase |
-| Sizes | 9 double sizes | Any length and width; personal outlines from a foot scan |
+| Sizes | 9 double sizes | Generator capability: an EU size, a measured length and width, or a personal outline from foot landmarks. Generated and checked: EU 37, 42, 46 and one synthetic foot. Fit not demonstrated at any size |
 
 ## 2. Fitting a size-42 FiveFingers KSO Trek
 
@@ -94,9 +96,10 @@ bridges the combs, and the bridge conducts more as the load rises.
 - the five metatarsal heads;
 - the five toes.
 
-They are Voronoi tiles around anatomical anchors, clipped to the sole. This is deliberate. OpenGo's high
-coverage is what makes total force and centre of pressure usable. Small discs ("point mode", still available)
-cover only 9 % of the sole and put three vias in the bend zone. The regions also map onto foot segments
+They are Voronoi tiles around anatomical anchors, clipped to the sole. This is deliberate: the hypothesis is
+that covering most of the sole helps total force and centre-of-pressure estimates. It has not been measured
+for this sole. Small discs ("point mode", still available) cover only 9 % of the sole and put three vias in
+the bend zone. The regions also map onto foot segments
 (hindfoot, midfoot, forefoot, big toe, lesser toes), which is what the multi-segment foot model needs.
 
 **Routing.** The sole is routed in copper by the generator itself (`sole_route.py`).

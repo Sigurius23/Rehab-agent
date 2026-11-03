@@ -2,8 +2,11 @@
 <!-- SPDX-License-Identifier: CERN-OHL-S-2.0 -->
 # Sensor sole
 
-This is an open pressure-sensing sole for five-toe barefoot shoes, made in any size and fitted to a person's own
-foot. A thin passive flex circuit with 16 sensing regions lies in the shoe; a small pod outside the shoe reads it.
+This is an open pressure-sensing sole for five-toe barefoot shoes. The generator can produce it for other EU
+sizes, for a measured foot length and width, or from a person's foot landmarks. That is a generator
+capability, not a demonstrated fit: four configurations have been generated and checked, and none has been
+fitted in a shoe. A thin passive flex circuit with 16 sensing regions lies in the shoe; a small pod outside
+the shoe reads it.
 
 **Status: design only, not released for fabrication.** The layout, its generator and KiCad boards exist;
 nothing has been fabricated or measured. No fabricator has confirmed the assumptions in
