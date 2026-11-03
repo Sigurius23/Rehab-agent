@@ -20,6 +20,7 @@ design, its targets against Moticon OpenGo, and the validation plan.
 | `verify_board.py` | Checks a board before fabrication: DRC with the project rules, the region-to-contact map traced through the copper, contact numbering, coverlay openings, provenance; writes `.drc.rpt` and `.check.json` |
 | `make_fab.sh` | Generator → KiCad → check → Gerbers and drill; writes no fabrication files if the check fails |
 | `kicad/` | All eight checked boards (EU 37, EU 42, EU 46 and the synthetic personal example, right and left), each with project rules, DRC report and check result; EU 42 previews |
+| `COMPARISON.md` | How the design compares with OpenGo and open insoles: documented features and measured performance kept apart; our figures are design goals |
 | `VERIFICATION.md` | Verification and risk summary: scope, identity and maps, reproducibility, checker negative controls, quantified geometry risks, what needs the fabricator or physical tests |
 | `channel_map.py` | Resolves a sole's printed ID to exactly one verified channel map, or refuses (plain Python) |
 | `maps/` | Deployed channel maps, one per passing board, each tied to the board's design hash and file sha256 |

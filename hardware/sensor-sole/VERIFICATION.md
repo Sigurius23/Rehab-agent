@@ -52,7 +52,8 @@ On top of that, every export of the same design was a different file, because Ki
   `F54cfa0`) is for people. The hash is what identifies the board.
 - **Different designs get different IDs.** Same design gets the same ID, and the same map. A collision would
   need two designs whose 40-bit prefix matches. `manifest.py` and `channel_map.py check` reject duplicate IDs
-  in a map set, so a collision would be caught, not silently accepted.
+  within one map set. That catches a collision only among the maps in that set (section "Remaining identity
+  risks").
 - **Seeded export.** KiCad's UUIDs are seeded from the design hash, so exports are byte-reproducible (section 3).
 - **The checker binds the ID.** `verify_board.py` requires the printed ID to equal the design ID written on
   the board, which must match the hash in the title block.
@@ -84,7 +85,17 @@ On top of that, every export of the same design was a different file, because Ki
 | Personal (synthetic) R | `F54cfa0 R 8a07f794d2` | `1d8c972f8aaa` | `maps/F54cfa0_R_8a07f794d2.json` |
 | Personal (synthetic) L | `F54cfa0 L 1ad600b888` | `4ba35f496c3b` | `maps/F54cfa0_L_1ad600b888.json` |
 
-**Remaining identity risks:**
+**Remaining identity risks (open):**
+- **Collisions outside a map set.** Rejecting duplicate IDs inside one map set does not rule out a collision
+  with a design outside it: another branch, an older revision, or someone else's build of the generator. If
+  such a sole were resolved against a set holding a different design with the same 10-hex prefix, it would get
+  the wrong map. The risk is small (40 bits) but not excluded.
+  - Mitigations, none built yet: resolve only against the set the sole was verified with; compare the full
+    design hash when it can be read; use a longer printed ID; or give the sole an electrical ID the pod can
+    read.
+- **The physical label and the matching process are not validated.** Nothing has shown that a person reads
+  the printed ID reliably, enters it correctly, or picks the right foot. Nor that the pod refuses in practice
+  when they do not.
 - **Legibility.** The ID is silkscreen text 1.0 mm high with 0.15 mm lines. That is exactly JLCPCB's published
   minimum for silkscreen, and it sits on a part that flexes. It may print or wear illegibly. Ask the
   fabricator, and test it.
@@ -110,7 +121,8 @@ On top of that, every export of the same design was a different file, because Ki
   - **EU 37 R: byte-identical** board and project file;
   - **personal example L: byte-identical** board and project file.
 
-  These two were regenerated as a spot check. The other six were not, but use the same code path.
+  **Two of the eight boards** were regenerated as a spot check. **The other six have not been tested for exact
+  reproduction.** They use the same code path, but that is an expectation, not a result.
   The file also records the git revision, so reproducing the exact file needs that revision. The design hash,
   and so the ID and map, depends only on the design.
 
@@ -119,7 +131,12 @@ On top of that, every export of the same design was a different file, because Ki
 **Negative controls** (`tests/test_verify_negative.py`). Take the passing EU 42 R board, break it in one known
 way, and require `verify_board.py` to fail for that reason. An unbroken copy must pass.
 
-Run on the committed EU 42 R board (`EU42 R 4ea1726398`). Each check runs in its own process, as in real use.
+**One fresh run of all twelve cases** (2026-11-03), on:
+- the test file as committed in 1d87666 (sha256 `05f35d8c3532d491…`);
+- the checker `verify_board.py` (sha256 `3815d9024f5d10ce…`);
+- the committed EU 42 R board `EU42 R 4ea1726398` (sha256 `50ca340ed60e9562…`).
+
+Each check runs in its own process, as in real use. This run replaces the earlier partial results below.
 
 | Fault injected | Result | The expected reason is among the reported problems (first one shown) |
 |---|---|---|
@@ -140,8 +157,10 @@ Two of the controls first went wrong because of the test, not the checker:
 - **The floating comb piece** was copied without KiCad 7's local-coordinate call, so it reloaded inside its own
   comb, and the board rightly passed.
 - **KiCad's save** writes a project file of its own, so "rules file removed" still had its rules.
-Both injections were fixed and the cases rerun. A control that passes only shows the fault was not really
-injected; each one is now confirmed to fail.
+Both injections were fixed. Each was investigated, the injection and then the checker, before the result
+was accepted, and the fresh run above repeats every case on the fixed test. An unexpected pass means either
+the fault was not really injected or the checker missed it, so it stays open until one of the two is shown.
+Here both were the injection.
 
 **Other tests:**
 - **Fail-closed DRC parsing** (`tests/test_verify_drc.py`, 8 cases): a failed report write, an empty report, a

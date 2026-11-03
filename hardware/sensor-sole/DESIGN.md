@@ -18,8 +18,8 @@ Its sensing regions are anchored to the wearer's own anatomy. It has two parts:
 | | OpenGo (vendor spec, from our comparison corpus) | Sensor sole v0 target |
 |---|---|---|
 | Pressure channels | 16 capacitive | 16 piezoresistive regions (pod v1: up to 32) |
-| Sensing coverage of the sole | 62.5–67.4 % | 78–83 % across EU 36–47 (generator, section 5) |
-| Toes | Standard insole, no toe pockets | Five toe tabs; big toe and four lesser toes sensed |
+| Sensing coverage of the sole | 62.5–67.4 % | 75–80 % at EU 37, 42 and 46 (geometric estimate from the generator, section 5; not measured) |
+| Toes | Toe pockets and five-toe fit not documented in the corpus | Five toe tabs; big toe and four lesser toes sensed |
 | Motion sensor | 6-axis in the insole | 6-axis in the pod, worn on the instep, so it moves with the foot |
 | Rate | 10–100 Hz | 100 Hz (target) |
 | Recording | 32 MB on board | microSD in the pod (prototype); stream over Bluetooth LE |
