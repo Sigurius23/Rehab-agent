@@ -1,17 +1,17 @@
 {
  "board": "sole_EU42_L.kicad_pcb",
- "sha256": "1130493a2f0ee78cba2d9707b87cb679dbca38a8465695c2525071b8397377e1",
+ "sha256": "6d33f4094c885a11b6500eedefbcea278aed3b8664883b5841b0a775f74a1246",
  "project_sha256": "423a803f896ae79a36201b7819dbf8793a33603bd6632f291700f2932e0e5f07",
  "kicad": "7.0.11+dfsg-1build4",
  "title": "Sensor sole v0 (L, foot 270 mm)",
  "title_block": [
   "CERN-OHL-S-2.0",
   "https://github.com/Sigurius23/Rehab-agent/tree/main/hardware/sensor-sole",
-  "sole_gen 029714cd986b sole_route 10804ab6f8ff kicad_export e44c53a5128b",
-  "git 39ada9a579ca; side L, size 42.0, exit arch"
+  "sole_gen bd1af8f1e187 sole_route 10804ab6f8ff kicad_export e44c53a5128b",
+  "git 12cd2b770af1; side L, size 42.0, exit arch"
  ],
  "source_in_board": {
-  "sole_gen": "029714cd986b",
+  "sole_gen": "bd1af8f1e187",
   "sole_route": "10804ab6f8ff",
   "kicad_export": "e44c53a5128b"
  },
@@ -29,7 +29,25 @@
    "warning": 17
   }
  },
- "coverlay_openings_ok": false,
+ "coverlay_openings_ok": true,
+ "coverlay_opening_pct_of_region": {
+  "mt4": 97.0,
+  "mt3": 99.9,
+  "toe1": 100.0,
+  "mid_lat_prox": 99.9,
+  "toe3": 100.0,
+  "heel_med": 97.9,
+  "toe5": 99.9,
+  "heel_lat": 100.0,
+  "heel_post": 100.0,
+  "mt2": 100.0,
+  "mt1": 100.0,
+  "toe2": 100.0,
+  "toe4": 100.0,
+  "mid_lat_dist": 99.4,
+  "arch_med": 99.6,
+  "mt5": 100.0
+ },
  "contacts_seen_from": "exposed contacts facing the viewer, tail end up; contact 1 on the left",
  "contacts_on": "B.Cu",
  "contact_numbering_physical": true,
@@ -215,8 +233,6 @@
   "toe4",
   "toe5"
  ],
- "problems": [
-  "coverlay openings: ['mt4: comb outside its opening']"
- ],
- "ok": false
+ "problems": [],
+ "ok": true
 }

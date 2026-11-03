@@ -155,31 +155,40 @@ def check(pcb_path):
     if errors or drc["unconnected"] or drc["footprint_errors"]:
         problems.append(f"DRC: {errors}, unconnected {drc['unconnected']}, footprint errors {drc['footprint_errors']}")
 
-    # coverlay: one opening per region, over that region's combs (exported footprint polygons have been
-    # misplaced by KiCad's local coordinates before; DRC alone would not notice an opening in the wrong place)
-    bad_open = []
+    # coverlay: one opening per region, over that region's combs. Exported footprint polygons have been
+    # misplaced by KiCad's local coordinates before, and DRC alone would not notice an opening in the wrong place.
+    # Each opening is compared with its region's outline (the B.Cu keep-out zone of the same name):
+    #   - it must lie on the region: at least 95 % of its area, and inside the region outline;
+    #   - the comb pieces must lie in it (anchor points; one small piece may sit in a notch).
+    # Notches where F.Cu tracks land or run along a region's edge cover a little of the comb (EU 42: at most
+    # 1.5 % of a region's sensing area; DESIGN.md, section 10).
+    bad_open, open_pct = [], {}
+    zones = {z.GetZoneName()[len("keepout_"):]: z for z in board.Zones() if z.GetZoneName().startswith("keepout_")}
     for fp in board.GetFootprints():
         if fp.GetReference() == "J1":
             continue
-        ops = [g.GetBoundingBox() for g in fp.GraphicalItems() if g.GetLayer() == pcbnew.F_Mask]
-        if len(ops) != 1:
-            bad_open.append(f"{fp.GetValue()}: {len(ops)} openings"); continue
-        # the opening is notched (≈0.4 mm) where tracks land on a comb, so compare with a 1 mm tolerance; a
-        # misplaced opening is off by far more. Then each comb piece's anchor point must lie inside the opening.
-        o, tol = ops[0], int(1.0 * NM)
-        shape = next(g for g in fp.GraphicalItems() if g.GetLayer() == pcbnew.F_Mask)
-        pads = list(fp.Pads())
-        for p in pads:
-            bb = p.GetBoundingBox()
-            if bb.GetX() < o.GetX() - tol or bb.GetY() < o.GetY() - tol or bb.GetRight() > o.GetRight() + tol \
-                    or bb.GetBottom() > o.GetBottom() + tol:
-                bad_open.append(f"{fp.GetValue()}: comb outside its opening"); break
-        poly = pcbnew.SHAPE_POLY_SET(shape.GetPolyShape())     # stored relative to the footprint
+        shapes = [g for g in fp.GraphicalItems() if g.GetLayer() == pcbnew.F_Mask]
+        if len(shapes) != 1:
+            bad_open.append(f"{fp.GetValue()}: {len(shapes)} openings"); continue
+        poly = pcbnew.SHAPE_POLY_SET(shapes[0].GetPolyShape())   # stored relative to the footprint
         poly.Move(fp.GetPosition())
+        z = zones.get(fp.GetValue())
+        if z is None:
+            bad_open.append(f"{fp.GetValue()}: no region outline (keep-out zone) to compare with"); continue
+        region = pcbnew.SHAPE_POLY_SET(z.Outline())
+        inter = pcbnew.SHAPE_POLY_SET(poly)
+        inter.BooleanIntersection(region, pcbnew.SHAPE_POLY_SET.PM_FAST)
+        a_reg, a_open, a_in = region.Area(), poly.Area(), inter.Area()
+        open_pct[fp.GetValue()] = round(100 * a_open / a_reg, 1) if a_reg else 0.0
+        if a_reg <= 0 or a_open < 0.95 * a_reg or a_in < 0.999 * a_open:
+            bad_open.append(f"{fp.GetValue()}: opening {a_open / NM ** 2:.0f} mm², {a_in / NM ** 2:.0f} mm² of it on the "
+                            f"region of {a_reg / NM ** 2:.0f} mm²")
+        pads = list(fp.Pads())
         outside = sum(1 for p in pads if not poly.Contains(p.GetPosition()))
-        if outside > max(1, 0.1 * len(pads)):                  # one small piece may sit in a notch
+        if outside > max(1, 0.1 * len(pads)):
             bad_open.append(f"{fp.GetValue()}: {outside} of {len(pads)} comb pieces outside the opening")
     res["coverlay_openings_ok"] = not bad_open
+    res["coverlay_opening_pct_of_region"] = open_pct
     if bad_open:
         problems.append(f"coverlay openings: {bad_open}")
 

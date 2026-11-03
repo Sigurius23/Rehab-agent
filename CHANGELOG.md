@@ -11,8 +11,31 @@
     - a routing plan along region seams, with bundles carved at their true width;
     - a flat tail and checks (fit, clearances, vias outside the toe-joint bend zone, connected combs).
   - It exports SVG, DXF (KiCad layers) and JSON.
-  - A sweep over EU 36–47 passes every check. The weak spot is the first metatarsal head region, which gives
-    up 23–34 % of its area to the main bundle.
+  - A layout-only sweep over EU 36–47 passed the layout checks. That sweep predates copper routing; see the
+    copper results below.
+  - **Copper routing and KiCad export.** `sole_route.py` routes real copper: sense lines on B.Cu as a planar
+    tree, a negotiated fine-grid pass, the common net on F.Cu, vias, stubs and jumpers. `kicad_export.py`
+    writes KiCad 7 boards with the design rules in the `.kicad_pro`.
+  - **`verify_board.py`** checks each board:
+    - DRC with the project rules;
+    - the region-to-contact map, traced through the physical copper without trusting net names;
+    - physical contact numbering;
+    - coverlay openings;
+    - provenance (the generator hashes in the title block).
+    `make_fab.sh` writes Gerbers only if the check passes.
+  - **Fixes from the review:**
+    - toe2's line split its comb, so only 38 % of its tile sensed. Toe vias now sit at the tab base, which
+      brings toe2 to 75 %.
+    - The left board's contact pads were numbered opposite to the physical order. Both feet are now numbered
+      physically, with one channel map per side.
+    - Coverlay opened per comb piece would have left uncuttable 0.2 mm webs between fingers. There is now one
+      opening per region, notched where tracks land.
+    - The source stamp is taken when the generator starts.
+  - **Results.** EU 42 right and left pass every check. EU 37, EU 46 and the personalised example do not:
+    the negotiated pass leaves lines too close, and on the personalised foot four sense lines are shorted.
+    Details are in DESIGN.md, section 5.
+  - `FABRICATION.md` compares the assumptions with two fabricators' published flex capabilities. It lists the
+    open questions and a draft enquiry, which has not been sent. Nothing is released for fabrication.
   - `DESIGN.md` covers the fit, layer stack, pod electronics (prototype on a XIAO nRF52840 Sense), data
     integration over LSL, the calibration and validation plan, and the open decisions.
 - **Flaky live-chain test fixed** (`test_live_chain_posture_to_suit_payloads`). It had failed in CI on nearly every
