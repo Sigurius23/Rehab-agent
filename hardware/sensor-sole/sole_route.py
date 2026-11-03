@@ -184,17 +184,23 @@ def build_lanes(paths, res, tail_start, tail_dir, tail_end, seeds, pitch, pad_pi
                 pa = {net: np.asarray(lane[(ps, net)].coords[-1], float) for net in co}
                 ca = {net: np.asarray(lane[(c, net)].coords[0], float) for net in co}
                 inner = max(co, key=lambda net: sg_ * o_p[net])
-                A = pa[inner]; B = ca[inner]
                 M = np.array([[d_p[0], -d_c[0]], [d_p[1], -d_c[1]]])
-                t_, _s = np.linalg.solve(M, B - A)
-                X = A + d_p * t_
                 r0 = 0.8
-                P0 = X - d_p * r0 * math.tan(abs(th) / 2)
-                K = P0 + sg_ * n_pv * r0
+                tn = math.tan(abs(th) / 2)
                 for net in co:
-                    Pp = pa[net]; Pi = Pp + d_p * float(np.dot(K - Pp, d_p))
-                    Cc = ca[net]; Qi = Cc + d_c * float(np.dot(K - Cc, d_c))
-                    r = np.linalg.norm(Pi - K)
+                    # a fillet per lane, from its own parent and child lines, radius r0 plus its distance from the
+                    # inner lane. The block may sit off-centre in the parent and centred in the child (a sideways
+                    # shift through the turn); per-lane centres then all shift together and the arcs stay one
+                    # pitch apart. A single centre projected onto every lane did not: the outer arcs missed
+                    # their child lanes, and the straight jogs that closed the gaps crossed (the personalised
+                    # foot, where the trunk meets the tail at about 35 degrees).
+                    A = pa[net]; B = ca[net]
+                    t_, _s = np.linalg.solve(M, B - A)
+                    Xi = A + d_p * t_
+                    r = r0 + sg_ * (o_p[inner] - o_p[net])
+                    Pi = Xi - d_p * r * tn
+                    Qi = Xi + d_c * r * tn
+                    K = Pi + sg_ * n_pv * r
                     a0_ = math.atan2(*(Pi - K)[::-1]); k = max(4, int(abs(th) / math.radians(8)))
                     arc = [tuple(K + r * np.array([math.cos(a0_ + sg_ * abs(th) * f), math.sin(a0_ + sg_ * abs(th) * f)]))
                            for f in np.linspace(0, 1, k + 1)]
@@ -357,8 +363,13 @@ def _raster(geoms, X, Y):
     return m
 
 
-def route_common(area, sense_combs, common_combs, obstacles, start, width, clear, res=0.2):
-    """Steiner tree on F.Cu from `start` to every common comb. Returns polylines (list of point lists)."""
+def route_common(area, sense_combs, common_combs, obstacles, start, width, clear, res=0.2, opening_clear=0.16):
+    """Steiner tree on F.Cu from `start` to every common comb. Returns polylines (list of point lists).
+
+    The tree keeps `opening_clear` plus half its width from every comb, common ones included, and reaches its
+    own comb only by a short final hop. Each region's coverlay opening is the region itself, so a common line
+    running along a comb's edge would need the opening notched along that whole edge, covering comb copper
+    (mt4 at EU 42 lost 5 % of its copper that way). Now only the landing point is notched."""
     minx, miny, maxx, maxy = area.bounds
     X = np.arange(minx - 1, maxx + 1, res); Y = np.arange(miny - 1, maxy + 1, res)
     ny, nx = len(Y), len(X)
@@ -370,7 +381,10 @@ def route_common(area, sense_combs, common_combs, obstacles, start, width, clear
     reach = width / 2 + clear + 0.05                    # margin for rasterisation error
     dist_block = ndimage.distance_transform_edt(~blocked) * res
     dist_edge = ndimage.distance_transform_edt(inside) * res
-    free = inside & (dist_block >= reach + res / 2) & (dist_edge >= reach + res / 2)
+    keep_off = width / 2 + opening_clear + res / 2        # from any comb, except for the final hop
+    all_combs = _raster([g.buffer(res * 0.5) for g in list(common_combs.values())], X, Y)
+    dist_comb = ndimage.distance_transform_edt(~all_combs) * res
+    free = inside & (dist_block >= reach + res / 2) & (dist_edge >= reach + res / 2) & (dist_comb >= keep_off)
     idx = -np.ones((ny, nx), int); fi = np.flatnonzero(free.ravel()); idx.ravel()[fi] = np.arange(len(fi))
     rows, cols, w = [], [], []
     for dy, dx in ((0, 1), (1, 0), (1, 1), (1, -1)):
@@ -389,7 +403,7 @@ def route_common(area, sense_combs, common_combs, obstacles, start, width, clear
     for n, g in common_combs.items():
         cm = _raster([g], X, Y)
         dm = ndimage.distance_transform_edt(~cm) * res
-        t = idx[free & (dm <= reach + 2 * res)]
+        t = idx[free & (dm <= keep_off + 3 * res)]
         targets[n] = set(t[t >= 0].tolist())
     lines, unreached = [], []
     todo = dict(targets)
@@ -474,13 +488,17 @@ def _draw(lines, points, X, Y):
 
 
 def maze_refine(planned, vias, order, allowed, keepout, res=0.06, track_w=0.12, clear=0.15, via_d=0.45,
-                no_go=None, rounds=8):
+                no_go=None, rounds=8, corridor=3.0):
     """Final pass: negotiated re-routing of every sense line on a fine grid (PathFinder-style).
 
     Each round routes every line by a shortest path whose cost is lowest on its planned lane. Cells within
     clearance of another line are allowed but cost more: a present-congestion term that grows every round, and
     a history term that accumulates where lines collided before. Lines therefore negotiate until none
     overlaps another. Vias, keep-out regions, the copper-free edge and the fixed fan-outs are hard obstacles.
+    Each line stays within `corridor` mm of its planned lane. The plan fixes the topology (which side of
+    which line every line runs); this pass only refines the geometry. Without the corridor, a line could take
+    a shortcut through free space the plan avoided (an empty area where a sensor is switched off), and lines
+    on a shortcut keep no order, so they crossed (the personalised foot).
     Returns (lanes, failed): failed lists lines still in conflict after the last round (or unroutable).
     """
     minx, miny, maxx, maxy = allowed.bounds
@@ -513,6 +531,7 @@ def maze_refine(planned, vias, order, allowed, keepout, res=0.06, track_w=0.12, 
     for n in nets:
         dp = edt(_draw([planned[n][:-2]], [], X, Y))
         plan_cost[n] = np.where(dp <= 0.08, 1.0, np.where(dp <= 0.45, 2.5, 8.0)).astype(np.float32)
+        hard[n] &= dp <= corridor
     hist = np.zeros((ny, nx), np.float32)
     paths, near = {}, {}
     pres = 0.5

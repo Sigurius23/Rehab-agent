@@ -288,6 +288,30 @@ def build(board_json, out_pcb):
     for k, s in enumerate(notes):
         text(b, s, (xmin, zmax + 22 - k * 3.0), pcbnew.F_Fab)
 
+    # the configuration the board was built for, machine-readable, for verify_board.py: the regions it must
+    # have (a personal sole can have fewer than 16) and the number of contacts
+    cfg = d.get("config")
+    if cfg:
+        text(b, "sensor-sole-config " + json.dumps(dict(regions=cfg["regions_built"], contacts=cfg["n_contacts"],
+                                                        dropped=cfg["dropped"]), separators=(",", ":")),
+             (xmin, zmax + 22 - len(notes) * 3.0), pcbnew.Cmts_User, size=0.8)
+
+    # a visible ID on the tail (F side, on coverlay), so a physical sole can be matched to its board revision
+    # and channel map: size or foot file, side, generator revision
+    src = d.get("source") or {}
+    opt, foot = src.get("options", {}), src.get("foot")
+    ident = f"{'foot ' + foot['sha256'][:6] if foot else 'EU' + format(opt.get('size', 0), 'g')} {d['side']} " \
+            f"g{(src.get('git') or 'nogit')[:7]}{'+' if src.get('generator_files_modified') else ''}"
+    tid = pcbnew.PCB_TEXT(b)
+    tid.SetText(ident)
+    tid.SetLayer(pcbnew.F_SilkS)
+    tid.SetTextSize(pcbnew.VECTOR2I(MM(1.0), MM(1.0)))
+    tid.SetTextThickness(MM(0.15))
+    at = (end[0] - dr[0] * (edge_gap + pl + 18.0), end[1] - dr[1] * (edge_gap + pl + 18.0))
+    tid.SetPosition(V(at))
+    tid.SetTextAngle(pcbnew.EDA_ANGLE(math.degrees(math.atan2(dr[1], dr[0])), pcbnew.DEGREES_T))
+    b.Add(tid)
+
     tb = b.GetTitleBlock()
     tb.SetTitle(f"Sensor sole v0 ({d['side']}, foot {d['foot_length']:.0f} mm)")
     tb.SetCompany("Rehab Agent meta-repo contributors")

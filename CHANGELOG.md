@@ -24,8 +24,9 @@
     - provenance (the generator hashes in the title block).
     `make_fab.sh` writes Gerbers only if the check passes.
   - **Fixes from the review:**
-    - toe2's line split its comb, so only 38 % of its tile sensed. Toe vias now sit at the tab base, which
-      brings toe2 to 75 %.
+    - toe2's line split its comb. By geometric estimate, its combs interleaved over 38 % of its tile (47 % of
+      its region outline). Toe vias now sit at the tab base, which brings it to 75 % (85 %). This is a
+      geometric estimate, not a measured sensitivity.
     - The left board's contact pads were numbered opposite to the physical order. Both feet are now numbered
       physically, with one channel map per side.
     - Coverlay opened per comb piece would have left uncuttable 0.2 mm webs between fingers. There is now one

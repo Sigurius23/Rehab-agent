@@ -4,17 +4,26 @@
 """Check a sensor-sole KiCad board before anything is sent to fabrication (KiCad 7 Python, i.e. the Python
 that ships pcbnew).
 
+  0. Configuration: the regions and number of contacts the board was built for (a text the exporter writes on
+     Cmts.User). Everything below is checked against it, so a personal sole with 14 regions is checked as 14.
   1. Design-rule check with the board's own project rules. The net classes (via size, clearance, track width)
      live in the .kicad_pro beside the board; without it KiCad falls back to its defaults and the result means
-     nothing, so a missing project file is a failure.
+     nothing, so a missing project file is a failure. The check fails closed: if KiCad cannot write the
+     report, or a section is missing, or the number of entries in a section differs from its header, the board
+     fails. The only entries accepted are "footprint not in a library" warnings for the board's own generated
+     footprints (each region and J1, each exactly once); they are listed one by one in the result.
   2. Region-to-contact map from the physical copper, without trusting net names: tracks, vias and pads that
      touch (on the same copper layer, or through a via) are joined. Each sense contact must reach exactly one
      region's sense comb and nothing else; the two common contacts must reach every common comb and nothing
      else; every comb piece must be reached. The map is then compared with the net names.
   3. Contact numbering: pad numbers must follow the physical order, the same on both feet. Look at the exposed
      contacts with the tail end pointing up: contact 1 is on the left.
-  4. Provenance: sha256 of the board and project files, and the generator hashes in the title block against
-     the generator files beside this script.
+  4. Coverlay: each region's opening must lie on that region, and the comb copper it leaves covered is measured
+     from the actual pad geometry (copper minus opening), per region and per comb. More than 2 % of a region's
+     copper covered fails.
+  5. Provenance: sha256 of the board and project files, and the generator hashes in the title block against
+     the generator files beside this script. The channel map in the result is tied to the board's sha256 and
+     the ID printed on its tail.
 
 Writes <board>.drc.rpt and <board>.check.json beside the board; exit status 1 if any check fails.
 Usage: python3 verify_board.py kicad/sole_EU42_R.kicad_pcb [more boards ...]
@@ -42,20 +51,112 @@ def source_hashes():
     return {f: sha(HERE / f"{f}.py", 12) for f in ("sole_gen", "sole_route", "kicad_export")}
 
 
-def run_drc(board, pcb_path):
+COVERED_COPPER_MAX_PCT = 2.0                        # comb copper a region may lose under coverlay
+
+
+def run_drc(board, pcb_path, generated_refs):
+    """Write and parse the DRC report. Returns (summary, problems); fails closed on anything unexpected."""
+    problems = []
     rpt = pcb_path.with_suffix(".drc.rpt")
-    cwd = os.getcwd()
-    os.chdir(pcb_path.parent)                       # the report names the board by the path it is given
-    try:
-        ok = pcbnew.WriteDRCReport(board, rpt.name, pcbnew.EDA_UNITS_MILLIMETRES, False)
-    finally:
-        os.chdir(cwd)
-    txt = rpt.read_text()
-    found = lambda what: int((re.search(r"\*\* Found (\d+) " + what, txt) or [0, 0])[1])
-    types = collections.Counter(re.findall(r"^\[(\w+)\]", txt, re.M))
-    sev = collections.Counter(re.findall(r"Severity: (\w+)", txt))
-    return dict(report=rpt.name, written=bool(ok), violations=found("DRC violations"), unconnected=found("unconnected pads"),
-                footprint_errors=found("Footprint errors"), by_type=dict(types), by_severity=dict(sev))
+    if rpt.exists():
+        rpt.unlink()                                    # never read a report from an earlier run
+    ok = pcbnew.WriteDRCReport(board, str(rpt), pcbnew.EDA_UNITS_MILLIMETRES, False)
+    summary = dict(report=rpt.name, written=bool(ok))
+    if not ok:
+        problems.append("KiCad says the DRC report could not be written")
+    if not rpt.exists() or rpt.stat().st_size == 0:
+        problems.append("DRC report missing or empty")
+        return summary, problems
+    lines = rpt.read_text().splitlines()
+    if lines and lines[0].startswith("** Drc report for "):   # keep local paths out of the report
+        lines[0] = f"** Drc report for {pcb_path.name} **"
+        rpt.write_text("\n".join(lines) + "\n")
+    heads = {}
+    for i, ln in enumerate(lines):
+        m = re.match(r"\*\* Found (\d+) (DRC violations|unconnected pads|Footprint errors) \*\*$", ln)
+        if m:
+            heads[m.group(2)] = (i, int(m.group(1)))
+        if ln.strip() == "** End of Report **":
+            heads["end"] = (i, None)
+    need = ["DRC violations", "unconnected pads", "Footprint errors", "end"]
+    if any(k not in heads for k in need) or [heads[k][0] for k in need] != sorted(heads[k][0] for k in need):
+        problems.append(f"DRC report not in the expected form (sections found: {sorted(heads)})")
+        return summary, problems
+
+    def entries(a, b):
+        out, cur = [], None
+        for ln in lines[a + 1:b]:
+            m = re.match(r"^\[(\w+)\]: (.*)$", ln)
+            if m:
+                cur = dict(type=m.group(1), message=m.group(2), severity=None, items=[]); out.append(cur)
+            elif cur is not None and ln.strip():
+                sv = re.search(r"Severity: (\w+)", ln)
+                if sv:
+                    cur["severity"] = sv.group(1)
+                elif ln.strip().startswith("@("):
+                    cur["items"].append(ln.strip())
+        return out
+    sec = {k: entries(heads[k][0], heads[nxt][0]) for k, nxt in zip(need[:-1], need[1:])}
+    for k in need[:-1]:
+        if len(sec[k]) != heads[k][1]:
+            problems.append(f"DRC report: '{k}' header says {heads[k][1]}, {len(sec[k])} entries parsed")
+    # library warnings: one per generated footprint, nothing else
+    lib, other = [], []
+    for e in sec["DRC violations"]:
+        if e["type"] == "lib_footprint_issues" and e["severity"] == "warning" and "'sensor_sole'" in e["message"] \
+                and len(e["items"]) == 1 and re.search(r": Footprint (\S+)$", e["items"][0]):
+            lib.append(re.search(r": Footprint (\S+)$", e["items"][0]).group(1))
+        else:
+            other.append(e)
+    expected = sorted(generated_refs)
+    if sorted(lib) != expected:
+        problems.append(f"library warnings for {sorted(lib)}, expected exactly one for each of {expected}")
+    if other:
+        kinds = collections.Counter(f"{e['type']} ({e['severity']})" for e in other)
+        problems.append(f"DRC: {dict(kinds)}")
+    if sec["unconnected pads"]:
+        problems.append(f"DRC: {len(sec['unconnected pads'])} unconnected")
+    if sec["Footprint errors"]:
+        problems.append(f"DRC: {len(sec['Footprint errors'])} footprint errors")
+    summary.update(violations=heads["DRC violations"][1], unconnected=heads["unconnected pads"][1],
+                   footprint_errors=heads["Footprint errors"][1],
+                   by_type=dict(collections.Counter(e["type"] for e in sec["DRC violations"])),
+                   library_warnings=sorted(lib), other_entries=[f"{e['type']}: {e['message']}" for e in other][:50])
+    return summary, problems
+
+
+def board_config(board):
+    """The configuration the exporter wrote on Cmts.User, or None."""
+    for d in board.GetDrawings():
+        if d.GetClass() in ("PCB_TEXT", "PTEXT") and d.GetLayer() == pcbnew.Cmts_User:
+            t = d.GetText()
+            if t.startswith("sensor-sole-config "):
+                try:
+                    return json.loads(t[len("sensor-sole-config "):])
+                except ValueError:
+                    return None
+    return None
+
+
+def board_id(board):
+    ids = [d.GetText() for d in board.GetDrawings()
+           if d.GetClass() in ("PCB_TEXT", "PTEXT") and d.GetLayer() == pcbnew.F_SilkS]
+    return ids[0] if len(ids) == 1 else None
+
+
+def pad_poly(p):
+    """A pad's copper in board coordinates (custom pads: their merged primitives)."""
+    q = pcbnew.SHAPE_POLY_SET()
+    p.MergePrimitivesAsPolygon(q)
+    q.Move(p.GetPosition())
+    return q
+
+
+def union(polys):
+    u = pcbnew.SHAPE_POLY_SET()
+    for q in polys:
+        u.BooleanAdd(q, pcbnew.SHAPE_POLY_SET.PM_FAST)
+    return u
 
 
 def copper_items(board):
@@ -148,21 +249,39 @@ def check(pcb_path):
     elif not res["source_matches_files"]:
         problems.append(f"generator files changed since this board was made: board {m}, files {now}")
 
+    # 0. the configuration the board was built for
+    cfg = board_config(board)
+    res["config"] = cfg
+    res["board_id"] = board_id(board)
+    if res["board_id"] is None:
+        problems.append("no single ID text on F.SilkS (the tail's printed board ID)")
+    fps = list(board.GetFootprints())
+    region_fps = [f for f in fps if f.GetReference() != "J1"]
+    if cfg is None:
+        problems.append("no sensor-sole-config text on Cmts.User: nothing to check the board against")
+    else:
+        if sorted(f.GetValue() for f in region_fps) != sorted(cfg["regions"]):
+            problems.append(f"regions on the board {sorted(f.GetValue() for f in region_fps)} differ from its "
+                            f"configuration {sorted(cfg['regions'])}")
+        j1_ = [f for f in fps if f.GetReference() == "J1"]
+        if len(j1_) != 1 or len(list(j1_[0].Pads())) != cfg["contacts"]:
+            problems.append(f"J1 should have {cfg['contacts']} contacts")
+    generated = [f.GetReference() for f in fps if str(f.GetFPID().GetLibNickname()) == "sensor_sole"]
+    if len(generated) != len(fps):
+        problems.append("footprints from other libraries on the board")
+
     # 1. DRC with the project's rules
-    drc = run_drc(board, pcb_path)
+    drc, drc_problems = run_drc(board, pcb_path, generated)
     res["drc"] = drc
-    errors = {k: v for k, v in drc["by_type"].items() if k != "lib_footprint_issues"}
-    if errors or drc["unconnected"] or drc["footprint_errors"]:
-        problems.append(f"DRC: {errors}, unconnected {drc['unconnected']}, footprint errors {drc['footprint_errors']}")
+    problems += drc_problems
 
     # coverlay: one opening per region, over that region's combs. Exported footprint polygons have been
     # misplaced by KiCad's local coordinates before, and DRC alone would not notice an opening in the wrong place.
     # Each opening is compared with its region's outline (the B.Cu keep-out zone of the same name):
     #   - it must lie on the region: at least 95 % of its area, and inside the region outline;
-    #   - the comb pieces must lie in it (anchor points; one small piece may sit in a notch).
-    # Notches where F.Cu tracks land or run along a region's edge cover a little of the comb (EU 42: at most
-    # 1.5 % of a region's sensing area; DESIGN.md, section 10).
-    bad_open, open_pct = [], {}
+    #   - the comb copper it leaves covered (notches where F.Cu tracks land or run along the region's edge) is
+    #     measured from the pads' geometry; more than COVERED_COPPER_MAX_PCT of the region's copper fails.
+    bad_open, open_pct, coverlay = [], {}, {}
     zones = {z.GetZoneName()[len("keepout_"):]: z for z in board.Zones() if z.GetZoneName().startswith("keepout_")}
     for fp in board.GetFootprints():
         if fp.GetReference() == "J1":
@@ -183,12 +302,23 @@ def check(pcb_path):
         if a_reg <= 0 or a_open < 0.95 * a_reg or a_in < 0.999 * a_open:
             bad_open.append(f"{fp.GetValue()}: opening {a_open / NM ** 2:.0f} mm², {a_in / NM ** 2:.0f} mm² of it on the "
                             f"region of {a_reg / NM ** 2:.0f} mm²")
-        pads = list(fp.Pads())
-        outside = sum(1 for p in pads if not poly.Contains(p.GetPosition()))
-        if outside > max(1, 0.1 * len(pads)):
-            bad_open.append(f"{fp.GetValue()}: {outside} of {len(pads)} comb pieces outside the opening")
+        # the copper the opening leaves covered, from the pads' real geometry
+        cov = {}
+        for num, name in (("1", "sense"), ("2", "common")):
+            cu = union(pad_poly(p) for p in fp.Pads() if p.GetNumber() == num)
+            hid = pcbnew.SHAPE_POLY_SET(cu)
+            hid.BooleanSubtract(poly, pcbnew.SHAPE_POLY_SET.PM_FAST)
+            cov[name] = (cu.Area() / NM ** 2, hid.Area() / NM ** 2)
+        total = sum(c for c, _ in cov.values()); hidden = sum(h for _, h in cov.values())
+        pct = 100 * hidden / total if total else 100.0
+        coverlay[fp.GetValue()] = dict(copper_mm2=round(total, 1), covered_mm2=round(hidden, 2),
+                                       covered_pct=round(pct, 2), sense_covered_mm2=round(cov["sense"][1], 2),
+                                       common_covered_mm2=round(cov["common"][1], 2),
+                                       opening_pct_of_region=open_pct[fp.GetValue()])
+        if pct > COVERED_COPPER_MAX_PCT:
+            bad_open.append(f"{fp.GetValue()}: {hidden:.1f} mm² ({pct:.1f} %) of its comb copper under coverlay")
     res["coverlay_openings_ok"] = not bad_open
-    res["coverlay_opening_pct_of_region"] = open_pct
+    res["coverlay"] = coverlay
     if bad_open:
         problems.append(f"coverlay openings: {bad_open}")
 
@@ -255,6 +385,14 @@ def check(pcb_path):
     res.update(contacts_seen_from="exposed contacts facing the viewer, tail end up; contact 1 on the left",
                contacts_on="B.Cu" if bottom else "F.Cu", contact_numbering_physical=numbering_ok,
                contacts=contacts, regions=regions)
+    if cfg is not None and regions != sorted(cfg["regions"]):
+        problems.append(f"regions reached through the copper {regions} differ from the configuration")
+    # the channel map, valid only for this exact board file (sha256) and the sole printed with this ID
+    res["channel_map"] = dict(board_sha256=res["sha256"], board_id=res["board_id"],
+                              side=(re.search(r"side (\w)", stamp[3] or "") or [None, None])[1],
+                              contact_to_region={c["contact"]: (c["sense_regions"][0] if len(c["sense_regions"]) == 1
+                                                                else ("COM" if c["net"] == "COM" else None))
+                                                 for c in contacts})
     res["problems"] = problems
     res["ok"] = not problems
     out = pcb_path.with_suffix(".check.json")
@@ -269,8 +407,13 @@ def main():
     for p in sys.argv[1:]:
         r = check(p)
         cmap = ", ".join(f"{c['contact']}:{c['sense_regions'][0] if c['sense_regions'] else 'COM'}" for c in r["contacts"])
-        print(f"{r['board']}: {'OK' if r['ok'] else 'FAIL'}  drc {r['drc']['by_type']} unconnected {r['drc']['unconnected']}"
+        print(f"{r['board']}: {'OK' if r['ok'] else 'FAIL'}  drc {r['drc'].get('by_type')} unconnected {r['drc'].get('unconnected')}"
               f"  source matches files: {r['source_matches_files']}\n  contacts {cmap}")
+        cov = r.get("coverlay", {})
+        if cov:
+            worst = max(cov.items(), key=lambda kv: kv[1]["covered_pct"])
+            print(f"  coverlay: most covered {worst[0]} {worst[1]['covered_mm2']} mm² ({worst[1]['covered_pct']} %);"
+                  f" library warnings for {len(r['drc'].get('library_warnings', []))} generated footprints")
         for pr in r["problems"]:
             print("  problem:", pr)
         bad += not r["ok"]

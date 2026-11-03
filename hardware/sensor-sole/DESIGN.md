@@ -110,18 +110,46 @@ cover only 9 % of the sole and put three vias in the bend zone. The regions also
   - Lines are 0.12 mm wide at a 0.40 mm pitch. The bundle is carved out of the neighbouring regions at its true
     width plus 0.8 mm, with extra room at each via. A path along the sole's edge keeps room for a full
     bundle.
-  - Turns use concentric fillets, which keep the pitch exact through any angle.
+  - Turns use a fillet per lane, of radius 0.8 mm plus the lane's distance from the inner lane. This keeps
+    the pitch exact through any angle, including where a block of lanes shifts sideways through a turn.
+    (A single arc centre for all lanes did not: where the personalised foot's trunk meets the tail at
+    about 35°, the outer lanes jogged across each other.)
   - A final, negotiated pass re-routes all lines together on a 0.06 mm grid, each guided by its planned lane.
     Lines may overlap at a price that rises every round until none do (the PathFinder method); vias, regions
     and the edge are hard obstacles.
+    - Each line stays within 3 mm of its planned lane. The plan fixes the topology, and this pass only
+      refines the geometry. A free pass took shortcuts through space the plan avoided, such as an empty
+      area where a sensor is switched off, and lines on a shortcut keep no order.
+    - Copper stays out of the 2 mm copper-free margin of the sole outline; 0.3 mm applies only in the tail.
+      The generator reports any copper in the margin (`copper_in_edge_margin_mm2`).
+  - **Tail root.** The outline has 5 mm fillets where the tail meets the sole. Sharp inside corners are where
+    a flex circuit starts to tear, and they left a bundle arriving at an angle no room to turn into the tail
+    within the margin.
+    - The regions also keep clear of a disk around the root: half the full bundle's width plus 0.8 mm plus
+      2 mm. Every bundle merges there and turns on fillets that cut inside the coarse path, so a region
+      carved only along the path could poke into the turn.
   - A crossing that the order cannot avoid would be bridged by a short F.Cu jumper. None is needed at EU 42.
   - Nothing runs under a sensing region: B.Cu stays clear there, so each region has an even backing.
 - **Vias.** Each region's via sits on the border of its sense comb nearest the tail. A short F.Cu stub
   joins the via to the comb, and no via falls within 12 mm of the toe-joint bend line.
+  - **A via never sits in a bundle.** Reaching a cell on the tree costs nothing, so a via used to be chosen on
+    the trunk itself, inside the bundle. The lines continuing past it then had to squeeze by, and at EU 37,
+    EU 46 and on the personalised foot they could not. Now a via keeps clear of the tree:
+    - by the bundle's half-width there (from the lines already through it, plus the joining line);
+    - plus the via's radius, clearance and a 0.3 mm margin;
+    - and it keeps room for a line between itself and every other via.
+    Later lines may not pass within reach of an existing via. Once all paths are known, a final pass moves any
+    via still too close (the bundle can widen after its via was chosen) into its region and extends its line.
+    The generator reports both: `vias_moved_clear_of_bundles_mm` and `vias_without_clear_cell`.
   - A toe's via sits at the base of its tab, where the trunk passes. A line running up a toe to a via splits
-    the toe's comb, and fingers cut off from their spine stop sensing. Before this rule, toe2 at EU 42 kept
-    only 38 % of its tile as sensing area; now it keeps 75 %. On a narrow toe the comb's default sense side can
-    have no room near the base, so the toe takes the other side and its comb swaps spines.
+    the toe's comb, and fingers cut off from their spine have no partner electrode.
+  - toe2 at EU 42, before and after this rule (a geometric estimate, not a measured sensitivity):
+    - before: the area where both combs interleave was 246 mm². That is 38 % of its 640 mm² Voronoi tile,
+      or 47 % of the 521 mm² region left after gaps and bundles;
+    - after: 480 mm², 75 % of the tile or 85 % of the 563 mm² region.
+    How much of that area responds to pressure, and how evenly, is for the coupon test (section 8).
+  - On a narrow toe the comb's default sense side can have no room near the base. The toe then takes the
+    other side, and its comb swaps spines.
 - **Common net (F.Cu).** It runs in the channels, which are empty on F.Cu, as a tree reaching every region's
   common comb. Two vias near the contacts take it to contacts 1 and 18.
 - **Tail and contacts.** The tail carries the 16 sense lines and the common net, and is 12 mm wide. The
@@ -176,7 +204,7 @@ No material is chosen until coupons have been measured.
 KiCad and checked with `verify_board.py`. A side marked "mirror" has the same routing as the other side;
 its KiCad board is checked separately.
 
-| Board | Regions | Coverage | Sensing area, all / weakest region | Vias, jumpers | Re-route left unresolved | KiCad DRC errors | Contacts traced through copper | Verdict |
+| Board | Regions | Coverage | Sensing area (geometric estimate), all / weakest region | Vias, jumpers | Re-route left unresolved | KiCad DRC errors | Contacts traced through copper | Verdict |
 |---|---|---|---|---|---|---|---|---|
 | EU 42 R | 16 | 78.1 % | 79 % / mt4 71 % | 18, none | none | 0 | 16 sense + COM, each to its own region | **passes** |
 | EU 42 L | 16 (mirror) | 78.1 % | 79 % / mt4 71 % | 18, none | none | 0 | 16 sense + COM, each to its own region | **passes** |
@@ -191,8 +219,9 @@ The personal example is `person_example.json`, with illustrative values, not a r
 metatarsal heads from "scan" landmarks, second toe longest, arch and fifth-toe sensors off.
 
 The EU 37 boards were generated before the coverlay-notch change (db56d33); that change does not affect
-routing. Coverage is the share of the sole covered by region outlines. Sensing area is the share of the regions'
-tiles where both combs interleave, which is the part that actually senses.
+routing. Coverage is the share of the sole covered by region outlines. Sensing area is a geometric estimate:
+the share of the regions' Voronoi tiles where both combs interleave (within one finger pitch of each). A
+film patch elsewhere touches one comb or none. It is not a measured sensitivity.
 
 **What fails, and why.** Only EU 42 routes cleanly. At the other sizes and on the personalised foot, the
 forefoot bundle (metatarsal and toe lines) does not untangle:
@@ -245,6 +274,13 @@ Pod v1 (custom board, bare nRF52840 module) adds 32 channels, more storage and a
   The display rule applies: no user-facing load claim until the force-plate comparison passes its
   pre-set thresholds.
 - **Data handling.** Recordings are health data and stay out of every repository.
+- **Channel maps.** Which region a pod channel reads depends on the side and on the exact board: the left
+  map is the right one reversed, and a regenerated board can route differently. Each sole has an ID printed
+  on its tail (size or foot file, side, generator revision). The pod or host must:
+  - load the channel map from the `.check.json` whose `channel_map.board_id` matches that ID and whose side
+    matches the foot it is worn on;
+  - refuse to label channels by region if no such map is found;
+  - record the ID and the board's sha256 with every recording, so data can be traced to its map.
 
 ## 8. Calibration and validation plan
 
@@ -294,16 +330,31 @@ Pod v1 (custom board, bare nRF52840 module) adds 32 channels, more storage and a
   - a preview.
 - `FABRICATION.md`: fabrication assumptions, open questions, draft enquiry to a fabricator.
 
-**What `verify_board.py` checks:**
-1. **DRC with the board's own rules.** The `.kicad_pro` must sit beside the board.
+**What `verify_board.py` checks** (any failure, or anything it cannot establish, fails the board):
+0. **Configuration.** The exporter writes the regions the board was built for, and its number of contacts,
+   as a text on `Cmts.User`. Everything below is checked against that list, so a personal sole with 14
+   regions is checked as 14, not 16. A board without the text fails.
+1. **DRC with the board's own rules,** failing closed. The `.kicad_pro` must sit beside the board. The board
+   fails if:
+   - KiCad cannot write the report;
+   - a section is missing, or the number of entries in a section differs from its header;
+   - there is any entry other than one "footprint not in a library" warning for each footprint the
+     generator made (each region, and J1). These are listed one by one in the result (`library_warnings`).
+   The local path in the report header is replaced by the file name.
 2. **Region-to-contact map through the copper.** Tracks, vias and pads that touch are joined, without using
    the net names. Each sense contact must reach exactly one region's sense comb, and contacts 1 and N must
-   reach every common comb. Every comb piece must be reached, and no two contacts may be joined.
+   reach every common comb. Every comb piece must be reached, and no two contacts may be joined. The regions
+   reached must be exactly those in the configuration.
 3. **Contact numbering.** Pad numbers must follow the physical order (section 4).
-4. **Coverlay openings.** One per region, lying on its region (≥ 95 % of the region's area), with the comb
-   pieces inside it.
-5. **Provenance.** The sha256 of the board and project files is recorded. The generator-file hashes in the
-   title block must match the files beside the script.
+4. **Coverlay.** One opening per region, lying on its region (≥ 95 % of the region's area). The comb copper
+   it leaves covered is computed from the pads' real geometry (copper minus opening), per region and per comb
+   (`coverlay` in the result). More than 2 % of a region's copper covered fails.
+5. **Provenance and channel map.** The result records:
+   - the sha256 of the board and project files;
+   - the generator-file hashes from the title block, which must match the files beside the script;
+   - the ID printed on the tail (size or foot file, side, generator revision).
+   The channel map (`channel_map`) carries the board's sha256, side and ID. It is valid for that board file
+   and for soles printed with that ID only.
 
 **EU 42 results (KiCad 7.0.11, 2026-11-03, generator 12cd2b7).** Both boards pass every check:
 

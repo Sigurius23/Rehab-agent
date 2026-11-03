@@ -192,7 +192,113 @@ def tail_geometry(sole, s, n_lines, exit="arch"):
     return strip, tuple(a), tuple(p), w, (tuple(b), tuple(d))
 
 
-def route(sole, regs, tail_start, res=0.25, sense=None, band=None):
+def _relocate_vias(names, full_idx, paths, load, lab, free, idx, X, Y, xx, yy, res, sense, side, band, margin=0.3,
+                   window=20.0):
+    """Move every via that sits inside or beside a bundle into its own region, clear of the bundle; its line
+    follows it there. Returns {net: mm moved}.
+
+    The tree is grown one region at a time, and each via is chosen next to the tree before the bundle there has
+    its final width. With 10 or more lines passing, a via then lies inside the bundle or on the outside of
+    its turn, and the lines that continue past it must squeeze by (EU 37 and EU 46 failed that way). Once every
+    path is known, the load of each tree cell is final, so the room a via needs is known too:
+      - from a cell carrying L lines: half the bundle, (L - 1) / 2 pitches, plus half a track, the clearance, the
+        via's radius and a margin for smoothing (all in mm);
+      - from another via: room for a line to pass between the two.
+    The new via is the nearest such cell in the same region, outside the bend band, preferring the sense side
+    of its comb. The extension runs inside the region and keeps a line's clearance from other bundles. Every via
+    is then a leaf beyond the edge of the bundle it leaves, so the lane order at each branch is planar.
+    """
+    pitch, tw, cl, vd = FAB["pitch"], CONTACT["sense_w"], CONTACT["clear"], CONTACT["via_d"]
+    ny, nx = lab.shape
+    r_via = lambda L: (L - 1) / 2 * pitch + tw / 2 + cl + vd / 2 + margin
+    r_lane = lambda L: L / 2 * pitch + tw / 2 + cl
+    r_vv = vd + cl + 2 * (tw + cl)
+    w = int(window / res)
+    moved = {}
+    for n in names:
+        if n not in full_idx:
+            continue
+        k = names.index(n)
+        own = full_idx[n]
+        v0 = own[0]
+        ci, cj = int(yy[v0]), int(xx[v0])
+        i0, i1, j0, j1 = max(0, ci - w), min(ny, ci + w + 1), max(0, cj - w), min(nx, cj + w + 1)
+        L_win = load[i0:i1, j0:j1]
+        own_mask = np.zeros((ny, nx), bool); own_mask[yy[own], xx[own]] = True
+        own_win = own_mask[i0:i1, j0:j1]
+        private = own_win & (L_win == 1)                    # cells only this line uses (its own leaf)
+        other = (L_win > 0) & ~private
+        forb_via = np.zeros(L_win.shape, bool); forb_lane = np.zeros(L_win.shape, bool)
+        for L in np.unique(L_win[other]):
+            m = other & (L_win == L)
+            d = ndimage.distance_transform_edt(~m) * res
+            forb_via |= d < r_via(int(L)); forb_lane |= d < r_lane(int(L))
+        vmask = np.zeros(L_win.shape, bool)
+        for m2 in names:
+            if m2 != n and m2 in full_idx:
+                q = full_idx[m2][0]
+                if i0 <= yy[q] < i1 and j0 <= xx[q] < j1:
+                    vmask[yy[q] - i0, xx[q] - j0] = True
+        if vmask.any():
+            forb_via |= ndimage.distance_transform_edt(~vmask) * res < r_vv
+        if not forb_via[ci - i0, cj - j0]:
+            continue                                         # already clear
+        region = (lab[i0:i1, j0:j1] == k) & free[i0:i1, j0:j1]
+        # The extension starts beside the bundle, so it must be free to leave the bundle's clearance zone; it
+        # pays for every cell inside it (so it leaves straight away) and may never cross another line's path.
+        barrier = ndimage.binary_dilation(other, structure=np.ones((3, 3), bool))
+        allowed = (region | private) & ~barrier
+        allowed[ci - i0, cj - j0] = True
+        pen = np.where(forb_lane, 20.0, 1.0)
+        gx, gy = np.meshgrid(X[j0:j1], Y[i0:i1])
+        target = allowed & region & ~forb_via
+        if band is not None:
+            bp, nrm, hw = band
+            target &= np.abs((gx - bp[0]) * nrm[0] + (gy - bp[1]) * nrm[1]) >= hw
+        if not target.any():
+            moved[n] = "no room in its region"; continue
+        # shortest extension from the old via through allowed cells (8-connected)
+        li = -np.ones(L_win.shape, int); af = np.flatnonzero(allowed.ravel()); li.ravel()[af] = np.arange(len(af))
+        hh, ww = L_win.shape
+        rr, cc, ws = [], [], []
+        for dy, dx in ((0, 1), (1, 0), (1, 1), (1, -1)):
+            a = li[0:hh - dy, max(0, -dx):ww - max(0, dx)]
+            b = li[dy:hh, max(0, dx):ww - max(0, -dx)]
+            ok = (a >= 0) & (b >= 0)
+            st = res * math.hypot(dx, dy)
+            pa, pb = pen.ravel()[af[a[ok]]], pen.ravel()[af[b[ok]]]
+            wgt = 0.5 * (pa + pb) * st
+            rr += [a[ok], b[ok]]; cc += [b[ok], a[ok]]; ws += [wgt, wgt]
+        G = csr_matrix((np.concatenate(ws), (np.concatenate(rr), np.concatenate(cc))), shape=(len(af), len(af)))
+        s0 = li[ci - i0, cj - j0]
+        Dd, pr = dijkstra(G, indices=s0, return_predecessors=True)
+        cand = li[target]
+        cand = cand[np.isfinite(Dd[cand])]
+        if len(cand) == 0:
+            moved[n] = "no path into its region"; continue
+        # prefer the sense side of the comb (short stub), then the shortest move
+        tier = np.zeros(len(cand))
+        if sense is not None and n in sense:
+            t, split = sense[n]
+            sg = side.get(n, 1)
+            ty, tx = np.unravel_index(af[cand], (hh, ww))
+            sd = sg * (X[j0 + tx] * t[0] + Y[i0 + ty] * t[1] - split)
+            tier = np.where(sd >= 1.5, 0, np.where(sd >= 0.5, 1, 2))
+        best = cand[np.lexsort((Dd[cand], tier))[0]]
+        ext = [best]
+        while ext[-1] != s0:
+            ext.append(pr[ext[-1]])
+        ey, ex = np.unravel_index(af[np.asarray(ext)], (hh, ww))
+        cells = [int(idx[i0 + a, j0 + b]) for a, b in zip(ey, ex)]          # new via ... old via
+        new_full = cells[:-1] + list(own)
+        full_idx[n] = new_full
+        paths[n] = [(X[xx[q]], Y[yy[q]]) for q in new_full]
+        load[yy[cells[:-1]], xx[cells[:-1]]] += 1
+        moved[n] = round(float(np.hypot(X[j0 + ex[0]] - X[cj], Y[i0 + ey[0]] - Y[ci])), 2)
+    return moved
+
+
+def route(sole, regs, tail_start, res=0.25, sense=None, band=None, relocate=True):
     """Route every region's signal line to the tail along region borders; carve the bundles out.
 
     A label raster of the regions gives the borders (and the sole edge). The path cost rises steeply with
@@ -307,8 +413,14 @@ def route(sole, regs, tail_start, res=0.25, sense=None, band=None):
                      if len(both_sides(k, names[k])[0]) else 0)
     parent = {src: -1}
     via_cells = set()
-    paths, load, side = {}, np.zeros((ny, nx), int), {}
+    paths, load, side, full_idx = {}, np.zeros((ny, nx), int), {}, {}
     near_r = 1.5                                     # mm: "beside the tree"
+    pitch, tw, cl_, vd = FAB["pitch"], CONTACT["sense_w"], CONTACT["clear"], CONTACT["via_d"]
+    r_via = lambda L: L / 2 * pitch + tw / 2 + cl_ + vd / 2 + 0.3        # via to the centre of L lines, counting
+                                                                         # the line that will join them
+    r_vv = vd + cl_ + 2 * (tw + cl_) + 0.3                               # via to via: a line fits between
+    via_keep = vd / 2 + cl_ + tw / 2 + 0.2                               # no later line this close to a via
+    via_fallback = []
     for k in order_k:
         n = names[k]
         ends, sgns = both_sides(k, n)
@@ -317,8 +429,27 @@ def route(sole, regs, tail_start, res=0.25, sense=None, band=None):
         tree_mask = np.zeros((ny, nx), bool)
         tl = np.fromiter(parent.keys(), int)
         tree_mask[yy[tl], xx[tl]] = True
+        # A via must not sit on the tree, nor so close to it that the bundle there would have to squeeze past:
+        # it keeps the bundle's half-width (from the lines already through each tree cell) plus via clearance,
+        # and keeps room for a line from every other via. A cell on the tree costs nothing to reach, so without
+        # this a via was often chosen on the trunk itself, inside the bundle.
+        forb = np.zeros((ny, nx), bool)
+        for L in np.unique(load[load > 0]):
+            forb |= ndimage.distance_transform_edt(load != L) * res < r_via(int(L))
+        vm = np.zeros((ny, nx), bool)
+        if via_cells:
+            vc = np.fromiter(via_cells, int); vm[yy[vc], xx[vc]] = True
+            dv = ndimage.distance_transform_edt(~vm) * res
+            forb |= dv < r_vv
+        ok_end = ~forb[yy[ends], xx[ends]]
+        if ok_end.any():
+            ends, sgns = ends[ok_end], sgns[ok_end]
+        else:
+            via_fallback.append(n)                    # no clear cell in its region: keep the nearest
         near = (ndimage.distance_transform_edt(~tree_mask) * res <= near_r) & ~tree_mask
         f = np.where(near[yy, xx], 3.0, 1.0)
+        if via_cells:                                 # later lines keep off earlier vias entirely
+            f = np.where(dv[yy, xx] < via_keep, np.inf, f)
         Gk = csr_matrix((w0 * np.maximum(f[rows], f[cols]), (rows, cols)), shape=(len(fi), len(fi)))
         blocked_via = set()
         for v in via_cells:                          # never join the tree at (or right next to) a via
@@ -344,7 +475,10 @@ def route(sole, regs, tail_start, res=0.25, sense=None, band=None):
             full.append(parent[full[-1]])
         via_cells.add(e)
         paths[n] = [(X[xx[q]], Y[yy[q]]) for q in full]
+        full_idx[n] = full
         load[yy[full], xx[full]] += 1
+    relocated = _relocate_vias(names, full_idx, paths, load, lab, free, idx, X, Y, xx, yy, res, sense, side, band) \
+        if relocate else {}
     # bundle corridors at their true width; how much each region gives up to them
     disks = []
     for n, pts in paths.items():
@@ -356,11 +490,17 @@ def route(sole, regs, tail_start, res=0.25, sense=None, band=None):
     for n, pts in paths.items():                     # room for each via beside its bundle
         if pts:
             disks.append(Point(pts[0]).buffer(0.45 / 2 + 0.15 + FAB["pitch"] + FAB["route_clear"], 16))
+    # room at the root, where every bundle merges and turns into the tail: the lanes turn on fillets that cut
+    # inside the coarse path, so a region carved only along the path can poke into the turn (the personalised
+    # foot, whose trunk meets the tail at an angle)
+    n_routed = sum(1 for p in paths.values() if p)
+    disks.append(Point(tail_start).buffer(n_routed * FAB["pitch"] / 2 + FAB["route_clear"] + 2.0, 32))
     carve = unary_union(disks) if disks else Polygon()
     # capacity: the corridor must stay inside the usable sole wherever it runs
     usable = sole.buffer(-FAB["edge_margin"] + FAB["route_clear"])
     spill = carve.difference(usable).area
-    worst = {"corridor_outside_sole_mm2": round(spill, 1)}
+    worst = {"corridor_outside_sole_mm2": round(spill, 1), "vias_moved_clear_of_bundles": relocated,
+             "vias_without_clear_cell": via_fallback}
     return paths, load, worst, carve, (X, Y, res), side
 
 
@@ -397,7 +537,14 @@ def build(s, names, mode, exit, side="R"):
     for n, r in list(regs.items()):
         if isinstance(r, MultiPolygon):
             regs[n] = max(r.geoms, key=lambda g: g.area)
-    plate = sole.union(tail)
+    # Fillets where the tail meets the sole. A sharp inside corner in a flex outline is where it starts to
+    # tear, and the copper-free margin along both edges of a sharp corner left a bundle arriving at an angle no
+    # room to turn into the tail (the personalised foot). The fillet adds outline, so the margin follows it.
+    plate0 = sole.union(tail)
+    flare = plate0.buffer(TAIL_FILLET, 32).buffer(-TAIL_FILLET, 32).difference(plate0) \
+        .intersection(Point(tail_exit).buffer(tail_w / 2 + TAIL_FILLET + 1.0, 32))
+    body = sole.union(flare)                         # the sole including the fillets: routing area, margin
+    plate = plate0.union(flare)
     # checks
     vias = {n: pts[0] for n, pts in paths.items() if pts}
     in_bend = [n for n, v in vias.items() if abs(np.dot(np.array(v) - bend_pt, nrm)) < FAB["bend_band"]]
@@ -409,6 +556,8 @@ def build(s, names, mode, exit, side="R"):
         coverage_pct=round(100 * cover, 1),
         max_bundle=int(load.max()),
         corridor_outside_sole_mm2=spill["corridor_outside_sole_mm2"],
+        vias_moved_clear_of_bundles_mm=spill.get("vias_moved_clear_of_bundles", {}),
+        vias_without_clear_cell=spill.get("vias_without_clear_cell", []),
         smallest_region=min(((n, round(r.area)) for n, r in regs.items()), key=lambda x: x[1]),
         least_area_kept=min(((n, round(100 * v)) for n, v in kept.items()), key=lambda x: x[1]),
         vias_in_bend_zone=in_bend,
@@ -431,7 +580,7 @@ def build(s, names, mode, exit, side="R"):
                                           pct_of_tile=round(100 * act[n] / before[n])) for n in copper}
         checks["least_sensing_area"] = min(((n, v["pct_of_tile"]) for n, v in checks["sensing_area"].items()),
                                            key=lambda x: x[1])
-    routing = route_copper(sole, tail, regs, copper, paths, sd, tail_start, tail_end, tail_dir, n_lines, checks) \
+    routing = route_copper(body, tail, regs, copper, paths, sd, tail_start, tail_end, tail_dir, n_lines, checks) \
         if copper else None
     if routing:                                       # copper on both layers inside the toe-joint bend zone
         C = CONTACT; ext = 400.0                      # stiffens the flex where it bends (the "I-beam" effect)
@@ -444,6 +593,8 @@ def build(s, names, mode, exit, side="R"):
         fcu = unary_union([ls(v, C["com_w"]) for v in routing["com"]] + [ls(v, C["sense_w"]) for v in routing["stubs"].values()]
                           + [ls(j["fcu"], C["sense_w"]) for j in routing["jumpers"]])
         checks["routing"]["stacked_copper_in_bend_mm2"] = round(bcu.intersection(fcu).intersection(bandp).area, 2)
+        margin_zone = body.difference(body.buffer(-FAB["edge_margin"])).difference(tail)
+        checks["routing"]["copper_in_edge_margin_mm2"] = round(bcu.union(fcu).intersection(margin_zone).area, 2)
         checks["regions_in_bend_pct"] = {n: round(100 * r.intersection(bandp).area / r.area) for n, r in regs.items()
                                          if r.intersects(bandp)}
     geo = dict(sole=sole, tail=tail, plate=plate, regions=regs, seeds=sd, paths=paths, toes=toes, web_x=web_x,
@@ -463,6 +614,7 @@ def build(s, names, mode, exit, side="R"):
     return geo, checks
 
 
+TAIL_FILLET = 5.0                                    # mm, fillet radius where the tail meets the sole
 CONTACT = dict(pad_len=4.0, pad_w=0.30, edge_gap=0.5, sense_w=0.12, com_w=0.20, via_d=0.45, via_drill=0.20, clear=0.15)
 
 
@@ -494,7 +646,10 @@ def route_copper(sole, tail, regs, copper, paths, seeds, tail_start, tail_end, t
         if best is None:
             break
         flips, lan, odd = best
-    allowed = sole.union(tail).buffer(-0.3)                        # copper-to-edge 0.3 mm
+    # copper stays out of the sole's copper-free margin (as regions, the routing plan and the common net do);
+    # 0.3 mm to the edge applies only in the tail. Allowing the margin let the fine-grid pass take shortcuts
+    # along the outline that bypass the planned lane order, so lines crossed (the personalised foot).
+    allowed = sole.buffer(-FAB["edge_margin"]).union(tail.buffer(-0.3))
     keepout = unary_union(list(regs.values()))                        # no B.Cu under the sensing regions
     order = lan["pin_order"][1:-1]
     planned = lan["lanes"]
@@ -805,7 +960,7 @@ def source_stamp(args):
                 options=dict(size=args.size, length=args.length, width=args.width, side=args.side, exit=args.exit))
 
 
-def to_board_json(geo, s, args, path):
+def to_board_json(geo, s, args, path, requested=None, checks=None):
     """Everything the KiCad exporter needs, in the foot frame (mm)."""
     ring = lambda r: [[round(x, 4), round(y, 4)] for x, y in np.asarray(r.coords)[:-1]]
     regions = {}
@@ -840,7 +995,11 @@ def to_board_json(geo, s, args, path):
     band = Polygon([bp - bt * ext - nrm * hw, bp + bt * ext - nrm * hw, bp + bt * ext + nrm * hw, bp - bt * ext + nrm * hw])
     band = band.intersection(geo["sole"].buffer(1.0))
     band = max(band.geoms, key=lambda g: g.area) if band.geom_type == "MultiPolygon" else band
-    out = dict(generator="sole_gen v0", source=source_stamp(args), side=args.side, foot_length=s["L"], ball_width=s["W"],
+    # the configuration the board was built for: verify_board.py checks the board against it (a personal sole
+    # can have fewer regions than the default 16)
+    config = dict(sensors_requested=list(requested or []), regions_built=list(regions),
+                  dropped=dict((checks or {}).get("dropped", {})), n_contacts=len(regions) + 2)
+    out = dict(generator="sole_gen v0", source=source_stamp(args), config=config, side=args.side, foot_length=s["L"], ball_width=s["W"],
                outline=ring(geo["plate"].exterior), fab=FAB, regions=regions,
                bend=dict(point=[float(bp[0]), float(bp[1])], dir=[float(bt[0]), float(bt[1])], half_width=FAB["bend_band"],
                          band=ring(band.exterior)),
@@ -896,7 +1055,7 @@ def main():
     to_json(geo, checks, s, a, out / f"{stem}.json"); to_png(geo, checks, out / f"{stem}.png", title)
     to_png_zoom(geo, out / f"{stem}_comb_mt2.png")
     if a.mode == "region":
-        to_board_json(geo, s, a, out / f"{stem}.board.json")
+        to_board_json(geo, s, a, out / f"{stem}.board.json", requested=names, checks=checks)
     print(json.dumps(dict(stem=stem, **checks), indent=1))
 
 
