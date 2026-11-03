@@ -119,7 +119,29 @@ On top of that, every export of the same design was a different file, because Ki
 **Negative controls** (`tests/test_verify_negative.py`). Take the passing EU 42 R board, break it in one known
 way, and require `verify_board.py` to fail for that reason. An unbroken copy must pass.
 
-*Results pending: the run on the committed EU 42 R board is in progress.*
+Run on the committed EU 42 R board (`EU42 R 4ea1726398`). Each check runs in its own process, as in real use.
+
+| Fault injected | Result | The expected reason is among the reported problems (first one shown) |
+|---|---|---|
+| None (control) | passes | — |
+| A track shorting contacts 2 and 3 | fails | yes; DRC: solder-mask bridge and clearance errors; copper trace: contacts joined |
+| One region's via-to-comb stub removed | fails | yes; DRC: dangling via; copper trace: comb reached from no contact |
+| One comb piece moved off its comb | fails | yes; DRC: 1 unconnected; copper trace: comb pieces not all connected |
+| Configuration names a region that is not on the board | fails | yes; regions on the board differ from the configuration |
+| Contact numbers 2 and 3 swapped | fails | yes; pad numbers do not follow the physical order |
+| Net labels of contacts 2 and 3 swapped (the map would be wrong) | fails | yes; DRC: bridge and clearance errors; copper trace: contact's net reaches another region |
+| One coverlay opening shrunk to 80 % | fails | yes; opening off its region; 39 % of the comb copper under coverlay |
+| A track inside the copper-free margin | fails | yes; DRC: items not allowed (margin keep-out) |
+| The printed ID altered by one digit | fails | yes; printed ID differs from the design ID |
+| A generator hash in the title block altered | fails | yes; generator files changed since the board was made |
+| The project rules file removed | fails | yes; design rules would be KiCad defaults |
+
+Two of the controls first went wrong because of the test, not the checker:
+- **The floating comb piece** was copied without KiCad 7's local-coordinate call, so it reloaded inside its own
+  comb, and the board rightly passed.
+- **KiCad's save** writes a project file of its own, so "rules file removed" still had its rules.
+Both injections were fixed and the cases rerun. A control that passes only shows the fault was not really
+injected; each one is now confirmed to fail.
 
 **Other tests:**
 - **Fail-closed DRC parsing** (`tests/test_verify_drc.py`, 8 cases): a failed report write, an empty report, a

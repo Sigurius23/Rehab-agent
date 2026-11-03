@@ -148,6 +148,8 @@ def main():
             pcbnew.SaveBoard(str(dst), board)
             if fault != "no_pro":
                 shutil.copy(src.with_suffix(".kicad_pro"), dst.with_suffix(".kicad_pro"))
+            else:                                             # SaveBoard writes a project file of its own
+                dst.with_suffix(".kicad_pro").unlink(missing_ok=True)
             # the check runs in its own process, as it would for real: KiCad keeps global state, and loading a
             # second board into a process that edited the first can crash
             subprocess.run([sys.executable, str(HERE / "verify_board.py"), str(dst)], capture_output=True, timeout=1800)
