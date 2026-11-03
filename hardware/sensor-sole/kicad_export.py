@@ -141,6 +141,11 @@ def via(board, p, net, d, drill):
 def build(board_json, out_pcb):
     d = json.loads(open(board_json).read())
     fab = d["fab"]
+    # KiCad gives every item a random UUID, so each export of the same design used to be a different file.
+    # Seeding the generator from the design hash makes the export byte-reproducible: same design, same KiCad
+    # version, same exporter -> same file and sha256.
+    if d.get("design_hash"):
+        pcbnew.KIID.SeedGenerator(int(d["design_hash"][:8], 16))
     b = pcbnew.BOARD()
     b.SetCopperLayerCount(2)
     ds = b.GetDesignSettings()
@@ -197,6 +202,10 @@ def build(board_json, out_pcb):
 
     # bend band: no vias across the toe-joint flex line (the generator clips it to the sole)
     rule_area(b, d["bend"]["band"], [pcbnew.F_Cu, pcbnew.B_Cu], "no_vias_bend_band", tracks=False, vias=True)
+    # copper-free margin along the sole outline (not in the tail, where 0.3 mm applies): DRC flags any track or
+    # via in it
+    for k, pts in enumerate(d.get("margin_keepout", [])):
+        rule_area(b, pts, [pcbnew.F_Cu, pcbnew.B_Cu], f"margin_{k:02d}", tracks=True, vias=True)
 
     # tail contacts: exposed pads at 0.5 mm pitch for a ZIF flat-flex connector. With copper routing they sit
     # on B.Cu (bottom contacts), where the sense lines arrive without vias.
@@ -293,15 +302,19 @@ def build(board_json, out_pcb):
     cfg = d.get("config")
     if cfg:
         text(b, "sensor-sole-config " + json.dumps(dict(regions=cfg["regions_built"], contacts=cfg["n_contacts"],
-                                                        dropped=cfg["dropped"]), separators=(",", ":")),
+                                                        dropped=cfg["dropped"], board_id=d.get("board_id"),
+                                                        design_hash=d.get("design_hash"),
+                                                        margin_keepouts=len(d.get("margin_keepout", [])),
+                                                        tools=dict((d.get("source") or {}).get("tools") or {},
+                                                                   kicad_export=pcbnew.GetBuildVersion())),
+                                                   separators=(",", ":")),
              (xmin, zmax + 22 - len(notes) * 3.0), pcbnew.Cmts_User, size=0.8)
 
     # a visible ID on the tail (F side, on coverlay), so a physical sole can be matched to its board revision
     # and channel map: size or foot file, side, generator revision
-    src = d.get("source") or {}
-    opt, foot = src.get("options", {}), src.get("foot")
-    ident = f"{'foot ' + foot['sha256'][:6] if foot else 'EU' + format(opt.get('size', 0), 'g')} {d['side']} " \
-            f"g{(src.get('git') or 'nogit')[:7]}{'+' if src.get('generator_files_modified') else ''}"
+    # The ID is the design's: label (size, measured length or foot file), side, first 10 hex of the design hash.
+    # It changes whenever the copper or the map could change, and only then.
+    ident = d.get("board_id") or "NO-ID"
     tid = pcbnew.PCB_TEXT(b)
     tid.SetText(ident)
     tid.SetLayer(pcbnew.F_SilkS)
@@ -325,7 +338,8 @@ def build(board_json, out_pcb):
     tb.SetComment(2, " ".join(f"{k.replace('.py', '')} {v}" for k, v in files.items()))
     opt = src.get("options", {})
     foot = src.get("foot")
-    tb.SetComment(3, f"git {src.get('git')}{' +modified generator' if src.get('generator_files_modified') else ''}; "
+    tb.SetComment(3, f"design {(d.get('design_hash') or '')[:16]}; git {src.get('git')}"
+                     f"{' +modified generator' if src.get('generator_files_modified') else ''}; "
                      f"side {opt.get('side')}, size {opt.get('size')}, exit {opt.get('exit')}"
                      + (f"; foot {foot['path']} {foot['sha256']}" if foot else ""))
     pi = b.GetPageSettings()

@@ -25,8 +25,13 @@ that ships pcbnew).
      the generator files beside this script. The channel map in the result is tied to the board's sha256 and
      the ID printed on its tail.
 
-Writes <board>.drc.rpt and <board>.check.json beside the board; exit status 1 if any check fails.
-Usage: python3 verify_board.py kicad/sole_EU42_R.kicad_pcb [more boards ...]
+  6. Identity: the ID printed on the tail must be the board's design ID (label, side, first 10 hex of the
+     design hash written on the board), and the copper-free margin keep-outs must be on the board.
+
+Writes <board>.drc.rpt and <board>.check.json beside the board; exit status 1 if any check fails. For a board
+that passes, it also writes the deployed channel map, a separate small file for the pod or host, into the
+directory given by --maps (see channel_map.py).
+Usage: python3 verify_board.py [--maps DIR] kicad/sole_EU42_R.kicad_pcb [more boards ...]
 """
 import collections
 import hashlib
@@ -39,6 +44,7 @@ from pathlib import Path
 import pcbnew
 
 HERE = Path(__file__).resolve().parent
+sys.path.insert(0, str(HERE))                       # channel_map.py, also under python -I
 NM = 1e6                                            # KiCad internal units per mm
 
 
@@ -226,7 +232,7 @@ def contact_order(j1, tail_up):
     return sorted(pads, key=lambda p: -(p.GetPosition().x * left[0] + p.GetPosition().y * left[1])), bottom
 
 
-def check(pcb_path):
+def check(pcb_path, maps_dir=None):
     pcb_path = Path(pcb_path).resolve()
     pro = pcb_path.with_suffix(".kicad_pro")
     problems = []
@@ -269,6 +275,36 @@ def check(pcb_path):
     generated = [f.GetReference() for f in fps if str(f.GetFPID().GetLibNickname()) == "sensor_sole"]
     if len(generated) != len(fps):
         problems.append("footprints from other libraries on the board")
+
+    # 6. identity: the printed ID must be the design ID the exporter wrote, and the margin keep-outs present
+    if cfg is not None:
+        bid, dh = cfg.get("board_id"), cfg.get("design_hash") or ""
+        if not bid or not re.fullmatch(r"\S+ [LR] [0-9a-f]{10}", bid) or not dh or bid.split()[-1] != dh[:10]:
+            problems.append(f"board ID {bid!r} is not a design ID for design hash {dh[:16]!r}")
+        elif res["board_id"] != bid:
+            problems.append(f"printed ID {res['board_id']!r} differs from the board's design ID {bid!r}")
+        if f"design {dh[:16]}" not in (stamp[3] or ""):
+            problems.append("title block does not carry the design hash")
+        margins = [z for z in board.Zones() if z.GetZoneName().startswith("margin_")]
+        if not margins or len(margins) != cfg.get("margin_keepouts", -1):
+            problems.append(f"{len(margins)} margin keep-outs on the board, configuration says {cfg.get('margin_keepouts')}")
+        if any(not (z.GetDoNotAllowTracks() and z.GetDoNotAllowVias()) for z in margins):
+            problems.append("a margin keep-out allows tracks or vias")
+
+    # provenance: inputs, run-start source hashes, tools, project rules, file hashes
+    rules = {}
+    if pro.exists():
+        pj = json.loads(pro.read_text())
+        r_ = pj.get("board", {}).get("design_settings", {}).get("rules", {})
+        nc = (pj.get("net_settings", {}).get("classes") or [{}])[0]
+        rules = {k: round(v, 4) if isinstance(v, float) else v for k, v in r_.items()
+                 if k.startswith("min_") or k == "solder_mask_to_copper_clearance"}
+        rules.update({f"netclass_{k}": nc.get(k) for k in ("clearance", "track_width", "via_diameter", "via_drill")})
+    res["provenance"] = dict(
+        design_hash=(cfg or {}).get("design_hash"), board_id=(cfg or {}).get("board_id"),
+        inputs=stamp[3], generator_files_at_run_start=stamp[2], tools=(cfg or {}).get("tools"),
+        project_rules=rules, board_sha256=res["sha256"], project_sha256=res["project_sha256"],
+        checker=dict(verify_board=sha(Path(__file__), 12), kicad=pcbnew.GetBuildVersion()))
 
     # 1. DRC with the project's rules
     drc, drc_problems = run_drc(board, pcb_path, generated)
@@ -397,15 +433,38 @@ def check(pcb_path):
     res["ok"] = not problems
     out = pcb_path.with_suffix(".check.json")
     out.write_text(json.dumps(res, indent=1) + "\n")
+    if maps_dir is not None and res["ok"]:
+        write_deployed_map(res, out, Path(maps_dir))
     return res
 
 
+def write_deployed_map(res, check_path, maps_dir):
+    """The channel map for the pod or host: small, separate from the development check result, tied to the
+    exact board (design hash, file sha256) and carrying its provenance. Written only for a board that passed."""
+    import channel_map
+    pkg = dict(format=channel_map.FORMAT, board_id=res["provenance"]["board_id"],
+               design_hash=res["provenance"]["design_hash"], side=res["channel_map"]["side"],
+               contacts=len(res["contacts"]), regions=res["regions"],
+               map={str(k): v for k, v in sorted(res["channel_map"]["contact_to_region"].items())},
+               verified=dict(board=res["board"], board_sha256=res["sha256"], project_sha256=res["project_sha256"],
+                             check_sha256=sha(check_path), checker=res["provenance"]["checker"]),
+               provenance={k: res["provenance"][k] for k in ("inputs", "generator_files_at_run_start", "tools",
+                                                              "project_rules")})
+    pkg["map_sha256"] = channel_map.content_hash(pkg)
+    maps_dir.mkdir(parents=True, exist_ok=True)
+    (maps_dir / channel_map.file_name(pkg["board_id"])).write_text(json.dumps(pkg, indent=1) + "\n")
+
+
 def main():
-    if len(sys.argv) < 2:
+    args = sys.argv[1:]
+    maps_dir = None
+    if args[:1] == ["--maps"]:
+        maps_dir, args = args[1], args[2:]
+    if not args:
         print(__doc__); sys.exit(2)
     bad = 0
-    for p in sys.argv[1:]:
-        r = check(p)
+    for p in args:
+        r = check(p, maps_dir)
         cmap = ", ".join(f"{c['contact']}:{c['sense_regions'][0] if c['sense_regions'] else 'COM'}" for c in r["contacts"])
         print(f"{r['board']}: {'OK' if r['ok'] else 'FAIL'}  drc {r['drc'].get('by_type')} unconnected {r['drc'].get('unconnected')}"
               f"  source matches files: {r['source_matches_files']}\n  contacts {cmap}")

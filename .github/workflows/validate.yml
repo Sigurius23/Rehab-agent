@@ -16,6 +16,8 @@ jobs:
         run: python3 scripts/validate_catalog.py
       - name: Unit tests
         run: python3 -m unittest discover -s tests -v
+      - name: Sensor sole channel-map resolver (no KiCad needed)
+        run: python3 -m unittest discover -s hardware/sensor-sole/tests -p "test_channel_map.py" -v
       - name: Generated files must be up to date
         run: |
           python3 scripts/generate_catalog.py

@@ -602,12 +602,12 @@ def build(s, names, mode, exit, side="R"):
         checks["routing"]["copper_in_edge_margin_mm2"] = round(bcu.union(fcu).intersection(margin_zone).area, 2)
         checks["regions_in_bend_pct"] = {n: round(100 * r.intersection(bandp).area / r.area) for n, r in regs.items()
                                          if r.intersects(bandp)}
-    geo = dict(sole=sole, tail=tail, plate=plate, regions=regs, seeds=sd, paths=paths, toes=toes, web_x=web_x,
+    geo = dict(sole=sole, body=body, tail=tail, plate=plate, regions=regs, seeds=sd, paths=paths, toes=toes, web_x=web_x,
                bend=(bend_pt, t), tail_exit=tail_exit, copper=copper, routing=routing,
                tail_info=dict(end=tail_end, dir=tail_dir, width=tail_w, lines=n_lines))
     if side == "L":                                   # mirror: z -> -z
         m = lambda g: affinity.scale(g, 1, -1, origin=(0, 0))
-        geo = dict(geo, mirrored=True, sole=m(sole), tail=m(tail), plate=m(plate), regions={k: m(v) for k, v in regs.items()},
+        geo = dict(geo, mirrored=True, sole=m(sole), body=m(body), tail=m(tail), plate=m(plate), regions={k: m(v) for k, v in regs.items()},
                    copper={k: (m(a), m(b)) for k, (a, b) in copper.items()},
                    tail_info=dict(end=(tail_end[0], -tail_end[1]), dir=(tail_dir[0], -tail_dir[1]), width=tail_w,
                                   lines=n_lines),
@@ -949,7 +949,15 @@ def _source_at_start():
         dirty = bool(git("status", "--porcelain", "--", "sole_gen.py", "sole_route.py"))
     except Exception:
         rev, dirty = None, None
-    return files, rev, dirty
+    import platform
+    from importlib import metadata
+    tools = {"python": platform.python_version()}
+    for pkg in ("numpy", "scipy", "shapely", "matplotlib", "ezdxf"):
+        try:
+            tools[pkg] = metadata.version(pkg)
+        except metadata.PackageNotFoundError:
+            tools[pkg] = None
+    return files, rev, dirty, tools
 
 
 _SOURCE = _source_at_start()
@@ -958,11 +966,12 @@ _SOURCE = _source_at_start()
 def source_stamp(args):
     """What produced a board: hashes of the generator files and the foot file, the git revision, the options.
     The KiCad exporter copies it into the title block, and verify_board.py checks it against the files."""
-    files, rev, dirty = _SOURCE
-    foot = {"path": Path(args.foot).name, "sha256": hashlib.sha256(Path(args.foot).read_bytes()).hexdigest()[:12]} \
+    files, rev, dirty, tools = _SOURCE
+    foot = {"path": Path(args.foot).name, "sha256": hashlib.sha256(Path(args.foot).read_bytes()).hexdigest()} \
         if args.foot else None
-    return dict(files=files, git=rev, generator_files_modified=dirty, foot=foot,
-                options=dict(size=args.size, length=args.length, width=args.width, side=args.side, exit=args.exit))
+    return dict(files=files, git=rev, generator_files_modified=dirty, foot=foot, tools=tools,
+                options=dict(size=args.size, length=args.length, width=args.width, side=args.side, exit=args.exit,
+                             mode=args.mode))
 
 
 def to_board_json(geo, s, args, path, requested=None, checks=None):
@@ -1008,14 +1017,33 @@ def to_board_json(geo, s, args, path, requested=None, checks=None):
     if not Polygon(outline_ring).is_valid:                    # as KiCad will read it, after rounding
         from shapely.validation import explain_validity
         raise RuntimeError(f"exported outline is invalid: {explain_validity(Polygon(outline_ring))}")
+    # copper-free margin as keep-out polygons (hole-free pieces), so KiCad's DRC itself flags copper in it
+    margin = geo["plate"].difference(geo["body"].buffer(-FAB["edge_margin"]).union(geo["tail"]))
+    margin_parts = [g for g in getattr(margin, "geoms", [margin]) if g.geom_type == "Polygon" and g.area > 1e-3]
+    margin_keepout = [ring(p.exterior) for g in margin_parts for p in fracture(g)]
     out = dict(generator="sole_gen v0", source=source_stamp(args), config=config, side=args.side, foot_length=s["L"], ball_width=s["W"],
-               outline=outline_ring, fab=FAB, regions=regions,
+               outline=outline_ring, margin_keepout=margin_keepout, fab=FAB, regions=regions,
                bend=dict(point=[float(bp[0]), float(bp[1])], dir=[float(bt[0]), float(bt[1])], half_width=FAB["bend_band"],
                          band=ring(band.exterior)),
                tail=dict(end=list(geo["tail_info"]["end"]), dir=list(geo["tail_info"]["dir"]),
                          width=geo["tail_info"]["width"], lines=geo["tail_info"]["lines"]),
                routing_plan={n: [[round(x, 3), round(y, 3)] for x, y in pts[::2]] for n, pts in geo["paths"].items() if pts},
                contact=CONTACT, copper_routing=geo.get("routing"))
+    # Identity. The design hash covers everything that defines the copper and the channel map (outline,
+    # regions, combs, routing, pin order, configuration, side, rules) and nothing about how or when it was
+    # made. Two different designs never share it; regenerating the same design gives the same hash, so the
+    # printed ID resolves to exactly one map. The label in front is for people only.
+    design = {k: v for k, v in out.items() if k not in ("generator", "source")}
+    dh = hashlib.sha256(json.dumps(design, sort_keys=True, separators=(",", ":"), default=float).encode()).hexdigest()
+    src = out["source"]
+    if src.get("foot"):
+        label = "F" + src["foot"]["sha256"][:6]
+    elif args.length:
+        label = f"L{args.length:.0f}" + (f"W{args.width:.0f}" if args.width else "")
+    else:
+        label = f"EU{args.size:g}"
+    out["design_hash"] = dh
+    out["board_id"] = f"{label} {args.side} {dh[:10]}"
     path.write_text(json.dumps(out))
 
 
