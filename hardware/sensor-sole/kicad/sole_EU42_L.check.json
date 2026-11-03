@@ -1,0 +1,222 @@
+{
+ "board": "sole_EU42_L.kicad_pcb",
+ "sha256": "1130493a2f0ee78cba2d9707b87cb679dbca38a8465695c2525071b8397377e1",
+ "project_sha256": "423a803f896ae79a36201b7819dbf8793a33603bd6632f291700f2932e0e5f07",
+ "kicad": "7.0.11+dfsg-1build4",
+ "title": "Sensor sole v0 (L, foot 270 mm)",
+ "title_block": [
+  "CERN-OHL-S-2.0",
+  "https://github.com/Sigurius23/Rehab-agent/tree/main/hardware/sensor-sole",
+  "sole_gen 029714cd986b sole_route 10804ab6f8ff kicad_export e44c53a5128b",
+  "git 39ada9a579ca; side L, size 42.0, exit arch"
+ ],
+ "source_in_board": {
+  "sole_gen": "029714cd986b",
+  "sole_route": "10804ab6f8ff",
+  "kicad_export": "e44c53a5128b"
+ },
+ "source_matches_files": true,
+ "drc": {
+  "report": "sole_EU42_L.drc.rpt",
+  "written": true,
+  "violations": 17,
+  "unconnected": 0,
+  "footprint_errors": 0,
+  "by_type": {
+   "lib_footprint_issues": 17
+  },
+  "by_severity": {
+   "warning": 17
+  }
+ },
+ "coverlay_openings_ok": false,
+ "contacts_seen_from": "exposed contacts facing the viewer, tail end up; contact 1 on the left",
+ "contacts_on": "B.Cu",
+ "contact_numbering_physical": true,
+ "contacts": [
+  {
+   "contact": 1,
+   "net": "COM",
+   "sense_regions": [],
+   "common_regions": 16,
+   "shares_copper_with_contacts": [
+    "18"
+   ]
+  },
+  {
+   "contact": 2,
+   "net": "S_mt2",
+   "sense_regions": [
+    "mt2"
+   ],
+   "common_regions": 0,
+   "shares_copper_with_contacts": []
+  },
+  {
+   "contact": 3,
+   "net": "S_mt3",
+   "sense_regions": [
+    "mt3"
+   ],
+   "common_regions": 0,
+   "shares_copper_with_contacts": []
+  },
+  {
+   "contact": 4,
+   "net": "S_mt1",
+   "sense_regions": [
+    "mt1"
+   ],
+   "common_regions": 0,
+   "shares_copper_with_contacts": []
+  },
+  {
+   "contact": 5,
+   "net": "S_toe1",
+   "sense_regions": [
+    "toe1"
+   ],
+   "common_regions": 0,
+   "shares_copper_with_contacts": []
+  },
+  {
+   "contact": 6,
+   "net": "S_toe2",
+   "sense_regions": [
+    "toe2"
+   ],
+   "common_regions": 0,
+   "shares_copper_with_contacts": []
+  },
+  {
+   "contact": 7,
+   "net": "S_toe3",
+   "sense_regions": [
+    "toe3"
+   ],
+   "common_regions": 0,
+   "shares_copper_with_contacts": []
+  },
+  {
+   "contact": 8,
+   "net": "S_toe4",
+   "sense_regions": [
+    "toe4"
+   ],
+   "common_regions": 0,
+   "shares_copper_with_contacts": []
+  },
+  {
+   "contact": 9,
+   "net": "S_toe5",
+   "sense_regions": [
+    "toe5"
+   ],
+   "common_regions": 0,
+   "shares_copper_with_contacts": []
+  },
+  {
+   "contact": 10,
+   "net": "S_mt5",
+   "sense_regions": [
+    "mt5"
+   ],
+   "common_regions": 0,
+   "shares_copper_with_contacts": []
+  },
+  {
+   "contact": 11,
+   "net": "S_mt4",
+   "sense_regions": [
+    "mt4"
+   ],
+   "common_regions": 0,
+   "shares_copper_with_contacts": []
+  },
+  {
+   "contact": 12,
+   "net": "S_mid_lat_dist",
+   "sense_regions": [
+    "mid_lat_dist"
+   ],
+   "common_regions": 0,
+   "shares_copper_with_contacts": []
+  },
+  {
+   "contact": 13,
+   "net": "S_arch_med",
+   "sense_regions": [
+    "arch_med"
+   ],
+   "common_regions": 0,
+   "shares_copper_with_contacts": []
+  },
+  {
+   "contact": 14,
+   "net": "S_mid_lat_prox",
+   "sense_regions": [
+    "mid_lat_prox"
+   ],
+   "common_regions": 0,
+   "shares_copper_with_contacts": []
+  },
+  {
+   "contact": 15,
+   "net": "S_heel_lat",
+   "sense_regions": [
+    "heel_lat"
+   ],
+   "common_regions": 0,
+   "shares_copper_with_contacts": []
+  },
+  {
+   "contact": 16,
+   "net": "S_heel_med",
+   "sense_regions": [
+    "heel_med"
+   ],
+   "common_regions": 0,
+   "shares_copper_with_contacts": []
+  },
+  {
+   "contact": 17,
+   "net": "S_heel_post",
+   "sense_regions": [
+    "heel_post"
+   ],
+   "common_regions": 0,
+   "shares_copper_with_contacts": []
+  },
+  {
+   "contact": 18,
+   "net": "COM",
+   "sense_regions": [],
+   "common_regions": 16,
+   "shares_copper_with_contacts": [
+    "1"
+   ]
+  }
+ ],
+ "regions": [
+  "arch_med",
+  "heel_lat",
+  "heel_med",
+  "heel_post",
+  "mid_lat_dist",
+  "mid_lat_prox",
+  "mt1",
+  "mt2",
+  "mt3",
+  "mt4",
+  "mt5",
+  "toe1",
+  "toe2",
+  "toe3",
+  "toe4",
+  "toe5"
+ ],
+ "problems": [
+  "coverlay openings: ['mt4: comb outside its opening']"
+ ],
+ "ok": false
+}
