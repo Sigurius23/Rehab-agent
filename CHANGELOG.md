@@ -32,7 +32,8 @@
       opening per region, notched where tracks land.
     - The source stamp is taken when the generator starts.
   - **Results.** EU 42 right and left pass every check. EU 37, EU 46 and the personalised example do not:
-    the negotiated pass leaves lines too close, and on the personalised foot four sense lines are shorted.
+    the negotiated pass leaves lines too close, and on the personalised foot seven sense lines are shorted in
+    two groups.
     Details are in DESIGN.md, section 5.
   - `FABRICATION.md` compares the assumptions with two fabricators' published flex capabilities. It lists the
     open questions and a draft enquiry, which has not been sent. Nothing is released for fabrication.

@@ -28,7 +28,7 @@ Those come from the coupon board, the fit test and the force-plate comparison (D
 | Comb fingers / gaps | 0.20 / 0.20 mm | Within the track rules; ±20 % width tolerance | Within the track rules | OK. The ±20 % tolerance (±0.04 mm) changes each region's sensitivity, so per-region calibration is needed anyway |
 | Vias | 0.45 mm pad, 0.20 mm drill (ring 0.125 mm), 18–24 per sole | Regular 0.30 / 0.55 mm; 2-layer "extreme" 0.10 / 0.30 mm at extra cost; pad ≥ hole + 0.2 mm (≥ 0.25 better); PTH annular ring ≥ 0.25 mm recommended, 0.18 mm absolute | Min drill 4 mil | Our vias fall in JLCPCB's extra-cost class. **Ask** whether the 0.18 mm ring limit applies to vias. Fallback: regenerate with 0.55 / 0.30 mm vias |
 | Copper to outline | 0.30 mm (DRC rule) | ≥ 0.3 mm; outline ±0.1 mm (±0.05 on request) | Not stated | OK |
-| Coverlay over the combs | One opening per region exposing both combs; coverlay everywhere else on F, full coverlay on B | Opening-to-trace ≥ 0.15 mm; "coverlay expansion (one-sided) 0.1 mm"; coverlay over vias recommended | Min coverlay bridge 8 mil (0.2 mm) | DRC checks other copper ≥ 0.15 mm from an opening. Openings are ≥ 1.2 mm apart. **Ask** whether the 0.1 mm expansion is added to our openings |
+| Coverlay over the combs | One opening per region exposing both combs, notched where F.Cu tracks land or run within 0.16 mm (covers ≤ 1.5 % of a region's sensing area at EU 42); coverlay everywhere else on F, full coverlay on B | Opening-to-trace ≥ 0.15 mm; "coverlay expansion (one-sided) 0.1 mm"; coverlay over vias recommended | Min coverlay bridge 8 mil (0.2 mm) | DRC checks other copper ≥ 0.15 mm from an opening. Openings are ≥ 1.2 mm apart. **Ask** whether the 0.1 mm expansion is added to our openings |
 | Surface finish | ENIG on the contacts and the combs | ENIG only, 1 or 2 µ″ gold | HASL, ENIG, ENEPIG, electrolytic Ni/Au, soft gold, hard gold, immersion silver, OSP, immersion tin | **Ask.** See "Dynamic flexing" below |
 | ZIF tail contacts | 18 × 0.30 mm at 0.50 mm pitch, 4.0 mm long, 0.5 mm from the tail end, on B.Cu | Gold-finger pad ≥ 0.2 mm from the edge (else cut back); thickness ±0.03 mm in the gold-finger area | Not stated | OK. Check against the chosen connector's FFC drawing |
 | Stiffener at the tail | PI on the F side (behind the contacts), total 0.30 mm at the contacts | PI 0.1 / 0.15 / 0.20 / 0.225 / 0.25 mm; "0.3 mm connector on a 0.11 mm FPC: 0.225 mm stiffener" | Thickness with PI stiffener ±10 % | OK at JLCPCB (±0.03 mm at the gold fingers). PCBWay's ±10 % is ±0.03 mm only if it applies to the 0.3 mm total. **Ask** |
@@ -50,8 +50,8 @@ below is what counts.
 - **Copper on both sides in the bend zone.** Under the regions, B.Cu is kept free, so the combs have no
   copper behind them. Where the trunk crosses the bend zone, F.Cu common lines could lie over B.Cu sense lines
   and stiffen the flex locally (the "I-beam" effect). The generator measures this per board as
-  `stacked_copper_in_bend_mm2`. It is 0 mm² on the committed EU 42 R board; all 13 mm² of stacked copper there
-  lies outside the bend zone.
+  `stacked_copper_in_bend_mm2`. It is 0 mm² on both EU 42 boards; all 14 mm² of stacked copper lies outside
+  the bend zone.
 - **Vias** are kept out of a ±12 mm band around the toe-joint line (a rule area on the board).
 - **Fingers** run parallel to the bend line, so a bend strains them along their length the least.
 
