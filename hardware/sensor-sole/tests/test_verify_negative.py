@@ -9,6 +9,7 @@ Run with the Python that ships KiCad's pcbnew (each case runs the full check, ab
 """
 import json
 import shutil
+import subprocess
 import sys
 import tempfile
 from pathlib import Path
@@ -58,6 +59,7 @@ def float_a_comb_piece(b):
     src = next(p for p in fp.Pads() if p.GetNumber() == "1")
     dup = pcbnew.PAD(src)                                     # a copy of a sense piece, not touching its comb
     dup.SetPosition(pcbnew.VECTOR2I(src.GetPosition().x, src.GetPosition().y + MM(400)))
+    dup.SetLocalCoord()                                       # KiCad 7 keeps footprint pads in local coordinates
     fp.Add(dup)
 
 
@@ -146,7 +148,11 @@ def main():
             pcbnew.SaveBoard(str(dst), board)
             if fault != "no_pro":
                 shutil.copy(src.with_suffix(".kicad_pro"), dst.with_suffix(".kicad_pro"))
-            r = V.check(dst)
+            # the check runs in its own process, as it would for real: KiCad keeps global state, and loading a
+            # second board into a process that edited the first can crash
+            subprocess.run([sys.executable, str(HERE / "verify_board.py"), str(dst)], capture_output=True, timeout=1800)
+            chk = dst.with_suffix(".check.json")
+            r = json.loads(chk.read_text()) if chk.exists() else dict(ok=False, problems=["checker produced no result"])
             probs = r["problems"]
             if expect is None:
                 ok = r["ok"]
