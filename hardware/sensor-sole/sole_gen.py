@@ -802,13 +802,14 @@ def to_board_json(geo, s, args, path):
     # regions on every run; dict order inside the generator can vary with Python's string hashing
     rank = {n: i for i, n in enumerate(DEFAULT_SENSORS)}
     # Coverlay: one opening per region, notched where an F.Cu track (common line, sense stub, jumper) lands on a
-    # comb, so the joint stays covered and the track keeps 0.2 mm from the opening (published flex rule:
-    # coverlay opening to trace >= 0.15 mm)
+    # comb or passes closer than the rule, so the joint stays covered and every track keeps 0.16 mm from the
+    # opening (published flex rule: coverlay opening to trace >= 0.15 mm; DRC checks 0.15 mm). A wider margin
+    # would also trim the comb's spine wherever a common line runs along a region's edge.
     R_ = geo.get("routing") or {}
     fcu = [(pts, CONTACT["com_w"]) for pts in R_.get("com", [])] + \
           [(pts, CONTACT["sense_w"]) for pts in R_.get("stubs", {}).values()] + \
           [(j["fcu"], CONTACT["sense_w"]) for j in R_.get("jumpers", [])]
-    notch = unary_union([LineString(p).buffer(w / 2 + 0.2, 8) for p, w in fcu if len(p) > 1]) if fcu else Polygon()
+    notch = unary_union([LineString(p).buffer(w / 2 + 0.16, 8) for p, w in fcu if len(p) > 1]) if fcu else Polygon()
 
     def opening(r):
         o = r.difference(notch) if not notch.is_empty else r
