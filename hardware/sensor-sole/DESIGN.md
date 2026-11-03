@@ -34,9 +34,9 @@ none has been fitted. Its sensing regions are anchored to the foot's anatomy. It
 
 The target shoe is the **Vibram FiveFingers KSO Trek** (kangaroo leather) in EU 42.
 
-- **Length.** Vibram EU 42 fits a foot of about 264–273 mm; sources differ (section 11). The generator
+- **Length.** Vibram EU 42 fits a foot of about 264–273 mm; sources differ (section 12). The generator
   defaults to 270 mm and takes the measured length when there is one.
-- **What the sole sits on.** The KSO Trek is built as follows (section 11):
+- **What the sole sits on.** The KSO Trek is built as follows (section 12):
   - a kangaroo-leather footbed;
   - a 4 mm EVA midsole;
   - a 4 mm Vibram rubber outsole.
@@ -162,7 +162,7 @@ the bend zone. The regions also map onto foot segments
     tail end pointing up; contact 1 is on the left.
   - The left sole is the mirror of the right, so a region sits on a different contact on each foot. The pod
     firmware needs one channel map per side. `verify_board.py` writes it for every board, traced through the
-    copper; see section 10 for EU 42.
+    copper; see section 11 for EU 42.
 
 **KiCad.** `kicad_export.py` turns the generator's board file into a two-layer KiCad 7 board:
 - the outline;
@@ -178,7 +178,7 @@ the bend zone. The regions also map onto foot segments
   of only the 17 library warnings. The title block records which
   generator files made the board.
 
-Design-rule results are reported in section 10.
+Design-rule results are reported in section 11.
 
 **Material (open; decided by a coupon test, section 8).** Options:
 - carbon-loaded polyolefin film (Velostat class): cheap and 0.1 mm, but known for hysteresis, creep and
@@ -306,6 +306,18 @@ Pod v1 (custom board, bare nRF52840 module) adds 32 channels, more storage and a
     that ID and that foot, or none;
   - refuse to label channels by region if no such map is found;
   - record the ID and the board's sha256 with every recording, so data can be traced to its map.
+- **What the sole could give the twin,** once built, calibrated and validated (none of it exists yet):
+  - load per region and its timing: heel, midfoot, forefoot and, in the standard layout, each toe;
+  - contact and toe-off times, stance duration and left–right timing, once event detection is validated;
+  - shifts of load between regions and between the feet;
+  - total vertical force and centre of pressure, estimated from the calibrated regions and checked against a
+    force plate;
+  - acceleration and angular rate of the foot from the pod IMU.
+- **What it cannot measure:**
+  - toe-joint angles, bone geometry, muscle forces, shear, or the full 3-D ground-reaction force vector;
+  - a peak inside a region, since each region gives one aggregate signal;
+  - the motion of each foot segment or toe, since the IMU on the instep moves with the foot as one body.
+  These are inputs to the twin, labelled with their provenance (above).
 
 ## 8. Calibration and validation plan
 
@@ -325,7 +337,125 @@ Pod v1 (custom board, bare nRF52840 module) adds 32 channels, more storage and a
 5. **Left/right sync** with a common trigger: offset and drift over an hour.
 6. **Durability:** cycles to failure at the toe-joint bend. OpenGo states ≥ 100,000 load cycles.
 
-## 9. Decisions needed
+Additions for the coupon, the calibration record and comparing two candidates are in sections 9.3 and 9.6.
+
+## 9. Proposed additions (a plan; nothing here is designed, built or tested)
+
+The 16-region sole stays the baseline. These additions come from comparing it with other insoles
+(`COMPARISON.md`). Numbers are arithmetic from the current design rules unless marked otherwise.
+
+### 9.1 A higher-resolution candidate, alongside the baseline
+
+- **Candidate subdivisions:**
+  - big toe: tip and base;
+  - lesser toes: one region each, as now; more only where a tab has room;
+  - forefoot: inner–outer and front–back detail around the metatarsal heads;
+  - heel: front–back and inner–outer;
+  - midfoot: the arch and the lateral foot, without forcing regions where they would compromise fit.
+- **Count and placement** come from fit, routing and measurement studies, not from a target number.
+  - The generator can switch regions off already; the synthetic foot has 14.
+  - Subdividing a region needs new anchors in `sole_gen.py`. That has not been tried.
+- **What more regions cost at the current rules.** This is arithmetic, not a routed design:
+
+  | | 16 regions (now) | 32 regions |
+  |---|---|---|
+  | Contacts (regions plus 2 common) | 18 | 34 |
+  | Contact row, centre to centre at 0.5 mm | 8.5 mm | 16.5 mm |
+  | Tail width, with the same edge allowance as now | 12 mm | about 20 mm |
+  | Widest bundle (0.12 mm lines at 0.40 mm pitch) | 6.1 mm | 12.5 mm |
+  | Carved out of the neighbouring regions (bundle plus 0.8 mm) | 6.9 mm | 13.3 mm |
+
+  - The full bundle meets the tail at the medial arch, so the regions there would likely lose the most area.
+  - The tail passes up the inside of the upper and over the collar, so a wider tail is a fit question.
+- **A dense matrix** (smartinsole-like) is a separate option: 253 cells read through 33 rows and 15 columns,
+  48 lines in all.
+  - On a five-toe sole the slits separate the toe tabs, so rows and columns cannot cross between toes. Each
+    toe would need its own lines back through the forefoot.
+  - A matrix also needs crosstalk compensation (smartinsole's 2026 paper) and a different readout (9.2).
+
+### 9.2 Electronics for more channels
+
+- **32 channels on the XIAO.** Two 16:1 multiplexers would share the four address lines, each feeding its own
+  transimpedance amplifier, with the spare pin as the second analog input. That uses all 11 I/O pins.
+- **Readout load.** 32 channels at 100 Hz are 3,200 conversions a second per foot. The nRF52840's ADC is not
+  expected to be the limit, but that is still to be confirmed against its datasheet. The practical limit is how
+  fast the amplifier settles after each switch, which has to be measured.
+- **Data.** 32 channels × 12 bit plus the IMU at 100 Hz come to about 6.0 kB/s (21.6 MB an hour), against
+  3.6 kB/s now.
+- **32 channels are not 253 cells.** A dense matrix needs row drive and column sense, not this multiplexer
+  chain.
+- **For every candidate, specify and measure:**
+  - the actual rate per channel with both feet recording;
+  - channel isolation: load one region and read its neighbours;
+  - range, resolution and saturation;
+  - power, size and heat;
+  - reliable identification of the attached sole and its channel map (section 7).
+- 100 Hz stays a target until it is measured on the complete system.
+
+### 9.3 Material and calibration additions (extending section 8)
+
+- **Partial loading** on the coupon: the same load at a region's centre, edge and corner, and across two
+  regions. A large region may respond differently when only part of it is pressed.
+- **Moisture** alongside temperature, because the leather footbed takes up sweat (section 2).
+- **A calibration record per sole,** keyed to its printed ID and design hash: the curve per region, zero,
+  date, rig and material lot. Zero and drift are re-checked at the start of every session.
+- **Warnings in the data:**
+  - **Saturation.**
+  - **A suspected open line.** A region that never rises above zero while its neighbours do is flagged. A
+    broken sense line reads like an unloaded region, so it can only be suspected, not detected.
+  - **Connector seating.** Contacts 1 and 18 both carry the common net. If the pod keeps them separate, it
+    can check continuity between them. That shows both ends of the connector are seated; it does not test
+    the sense lines.
+- **Raw signals are kept** with every calibrated estimate. Calibrated values are labelled experimental until
+  section 8 is complete (section 7).
+
+### 9.4 Synchronising both feet and the cameras
+
+- **Each pod records:**
+  - every sample with the pod's timestamp, meaning when it was taken rather than when it arrived. smartinsole's
+    README notes that host arrival times over Wi-Fi include the transmission delay;
+  - IMU acceleration and angular rate;
+  - sync-input events from a pulse shared with the force plates and cameras. A camera needs a visible marker
+    of the same pulse, an LED for instance;
+  - board ID, side, channel-map hash and calibration version.
+- **Measure before relying on it:**
+  - clock offset and drift between the feet and against the cameras;
+  - packet loss;
+  - end-to-end latency of the live stream.
+- **Camera or RealSense body pose** stays an observation or an inference, not a measurement of internal
+  anatomy.
+
+### 9.5 Mechanical requirements for five-toe use
+
+- **Toe tabs stay flat and in their pockets** while the toes spread and grip.
+- **Slit ends.** The 2 mm slits between the tabs end in a full radius of about 1.0 mm at EU 37, 42 and 46, as
+  measured on the generated outlines. Whether that survives repeated toe spreading is for the bend test.
+- **The join between each tab and the sole** is flexible and covered on both faces.
+- **Tail root and pod:** comfortable at the collar; the pod attached securely and unobtrusively.
+- **Sweat, abrasion, cleaning and repeated insertion** into the shoe.
+- **Bend fatigue** at the toe-joint line, including the known risks (`VERIFICATION.md`):
+  - EU 46's 0.43 mm² of stacked copper in the bend zone;
+  - the synthetic foot's 8.7 mm stub at 0.19 mm clearance.
+- **Thickness.** The 0.35–0.40 mm stack is a proposal. Thickness and comfort depend on the film, adhesive,
+  cover and fabrication.
+
+### 9.6 Validating both candidates the same way (extending section 8)
+
+- **Same tasks and the same references,** so that the two candidates can be compared.
+- **Walking first:** regional loading, contact timing, left–right differences, and total force and centre of
+  pressure against force plates.
+- **Spatial pressure.** A force plate cannot check a pressure map. Options:
+  - an indenter at known points on the bench;
+  - a pressure plate with the sole lying on it, outside the shoe.
+  In-shoe reference insoles (Pedar-X class) come in conventional outlines, so they share the five-toe fit
+  problem.
+- **Later:** running, turning and jumps, if those become intended uses. McNeese et al.'s jump protocol gives a
+  published comparison (`COMPARISON.md`).
+- **Generalisation:** people, foot shapes and sessions not used to fit the calibration.
+- **Acceptance criteria are set before the data is seen.** The comparison decides whether the extra channels
+  improve the outputs the twin uses enough to justify their cost.
+
+## 10. Decisions needed
 
 1. **Where the design lives.** Decided 2026-11-02: open hardware in the public repository
    `Sigurius23/Rehab-agent`, folder `hardware/sensor-sole/`, under CERN-OHL-S-2.0 (see `README.md`).
@@ -336,8 +466,10 @@ Pod v1 (custom board, bare nRF52840 module) adds 32 channels, more storage and a
 4. **Channels.** 16 on the XIAO prototype now, or go straight to a 32-channel custom pod.
 5. **Materials for the coupon test**, and the budget and fabricator for the flex boards.
 6. **Ethics and consent** (decision D8 in the review) before anyone other than the developers wears it.
+7. **Higher-resolution candidate.** Develop it in parallel with the 16-region baseline, or not yet.
+   Its region count would come from the studies in section 9 and also settles item 4.
 
-## 10. Files and how to run
+## 11. Files and how to run
 
 - `sole_gen.py`: the generator. Run `python sole_gen.py --size 42 --out out/`, with optional `--length`,
   `--width`, `--side L`, `--exit heel`, `--mode point` and `--foot person.json`. It needs numpy, scipy,
@@ -448,7 +580,7 @@ Next steps (not started):
 - draw the pod carrier schematic;
 - design the coupon board.
 
-## 11. Sources
+## 12. Sources
 
 - Vibram EU 42 foot length:
   - [Woot listing, EL-X and CVT models](https://sellout.woot.com/offers/mens-el-x-grey-black-orange-12) (10¾ in);

@@ -17,6 +17,10 @@ Three kinds of statement, kept apart:
 - **Not documented:** the corpus does not say. Toe pockets and five-toe fit are not documented for any project
   below. That is unknown, not "absent".
 
+**Checked against primary sources on 2026-11-03,** beyond the corpus: the smartinsole README, Moticon's OpenGo
+Programmer's Guide (version 3.4, 2025) and the GRFMS paper. Two GRFMS entries in this comparison were wrong and are
+corrected below: its reference was force platforms, not motion capture, and it does use radio.
+
 ## Documented features
 
 | | Our sensor sole (design goals) | Moticon OpenGo | JunjianChi/smartinsole | KAKI Smart Insole | GRFMS |
@@ -24,13 +28,13 @@ Three kinds of statement, kept apart:
 | Sensing | Shunt-mode piezoresistive film over interdigitated combs; film not yet chosen | Capacitive textile sensors | Velostat sheet over a flex-circuit electrode grid | Capacitive (MPR121) through a TPU gyroid footbed | FlexiForce A301 piezoresistive sensors |
 | Channels | 16 regions (14 on the synthetic personal sole); pod v1 up to 32 | 16 | 253 (33 × 15 grid, 7.5 mm pitch) | 12 | 14 per insole |
 | Coverage of the sole | 75–80 %: region outlines as a share of the sole outline, toe tabs included (geometric estimate) | 62.5–67.4 %, size-dependent (corpus); "65% area coverage" (product page); definition not stated | Not documented as a percentage; foot-shaped grid | Not documented | Not documented; discrete sensors |
-| Toes, toe pockets, five-toe shoes | Five toe tabs, each toe its own region; designed for a five-toe shoe | Not documented (9 double sizes) | Not documented | Not documented | Not documented |
+| Toes, toe pockets, five-toe shoes | Five toe tabs, each toe its own region; designed for a five-toe shoe | Not documented by the vendor (9 double sizes). The project owner reports that it does not fit five-toe shoes; not tested by us | Not documented | Not documented | Not documented |
 | Sizes, personalisation | Generator capability: an EU size, a measured length and width, or a personal outline from landmarks. Generated and checked: EU 37, 42, 46 and one synthetic foot; fit not demonstrated | 9 double sizes, "covering 98% of adult sizes" (product page) | Not documented | Not documented | Not documented |
 | Wiring of the sensors | One sense line per region, no crossbar | Not documented | Crossbar; crosstalk compensation in the 2026 paper | Not documented | Multiplexer (74HC4067) |
 | In the shoe | Passive flex, about 0.35–0.40 mm stack (proposed); all electronics in a pod outside | Electronics in the insole, coin cells | ESP32 board, IMU | Passive footbed; reusable pod on the shoe | ESP32 nodes, SD card |
 | Motion sensor | 6-axis IMU in the pod (planned) | 6-axis IMU (current product) | 6-axis | 9-DOF | None |
 | Rate | 100 Hz (target) | 10–100 Hz | 60 Hz (30 Hz dual-frame) | 100 Hz | 100 Hz |
-| Recording, radio | microSD and BLE (planned) | 32 MB on board; BLE | Wi-Fi; no on-board storage | BLE; no on-board storage | SD card; no radio |
+| Recording, radio | microSD and BLE (planned) | 32 MB on board; BLE | Wi-Fi UDP to a host, no on-board storage. The capture tool records both insoles with a RealSense D435i depth camera | BLE; no on-board storage | SD card in each foot node; start commands over ESP-NOW; data downloaded over Wi-Fi after the session |
 | Left/right sync | Crystals plus a hardware sync input (planned, to verify) | < 0.006 % drift | Host-side | None documented (single foot) | Master/slave |
 | Calibration | Per region on our bench (planned) | Factory, lifetime; auto-zeroing; firmware updatable through the app | Research lookup table | Not documented | Per sensor |
 | Load cycles | Not known; bend test planned | ≥ 100,000 | Not documented | Not documented | Not documented |
@@ -44,7 +48,7 @@ Three kinds of statement, kept apart:
 | OpenGo | Four independent studies (next section). Three used the earlier **13-sensor** insoles. One, McNeese et al. 2026, used 16-sensor OpenGo insoles; whether those match the product sold now is unconfirmed | 13-sensor studies: timing agrees well with force plates; force is underestimated, more so at higher forces and in fast motions. 16-sensor study (10 healthy adults, submaximal jumps, values at the instant of peak force only): peak vertical force MAE 4.34 N/kg; anterior–posterior centre of pressure MAE 10 % of foot length; medial–lateral MAE 50 % of foot width, not valid by the authors' criteria. Where centre of pressure was assessed (Stöggl & Martiner; McNeese et al.), medial–lateral was less reliable than anterior–posterior. The product's own figures (≤ 1 % hysteresis, < 5 % total-force error) are the manufacturer's |
 | smartinsole | Two IEEE ISCAS papers (2025, 2026) | Force-plate error metrics not published in the README |
 | KAKI | 10 m walk tests: 3 participants, 5 sessions, footstrike checked visually | Gait events only; no pressure range or calibration published |
-| GRFMS | Ground reaction force against a reference, with Vicon motion capture | GRF estimation fit 68.71 % ± 4.80 % |
+| GRFMS | Ground reaction force against two BTS P6000 force platforms: 10 m walks, 4 participants without gait pathology | Fit measure 68.71 % ± 4.80 % (the authors' own metric, not a percentage accuracy) |
 
 ## OpenGo: what was validated, and on which hardware
 
@@ -111,6 +115,20 @@ shoe.
   al. It was added from a citation supplied in review. Other studies of the 16-sensor insoles may exist; a PubMed or
   Google Scholar search with a year filter is still to do.
 
+## What each system gives a digital twin
+
+| System | Data available or intended | Main limitation for the twin |
+|---|---|---|
+| **Our sole (planned)** | One signal per region: 16 on a standard sole, each toe separate; 14 on the synthetic personal example. Acceleration and angular rate from the pod IMU | No data yet. Each region is one aggregate signal, not a map within the region |
+| smartinsole | 253 sensor values per foot and a 6-axis IMU, at 60 Hz single-frame or 30 Hz dual-frame. Its capture tool records both insoles with a RealSense D435i and writes 13 camera-derived 3-D body keypoints (MediaPipe), with the pressure resampled onto the camera frames (README) | Five-toe fit not documented. The keypoints are camera-derived pose, not measured bones or joints. Insole times are host arrival times over Wi-Fi, which the README notes include transmission delay |
+| KAKI | 12 capacitive channels, a 9-DOF IMU in the pod, gait events; example walking recordings with visually checked footstrikes | Pressure accuracy not established by its small walking set. Five-toe fit not documented |
+| GRFMS | 14 FlexiForce sensors per foot and a ground-reaction-force estimate, both feet at 100 Hz | Discrete sensors. Force agreement shown only in 10 m walks with 4 participants. Five-toe fit not documented |
+| OpenGo | 16 pressure values (in ¼ N/cm²), 3-axis acceleration, 3-axis angular rate, total force (N), and centre of pressure on two axes in % of insole length and width (Programmer's Guide) | Reported by the project owner not to fit five-toe shoes. Accuracy depends on the output and the task (section above) |
+
+None of these measures toe-joint angles, bone geometry, muscle forces or the full 3-D ground-reaction force
+vector. They are inputs to the twin, with their provenance. What our sole could and could not give is set out in
+DESIGN.md, section 7.
+
 ## What this means for our sole
 
 **What the design aims at (goals, not results):**
@@ -134,6 +152,16 @@ shoe.
   forefoot and five toe regions, and also targets 100 Hz.
 - **What is open:** whether our layout changes the medial–lateral error is untested. The 100 Hz limitation would
   apply to us as well.
+
+**What to take from the others** (proposed additions in DESIGN.md, section 9):
+- **Keep** the five-toe geometry and the 16-region sole as the baseline.
+- **From smartinsole:** study a higher-resolution candidate in parallel. That includes whether a denser layout
+  can work with five separate toe tabs, accepting more routing, calibration and crosstalk work. More cells do
+  not by themselves mean better absolute accuracy.
+- **From KAKI:** the split between a passive sensing footbed and a reusable pod, and its data handling.
+- **From GRFMS:** a worked example of a force-platform comparison to plan ours against.
+- **No hardware is selected or combined** before our sole has been shown to fit, survive walking and give
+  repeatable calibrated readings.
 
 **Where it is behind:**
 - **Nothing measured.** Physical sensing, fit in the shoe and durability are untested. Each alternative above has

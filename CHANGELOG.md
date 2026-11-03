@@ -77,7 +77,18 @@
     - three on 13-sensor insoles;
     - McNeese et al. 2026 on 16-sensor insoles (10 healthy adults, submaximal jumps, values at peak force only).
       Hardware revision and firmware are not stated, so its match to the product sold now is unconfirmed.
-    Our sole is untested for physical sensing, fit and durability.
+    Our sole is untested for physical sensing, fit and durability. A table sets out what data each system gives
+    a digital twin. Two GRFMS entries were corrected against the paper: its reference was force
+    platforms, not motion capture, and it does use radio.
+  - `DESIGN.md`, section 9: proposed additions, as a plan only. The 16-region sole stays the baseline.
+    - a higher-resolution candidate in parallel, with what 32 regions would cost in contacts, tail width and
+      routing;
+    - readout requirements for more channels;
+    - partial-loading and moisture tests;
+    - a calibration record per sole;
+    - camera synchronisation to measure;
+    - five-toe mechanical requirements (the toe slits end in a 1.0 mm radius at EU 37, 42 and 46);
+    - validating both candidates the same way.
 - **Flaky live-chain test fixed** (`test_live_chain_posture_to_suit_payloads`). It had failed in CI on nearly every
   run since 2026-10-24, and once in a local full-suite run.
   - The engine sent its cue correctly, but the suit bridge sometimes had not yet connected to the cue stream. LSL
