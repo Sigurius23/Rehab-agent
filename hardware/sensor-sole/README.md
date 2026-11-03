@@ -19,9 +19,12 @@ design, its targets against Moticon OpenGo, and the validation plan.
 | `kicad_export.py` | Board file → KiCad 7 board (`.kicad_pcb` + `.kicad_pro`, which holds the design rules); run with the Python that ships KiCad's `pcbnew` |
 | `verify_board.py` | Checks a board before fabrication: DRC with the project rules, the region-to-contact map traced through the copper, contact numbering, coverlay openings, provenance; writes `.drc.rpt` and `.check.json` |
 | `make_fab.sh` | Generator → KiCad → check → Gerbers and drill; writes no fabrication files if the check fails |
-| `kicad/` | The EU 42 boards (right and left) with their DRC reports, check results (including each side's contact map, tied to the board's sha256 and printed ID) and previews |
-| `kicad/checks/` | DRC reports and check results of the EU 37, EU 46 and personal-example boards (the boards regenerate exactly) |
-| `tests/test_verify_drc.py` | Shows that the checker fails closed on broken DRC reports (KiCad's Python) |
+| `kicad/` | All eight checked boards (EU 37, EU 42, EU 46 and the synthetic personal example, right and left), each with project rules, DRC report and check result; EU 42 previews |
+| `VERIFICATION.md` | Verification and risk summary: scope, identity and maps, reproducibility, checker negative controls, quantified geometry risks, what needs the fabricator or physical tests |
+| `channel_map.py` | Resolves a sole's printed ID to exactly one verified channel map, or refuses (plain Python) |
+| `maps/` | Deployed channel maps, one per passing board, each tied to the board's design hash and file sha256 |
+| `manifest.py` | Writes `kicad/MANIFEST.json`: all committed boards with IDs, hashes and provenance |
+| `tests/` | `test_verify_drc.py` and `test_verify_negative.py` (checker, KiCad's Python); `test_channel_map.py` (resolver, in CI) |
 | `FABRICATION.md` | Fabrication assumptions against published flex-PCB capabilities, open questions, draft enquiry (not sent) |
 | `person_example.json` | Personalisation format (illustrative values, not a real person) |
 | `requirements.txt` | Python packages the generator needs |

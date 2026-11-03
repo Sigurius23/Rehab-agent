@@ -49,6 +49,23 @@
     - checks against the configuration written on the board;
     - ties each channel map to the board's sha256 and the ID printed on its tail.
     `make_fab.sh` marks its output NOT-RELEASED.
+  - **Identity, reproducibility and checker confidence** (`VERIFICATION.md`):
+    - **Design IDs.** The printed ID is now `<label> <side> <first 10 hex of the design hash>`. The old ID
+      (size or foot file, side, git revision) was shared by different inputs: a measured foot and a heel-exit
+      sole printed the same ID as the default EU 42.
+    - **Reproducible export.** KiCad's UUIDs are seeded from the design hash. EU 37 R and the personal example L,
+      regenerated from the recorded commit in a clean worktree, are byte-identical to the committed boards.
+    - **Deployed maps.** `channel_map.py` resolves a printed ID to exactly one intact map for the right foot,
+      and refuses anything else (CI tests). Maps for passing boards are in `maps/`.
+    - **All eight boards committed**, with provenance: inputs, run-start generator hashes, tool versions,
+      project rules, file hashes and checker version (`kicad/MANIFEST.json`).
+    - **Negative controls** for the checker (`tests/test_verify_negative.py`).
+    - **Copper-free margin** as DRC keep-outs on the board.
+    - **Geometry risks quantified:**
+      - tightest via clearance 0.189 mm (rule 0.15);
+      - the synthetic foot's 8.7 mm stub;
+      - EU 46's 0.43 mm² of F.Cu-over-B.Cu crossings in the bend zone;
+      - the tail-root widening, 16 mm wide 1 mm past the sole edge.
   - `FABRICATION.md` compares the assumptions with two fabricators' published flex capabilities. It lists the
     open questions and a draft enquiry, which has not been sent. Nothing is released for fabrication.
   - `DESIGN.md` covers the fit, layer stack, pod electronics (prototype on a XIAO nRF52840 Sense), data

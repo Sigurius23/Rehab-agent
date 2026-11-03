@@ -22,7 +22,7 @@ ARGS=(--size "$SIZE" --side "$SIDE" --out out --name "$STEM")
 "$PY" sole_gen.py "${ARGS[@]}"
 mkdir -p kicad fab
 "$KPY" kicad_export.py "out/${STEM}.board.json" "kicad/${STEM}.kicad_pcb"
-if ! "$KPY" verify_board.py "kicad/${STEM}.kicad_pcb"; then
+if ! "$KPY" verify_board.py --maps maps "kicad/${STEM}.kicad_pcb"; then
   echo "verification failed (kicad/${STEM}.check.json): no fabrication files written" >&2
   exit 1
 fi

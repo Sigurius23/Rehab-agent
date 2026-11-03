@@ -1,0 +1,433 @@
+{
+ "note": "Boards that pass verify_board.py. Not released for fabrication (FABRICATION.md).",
+ "all_passed": true,
+ "ids_unique": true,
+ "board_files_match_their_checks": true,
+ "every_passing_board_has_a_map": true,
+ "boards": [
+  {
+   "board": "sole_EU37_L.kicad_pcb",
+   "board_id": "EU37 L be318d6216",
+   "design_hash": "be318d62168839d751c8f645b9f97ac71ce3d14335acb7e1089e34cb77d1026d",
+   "passed": true,
+   "problems": [],
+   "files": {
+    "kicad_pcb": "5c742d597730949446a93b2900d5ec72710e2f2da8d6314e293892ee3cc70a3d",
+    "kicad_pro": "64c9c23fc5d9ea5ebf862f3e8cbb70bd4c3900c710be1515a3b52cce589b11b6",
+    "check_json": "a656a7ec08a69e316d1ff2d7c8366e75cf1865acc41d9b05093b696ca799cfc0",
+    "map": "EU37_L_be318d6216.json",
+    "map_sha256": "cebdb697bc55452ddc72dffbb1d93e628d9a7920046a10b31a93c2180e39e129"
+   },
+   "board_sha256_matches_check": true,
+   "inputs": "design be318d62168839d7; git 99c746890b24; side L, size 37.0, exit arch",
+   "generator_files_at_run_start": "sole_gen fbcd6bb25cd8 sole_route 72ed9bb8f9dd kicad_export eb7da1c8654e",
+   "tools": {
+    "python": "3.13.16",
+    "numpy": "2.5.4",
+    "scipy": "1.18.1",
+    "shapely": "2.2.0",
+    "matplotlib": "3.11.2",
+    "ezdxf": "1.4.5",
+    "kicad_export": "7.0.11+dfsg-1build4"
+   },
+   "project_rules": {
+    "min_clearance": 0.15,
+    "min_connection": 0.0,
+    "min_copper_edge_clearance": 0.3,
+    "min_hole_clearance": 0.25,
+    "min_hole_to_hole": 0.25,
+    "min_microvia_diameter": 0.2,
+    "min_microvia_drill": 0.1,
+    "min_resolved_spokes": 2,
+    "min_silk_clearance": 0.0,
+    "min_text_height": 0.8,
+    "min_text_thickness": 0.08,
+    "min_through_hole_diameter": 0.2,
+    "min_track_width": 0.1,
+    "min_via_annular_width": 0.1,
+    "min_via_diameter": 0.4,
+    "solder_mask_to_copper_clearance": 0.15,
+    "netclass_clearance": 0.15,
+    "netclass_track_width": 0.15,
+    "netclass_via_diameter": 0.45,
+    "netclass_via_drill": 0.2
+   },
+   "checker": {
+    "verify_board": "3815d9024f5d",
+    "kicad": "7.0.11+dfsg-1build4"
+   },
+   "synthetic_foot": false
+  },
+  {
+   "board": "sole_EU37_R.kicad_pcb",
+   "board_id": "EU37 R 1ae8010c95",
+   "design_hash": "1ae8010c95cc90b6214667d636874bd118f6ce8e464927a79360fcf20aee0c0c",
+   "passed": true,
+   "problems": [],
+   "files": {
+    "kicad_pcb": "51a018de211686441312d0fcbebba50712365396600381f233d1605c81c59ff6",
+    "kicad_pro": "9c61ee57d7bb74fbb124bf483e8cc0f21ef964d5e072017602396e8102fe0279",
+    "check_json": "89af4c2314004d9b1287154a648b3c2b0595e0c98699436a8c85d7eb22fe59fb",
+    "map": "EU37_R_1ae8010c95.json",
+    "map_sha256": "37aef9ddf1fecdb1579a25b4a5b3e5405540e580674bac9266bfc292570032d9"
+   },
+   "board_sha256_matches_check": true,
+   "inputs": "design 1ae8010c95cc90b6; git 99c746890b24; side R, size 37.0, exit arch",
+   "generator_files_at_run_start": "sole_gen fbcd6bb25cd8 sole_route 72ed9bb8f9dd kicad_export eb7da1c8654e",
+   "tools": {
+    "python": "3.13.16",
+    "numpy": "2.5.4",
+    "scipy": "1.18.1",
+    "shapely": "2.2.0",
+    "matplotlib": "3.11.2",
+    "ezdxf": "1.4.5",
+    "kicad_export": "7.0.11+dfsg-1build4"
+   },
+   "project_rules": {
+    "min_clearance": 0.15,
+    "min_connection": 0.0,
+    "min_copper_edge_clearance": 0.3,
+    "min_hole_clearance": 0.25,
+    "min_hole_to_hole": 0.25,
+    "min_microvia_diameter": 0.2,
+    "min_microvia_drill": 0.1,
+    "min_resolved_spokes": 2,
+    "min_silk_clearance": 0.0,
+    "min_text_height": 0.8,
+    "min_text_thickness": 0.08,
+    "min_through_hole_diameter": 0.2,
+    "min_track_width": 0.1,
+    "min_via_annular_width": 0.1,
+    "min_via_diameter": 0.4,
+    "solder_mask_to_copper_clearance": 0.15,
+    "netclass_clearance": 0.15,
+    "netclass_track_width": 0.15,
+    "netclass_via_diameter": 0.45,
+    "netclass_via_drill": 0.2
+   },
+   "checker": {
+    "verify_board": "3815d9024f5d",
+    "kicad": "7.0.11+dfsg-1build4"
+   },
+   "synthetic_foot": false
+  },
+  {
+   "board": "sole_EU42_L.kicad_pcb",
+   "board_id": "EU42 L 7d4eecd3c9",
+   "design_hash": "7d4eecd3c9a84c52e51ecdde175fa85e4dd67e4cfffd3e1e1041d128f6ae5453",
+   "passed": true,
+   "problems": [],
+   "files": {
+    "kicad_pcb": "5f37305240624db5176de9f78c939dc3bd292fc63e272cc3cc68fee42dddd35e",
+    "kicad_pro": "423a803f896ae79a36201b7819dbf8793a33603bd6632f291700f2932e0e5f07",
+    "check_json": "507f15c851b03ed717ca1e6eb0a370bd9bf6bfd38fbdc1a3c903d6e3b36f3cb1",
+    "map": "EU42_L_7d4eecd3c9.json",
+    "map_sha256": "ee46bafac7b4dee60e644dcbd6f8c9316c66311a87895d41f334a7280a66f9e7"
+   },
+   "board_sha256_matches_check": true,
+   "inputs": "design 7d4eecd3c9a84c52; git 99c746890b24; side L, size 42.0, exit arch",
+   "generator_files_at_run_start": "sole_gen fbcd6bb25cd8 sole_route 72ed9bb8f9dd kicad_export eb7da1c8654e",
+   "tools": {
+    "python": "3.13.16",
+    "numpy": "2.5.4",
+    "scipy": "1.18.1",
+    "shapely": "2.2.0",
+    "matplotlib": "3.11.2",
+    "ezdxf": "1.4.5",
+    "kicad_export": "7.0.11+dfsg-1build4"
+   },
+   "project_rules": {
+    "min_clearance": 0.15,
+    "min_connection": 0.0,
+    "min_copper_edge_clearance": 0.3,
+    "min_hole_clearance": 0.25,
+    "min_hole_to_hole": 0.25,
+    "min_microvia_diameter": 0.2,
+    "min_microvia_drill": 0.1,
+    "min_resolved_spokes": 2,
+    "min_silk_clearance": 0.0,
+    "min_text_height": 0.8,
+    "min_text_thickness": 0.08,
+    "min_through_hole_diameter": 0.2,
+    "min_track_width": 0.1,
+    "min_via_annular_width": 0.1,
+    "min_via_diameter": 0.4,
+    "solder_mask_to_copper_clearance": 0.15,
+    "netclass_clearance": 0.15,
+    "netclass_track_width": 0.15,
+    "netclass_via_diameter": 0.45,
+    "netclass_via_drill": 0.2
+   },
+   "checker": {
+    "verify_board": "3815d9024f5d",
+    "kicad": "7.0.11+dfsg-1build4"
+   },
+   "synthetic_foot": false
+  },
+  {
+   "board": "sole_EU42_R.kicad_pcb",
+   "board_id": "EU42 R 4ea1726398",
+   "design_hash": "4ea172639860ff2e0e36bbfbe923c31bc312d49c879fffdd05b7fd52d0e1a2ad",
+   "passed": true,
+   "problems": [],
+   "files": {
+    "kicad_pcb": "50ca340ed60e9562d746bf6711dc4f7aadee33a8007b422b576b81404ca3c1a7",
+    "kicad_pro": "1440188d625db353df332d33746d1d636ba5a3f7b14a4d4002f3d0587926b5ac",
+    "check_json": "459b52ca3e76371af16a7f700f51940eb7e65e4ba29792caeb5485b93558ef25",
+    "map": "EU42_R_4ea1726398.json",
+    "map_sha256": "9a2e7769730359853a41b112f6dd1ac08702f40038c41554d53e0d385b0953ae"
+   },
+   "board_sha256_matches_check": true,
+   "inputs": "design 4ea172639860ff2e; git 99c746890b24; side R, size 42.0, exit arch",
+   "generator_files_at_run_start": "sole_gen fbcd6bb25cd8 sole_route 72ed9bb8f9dd kicad_export eb7da1c8654e",
+   "tools": {
+    "python": "3.13.16",
+    "numpy": "2.5.4",
+    "scipy": "1.18.1",
+    "shapely": "2.2.0",
+    "matplotlib": "3.11.2",
+    "ezdxf": "1.4.5",
+    "kicad_export": "7.0.11+dfsg-1build4"
+   },
+   "project_rules": {
+    "min_clearance": 0.15,
+    "min_connection": 0.0,
+    "min_copper_edge_clearance": 0.3,
+    "min_hole_clearance": 0.25,
+    "min_hole_to_hole": 0.25,
+    "min_microvia_diameter": 0.2,
+    "min_microvia_drill": 0.1,
+    "min_resolved_spokes": 2,
+    "min_silk_clearance": 0.0,
+    "min_text_height": 0.8,
+    "min_text_thickness": 0.08,
+    "min_through_hole_diameter": 0.2,
+    "min_track_width": 0.1,
+    "min_via_annular_width": 0.1,
+    "min_via_diameter": 0.4,
+    "solder_mask_to_copper_clearance": 0.15,
+    "netclass_clearance": 0.15,
+    "netclass_track_width": 0.15,
+    "netclass_via_diameter": 0.45,
+    "netclass_via_drill": 0.2
+   },
+   "checker": {
+    "verify_board": "3815d9024f5d",
+    "kicad": "7.0.11+dfsg-1build4"
+   },
+   "synthetic_foot": false
+  },
+  {
+   "board": "sole_EU46_L.kicad_pcb",
+   "board_id": "EU46 L 55351e5576",
+   "design_hash": "55351e5576d0c72038dba8bbdc7055ace036d50dbf4d545970aa5aa8b24e2f2e",
+   "passed": true,
+   "problems": [],
+   "files": {
+    "kicad_pcb": "8def0f28296f1d082e19b9db70d19e670dc748825c23fb30f5cd7c5f3f57e4ab",
+    "kicad_pro": "c8a3d4e1265b7faa7f5efb4e5f877139cc68b49a0c820cc216ca0225bfc6134c",
+    "check_json": "d2e4b507c63f2d2612ba78c739e22e415e50a4fb8cf261877acd93c8d5f178cd",
+    "map": "EU46_L_55351e5576.json",
+    "map_sha256": "2e5cbbee550e0af8d418f585fde8c4e398f7115670fe4a3041848863a0e02202"
+   },
+   "board_sha256_matches_check": true,
+   "inputs": "design 55351e5576d0c720; git 99c746890b24; side L, size 46.0, exit arch",
+   "generator_files_at_run_start": "sole_gen fbcd6bb25cd8 sole_route 72ed9bb8f9dd kicad_export eb7da1c8654e",
+   "tools": {
+    "python": "3.13.16",
+    "numpy": "2.5.4",
+    "scipy": "1.18.1",
+    "shapely": "2.2.0",
+    "matplotlib": "3.11.2",
+    "ezdxf": "1.4.5",
+    "kicad_export": "7.0.11+dfsg-1build4"
+   },
+   "project_rules": {
+    "min_clearance": 0.15,
+    "min_connection": 0.0,
+    "min_copper_edge_clearance": 0.3,
+    "min_hole_clearance": 0.25,
+    "min_hole_to_hole": 0.25,
+    "min_microvia_diameter": 0.2,
+    "min_microvia_drill": 0.1,
+    "min_resolved_spokes": 2,
+    "min_silk_clearance": 0.0,
+    "min_text_height": 0.8,
+    "min_text_thickness": 0.08,
+    "min_through_hole_diameter": 0.2,
+    "min_track_width": 0.1,
+    "min_via_annular_width": 0.1,
+    "min_via_diameter": 0.4,
+    "solder_mask_to_copper_clearance": 0.15,
+    "netclass_clearance": 0.15,
+    "netclass_track_width": 0.15,
+    "netclass_via_diameter": 0.45,
+    "netclass_via_drill": 0.2
+   },
+   "checker": {
+    "verify_board": "3815d9024f5d",
+    "kicad": "7.0.11+dfsg-1build4"
+   },
+   "synthetic_foot": false
+  },
+  {
+   "board": "sole_EU46_R.kicad_pcb",
+   "board_id": "EU46 R 4fb67c089d",
+   "design_hash": "4fb67c089dd9fb7a9d5412ca46ad3ba7e3a01268cc9cb3190d70b1d229b18690",
+   "passed": true,
+   "problems": [],
+   "files": {
+    "kicad_pcb": "1ebcc6b1bca29086ed6dcbe14e9eea04b96c25d5db422b5829ff5e6b7611132a",
+    "kicad_pro": "f1065e81191ef280833019188c1f6e1501ef9c6864457b1183da2ac2bc48379d",
+    "check_json": "a4deea4af1281cac578c08da37d94daa5f7bc63c48f453de6a4b8ee69ba7fd73",
+    "map": "EU46_R_4fb67c089d.json",
+    "map_sha256": "1a7a1082c202964ad69a42b60d682a94fc0cc1c87fcf633e69b674a09398656d"
+   },
+   "board_sha256_matches_check": true,
+   "inputs": "design 4fb67c089dd9fb7a; git 99c746890b24; side R, size 46.0, exit arch",
+   "generator_files_at_run_start": "sole_gen fbcd6bb25cd8 sole_route 72ed9bb8f9dd kicad_export eb7da1c8654e",
+   "tools": {
+    "python": "3.13.16",
+    "numpy": "2.5.4",
+    "scipy": "1.18.1",
+    "shapely": "2.2.0",
+    "matplotlib": "3.11.2",
+    "ezdxf": "1.4.5",
+    "kicad_export": "7.0.11+dfsg-1build4"
+   },
+   "project_rules": {
+    "min_clearance": 0.15,
+    "min_connection": 0.0,
+    "min_copper_edge_clearance": 0.3,
+    "min_hole_clearance": 0.25,
+    "min_hole_to_hole": 0.25,
+    "min_microvia_diameter": 0.2,
+    "min_microvia_drill": 0.1,
+    "min_resolved_spokes": 2,
+    "min_silk_clearance": 0.0,
+    "min_text_height": 0.8,
+    "min_text_thickness": 0.08,
+    "min_through_hole_diameter": 0.2,
+    "min_track_width": 0.1,
+    "min_via_annular_width": 0.1,
+    "min_via_diameter": 0.4,
+    "solder_mask_to_copper_clearance": 0.15,
+    "netclass_clearance": 0.15,
+    "netclass_track_width": 0.15,
+    "netclass_via_diameter": 0.45,
+    "netclass_via_drill": 0.2
+   },
+   "checker": {
+    "verify_board": "3815d9024f5d",
+    "kicad": "7.0.11+dfsg-1build4"
+   },
+   "synthetic_foot": false
+  },
+  {
+   "board": "sole_person_example_L.kicad_pcb",
+   "board_id": "F54cfa0 L 1ad600b888",
+   "design_hash": "1ad600b88889802cfabb0866c94fdd688de5b0232c23c1aef547b93fecad0e14",
+   "passed": true,
+   "problems": [],
+   "files": {
+    "kicad_pcb": "4ba35f496c3b030e2ccda5d4edb7a612a12ed46f3da311377b36a2406d86941d",
+    "kicad_pro": "201084b6b8c5dd040905c47a488628935e532977877760b4463df5007feab778",
+    "check_json": "8c097d982d03bdd193f437e67f7b876fe211bbd8dbbf8b0b6273191aeb42798d",
+    "map": "F54cfa0_L_1ad600b888.json",
+    "map_sha256": "c86e51ee644a92a345f6884be29fd6b95241ca29c1ce8594386a5c733a0e0e0b"
+   },
+   "board_sha256_matches_check": true,
+   "inputs": "design 1ad600b88889802c; git 99c746890b24; side L, size 42, exit arch; foot person_example.json 54cfa09d05ac366a81b90f0c2c38bc2c92313d3fa83629e715d83c769865d465",
+   "generator_files_at_run_start": "sole_gen fbcd6bb25cd8 sole_route 72ed9bb8f9dd kicad_export eb7da1c8654e",
+   "tools": {
+    "python": "3.13.16",
+    "numpy": "2.5.4",
+    "scipy": "1.18.1",
+    "shapely": "2.2.0",
+    "matplotlib": "3.11.2",
+    "ezdxf": "1.4.5",
+    "kicad_export": "7.0.11+dfsg-1build4"
+   },
+   "project_rules": {
+    "min_clearance": 0.15,
+    "min_connection": 0.0,
+    "min_copper_edge_clearance": 0.3,
+    "min_hole_clearance": 0.25,
+    "min_hole_to_hole": 0.25,
+    "min_microvia_diameter": 0.2,
+    "min_microvia_drill": 0.1,
+    "min_resolved_spokes": 2,
+    "min_silk_clearance": 0.0,
+    "min_text_height": 0.8,
+    "min_text_thickness": 0.08,
+    "min_through_hole_diameter": 0.2,
+    "min_track_width": 0.1,
+    "min_via_annular_width": 0.1,
+    "min_via_diameter": 0.4,
+    "solder_mask_to_copper_clearance": 0.15,
+    "netclass_clearance": 0.15,
+    "netclass_track_width": 0.15,
+    "netclass_via_diameter": 0.45,
+    "netclass_via_drill": 0.2
+   },
+   "checker": {
+    "verify_board": "3815d9024f5d",
+    "kicad": "7.0.11+dfsg-1build4"
+   },
+   "synthetic_foot": true
+  },
+  {
+   "board": "sole_person_example_R.kicad_pcb",
+   "board_id": "F54cfa0 R 8a07f794d2",
+   "design_hash": "8a07f794d2b9934ffc6fd71b6cb579afa933b60144f9f094affc47afb9adf2b5",
+   "passed": true,
+   "problems": [],
+   "files": {
+    "kicad_pcb": "1d8c972f8aaa5bde5084da660cd31b6479124800bd5a67b180dbd115a96b520d",
+    "kicad_pro": "71d97b02850e28004572cb69aad953ca5836afef45851e4547b6cdff1aed9ea7",
+    "check_json": "9e75eb7bcdc150c2d3129d6386bddf3061826ded2bfb8598d73fb0991e035d3e",
+    "map": "F54cfa0_R_8a07f794d2.json",
+    "map_sha256": "cc5974eed7edf9e22bc2e739c996926910004f119779a240cd3e0d8ae094eced"
+   },
+   "board_sha256_matches_check": true,
+   "inputs": "design 8a07f794d2b9934f; git 99c746890b24; side R, size 42, exit arch; foot person_example.json 54cfa09d05ac366a81b90f0c2c38bc2c92313d3fa83629e715d83c769865d465",
+   "generator_files_at_run_start": "sole_gen fbcd6bb25cd8 sole_route 72ed9bb8f9dd kicad_export eb7da1c8654e",
+   "tools": {
+    "python": "3.13.16",
+    "numpy": "2.5.4",
+    "scipy": "1.18.1",
+    "shapely": "2.2.0",
+    "matplotlib": "3.11.2",
+    "ezdxf": "1.4.5",
+    "kicad_export": "7.0.11+dfsg-1build4"
+   },
+   "project_rules": {
+    "min_clearance": 0.15,
+    "min_connection": 0.0,
+    "min_copper_edge_clearance": 0.3,
+    "min_hole_clearance": 0.25,
+    "min_hole_to_hole": 0.25,
+    "min_microvia_diameter": 0.2,
+    "min_microvia_drill": 0.1,
+    "min_resolved_spokes": 2,
+    "min_silk_clearance": 0.0,
+    "min_text_height": 0.8,
+    "min_text_thickness": 0.08,
+    "min_through_hole_diameter": 0.2,
+    "min_track_width": 0.1,
+    "min_via_annular_width": 0.1,
+    "min_via_diameter": 0.4,
+    "solder_mask_to_copper_clearance": 0.15,
+    "netclass_clearance": 0.15,
+    "netclass_track_width": 0.15,
+    "netclass_via_diameter": 0.45,
+    "netclass_via_drill": 0.2
+   },
+   "checker": {
+    "verify_board": "3815d9024f5d",
+    "kicad": "7.0.11+dfsg-1build4"
+   },
+   "synthetic_foot": true
+  }
+ ]
+}
