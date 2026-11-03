@@ -2,8 +2,9 @@
 <!-- SPDX-License-Identifier: CERN-OHL-S-2.0 -->
 # Sensor sole v0: our own pressure-sensing sole for five-toe shoes
 
-Status, 2026-11-02: **layout design and generator only.** Nothing has been fabricated or measured. Every
-electrical figure below is a design target or an estimate, marked as such, until the bench says otherwise.
+Status, 2026-11-02: **layout design and generator only.** Nothing has been fabricated or measured. Physical
+sensing, fit in the shoe and durability are untested. Every electrical figure below is a design target or an
+estimate, marked as such, until the bench says otherwise.
 
 ## 1. What it is
 

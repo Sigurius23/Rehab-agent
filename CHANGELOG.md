@@ -72,6 +72,12 @@
     open questions and a draft enquiry, which has not been sent. Nothing is released for fabrication.
   - `DESIGN.md` covers the fit, layer stack, pod electronics (prototype on a XIAO nRF52840 Sense), data
     integration over LSL, the calibration and validation plan, and the open decisions.
+  - `COMPARISON.md` sets the sole against OpenGo and three open insoles, keeping documented features apart from
+    measured performance. It covers four OpenGo validation studies:
+    - three on 13-sensor insoles;
+    - McNeese et al. 2026 on 16-sensor insoles (10 healthy adults, submaximal jumps, values at peak force only).
+      Hardware revision and firmware are not stated, so its match to the product sold now is unconfirmed.
+    Our sole is untested for physical sensing, fit and durability.
 - **Flaky live-chain test fixed** (`test_live_chain_posture_to_suit_payloads`). It had failed in CI on nearly every
   run since 2026-10-24, and once in a local full-suite run.
   - The engine sent its cue correctly, but the suit bridge sometimes had not yet connected to the cue stream. LSL

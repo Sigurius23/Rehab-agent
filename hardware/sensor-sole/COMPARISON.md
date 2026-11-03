@@ -5,7 +5,7 @@
 
 **Basis.** For the other insoles, the documented features come from the project's comparison corpus: the
 research report "Open-Source Alternatives to Moticon OpenGo Sensor Insoles", last verified 2026-11-02. For
-OpenGo, they also come from Moticon's current product page and from three validation papers, all read on
+OpenGo, they also come from Moticon's current product page and from four validation papers, all read on
 2026-11-03 (section "OpenGo: what was validated, and on which hardware"). We have tested none of these
 insoles. For our sole, every figure is a **design goal or a geometric estimate**: nothing has been built or
 measured. Passing `verify_board.py` is a software check of the copper, not sensing accuracy.
@@ -40,13 +40,44 @@ Three kinds of statement, kept apart:
 
 | | Measured against a reference | Result as reported |
 |---|---|---|
-| **Our sensor sole** | **Nothing.** No board made, no film chosen, no calibration | — |
-| OpenGo | Three independent studies, all on the earlier **13-sensor** insoles (next section) | Timing agrees well with force plates. Force is underestimated, more so at higher forces and in fast motions. Medio-lateral centre of pressure is less reliable than anterior–posterior. **No independent validation of the current 16-sensor product was found**; its figures (≤ 1 % hysteresis, < 5 % total-force error) are the manufacturer's |
+| **Our sensor sole** | **Nothing.** No board made, no film chosen, no calibration. Physical sensing, fit in the shoe and durability are untested | — |
+| OpenGo | Four independent studies (next section). Three used the earlier **13-sensor** insoles. One, McNeese et al. 2026, used 16-sensor OpenGo insoles; whether those match the product sold now is unconfirmed | 13-sensor studies: timing agrees well with force plates; force is underestimated, more so at higher forces and in fast motions. 16-sensor study (10 healthy adults, submaximal jumps, values at the instant of peak force only): peak vertical force MAE 4.34 N/kg; anterior–posterior centre of pressure MAE 10 % of foot length; medial–lateral MAE 50 % of foot width, not valid by the authors' criteria. Where centre of pressure was assessed (Stöggl & Martiner; McNeese et al.), medial–lateral was less reliable than anterior–posterior. The product's own figures (≤ 1 % hysteresis, < 5 % total-force error) are the manufacturer's |
 | smartinsole | Two IEEE ISCAS papers (2025, 2026) | Force-plate error metrics not published in the README |
 | KAKI | 10 m walk tests: 3 participants, 5 sessions, footstrike checked visually | Gait events only; no pressure range or calibration published |
 | GRFMS | Ground reaction force against a reference, with Vicon motion capture | GRF estimation fit 68.71 % ± 4.80 % |
 
 ## OpenGo: what was validated, and on which hardware
+
+### 16-sensor insoles: McNeese et al., Sensors 2026
+
+McNeese D, Eisner C, Todd R, Noehren B, Owen MK. "Validity and Reliability of Force Insoles to Measure Center of
+Pressure During Return-to-Sport Testing." *Sensors* 26(1):66 (2026; online 22 December 2025).
+[doi:10.3390/s26010066](https://doi.org/10.3390/s26010066), full text in PubMed Central (PMC12787798), CC BY 4.0.
+Funded by NIH (R01AR080708); the authors declare no conflicts of interest. Read in full on 2026-11-03.
+
+| | What the paper reports |
+|---|---|
+| Task | Four jumps in this order: double-leg and single-leg countermovement jumps (one maximal jump, then four vertical jumps at 50 % effort; the paper does not say whether four per jump type), then double-leg and single-leg horizontal jumps scaled to 50 % of the maximal distance (trial count not stated). Two identical sessions, 7.2 ± 4.7 days apart |
+| Sample | 10 healthy, active adults with no history of lower-limb injury; 5 men, 5 women; 25.5 ± 3.8 years; 74.9 ± 12.4 kg |
+| Reference | Bertec instrumented force plate in a treadmill, 2000 Hz, reduced to 100 Hz by simple decimation. 13-camera motion capture (200 Hz) placed the force-plate centre of pressure in the foot's frame (Visual3D). Each trial was aligned by shifting the two signals so that their force peaks coincide |
+| Insole tested | "Moticon OpenGo force insoles": **16 pressure sensors covering ~65 % of the insole** (6 along the foot, 2–5 across), sizes S4–S9 of 9, **sampled at 100 Hz**. Calibrated with Moticon's recommended procedure (slow walking, anterior–posterior and medial–lateral shifts); the source cited for that procedure is a paper on a different insole (Insole3, Cramer et al. 2022). Force and centre of pressure as computed by the insole system |
+| Not stated | Firmware version, app or software version, hardware revision or model number, purchase date, collection dates (ethics approval dated 14 July 2025), shoe model, use of the motion sensor |
+| What was compared | One instant per trial: peak vertical force. Validity criteria set by the authors: at least three of MAE and RMSE below 20 % of the magnitude, MAPE below 20 %, and r above 0.75 |
+| Validity, all tasks | Peak vertical force: MAE 4.34 N/kg, RMSE 5.68 N/kg, MAPE 15.03 %, r = 0.79 (per task MAE 1.99–6.22 N/kg; MAPE 19.6–21.6 % in the horizontal jumps). Anterior–posterior centre of pressure: MAE 10 % of foot length, RMSE 11 %, MAPE 21.41 %, r = 0.94. Medial–lateral centre of pressure: MAE 50 % of foot width, RMSE 50 %, r = 0.20, **not valid** |
+| Reliability (ICC 3,k, session 1 vs 2) | Vertical force 0.75–0.91; anterior–posterior centre of pressure 0.88–0.97; medial–lateral 0.72–0.82, except 0.09 in the single-leg countermovement jump. For the single-leg countermovement jump the abstract gives 0.89 for anterior–posterior centre of pressure; Table 3 gives 0.88 |
+| Direction of the force error | The authors read the errors as the insoles overestimating peak force, from computing force as pressure × sensor area. The tables report no signed bias |
+| Limitations stated by the authors | 100 Hz may be too slow for fast changes, particularly medial–lateral centre of pressure (they cite 200 Hz for landing data). Reproducing 50 % effort across sessions. The effect of insole and shoe deformation on force and centre of pressure is unknown. Sensor density is low across the narrow forefoot (two sensors wide on the distal half), a possible cause of the poor medial–lateral result. The small sample explains the 0.09 ICC |
+
+Further limitations, ours rather than the authors':
+- **Who and what.** Ten healthy young adults doing submaximal jumps. There were no patients after injury, despite the
+  return-to-sport framing, and no walking or running.
+- **One instant per trial.** The signals were aligned at their force peaks by construction, so timing and the rest of
+  the force curve were not assessed.
+- **"Valid" is the authors' threshold,** not a general accuracy statement.
+- **The reference was decimated.** Simple decimation of the 2000 Hz force plate can itself shift the reference peak;
+  the paper does not quantify this.
+
+### 13-sensor insoles: three earlier studies
 
 | | Stöggl & Martiner, J Sports Sci 2017 (online 2016) | Braun et al., J Foot Ankle Res 2015 | Rowing study, PMC8036524 (2021) |
 |---|---|---|---|
@@ -62,19 +93,23 @@ Two further limitations, ours rather than the authors': all three samples are sm
 young adults, young rowers). In Stöggl & Martiner, the OpenGo insoles lay under the Pedar-X insoles in the same
 shoe.
 
-**Does the tested hardware match the product offered now?** No, as far as the papers and the product page show:
-- **Sensors.** All three studies used 13-sensor insoles. Moticon's current page lists 16 textile pressure
-  sensors with "65% area coverage".
-- **Motion sensor, rate and power.** The current page lists a 6-axis IMU, 10–100 Hz sampling and coin cells.
-  Stöggl & Martiner had a 3-axis accelerometer at 50 Hz; Braun et al. a Li-ion battery.
-- **Firmware.** None of the papers states a firmware version, and the current firmware is updatable through
-  the app. So even an unchanged insole may not behave as the tested one did.
-- **No independent study of the 16-sensor product was found.** Searched 2026-11-03: two general web searches
-  and one extended search, plus the papers above. PubMed refused direct access (HTTP 429), so a PubMed or
-  Google Scholar search with a year filter is still to do.
+### Does the tested hardware match the product offered now?
 
-Stöggl & Martiner is the study with 16 *participants*. If a different study was meant, its details need adding
-here.
+- **The three 13-sensor studies: no**, as far as the papers and the product page show.
+  - All three used 13-sensor insoles. Moticon's current page lists 16 textile pressure sensors with "65% area
+    coverage".
+  - The current page lists a 6-axis IMU, 10–100 Hz sampling and coin cells. Stöggl & Martiner had a 3-axis
+    accelerometer at 50 Hz; Braun et al. a Li-ion battery.
+- **McNeese et al.: unconfirmed.** It neither matches nor fails to match.
+  - What the paper states agrees with the current product page: 16 sensors, about 65 % coverage, nine sizes and
+    100 Hz.
+  - The paper does not identify the hardware revision or the firmware or software version. The firmware is
+    updatable through the app.
+  - So whether the tested insoles behave like the product sold now is not established either way.
+- **Firmware.** None of the four papers states a firmware version.
+- **Search.** Our earlier search (2026-11-03: two general web searches and one extended search) missed McNeese et
+  al. It was added from a citation supplied in review. Other studies of the 16-sensor insoles may exist; a PubMed or
+  Google Scholar search with a year filter is still to do.
 
 ## What this means for our sole
 
@@ -91,9 +126,19 @@ here.
 - **A passive, thin sole** with every component outside the shoe. KAKI documents the same split, and the same
   XIAO nRF52840 Sense pod.
 
+**A test we could compare directly:** the McNeese protocol.
+- **Protocol:** the same four jumps, values at peak vertical force, against a force plate, with centre of pressure
+  in % of foot length and width.
+- **Where it may bear on us:** the weak spot there was medial–lateral centre of pressure. The authors suspect the
+  low sensor density across the forefoot and the 100 Hz rate. Our layout has five metatarsal-head regions across the
+  forefoot and five toe regions, and also targets 100 Hz.
+- **What is open:** whether our layout changes the medial–lateral error is untested. The 100 Hz limitation would
+  apply to us as well.
+
 **Where it is behind:**
-- **Nothing measured.** Each alternative above has at least some measurement; OpenGo has independent
-  validation of earlier versions.
+- **Nothing measured.** Physical sensing, fit in the shoe and durability are untested. Each alternative above has
+  at least some measurement. OpenGo has independent validation of the earlier 13-sensor versions, plus one small
+  study of 16-sensor insoles whose match to the current product is unconfirmed.
 - **Accuracy is open.** Piezoresistive films (Velostat class) are known for hysteresis, creep and temperature
   drift. Until our coupon test and force-plate comparison report numbers, assume nothing better than the DIY
   piezoresistive insoles.

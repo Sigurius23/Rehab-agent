@@ -9,10 +9,10 @@ fitted in a shoe. A thin passive flex circuit with 16 sensing regions lies in th
 the shoe reads it.
 
 **Status: design only, not released for fabrication.** The layout, its generator and KiCad boards exist;
-nothing has been fabricated or measured. No fabricator has confirmed the assumptions in
-[`FABRICATION.md`](FABRICATION.md). Check results per size and side are in DESIGN.md, sections 5 and 10.
-See [`DESIGN.md`](DESIGN.md) for the
-design, its targets against Moticon OpenGo, and the validation plan.
+nothing has been fabricated or measured. Physical sensing, fit in the shoe and durability are untested. No
+fabricator has confirmed the assumptions in [`FABRICATION.md`](FABRICATION.md). Check results per size and
+side are in DESIGN.md, sections 5 and 10. See [`DESIGN.md`](DESIGN.md) for the design, its targets against
+Moticon OpenGo, and the validation plan.
 
 | File | What it is |
 |---|---|
