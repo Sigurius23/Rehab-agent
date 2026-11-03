@@ -777,9 +777,9 @@ def pad_pieces(poly, overlap=0.02):
     return out
 
 
-def source_stamp(args):
-    """What produced a board: hashes of the generator files and the foot file, the git revision, the options.
-    The KiCad exporter copies it into the title block, and verify_board.py checks it against the files."""
+def _source_at_start():
+    """Hashes of the generator files and the git state, taken when the generator starts: a run takes minutes,
+    and a file edited meanwhile must not end up in the stamp of a board it did not make."""
     here = Path(__file__).resolve().parent
     h = lambda f: hashlib.sha256(Path(f).read_bytes()).hexdigest()[:12]
     files = {f: h(here / f) for f in ("sole_gen.py", "sole_route.py")}
@@ -789,7 +789,18 @@ def source_stamp(args):
         dirty = bool(git("status", "--porcelain", "--", "sole_gen.py", "sole_route.py"))
     except Exception:
         rev, dirty = None, None
-    foot = {"path": Path(args.foot).name, "sha256": h(args.foot)} if args.foot else None
+    return files, rev, dirty
+
+
+_SOURCE = _source_at_start()
+
+
+def source_stamp(args):
+    """What produced a board: hashes of the generator files and the foot file, the git revision, the options.
+    The KiCad exporter copies it into the title block, and verify_board.py checks it against the files."""
+    files, rev, dirty = _SOURCE
+    foot = {"path": Path(args.foot).name, "sha256": hashlib.sha256(Path(args.foot).read_bytes()).hexdigest()[:12]} \
+        if args.foot else None
     return dict(files=files, git=rev, generator_files_modified=dirty, foot=foot,
                 options=dict(size=args.size, length=args.length, width=args.width, side=args.side, exit=args.exit))
 
