@@ -543,8 +543,13 @@ def build(s, names, mode, exit, side="R"):
     plate0 = sole.union(tail)
     flare = plate0.buffer(TAIL_FILLET, 32).buffer(-TAIL_FILLET, 32).difference(plate0) \
         .intersection(Point(tail_exit).buffer(tail_w / 2 + TAIL_FILLET + 1.0, 32))
-    body = sole.union(flare)                         # the sole including the fillets: routing area, margin
-    plate = plate0.union(flare)
+    # keep the two fillets only: closing also leaves hair-thin slivers along the curved edge, which made the
+    # exported outline self-intersect once rounded (KiCad: invalid_outline)
+    flare = unary_union([g for g in getattr(flare, "geoms", [flare]) if g.geom_type == "Polygon" and g.area > 0.5])
+    body = sole.union(flare).buffer(0.02).buffer(-0.02)      # the sole including the fillets: routing, margin
+    plate = plate0.union(flare).buffer(0.02).buffer(-0.02)
+    if plate.geom_type != "Polygon" or not plate.is_valid:
+        raise RuntimeError("board outline is not a single valid polygon")
     # checks
     vias = {n: pts[0] for n, pts in paths.items() if pts}
     in_bend = [n for n, v in vias.items() if abs(np.dot(np.array(v) - bend_pt, nrm)) < FAB["bend_band"]]
@@ -999,8 +1004,12 @@ def to_board_json(geo, s, args, path, requested=None, checks=None):
     # can have fewer regions than the default 16)
     config = dict(sensors_requested=list(requested or []), regions_built=list(regions),
                   dropped=dict((checks or {}).get("dropped", {})), n_contacts=len(regions) + 2)
+    outline_ring = ring(geo["plate"].exterior)
+    if not Polygon(outline_ring).is_valid:                    # as KiCad will read it, after rounding
+        from shapely.validation import explain_validity
+        raise RuntimeError(f"exported outline is invalid: {explain_validity(Polygon(outline_ring))}")
     out = dict(generator="sole_gen v0", source=source_stamp(args), config=config, side=args.side, foot_length=s["L"], ball_width=s["W"],
-               outline=ring(geo["plate"].exterior), fab=FAB, regions=regions,
+               outline=outline_ring, fab=FAB, regions=regions,
                bend=dict(point=[float(bp[0]), float(bp[1])], dir=[float(bt[0]), float(bt[1])], half_width=FAB["bend_band"],
                          band=ring(band.exterior)),
                tail=dict(end=list(geo["tail_info"]["end"]), dir=list(geo["tail_info"]["dir"]),
