@@ -202,7 +202,9 @@ forefoot bundle (metatarsal and toe lines) does not untangle:
 
 The KiCad DRC reports these as clearance errors. The copper trace in `verify_board.py` shows them as
 contacts joined to each other, which is decisive: such a board must not be made.
-Whether more negotiation rounds help is being tested (EU 37 R with 16 rounds instead of 8).
+More negotiation rounds do not help. EU 37 R with 16 rounds instead of 8 still leaves four lines unresolved
+(mt2, mt3, toe1, toe2) and needs the same jumper. The conflict is in the lane plan, not the convergence of
+the fine-grid pass, so the fix belongs in the planner: the bundle order and via placement in the forefoot.
 
 **Earlier layout-only sweep.** Before copper routing existed, a sweep over EU 36–47 passed the layout
 checks: regions, routing plan, corridor inside the margin, no vias in the bend zone. That sweep says nothing
