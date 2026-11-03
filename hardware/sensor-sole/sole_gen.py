@@ -24,7 +24,7 @@ Usage:
   sole_gen.py --length 268 --width 103 ...    # measured foot
   sole_gen.py --foot person.json ...          # landmarks and sensor choices from a scan
 """
-import argparse, json, math
+import argparse, hashlib, json, math, subprocess
 from pathlib import Path
 
 import numpy as np
@@ -255,7 +255,9 @@ def route(sole, regs, tail_start, res=0.25, sense=None, band=None):
     D, pred = dijkstra(G, indices=src, return_predecessors=True)
     yy, xx = np.unravel_index(fi, (ny, nx))
 
-    def endpoints(k, n):
+    def endpoints(k, n, sgn=1):
+        """Via candidates of region k on one side (sgn) of its comb split, and how well they clear the split
+        (0 best). The sense comb's spine runs along that side, so the via's stub to it stays short."""
         ends = idx[(lab == k) & (bd <= 0.6) & free]
         ends = ends[np.isfinite(D[ends])]
         ex, ey = X[xx[ends]], Y[yy[ends]]
@@ -263,26 +265,53 @@ def route(sole, regs, tail_start, res=0.25, sense=None, band=None):
         if band is not None:                         # no via in the toe-joint bend band
             bp, nrm, hw = band
             keep &= np.abs((ex - bp[0]) * nrm[0] + (ey - bp[1]) * nrm[1]) >= hw
+        tier = 0
         if sense is not None and n in sense:         # the via sits beside the sense comb's spine
             t, split = sense[n]
-            for margin in (1.5, 0.5, -1e9):
-                ok = keep & ((ex * t[0] + ey * t[1]) >= split + margin)
+            for tier, margin in enumerate((1.5, 0.5, -1e9)):
+                ok = keep & (sgn * (ex * t[0] + ey * t[1] - split) >= margin)
                 if ok.any():
                     keep = ok; break
-        return ends[keep] if keep.any() else ends
+        return (ends[keep], tier) if keep.any() else (ends, 3)
+
+    def both_sides(k, n):
+        """Via candidates and the comb side they belong to (+1: the default sense side).
+
+        A toe's via belongs at the base of its tab, where the trunk passes: a line that runs up the tab to a
+        via splits the toe's comb, and the fingers cut off from their spine stop sensing (toe2 at EU 42 kept
+        38 % of its tile that way). The comb split runs parallel to the oblique bend line, so on a narrow toe
+        the default side can have no cell near the base at all; then the toe takes the other side there, and
+        its comb swaps spines to match. Every other region keeps the default side."""
+        ends, tier = endpoints(k, n, 1)
+        if not n.startswith("toe") or sense is None or n not in sense or band is None:
+            return ends, np.ones(len(ends), int)
+        bp, nrm, _hw = band
+        along = lambda e: X[xx[e]] * nrm[0] + Y[yy[e]] * nrm[1]
+        cells = idx[(lab == k) & free]
+        base = float(np.min(along(cells))) + 10.0         # the first 10 mm of the toe region
+        pick = []
+        for sg in (1, -1):
+            e, tr = endpoints(k, n, sg)
+            e = e[along(e) <= base]
+            if len(e):
+                pick.append((tr, -sg, e, sg))                # better tier first, then the default side
+        if not pick:
+            return ends, np.ones(len(ends), int)
+        tr, _, e, sg = min(pick, key=lambda q: (q[0], q[1]))
+        return e, np.full(len(e), sg)
 
     # Grow one tree from the tail, farthest region first. Each new path runs to the nearest point of the
     # tree (every tree cell is a source at distance 0) and is penalised for running close beside it without
     # joining, so parallel lines share one bundle instead of shadowing each other. Vias stay off the tree.
-    order_k = sorted(range(len(names)), key=lambda k: -float(np.min(D[endpoints(k, names[k])], initial=np.inf))
-                     if len(endpoints(k, names[k])) else 0)
+    order_k = sorted(range(len(names)), key=lambda k: -float(np.min(D[both_sides(k, names[k])[0]], initial=np.inf))
+                     if len(both_sides(k, names[k])[0]) else 0)
     parent = {src: -1}
     via_cells = set()
-    paths, load = {}, np.zeros((ny, nx), int)
+    paths, load, side = {}, np.zeros((ny, nx), int), {}
     near_r = 1.5                                     # mm: "beside the tree"
     for k in order_k:
         n = names[k]
-        ends = endpoints(k, n)
+        ends, sgns = both_sides(k, n)
         if len(ends) == 0:
             paths[n] = None; continue
         tree_mask = np.zeros((ny, nx), bool)
@@ -301,9 +330,10 @@ def route(sole, regs, tail_start, res=0.25, sense=None, band=None):
                         blocked_via.add(int(j))
         sources = [c for c in parent if c not in blocked_via]
         Dk, pk, _ = dijkstra(Gk, indices=sources, return_predecessors=True, min_only=True)
-        e = ends[np.argmin(Dk[ends])]
+        ie = int(np.argmin(Dk[ends])); e = ends[ie]
         if not np.isfinite(Dk[e]):
             paths[n] = None; continue
+        side[n] = int(sgns[ie])
         seq = [e]
         while seq[-1] not in parent and pk[seq[-1]] >= 0:
             seq.append(pk[seq[-1]])
@@ -331,7 +361,7 @@ def route(sole, regs, tail_start, res=0.25, sense=None, band=None):
     usable = sole.buffer(-FAB["edge_margin"] + FAB["route_clear"])
     spill = carve.difference(usable).area
     worst = {"corridor_outside_sole_mm2": round(spill, 1)}
-    return paths, load, worst, carve, (X, Y, res)
+    return paths, load, worst, carve, (X, Y, res), side
 
 
 # ------------------------------------------------------------------------------------------------ build
@@ -357,7 +387,7 @@ def build(s, names, mode, exit, side="R"):
         nrm = -nrm
     bend_pt = m5 + nrm * 8.0
     split = {n: float(np.dot(np.asarray(r.centroid.coords[0]), t)) for n, r in regs.items()}
-    paths, load, spill, carve, _grid = route(sole, regs, tail_start, sense={n: (t, split[n]) for n in regs},
+    paths, load, spill, carve, _grid, sense_side = route(sole, regs, tail_start, sense={n: (t, split[n]) for n in regs},
                                              band=(bend_pt, nrm, FAB["bend_band"]))
     # final regions: the gap between neighbours, then room for the bundles; keep the largest piece
     before = {n: r.area for n, r in regs.items()}
@@ -386,15 +416,36 @@ def build(s, names, mode, exit, side="R"):
         regions_inside=all(sole.buffer(-FAB["edge_margin"] + 0.05).contains(r) for r in regs.values()),
         min_region_gap_mm=round(min((a.distance(b) for i, a in enumerate(regs.values()) for b in list(regs.values())[i + 1:]), default=0), 2),
     )
-    copper = {n: combs(r, t, split=split[n]) for n, r in regs.items()} if mode == "region" else {}
+    copper = {n: combs(r, t, split=split[n], flip=sense_side.get(n, 1) < 0) for n, r in regs.items()} \
+        if mode == "region" else {}
     if copper:
         checks["comb_connected"] = all(getattr(a, 'geom_type', '') == 'Polygon' and getattr(b, 'geom_type', '') == 'Polygon'
                                          for a, b in copper.values())
         checks["comb_min_spacing_mm"] = round(min(a.distance(b) for a, b in copper.values()), 3)
         fill = {n: (a.area + b.area) / regs[n].area for n, (a, b) in copper.items()}
         checks["comb_copper_fill_pct"] = [round(100 * min(fill.values())), round(100 * max(fill.values()))]
+        # sensing area: where both combs interleave. Copper of one comb alone (fingers cut off from their partner
+        # by a line through the region) does not sense, so this is what a region really keeps of its tile.
+        act = {n: active_area(a, b, regs[n]) for n, (a, b) in copper.items()}
+        checks["sensing_area"] = {n: dict(tile_mm2=round(before[n]), active_mm2=round(act[n]),
+                                          pct_of_tile=round(100 * act[n] / before[n])) for n in copper}
+        checks["least_sensing_area"] = min(((n, v["pct_of_tile"]) for n, v in checks["sensing_area"].items()),
+                                           key=lambda x: x[1])
     routing = route_copper(sole, tail, regs, copper, paths, sd, tail_start, tail_end, tail_dir, n_lines, checks) \
         if copper else None
+    if routing:                                       # copper on both layers inside the toe-joint bend zone
+        C = CONTACT; ext = 400.0                      # stiffens the flex where it bends (the "I-beam" effect)
+        bandp = Polygon([bend_pt - t * ext - nrm * FAB["bend_band"], bend_pt + t * ext - nrm * FAB["bend_band"],
+                         bend_pt + t * ext + nrm * FAB["bend_band"], bend_pt - t * ext + nrm * FAB["bend_band"]])
+        ls = lambda pts, w: LineString(pts).buffer(w / 2) if len(pts) > 1 else Polygon()
+        bcu = unary_union([ls(v, C["sense_w"]) for v in routing["lanes"].values()] +
+                          [ls(v, C["sense_w"]) for _, v in routing["lanes_extra"]] +
+                          [ls(v, C["com_w"]) for v in routing["com_pin_stubs"]])
+        fcu = unary_union([ls(v, C["com_w"]) for v in routing["com"]] + [ls(v, C["sense_w"]) for v in routing["stubs"].values()]
+                          + [ls(j["fcu"], C["sense_w"]) for j in routing["jumpers"]])
+        checks["routing"]["stacked_copper_in_bend_mm2"] = round(bcu.intersection(fcu).intersection(bandp).area, 2)
+        checks["regions_in_bend_pct"] = {n: round(100 * r.intersection(bandp).area / r.area) for n, r in regs.items()
+                                         if r.intersects(bandp)}
     geo = dict(sole=sole, tail=tail, plate=plate, regions=regs, seeds=sd, paths=paths, toes=toes, web_x=web_x,
                bend=(bend_pt, t), tail_exit=tail_exit, copper=copper, routing=routing,
                tail_info=dict(end=tail_end, dir=tail_dir, width=tail_w, lines=n_lines))
@@ -457,10 +508,18 @@ def route_copper(sole, tail, regs, copper, paths, seeds, tail_start, tail_end, t
     # a crossing forced by where two vias sit: one line hops over the other on F.Cu (two vias, one jumper)
     jumpers, extra, no_region_via = [], [], set()
     for n, m in crossings(lanes):
+        jumped = {j["net"] for j in jumpers}
+        if m in jumped and n not in jumped:              # a line crossed twice: let the other one hop
+            n, m = m, n
+        if m in jumped or len(lanes[m]) < 4 or len(lanes[n]) < 4:
+            continue                                     # left for the B.Cu crossing check below
         A, B = LineString(lanes[n][:-2]), LineString(lanes[m][:-2])
         c = A.intersection(B)
-        c = c if c.geom_type == "Point" else list(getattr(c, "geoms", [c]))[0]
-        L = B.length; sc = B.project(c if c.geom_type == "Point" else c.centroid)
+        pts_c = [g for g in getattr(c, "geoms", [c]) if g.geom_type == "Point" and not g.is_empty]
+        if not pts_c:                                    # no longer crossing here
+            continue
+        c = pts_c[0]
+        L = B.length; sc = B.project(c)
         need = C["via_d"] / 2 + C["clear"] + C["sense_w"] / 2       # via to any other line
         need_v = C["via_d"] + C["clear"]                               # via to any other via
         others = unary_union([LineString(lanes[k][:-2]) for k in lanes if k != m and len(lanes[k]) > 3] +
@@ -488,6 +547,11 @@ def route_copper(sole, tail, regs, copper, paths, seeds, tail_start, tail_end, t
         extra.append((m, list(tail_.coords) + list(lanes_full_end(planned, m))))
         jumpers.append(dict(net=m, over=n, fcu=[(p1.x, p1.y), (p2.x, p2.y)], vias=jvias))
     lan["lanes"] = lanes
+    # whatever still crosses on B.Cu (a line crossed by two others, a jumper tail crossing again) is reported;
+    # the board would short there, and DRC flags it too
+    bcu = [(k, LineString(v)) for k, v in lanes.items() if len(v) > 1] + [(k, LineString(v)) for k, v in extra if len(v) > 1]
+    still = sorted({tuple(sorted((a, b))) for i, (a, la) in enumerate(bcu) for b, lb in bcu[i + 1:]
+                    if a != b and la.intersects(lb)})
     common = {n: copper[n][0] for n in copper}; sense = {n: copper[n][1] for n in copper}
     stubs, near_common = stubs_to_combs(lan["vias"], sense, common, C["sense_w"], C["clear"])
     td, pm, ac = np.asarray(tail_dir, float), np.asarray(lan["pad_mid"]), np.asarray(lan["across"])
@@ -507,7 +571,8 @@ def route_copper(sole, tail, regs, copper, paths, seeds, tail_start, tail_end, t
     checks["routing"] = dict(
         sense_routed=len(lan["lanes"]) - len(maze_failed), maze_failed=maze_failed,
         negotiation_rounds=getattr(maze_refine, "rounds_used", None),
-        jumpers=[(j["net"], j["over"]) for j in jumpers], side_flips=sorted(flips),
+        jumpers=[(j["net"], j["over"]) for j in jumpers], unresolved_crossings=[list(x) for x in still],
+        side_flips=sorted(flips),
         planned_odd_crossings=odd,
         common_unreached=unreached, stubs_near_common=near_common,
         longest_stub_mm=round(max((LineString(v).length for v in stubs.values()), default=0), 2),
@@ -537,11 +602,12 @@ def _mirror_routing(r):
 
 
 # ------------------------------------------------------------------------------------------------ copper
-def combs(region, bend_dir, finger=None, gap=None, spine=0.3, split=None):
+def combs(region, bend_dir, finger=None, gap=None, spine=0.3, split=None, flip=False):
     """Two interleaved electrode combs filling a region (shunt-mode force-sensing resistor).
 
     Fingers run parallel to the bend line (`bend_dir`), so bending at the toe joints strains them least.
-    Returns (sense, common): sense fingers join a spine on one side, common fingers a spine on the other.
+    Returns (common, sense): common fingers join the spine on the low side of `split` (along `bend_dir`),
+    sense fingers the spine on the high side; `flip` swaps the sides (the routing chose the low side).
     A piezoresistive film over the region bridges the two combs; its conductance rises with load.
     """
     finger = finger or FAB["comb_finger"]; gap = gap or FAB["comb_gap"]
@@ -572,7 +638,17 @@ def combs(region, bend_dir, finger=None, gap=None, spine=0.3, split=None):
     # etched reliably and may lift off a flexing sole
     trim = lambda g: big(big(g).buffer(-0.05, 16).buffer(0.05, 16))
     back = lambda g: affinity.rotate(g, ang, origin=(0, 0))
-    return back(trim(A)), back(trim(B))
+    A, B = back(trim(A)), back(trim(B))
+    return (B, A) if flip else (A, B)
+
+
+def active_area(common, sense, region, reach=None):
+    """Area (mm²) where the two combs interleave: within one finger pitch of both. A film patch there sees
+    both electrodes; elsewhere it touches one comb or none and adds nothing to the reading."""
+    reach = reach or (FAB["comb_finger"] + FAB["comb_gap"] + 0.05)
+    if common.is_empty or sense.is_empty:
+        return 0.0
+    return common.buffer(reach, 4).intersection(sense.buffer(reach, 4)).intersection(region).area
 
 
 # ------------------------------------------------------------------------------------------------ export
@@ -701,15 +777,48 @@ def pad_pieces(poly, overlap=0.02):
     return out
 
 
+def source_stamp(args):
+    """What produced a board: hashes of the generator files and the foot file, the git revision, the options.
+    The KiCad exporter copies it into the title block, and verify_board.py checks it against the files."""
+    here = Path(__file__).resolve().parent
+    h = lambda f: hashlib.sha256(Path(f).read_bytes()).hexdigest()[:12]
+    files = {f: h(here / f) for f in ("sole_gen.py", "sole_route.py")}
+    git = lambda *a: subprocess.run(["git", "-C", str(here), *a], capture_output=True, text=True, timeout=20).stdout.strip()
+    try:
+        rev = git("rev-parse", "--short=12", "HEAD") or None
+        dirty = bool(git("status", "--porcelain", "--", "sole_gen.py", "sole_route.py"))
+    except Exception:
+        rev, dirty = None, None
+    foot = {"path": Path(args.foot).name, "sha256": h(args.foot)} if args.foot else None
+    return dict(files=files, git=rev, generator_files_modified=dirty, foot=foot,
+                options=dict(size=args.size, length=args.length, width=args.width, side=args.side, exit=args.exit))
+
+
 def to_board_json(geo, s, args, path):
     """Everything the KiCad exporter needs, in the foot frame (mm)."""
     ring = lambda r: [[round(x, 4), round(y, 4)] for x, y in np.asarray(r.coords)[:-1]]
     regions = {}
-    for n, r in geo["regions"].items():
+    # a fixed region order (heel to toes, as in DEFAULT_SENSORS), so footprint references S01..S16 name the same
+    # regions on every run; dict order inside the generator can vary with Python's string hashing
+    rank = {n: i for i, n in enumerate(DEFAULT_SENSORS)}
+    # Coverlay: one opening per region, notched where an F.Cu track (common line, sense stub, jumper) lands on a
+    # comb, so the joint stays covered and the track keeps 0.2 mm from the opening (published flex rule:
+    # coverlay opening to trace >= 0.15 mm)
+    R_ = geo.get("routing") or {}
+    fcu = [(pts, CONTACT["com_w"]) for pts in R_.get("com", [])] + \
+          [(pts, CONTACT["sense_w"]) for pts in R_.get("stubs", {}).values()] + \
+          [(j["fcu"], CONTACT["sense_w"]) for j in R_.get("jumpers", [])]
+    notch = unary_union([LineString(p).buffer(w / 2 + 0.2, 8) for p, w in fcu if len(p) > 1]) if fcu else Polygon()
+
+    def opening(r):
+        o = r.difference(notch) if not notch.is_empty else r
+        return max(o.geoms, key=lambda g: g.area) if o.geom_type == "MultiPolygon" else o
+    for n, r in sorted(geo["regions"].items(), key=lambda kv: (rank.get(kv[0], len(rank)), kv[0])):
         common, sense = geo["copper"].get(n, (Polygon(), Polygon()))
         via = geo["paths"].get(n)
         regions[n] = dict(
             outline=ring(r.exterior),
+            opening=ring(opening(r).exterior),
             common=[dict(pts=ring(p.exterior), anchor=list(p.representative_point().coords[0])) for p in pad_pieces(common)],
             sense=[dict(pts=ring(p.exterior), anchor=list(p.representative_point().coords[0])) for p in pad_pieces(sense)],
             via_hint=[round(v, 3) for v in via[0]] if via else None)
@@ -719,7 +828,7 @@ def to_board_json(geo, s, args, path):
     band = Polygon([bp - bt * ext - nrm * hw, bp + bt * ext - nrm * hw, bp + bt * ext + nrm * hw, bp - bt * ext + nrm * hw])
     band = band.intersection(geo["sole"].buffer(1.0))
     band = max(band.geoms, key=lambda g: g.area) if band.geom_type == "MultiPolygon" else band
-    out = dict(generator="sole_gen v0", side=args.side, foot_length=s["L"], ball_width=s["W"],
+    out = dict(generator="sole_gen v0", source=source_stamp(args), side=args.side, foot_length=s["L"], ball_width=s["W"],
                outline=ring(geo["plate"].exterior), fab=FAB, regions=regions,
                bend=dict(point=[float(bp[0]), float(bp[1])], dir=[float(bt[0]), float(bt[1])], half_width=FAB["bend_band"],
                          band=ring(band.exterior)),

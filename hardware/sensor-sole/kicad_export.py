@@ -18,9 +18,11 @@ Reads the `<stem>.board.json` that sole_gen.py writes and builds a two-layer fle
 Usage:
   python3 kicad_export.py out/sole_EU42_R_region.board.json kicad/sole_EU42_R.kicad_pcb
 """
+import hashlib
 import json
 import math
 import sys
+from pathlib import Path
 
 import pcbnew
 
@@ -102,6 +104,24 @@ def custom_pad(fp, number, net, piece):
     return pad
 
 
+def mask_opening(fp, pts):
+    """One coverlay/mask opening over a whole region. Per-pad openings would leave 0.2 mm coverlay webs between
+    the comb fingers: too fine to cut, and 50 µm of coverlay there would hold the film off the copper."""
+    sh = pcbnew.FP_SHAPE(fp)
+    sh.SetShape(pcbnew.SHAPE_T_POLY)
+    sh.SetLayer(pcbnew.F_Mask)
+    sh.SetFilled(True)
+    sh.SetWidth(0)
+    o = fp.GetPosition()                            # KiCad 7 keeps footprint polygons relative to the footprint
+    v = pcbnew.VECTOR_VECTOR2I()
+    for p in pts:
+        q = V(p)
+        v.append(pcbnew.VECTOR2I(q.x - o.x, q.y - o.y))
+    sh.SetPolyPoints(v)
+    fp.Add(sh)
+    return sh
+
+
 def track(board, pts, layer, net, width):
     for p, q in zip(pts[:-1], pts[1:]):
         if abs(p[0] - q[0]) < 1e-6 and abs(p[1] - q[1]) < 1e-6:
@@ -130,6 +150,13 @@ def build(board_json, out_pcb):
     ds.m_MinThroughDrill = MM(0.2)
     ds.m_ViasMinAnnularWidth = MM(0.1)
     ds.m_CopperEdgeClearance = MM(0.3)
+    # coverlay: one opening per region exposes both combs (two nets) by design, so bridged apertures inside a
+    # footprint are allowed; copper of any other item must keep 0.15 mm from an opening (published flex rule:
+    # coverlay opening to trace >= 0.15 mm), and openings closer than 0.2 mm would leave an uncuttable web
+    ds.m_AllowSoldermaskBridgesInFPs = True
+    ds.m_SolderMaskToCopperClearance = MM(0.15)
+    ds.m_SolderMaskMinWidth = MM(0.2)
+    ds.m_SolderMaskExpansion = 0
     try:                                            # KiCad 7: default net class
         nc = ds.m_NetSettings.m_DefaultNetClass
         nc.SetClearance(MM(0.15)); nc.SetTrackWidth(MM(0.15))
@@ -163,6 +190,7 @@ def build(board_json, out_pcb):
             custom_pad(fp, "1", nets[n], piece)
         for piece in r["common"]:
             custom_pad(fp, "2", com, piece)
+        mask_opening(fp, r.get("opening", r["outline"]))
         b.Add(fp)
         # no B.Cu tracks or vias under the region: even backing for the sensor
         rule_area(b, r["outline"], [pcbnew.B_Cu], f"keepout_{n}")
@@ -195,9 +223,17 @@ def build(board_json, out_pcb):
                            centre[1] + across[1] * (k - (lines - 1) / 2) * pitch) for k in range(lines)}
         cu, mask = pcbnew.F_Cu, pcbnew.F_Mask
     vertical = abs(dr[1]) > abs(dr[0])
+    # Contact numbers follow the physical order, the same rule on both feet: look at the exposed contacts with
+    # the tail end pointing up; contact 1 is on the left. The left sole is the mirror of the right, so the same
+    # region sits on different contacts on the two feet (verify_board.py writes the map for each board).
+    ux, uy = dr[0], -dr[1]                                   # tail direction on the page (Y down)
+    left = (-uy, ux) if cu == pcbnew.B_Cu else (uy, -ux)     # seen from below, left and right swap
+    pg = lambda q: (q[0] + X0, Y0 - q[1])
+    phys = sorted(range(lines), key=lambda k: -(pg(pad_pos[k + 1])[0] * left[0] + pg(pad_pos[k + 1])[1] * left[1]))
+    contact_no = {k: phys.index(k) + 1 for k in range(lines)}
     for k in range(lines):
         pad = pcbnew.PAD(fp)
-        pad.SetNumber(str(k + 1))
+        pad.SetNumber(str(contact_no[k]))
         pad.SetAttribute(pcbnew.PAD_ATTRIB_SMD)
         pad.SetShape(pcbnew.PAD_SHAPE_RECT)
         pad.SetSize(pcbnew.VECTOR2I(MM(pw), MM(pl)) if vertical else pcbnew.VECTOR2I(MM(pl), MM(pw)))
@@ -257,6 +293,17 @@ def build(board_json, out_pcb):
     tb.SetCompany("Rehab Agent meta-repo contributors")
     tb.SetComment(0, "CERN-OHL-S-2.0")
     tb.SetComment(1, "https://github.com/Sigurius23/Rehab-agent/tree/main/hardware/sensor-sole")
+    # provenance, checked by verify_board.py: hashes of the generator files that made this board, git revision,
+    # options and foot file
+    src = d.get("source") or {}
+    files = dict(src.get("files", {}))
+    files["kicad_export"] = hashlib.sha256(Path(__file__).read_bytes()).hexdigest()[:12]
+    tb.SetComment(2, " ".join(f"{k.replace('.py', '')} {v}" for k, v in files.items()))
+    opt = src.get("options", {})
+    foot = src.get("foot")
+    tb.SetComment(3, f"git {src.get('git')}{' +modified generator' if src.get('generator_files_modified') else ''}; "
+                     f"side {opt.get('side')}, size {opt.get('size')}, exit {opt.get('exit')}"
+                     + (f"; foot {foot['path']} {foot['sha256']}" if foot else ""))
     pi = b.GetPageSettings()
     try:
         pi.SetType("A3"); pi.SetPortrait(False); b.SetPageSettings(pi)
