@@ -118,6 +118,17 @@
         688.6 N against a 686.7 N body weight.
       - The load pattern is not meaningful with the joints locked; tracking simulations and HPC sweeps are
         planned.
+      - **Multi-segment feet** (2026-11-04). On D'Hondt et al.'s four-segment foot, the toe joint hangs from a
+        forefoot segment. `sole_sim.py osim` read it in the wrong frame and scaled the sole by 0.454, with only a
+        warning. It also put the metatarsal regions on the calcaneus and left the forefoot's own contact spheres
+        in place.
+        - It now follows the joints from calcn to the toes and reads the landmarks through OpenSim's frame
+          transforms. Each point is put on the segment it lies under, and generic spheres are replaced on every
+          segment. A foot without that chain is refused.
+        - **Results:** on the four-segment model, scale 0.996, every sphere on the plantar plane, and a drop
+          test that carries the body weight (608.4 N against 608.2 N). On the self-test model the output is
+          unchanged (sphere positions within 2e-16 m).
+        - **Tests:** `tests/test_sim_osim.py`, which fails on the old code.
     - **Printed prototype** (`PRINTED.md`, `sole_print.py`). A TPU carrier is built from the same design:
       - underside wire channels along the routing plan;
       - a floor with one hole per region;

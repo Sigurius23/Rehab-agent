@@ -34,13 +34,21 @@ python sole_sim.py readout forces.sto sim/EU42_R_<hash>.sole_sim.json -o reading
 2. **OpenSim.** A copy of the model is written in which the foot meets the floor through the sole:
    - **One contact sphere per contact point.** Each is named `sole_<side>_<region>_<k>` and has its own
      `SmoothSphereHalfSpaceForce` against the model's floor.
-   - **Which body:** spheres for toe regions ride on `toes_<side>`; all other regions ride on `calcn_<side>`.
-     Metatarsal heads are proximal of the toe joint.
+   - **Which body.** `sole_sim.py` follows the model's joints from `calcn_<side>` to `toes_<side>`.
+     - Spheres for toe regions ride on the toes.
+     - Every other sphere rides on the segment it lies under: the last segment whose proximal joint is behind
+       it. On a two-segment foot that is `calcn`, since the metatarsal heads are proximal of the toe joint. On a
+       multi-segment foot it is `calcn`, `midfoot` or `forefoot`.
+     - The boundary between segments is a line across the foot through the joint centre. It approximates an
+       oblique joint axis.
+     - A model whose toes are not reached from `calcn` through its joints is refused.
+       (`tests/test_sim_osim.py` covers both cases.)
    - **Registration.** The sole's heel point goes on the back of the model's heel sphere. Its toe-joint bend line
-     goes on the model's `mtp` joint axis, at the foot's long axis. The scale between those two landmarks
-     applies to x and z.
-   - **Plantar plane:** the bottom of the model's foot contact spheres.
-   - **They replace that foot's generic contact spheres** (`--keep-generic` keeps them).
+     goes on the model's toe joint axis, at the foot's long axis. The scale between those two landmarks applies
+     to x and z. Both landmarks are read in the `calcn` frame at the model's default pose, through OpenSim's frame
+     transforms. A toe joint that hangs from a forefoot segment is therefore located correctly.
+   - **Plantar plane:** the bottom of the model's `calcn` contact spheres.
+   - **They replace the generic contact spheres on every segment of that foot** (`--keep-generic` keeps them).
    - **Contact parameters** are copied from the model's own foot contact. The stiffness is scaled so the foot as a
      whole keeps the same contact stiffness: Hertz contact grows with the square root of the radius per sphere,
      so 55 small spheres with the generic stiffness would make the foot several times stiffer.
@@ -86,12 +94,37 @@ out per region in the pod's layout. The forces add up to the body weight.
 - **Rigid segments.** `calcn` and `toes` are rigid. There are no footbed or shoe layers yet: the sole meets the
   floor directly.
 
+### A four-segment foot (2026-11-04)
+
+The same EU 42 soles were loaded onto D'Hondt et al.'s four-segment foot model. It has `calcn`, then `midfoot`
+through a midtarsal joint, a `forefoot` welded to the midfoot, and `toes`. The source is
+`Fal_s1_mtjcf3_FK_sc_FDB2_MTc5_cspx10_cg9_o1x10.osim` from the `four-segment_foot_model` branch of
+`Lars-DHondt-KUL/3dpredictsim` (MIT). The model is not committed here.
+
+| | Before the fix | After |
+|---|---|---|
+| Toe joint located | in the forefoot's frame, read as if it were the calcaneus's | in the calcaneus frame |
+| Sole scale | **0.454**, with only a warning | 0.996 |
+| Midfoot and metatarsal regions | on `calcn`, though the forefoot moves separately | 18 spheres on `calcn`, 4 on `midfoot`, 20 on `forefoot`, 13 on `toes` |
+| The model's own forefoot spheres | left in place, so the forefoot touched twice | replaced, with those on `calcn` and `toes` |
+| Sphere bottoms at the default pose | — | all 110 on the plantar plane, on every segment |
+| Drop test (same set-up as above) | — | settles at 304.2 N per foot, 608.4 N together; the model weighs 608.2 N |
+
+**What this does not show:**
+- The load pattern means as little as in the first check: the joints are locked and the foot is flat.
+- The paper's foot mechanics are not reproduced by a plain OpenSim run of this model. The `.osim` carries a
+  plantar-fascia path (`Ligament`, calcaneus to toes, resting length 0.149 m). The paper's fascia stiffness
+  (Natali 2010, slack length 0.146 m) and its midtarsal ligament moment are applied in the repository's
+  MATLAB/CasADi code (`VariousFunctions/getSettingsNominalModel.m`), not in the `.osim`.
+
 ## 3. Limits to keep in mind
 
 - **A coarse grid.** 15 mm spacing gives about 55 spheres per EU 42 sole, and some small regions have 2. A finer
   grid (`--spacing`) costs simulation time.
 - **The stiffness rule** keeps the foot's overall stiffness, not the sole's real compliance. That comes from the
   coupon and printed-prototype tests.
+- **Segment boundaries** on a multi-segment foot are lines across the foot through each joint centre, not the
+  joints' oblique axes. A sphere near a boundary may ride on the neighbouring segment.
 - **The registration uses two landmarks** (heel and toe joint). The model's toe-joint axis is more oblique (about
   35°) than the sole's bend line (about 13°), so the toe-joint line is matched at the foot's long axis only.
 

@@ -32,7 +32,7 @@ Moticon OpenGo, and the validation plan.
 | `channel_map.py` | Resolves a sole's printed ID to exactly one verified channel map, or refuses (plain Python) |
 | `maps/` | Deployed channel maps, one per passing board, each tied to the board's design hash and file sha256 |
 | `manifest.py` | Writes `kicad/MANIFEST.json`: all committed boards with IDs, hashes and provenance |
-| `tests/` | `test_verify_drc.py` and `test_verify_negative.py` (checker, KiCad's Python); `test_channel_map.py` (resolver, in CI); `test_generator_regressions.py` (fail-closed splitting, valid export outlines, the EU 37 routing regression); `test_sim_print.py` (simulation export and readout, printed parts) |
+| `tests/` | `test_verify_drc.py` and `test_verify_negative.py` (checker, KiCad's Python); `test_channel_map.py` (resolver, in CI); `test_generator_regressions.py` (fail-closed splitting, valid export outlines, the EU 37 routing regression); `test_sim_print.py` (simulation export and readout, printed parts); `test_sim_osim.py` (the sole on two- and multi-segment OpenSim feet, the pipeline's Python) |
 | `FABRICATION.md` | Fabrication assumptions against published flex-PCB capabilities, open questions, draft enquiry (not sent) |
 | `CANDIDATES.md` | Higher-resolution candidates, design and analysis only: the targeted candidate T1 beside the 16-region baseline, compared with a dense matrix; open-line diagnostics; crosstalk |
 | `sole_candidate.py` | Builds a candidate from a layout file with the shared generator, rules and checker, and no code of its own |

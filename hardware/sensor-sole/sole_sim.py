@@ -13,9 +13,11 @@ Three steps:
            region, and the contact-to-region map (from the verified deployed map when given).
            Needs shapely (the generator's Python).
   osim     OpenSim model + sole_sim.json -> a model whose foot touches the ground through the sole: one contact
-           sphere per contact point, on toes for the toe regions and on calcn for every other region (the
-           metatarsal heads are proximal of the toe joint), each named after its region. By default they
-           replace that foot's generic contact spheres.
+           sphere per contact point, each named after its region. Toe regions ride on the toes. Every other
+           point rides on the foot segment it lies under: calcn on a two-segment foot (the metatarsal heads are
+           proximal of the toe joint), or calcn, midfoot or forefoot on a multi-segment one, found by following
+           the joints from calcn to the toes. A foot without that chain is refused. By default the spheres
+           replace the generic contact spheres on every segment of that foot.
            Needs the opensim package (the pipeline's Python).
   readout  forces from a simulation (an OpenSim ForceReporter .sto) -> per-region normal force, centre of
            pressure and pod readings in contact order, through the assumed sensor model. numpy only.
@@ -25,7 +27,8 @@ right (a left sole is the mirror, so its lateral side is -z), millimetres. OpenS
 axes (x forward, y up, z right for both feet), in metres. The sole is registered on the model by two
 landmarks: its heel point on the back of the model's heel sphere, and its toe-joint bend line on the model's
 toe joint (mtp) axis; the scale between them is applied to x and z. The plantar plane is the bottom of the
-model's foot contact spheres.
+model's calcn contact spheres. Landmarks are read at the model's default pose, through OpenSim's own frame
+transforms, so a toe joint that hangs from a midfoot or forefoot segment is located correctly.
 
   python sole_sim.py export out/sole_EU42_R.board.json --map maps/EU42_R_<hash>.json -o sim/
   python sole_sim.py osim model_scaled.osim sim/EU42_R_<hash>.sole_sim.json -o model_with_sole.osim
@@ -95,15 +98,6 @@ def export(board_json, map_json=None, spacing=15.0, min_points=2):
 
 
 # ----------------------------------------------------------------------------------------- registration
-def _rot_xyz(a, b, c):
-    """Body-fixed X-Y-Z rotation (OpenSim's orientation convention for offset frames)."""
-    ca, sa, cb, sb, cc, sc = math.cos(a), math.sin(a), math.cos(b), math.sin(b), math.cos(c), math.sin(c)
-    Rx = np.array([[1, 0, 0], [0, ca, -sa], [0, sa, ca]])
-    Ry = np.array([[cb, 0, sb], [0, 1, 0], [-sb, 0, cb]])
-    Rz = np.array([[cc, -sc, 0], [sc, cc, 0], [0, 0, 1]])
-    return Rx @ Ry @ Rz
-
-
 def register(sole, heel_x, plantar_y, mtp_point, mtp_axis):
     """Sole frame (mm) -> calcn frame (m). Returns (to_calcn(x, z) -> (X, Y, Z), scale, mtp line x(z))."""
     bp, bd = np.asarray(sole["bend"]["point"], float), np.asarray(sole["bend"]["dir"], float)
@@ -115,29 +109,69 @@ def register(sole, heel_x, plantar_y, mtp_point, mtp_axis):
     return to_calcn, scale, mtp_x
 
 
-def model_foot(model, side):
-    """Heel x, plantar height, toe-joint point and axis of one foot, read from an OpenSim model (calcn frame)."""
+def foot_chain(model, side):
+    """The foot's bodies from calcn_<s> to toes_<s>, following the joints, and the joints between them.
+
+    Two-segment feet (calcn -> toes) and multi-segment ones (calcn -> midfoot -> forefoot -> toes, as in D'Hondt
+    et al. 2024) both work. Anything else stops here rather than being simulated with the sole in the wrong place."""
+    s = side.lower()
+    bodies = model.getBodySet()
+    if not (bodies.contains(f"calcn_{s}") and bodies.contains(f"toes_{s}")):
+        raise SystemExit(f"the model has no calcn_{s} and toes_{s}: this foot is not supported")
+    into = {}
+    for j in model.getJointSet():
+        into[j.getChildFrame().findBaseFrame().getName()] = j
+    chain, joints, b = [f"toes_{s}"], [], f"toes_{s}"
+    while b != f"calcn_{s}":
+        j = into.get(b)
+        if j is None or len(chain) > 8:
+            raise SystemExit(f"toes_{s} is not reached from calcn_{s} through the model's joints: "
+                             f"this foot is not supported (chain so far: {chain[::-1]})")
+        joints.append(j.getName())
+        b = j.getParentFrame().findBaseFrame().getName()
+        chain.append(b)
+    return chain[::-1], joints[::-1]
+
+
+def model_foot(model, side, state):
+    """One foot's landmarks in the calcn frame, at the model's default pose: heel x, plantar height, toe-joint
+    point and axis, and where each segment between calcn and the toes begins (its proximal joint)."""
     import opensim as osim
     s = side.lower()
+    chain, joints = foot_chain(model, side)
+    calcn = model.getBodySet().get(f"calcn_{s}")
+    model.realizePosition(state)
+    v = lambda p: np.array([p.get(0), p.get(1), p.get(2)])
     spheres = []
     for i in range(model.getContactGeometrySet().getSize()):
         g = model.getContactGeometrySet().get(i)
-        if g.getConcreteClassName() == "ContactSphere" and g.getFrame().getName() in (f"calcn_{s}", f"toes_{s}"):
+        base = g.getFrame().findBaseFrame().getName()
+        if g.getConcreteClassName() == "ContactSphere" and base in chain:
             sp = osim.ContactSphere.safeDownCast(g)
-            loc = sp.get_location()
-            spheres.append((g.getFrame().getName(), np.array([loc.get(0), loc.get(1), loc.get(2)]), sp.getRadius()))
-    calcn = [q for q in spheres if q[0] == f"calcn_{s}"]
-    if not calcn:
+            at = v(g.getFrame().findStationLocationInAnotherFrame(state, sp.get_location(), calcn))
+            spheres.append((base, at, sp.getRadius()))
+    on_calcn = [q for q in spheres if q[0] == f"calcn_{s}"]
+    if not on_calcn:
         raise SystemExit(f"no contact spheres on calcn_{s}: cannot find the heel and the plantar plane")
-    heel = min(calcn, key=lambda q: q[1][0])
+    heel = min(on_calcn, key=lambda q: q[1][0])
     heel_x = heel[1][0] - heel[2]
-    plantar_y = float(np.mean([q[1][1] - q[2] for q in calcn]))
-    j = model.getJointSet().get(f"mtp_{s}")
-    f = j.get_frames(0)                                  # the offset frame on calcn
-    t, o = f.get_translation(), f.get_orientation()
-    R = _rot_xyz(o.get(0), o.get(1), o.get(2))
-    return dict(heel_x=float(heel_x), plantar_y=plantar_y, mtp_point=np.array([t.get(0), t.get(1), t.get(2)]),
-                mtp_axis=R[:, 2], generic_spheres=spheres)
+    plantar_y = float(np.mean([q[1][1] - q[2] for q in on_calcn]))
+    toe_joint = model.getJointSet().get(joints[-1])           # the joint into the toes (mtp)
+    P = toe_joint.getParentFrame()
+    mtp_point = v(P.findStationLocationInAnotherFrame(state, osim.Vec3(0, 0, 0), calcn))
+    mtp_axis = v(P.expressVectorInAnotherFrame(state, osim.Vec3(0, 0, 1), calcn))
+    segments = []                                             # (body, x of its proximal joint in calcn)
+    for body, jn in zip(chain[1:-1], joints[:-1]):
+        C = model.getJointSet().get(jn).getChildFrame()
+        segments.append((body, float(v(C.findStationLocationInAnotherFrame(state, osim.Vec3(0, 0, 0), calcn))[0])))
+    pose = {}
+    for jn in joints:
+        j = model.getJointSet().get(jn)
+        for k in range(j.numCoordinates()):
+            c = j.get_coordinates(k)
+            pose[c.getName()] = round(c.getValue(state), 6)
+    return dict(heel_x=float(heel_x), plantar_y=plantar_y, mtp_point=mtp_point, mtp_axis=mtp_axis,
+                generic_spheres=spheres, chain=chain, joints=joints, segments=segments, pose=pose)
 
 
 # --------------------------------------------------------------------------------------------- OpenSim
@@ -147,16 +181,36 @@ def add_to_osim(model_path, sole_json, out_path, radius_mm=None, keep_generic=Fa
     sole = json.loads(Path(sole_json).read_text())
     side = sole["side"]; s = side.lower()
     model = osim.Model(str(model_path))
-    model.initSystem()
-    foot = model_foot(model, side)
+    state = model.initSystem()
+    foot = model_foot(model, side, state)
+    chain = foot["chain"]
     to_calcn, scale, mtp_x = register(sole, foot["heel_x"], foot["plantar_y"], foot["mtp_point"], foot["mtp_axis"])
+    # where each sole point goes, worked out before the model is changed (its state is still valid now):
+    # toe regions ride on the toes; every other point on the foot segment it lies under, i.e. the last segment
+    # whose proximal joint is behind it (calcn if the foot has no segment between calcn and the toes). The
+    # boundary is a line across the foot through the joint centre, an approximation of an oblique joint axis.
+    r = (radius_mm if radius_mm else sole["point_spacing_mm"] / 2) / 1000.0
+    calcn = model.getBodySet().get(f"calcn_{s}")
+    plan = []
+    for n, pts in sole["contact_points"].items():
+        for k, (x, z) in enumerate(pts):
+            X, Y, Z = to_calcn(x, z)
+            if n.startswith("toe"):
+                body = f"toes_{s}"
+            else:
+                body = f"calcn_{s}"
+                for seg, bx in foot["segments"]:
+                    if X >= bx:
+                        body = seg
+            at = calcn.findStationLocationInAnotherFrame(state, osim.Vec3(X, Y + r, Z), model.getBodySet().get(body))
+            plan.append((n, k, body, np.array([at.get(0), at.get(1), at.get(2)])))
     forces = model.getForceSet()
     template, half_space = None, None
     for i in range(forces.getSize()):
         fo = forces.get(i)
         if fo.getConcreteClassName() == "SmoothSphereHalfSpaceForce":
             ss = osim.SmoothSphereHalfSpaceForce.safeDownCast(fo)
-            if ss.getConnectee("sphere").getFrame().getName() in (f"calcn_{s}", f"toes_{s}"):
+            if ss.getConnectee("sphere").getFrame().findBaseFrame().getName() in chain:
                 template = template or ss
                 half_space = half_space or ss.getConnectee("half_space")
     if template is None:
@@ -167,19 +221,17 @@ def add_to_osim(model_path, sole_json, out_path, radius_mm=None, keep_generic=Fa
                   constant_contact_force=template.get_constant_contact_force(),
                   hertz_smoothing=template.get_hertz_smoothing(), hunt_crossley_smoothing=template.get_hunt_crossley_smoothing())
     hs_name, template_name = half_space.getName(), template.getName()
-    if not keep_generic:                                  # the sole replaces this foot's generic contact
+    if not keep_generic:                                  # the sole replaces the generic contact of every segment
         for i in reversed(range(forces.getSize())):
             fo = forces.get(i)
             if fo.getConcreteClassName() == "SmoothSphereHalfSpaceForce":
                 ss = osim.SmoothSphereHalfSpaceForce.safeDownCast(fo)
-                if ss.getConnectee("sphere").getFrame().getName() in (f"calcn_{s}", f"toes_{s}"):
+                if ss.getConnectee("sphere").getFrame().findBaseFrame().getName() in chain:
                     forces.remove(i)
         cg = model.getContactGeometrySet()
         for i in reversed(range(cg.getSize())):
-            if cg.get(i).getFrame().getName() in (f"calcn_{s}", f"toes_{s}"):
+            if cg.get(i).getFrame().findBaseFrame().getName() in chain:
                 cg.remove(i)
-    mp = foot["mtp_point"]
-    r = (radius_mm if radius_mm else sole["point_spacing_mm"] / 2) / 1000.0
     # Keep the foot's overall contact stiffness: Hertz contact scales with sqrt(radius) per sphere, so n sole
     # spheres of radius r get stiffness k * (n_generic * sqrt(R_generic)) / (n * sqrt(r)). Otherwise 55 spheres with
     # the generic stiffness make the foot several times stiffer than the model it came from.
@@ -188,21 +240,16 @@ def add_to_osim(model_path, sole_json, out_path, radius_mm=None, keep_generic=Fa
     k_scale = (sum(math.sqrt(q[2]) for q in generic) / (n_sole * math.sqrt(r))) if generic else 1.0
     params["stiffness"] = params["stiffness"] * k_scale
     placed = []
-    for n, pts in sole["contact_points"].items():
-        for k, (x, z) in enumerate(pts):
-            X, Y, Z = to_calcn(x, z)
-            on_toes = n.startswith("toe")                 # toe regions ride on the toes; the rest on calcn
-            body = f"toes_{s}" if on_toes else f"calcn_{s}"
-            loc = np.array([X, Y + r, Z]) - (mp if on_toes else 0)
-            name = f"sole_{s}_{n}_{k:02d}"
-            sp = osim.ContactSphere(r, osim.Vec3(*loc), model.getBodySet().get(body), name)
-            model.addContactGeometry(sp)
-            hs = osim.ContactHalfSpace.safeDownCast(model.getContactGeometrySet().get(hs_name))
-            fo = osim.SmoothSphereHalfSpaceForce(f"force_{name}", sp, hs)
-            for key, v in params.items():
-                getattr(fo, f"set_{key}")(v)
-            model.addForce(fo)
-            placed.append(dict(region=n, sphere=name, body=body))
+    for n, k, body, loc in plan:
+        name = f"sole_{s}_{n}_{k:02d}"
+        sp = osim.ContactSphere(r, osim.Vec3(*loc), model.getBodySet().get(body), name)
+        model.addContactGeometry(sp)
+        hs = osim.ContactHalfSpace.safeDownCast(model.getContactGeometrySet().get(hs_name))
+        fo = osim.SmoothSphereHalfSpaceForce(f"force_{name}", sp, hs)
+        for key, v in params.items():
+            getattr(fo, f"set_{key}")(v)
+        model.addForce(fo)
+        placed.append(dict(region=n, sphere=name, body=body))
     model.finalizeConnections()
     model.initSystem()
     model.printToXML(str(out_path))
@@ -216,7 +263,11 @@ def add_to_osim(model_path, sole_json, out_path, radius_mm=None, keep_generic=Fa
                 stiffness_per_sphere=params["stiffness"], registration=dict(
                     heel_x=foot["heel_x"], plantar_y=foot["plantar_y"], mtp_point=foot["mtp_point"].tolist()),
                 regions={n: sum(1 for p in placed if p["region"] == n) for n in sole["contact_points"]},
-                on_toes=sorted({p["region"] for p in placed if p["body"].startswith("toes")}))
+                on_toes=sorted({p["region"] for p in placed if p["body"].startswith("toes")}),
+                foot_chain=chain, toe_joint=foot["joints"][-1], pose=foot["pose"],
+                segment_starts_x={b: round(x, 5) for b, x in foot["segments"]},
+                spheres_per_body={b: sum(1 for p in placed if p["body"] == b) for b in chain},
+                replaced_generic_on=sorted({q[0] for q in generic}) if not keep_generic else [])
     Path(out_path).with_suffix(".sole_sim_meta.json").write_text(json.dumps(meta, indent=1, default=float) + "\n")
     return meta
 
