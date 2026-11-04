@@ -94,6 +94,14 @@ class Provenance(unittest.TestCase):
         self.assertEqual(prov["port"]["table_sha256"],
                          hashlib.sha256((HERE / "foot_models" / "dhondt2024_mtj_ligament_moment.json").read_bytes()).hexdigest())
 
+    def test_committed_soles_match_the_recorded_hashes(self):
+        import json
+        soles = {k: v for k, v in json.loads((HERE / "foot_models" / "PROVENANCE.json").read_text())["soles"].items()
+                 if k.startswith("sim/")}
+        self.assertEqual(len(soles), 8)                        # 15, 10, 7.5 and 5 mm, right and left
+        for rel, want in soles.items():
+            self.assertEqual(hashlib.sha256((HERE / rel).read_bytes()).hexdigest(), want, rel)
+
 
 @unittest.skipIf(casadi is None or not EXP5, "needs casadi and DHONDT_EXP5")
 class OriginalBspline(unittest.TestCase):

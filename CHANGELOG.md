@@ -167,6 +167,11 @@
           - The two-segment and D'Hondt rigid feet agree once the stiffness is matched.
           - *Corrected wording:* the spacing results are a discretisation sensitivity (shares not converged in
             spacing), not a ±3-point confidence interval or the total uncertainty.
+        - **Synergy foot:** a kinematic comparison on bone landmarks. The sole's lateral regions (mt3–mt5,
+          toe4–toe5) do not line up with that generic skeleton, and all five toes turn together. Sikidar is still
+          to inspect.
+        - **Board docs:** VERIFICATION.md section 7.2's copper sentence and the CANDIDATES.md and CHANGELOG
+          wording now say that both T1 synthetic-foot boards exceed the 1e-4 mm² threshold.
       - **One assumed sole contact across the foot models** (2026-11-04; `FOOT_MODELS.md`). Experimental; no model
         is selected; simulation only.
         - `sole_sim.ASSUMED_CONTACT_V1`: p = 100 kPa × (indentation / 3 mm)^1.5 per grid cell, with stiffness
@@ -198,11 +203,35 @@
           force-plate comparison of the current foot-to-ground model first (OpenCap LabValidation as first
           choice), then regional barefoot plantar pressure, then foot–insole contact, each with candidate public
           datasets and reference equipment.
-        - **Synergy foot:** a kinematic comparison on bone landmarks. The sole's lateral regions (mt3–mt5,
-          toe4–toe5) do not line up with that generic skeleton, and all five toes turn together. Sikidar is still
-          to inspect.
-        - **Board docs:** VERIFICATION.md section 7.2's copper sentence and the CANDIDATES.md and CHANGELOG
-          wording now say that both T1 synthetic-foot boards exceed the 1e-4 mm² threshold.
+      - **Workstation setup and resumable runs** (2026-11-04; `workstation/`), for running the simulations on a
+        machine that is free only some of the time, such as the lab laptop.
+        - `workstation/setup.sh`, for Linux or WSL2. It installs nothing system-wide and needs no account.
+          - Three pinned environments: OpenSim 4.6, CasADi 3.8.2, the generator.
+          - **Finding:** OpenSim 4.6's wheel bundles CasADi 3.7 for Moco, and CasADi 3.8.2 then fails to load in
+            the same process, whichever is imported first. The bspline check therefore keeps its own environment.
+          - Inputs: `fetch_inputs.py` fetches each external repository at its pinned commit (sparse, one commit)
+            and checks every file against `foot_models/PROVENANCE.json`. It stops on any mismatch and leaves no
+            `inputs.env`. Tested here: all 12 hashes and the Synergy geometry digest match, and a tampered model,
+            a tampered mesh, a data folder inside the repository and a checkout at another commit are all
+            refused.
+          - The machine is recorded (CPU, cores, memory, GPU, OS, every package version), and every suite runs
+            with its outcomes recorded.
+        - **The two-segment model:** it is now rebuilt from the pipeline at commit 33aeb49, which reproduces the
+          recorded file byte for byte. Today's pipeline gives the same geometry, joints and contact spheres but
+          body masses and inertias about 3 % higher, so it is a different model. This is now in
+          PROVENANCE.json.
+        - **Resumable comparison** (`foot_models/case_store.py`, `run_comparison.py`):
+          - each case's folder is named from a fingerprint of its inputs, parameters, code and tool versions;
+          - a case counts as done only when its completion record, written last and atomically, matches;
+          - a rerun reuses finished cases and never reuses across a change;
+          - `--jobs N` runs cases in parallel, `--no-resume` recomputes everything.
+          `tests/test_case_store.py` has 11 cases. A run with three workers, killed after 9 s and resumed,
+          reproduced the 32 controlled-loading cases of `results_2026-11-04.json` in every field.
+        - **Soles at 10, 7.5 and 5 mm** are now committed in `sim/spacing/`. A regenerated EU 42 R board exports
+          the committed 15 and 5 mm soles byte for byte. `setup.sh soles <mm>` makes finer ones and checks the
+          regenerated boards the same way.
+        - `tests/run_suites.py` now reports a module with no unittest cases as an error instead of an empty pass.
+          The KiCad checks are script-style, so `setup.sh` runs them as scripts and records their exit codes.
     - **Printed prototype** (`PRINTED.md`, `sole_print.py`). A TPU carrier is built from the same design:
       - underside wire channels along the routing plan;
       - a floor with one hole per region;

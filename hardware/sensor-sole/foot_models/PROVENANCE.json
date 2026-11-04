@@ -5,6 +5,7 @@
   "repository": "https://github.com/Lars-DHondt-KUL/3dpredictsim",
   "branch": "four-segment_foot_model",
   "commit": "e963f4a",
+  "commit_full": "e963f4a5e3224e9e176942579629f89e02245422",
   "licence": "MIT (Copyright (c) 2019 antoinefalisse)",
   "models": {
    "OpenSimModel/Nominal models/DHondt_2024_3-segment_foot_fixed_knee.osim": "f78df97841b566ad5fbfbf5e50a3b9dce2a82ac9308153579875bd93e9608e4b",
@@ -46,13 +47,22 @@
   },
   "geometry_digest": {
    "files": 19,
-   "sha256_of_names_and_hashes": "e77c93894465ede2050f0dbf078c5e49a2c13cb211aaa5e323909eb58a719d68"
+   "sha256_of_names_and_hashes": "e77c93894465ede2050f0dbf078c5e49a2c13cb211aaa5e323909eb58a719d68",
+   "computed_as": "sha256 over the Geometry/*.stl files sorted by name: for each, its file name (UTF-8) then its sha256 as lowercase hex"
   }
  },
  "two_segment": {
   "model": "the pipeline's self-test output, opensim/model_scaled.osim (python -m rehabtwin selftest <dir>; synthetic squat)",
   "sha256": "b124c3cfc8940d3e93d9837621c3d69dc90221c3e509dd40be673b7730b4fc26",
-  "note": "regenerating it may give a different file if the pipeline has changed; this hash identifies the file used"
+  "pipeline_commit": "33aeb49d7f1f0f1bc6360e8c84ebed73cfcd09b0",
+  "reproduced": "pipeline/ and schemas/ of this repository at pipeline_commit, with Pose2Sim at the upstream commit below, give this file byte for byte (python -m rehabtwin selftest; checked 2026-11-04, OpenSim 4.6, numpy 2.5.4). The current pipeline gives the same geometry, joints and contact spheres but different body masses and inertias (about 3 % heavier), so it is not this model. workstation/setup.sh builds it from pipeline_commit.",
+  "upstream": {
+   "repository": "https://github.com/perfanalytics/pose2sim",
+   "commit": "084d822d7b97165508cbcbaf77296a9a0f6a23a0",
+   "path": "Pose2Sim/OpenSim_Setup",
+   "licence": "BSD-3-Clause",
+   "use": "the self-test's base model and marker set (pipeline/configs/skel105_pose2sim.json); no hashes recorded"
+  }
  },
  "kinematics": {
   "file": "Moco/exampleSquat/squats1_videoAndMocap.mot",
@@ -65,13 +75,13 @@
  "soles": {
   "sim/EU42_L_40fe8e1d0c.sole_sim.json": "99d777069ed8b83c7965128ecb615c22d77a7c1621d57afc383b54c3d69b09e9",
   "sim/EU42_R_636645a928.sole_sim.json": "dbf4be9cfb1d5689abec1227e01ada14bbf957f1cc67f90ddea7343bab2d0170",
-  "spacing 10 mm/EU42_L_40fe8e1d0c.sole_sim.json": "5511e53fa46ad695a23d17c7fcb12f7ccdffe2cc83f48bacc9e77422b62d9a1f",
-  "spacing 10 mm/EU42_R_636645a928.sole_sim.json": "51b8b66ae72b41ffa1176041dc9a6d375568fc52b83614e0e00790d0796ae722",
-  "spacing 7.5 mm/EU42_L_40fe8e1d0c.sole_sim.json": "a5ccd9a16e45b7344853337c39975c0df70630c7ecb19060797afc196cbfea3f",
-  "spacing 7.5 mm/EU42_R_636645a928.sole_sim.json": "1e2e930e8910f6af054dfdaebf0cf489f805bd18fa9053a4e1cc83bffd8b25d0",
-  "spacing 5 mm/EU42_L_40fe8e1d0c.sole_sim.json": "fb32645eca324f823446e06700c1f6c6de501621663540aa2490015177842eac",
-  "spacing 5 mm/EU42_R_636645a928.sole_sim.json": "b0f2fde533591de0011f6d05b4aed2435e799f8f46adfd89aefe2f762f764722",
-  "other spacings made with": "python sole_sim.py export out/sole_EU42_<side>.board.json --map maps/EU42_<side>_<hash>.json --spacing <mm> (generator commit 0257862; design hashes 636645a928..., 40fe8e1d0c...)"
+  "sim/spacing/10mm/EU42_L_40fe8e1d0c.sole_sim.json": "5511e53fa46ad695a23d17c7fcb12f7ccdffe2cc83f48bacc9e77422b62d9a1f",
+  "sim/spacing/10mm/EU42_R_636645a928.sole_sim.json": "51b8b66ae72b41ffa1176041dc9a6d375568fc52b83614e0e00790d0796ae722",
+  "sim/spacing/7.5mm/EU42_L_40fe8e1d0c.sole_sim.json": "a5ccd9a16e45b7344853337c39975c0df70630c7ecb19060797afc196cbfea3f",
+  "sim/spacing/7.5mm/EU42_R_636645a928.sole_sim.json": "1e2e930e8910f6af054dfdaebf0cf489f805bd18fa9053a4e1cc83bffd8b25d0",
+  "sim/spacing/5mm/EU42_L_40fe8e1d0c.sole_sim.json": "fb32645eca324f823446e06700c1f6c6de501621663540aa2490015177842eac",
+  "sim/spacing/5mm/EU42_R_636645a928.sole_sim.json": "b0f2fde533591de0011f6d05b4aed2435e799f8f46adfd89aefe2f762f764722",
+  "other spacings made with": "python sole_sim.py export out/sole_EU42_<side>.board.json --map maps/EU42_<side>_<hash>.json --spacing <mm> (generator commit 0257862; design hashes 636645a928..., 40fe8e1d0c...). Regenerating the EU 42 R board on 2026-11-04 and exporting it at 15 and 5 mm reproduced these files byte for byte"
  },
  "environments": {
   "pipeline (OpenSim)": {
@@ -92,5 +102,6 @@
    "scipy": "1.18.1",
    "shapely": "2.2.0"
   }
- }
+ },
+ "fetch": "workstation/fetch_inputs.py fetches every external file above at its pinned commit and checks these hashes"
 }

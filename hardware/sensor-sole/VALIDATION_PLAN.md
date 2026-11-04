@@ -59,8 +59,8 @@ holds **estimated** forces: its own record says "quasi-static double stance".
 - A result outside a threshold is reported as such, not re-tuned until it passes.
 
 **Practical:**
-- The 2.9 GB download did not fit in the working environment used on 2026-11-04 (about 1.1 GB free). Where to
-  run it is still to be decided.
+- The 2.9 GB download did not fit in the working environment used on 2026-11-04 (about 1.1 GB free). The lab
+  workstation is the proposed place to run it (`workstation/README.md`); nothing has been downloaded yet.
 
 **Reference equipment, if the project later measures its own data** (listed only; nothing to buy or contact):
 - **Laboratory force plates** (AMTI, Bertec, Kistler), as found in university gait laboratories.

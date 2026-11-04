@@ -344,19 +344,33 @@ Within these simulations only, and for a passive foot with a prescribed centre o
   need the external models, or CasADi, and skip without them.
 - **Results:** `foot_models/results_2026-11-04.json` holds the summary of all 244 runs that the tables here
   come from.
+- **On another machine:** `workstation/setup.sh` fetches every external input at its pinned commit and checks it
+  against `PROVENANCE.json`. It rebuilds the two-segment model from the pipeline at the recorded commit.
+  `workstation/run_comparison.sh` then runs the comparison (`workstation/README.md`).
+- **Resumable runs:** each case's folder is named from a fingerprint of its inputs, parameters, code and OpenSim
+  version (`foot_models/case_store.py`). A rerun after an interruption reuses finished cases, never across a
+  change to any of these. `--jobs N` runs cases in parallel. A run killed partway and resumed, with three
+  workers, reproduced the 32 controlled-loading cases of the results file in every field.
+- **Soles at other spacings** are committed in `sim/spacing/`. Regenerating the EU 42 R board and exporting it at
+  15 and 5 mm reproduced the committed files byte for byte.
 
 ```
 # the pipeline's Python (opensim, numpy, scipy)
 python foot_models/dhondt_port.py DHondt_2024_4-segment_foot_fixed_knee.osim ported_4seg.osim
 python foot_models/run_comparison.py --selftest model_scaled.osim --dhondt <nominal models folder> \
     --mot squats1_videoAndMocap.mot --sole-r sim/EU42_R_636645a928.sole_sim.json \
-    --sole-l sim/EU42_L_40fe8e1d0c.sole_sim.json --sole-r10 <10 mm R> --sole-l10 <10 mm L> \
-    --spacing-soles <10 mm dir> <7.5 mm dir> <5 mm dir> --out runs/
+    --sole-l sim/EU42_L_40fe8e1d0c.sole_sim.json --sole-r10 sim/spacing/10mm/EU42_R_636645a928.sole_sim.json \
+    --sole-l10 sim/spacing/10mm/EU42_L_40fe8e1d0c.sole_sim.json \
+    --spacing-soles sim/spacing/10mm sim/spacing/7.5mm sim/spacing/5mm --out runs/ [--jobs N]
+# or, on a machine set up with workstation/setup.sh:
+workstation/run_comparison.sh
 python foot_models/synergy_kinematics.py synergy_foot_r.osim sim/EU42_R_636645a928.sole_sim.json -o synergy.json
 # tests (several skip without the external models; see TEST_RUNS.md)
-DHONDT_NOMINAL_DIR=... python tests/test_dhondt_port.py      # and DHONDT_EXP5=... with casadi for the bspline check
+DHONDT_NOMINAL_DIR=... python tests/test_dhondt_port.py
+DHONDT_EXP5=... <CasADi's Python> tests/test_dhondt_port.py   # a separate environment: OpenSim 4.6 carries CasADi 3.7
 DHONDT_NOMINAL_DIR=... SYNERGY_MODEL=... python tests/test_foot_comparison.py
 python tests/test_sim_osim.py
 ```
 
-Soles at other spacings come from `sole_sim.py export ... --spacing 10` (the generator's Python).
+Soles at other spacings come from `sole_sim.py export ... --spacing <mm>` (the generator's Python), or
+`workstation/setup.sh soles <mm>`.

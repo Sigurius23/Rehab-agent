@@ -44,7 +44,8 @@ def main():
         suite = unittest.defaultTestLoader.loadTestsFromName(name)
         runner = unittest.TextTestRunner(stream=open("/dev/null", "w"), resultclass=Recorder)
         res = runner.run(suite)
-        out[name] = res.rows
+        # a module with no unittest cases (a script-style check) must not read as a clean pass
+        out[name] = res.rows or [(name, "ERROR", "no unittest tests found: run it as a script and use its exit code")]
     print(json.dumps(out))
 
 
