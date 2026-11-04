@@ -1,0 +1,133 @@
+{
+ "board_id": "EU42 L 40fe8e1d0c",
+ "design_hash": "40fe8e1d0c35ee6b1d9a29219cb99030a94785a30946e18bf29c8df54a239801",
+ "side": "L",
+ "status": "design only: not printed; sensing, fit and durability untested",
+ "parts": {
+  "carrier": {
+   "file": "EU42_L_40fe8e1d0c.carrier.stl",
+   "thickness_mm": 1.5,
+   "volume_cm3": 24.14,
+   "watertight": true,
+   "genus": 17
+  },
+  "cover": {
+   "file": "EU42_L_40fe8e1d0c.cover.stl",
+   "thickness_mm": 0.4,
+   "volume_cm3": 8.64,
+   "watertight": true
+  }
+ },
+ "layers": {
+  "underside_channels_mm": 0.5,
+  "floor_with_holes_mm": 0.5,
+  "pockets_mm": 0.5,
+  "cover_mm": 0.4,
+  "stack_total_mm": 1.9,
+  "pocket_inset_mm": 0.6,
+  "hole_mm": 1.2,
+  "narrowest_wall_between_pockets_mm": 2.4,
+  "material": "TPU (95A class), proposed"
+ },
+ "pockets": {
+  "heel_post": {
+   "area_mm2": 813.4,
+   "region_area_mm2": 885.1
+  },
+  "heel_med": {
+   "area_mm2": 1253.7,
+   "region_area_mm2": 1345.0
+  },
+  "heel_lat": {
+   "area_mm2": 1414.7,
+   "region_area_mm2": 1508.4
+  },
+  "arch_med": {
+   "area_mm2": 1992.3,
+   "region_area_mm2": 2105.1
+  },
+  "mid_lat_prox": {
+   "area_mm2": 1508.2,
+   "region_area_mm2": 1605.2
+  },
+  "mid_lat_dist": {
+   "area_mm2": 973.5,
+   "region_area_mm2": 1048.7
+  },
+  "mt1": {
+   "area_mm2": 933.5,
+   "region_area_mm2": 1024.2
+  },
+  "mt2": {
+   "area_mm2": 1112.0,
+   "region_area_mm2": 1212.8
+  },
+  "mt3": {
+   "area_mm2": 1001.5,
+   "region_area_mm2": 1101.8
+  },
+  "mt4": {
+   "area_mm2": 738.6,
+   "region_area_mm2": 825.7
+  },
+  "mt5": {
+   "area_mm2": 552.3,
+   "region_area_mm2": 622.4
+  },
+  "toe1": {
+   "area_mm2": 1001.1,
+   "region_area_mm2": 1094.4
+  },
+  "toe2": {
+   "area_mm2": 499.7,
+   "region_area_mm2": 566.9
+  },
+  "toe3": {
+   "area_mm2": 411.7,
+   "region_area_mm2": 468.4
+  },
+  "toe4": {
+   "area_mm2": 320.3,
+   "region_area_mm2": 370.1
+  },
+  "toe5": {
+   "area_mm2": 248.8,
+   "region_area_mm2": 292.8
+  }
+ },
+ "wires": {
+  "sense": 16,
+  "common": 1,
+  "most_in_one_channel": 17,
+  "wire_diameter_mm": 0.35,
+  "note": "channels follow the routing plan; widths are wires x diameter + clearance"
+ },
+ "removed_thin_walls_mm2": {
+  "channels": 6.87,
+  "floor": 0.11,
+  "pockets": 0.16
+ },
+ "bed": {
+  "rotation_deg": 42,
+  "size_mm": [
+   217.1,
+   216.1
+  ],
+  "fits": true,
+  "bed_mm": [
+   256.0,
+   256.0
+  ]
+ },
+ "sensor_stack_proposal": [
+  "sense electrode per pocket (copper tape or conductive fabric), its wire up through the hole",
+  "pressure-sensitive film patch per pocket (Velostat class, about 0.1 mm)",
+  "shared conductive-fabric common electrode over the whole top, its wire up through the hole at the tail root (outside every pocket)",
+  "printed cover"
+ ],
+ "caveats": [
+  "through-mode film sensing: response, hysteresis and crosstalk unmeasured",
+  "thicker than the flex sole; toe-pocket fit untested",
+  "nothing has been printed or bought"
+ ]
+}
