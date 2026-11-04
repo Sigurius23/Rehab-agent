@@ -1,0 +1,2798 @@
+{
+ "EU37 R 1ae8010c95": {
+  "regions": {
+   "heel_post": {
+    "facing_edge_mm": 1469,
+    "comb_pF": [
+     26.0,
+     61.1
+    ],
+    "line_mm": 154,
+    "line_under_common_mm2": 0.03,
+    "line_pF": 0.04,
+    "drop_if_broken_at_comb_pct": [
+     100,
+     100
+    ],
+    "neighbour_parallel_mm": 102,
+    "neighbour_pF": [
+     2.5,
+     4.1
+    ]
+   },
+   "heel_med": {
+    "facing_edge_mm": 2245,
+    "comb_pF": [
+     39.8,
+     93.4
+    ],
+    "line_mm": 107,
+    "line_under_common_mm2": 0.03,
+    "line_pF": 0.04,
+    "drop_if_broken_at_comb_pct": [
+     100,
+     100
+    ],
+    "neighbour_parallel_mm": 101,
+    "neighbour_pF": [
+     2.5,
+     4.1
+    ]
+   },
+   "heel_lat": {
+    "facing_edge_mm": 2553,
+    "comb_pF": [
+     45.2,
+     106.3
+    ],
+    "line_mm": 128,
+    "line_under_common_mm2": 0.05,
+    "line_pF": 0.08,
+    "drop_if_broken_at_comb_pct": [
+     100,
+     100
+    ],
+    "neighbour_parallel_mm": 123,
+    "neighbour_pF": [
+     3.1,
+     4.9
+    ]
+   },
+   "arch_med": {
+    "facing_edge_mm": 3614,
+    "comb_pF": [
+     64.0,
+     150.4
+    ],
+    "line_mm": 103,
+    "line_under_common_mm2": 0.02,
+    "line_pF": 0.04,
+    "drop_if_broken_at_comb_pct": [
+     100,
+     100
+    ],
+    "neighbour_parallel_mm": 98,
+    "neighbour_pF": [
+     2.4,
+     3.9
+    ]
+   },
+   "mid_lat_prox": {
+    "facing_edge_mm": 2788,
+    "comb_pF": [
+     49.4,
+     116.0
+    ],
+    "line_mm": 128,
+    "line_under_common_mm2": 0.05,
+    "line_pF": 0.08,
+    "drop_if_broken_at_comb_pct": [
+     100,
+     100
+    ],
+    "neighbour_parallel_mm": 123,
+    "neighbour_pF": [
+     3.1,
+     4.9
+    ]
+   },
+   "mid_lat_dist": {
+    "facing_edge_mm": 1765,
+    "comb_pF": [
+     31.3,
+     73.5
+    ],
+    "line_mm": 135,
+    "line_under_common_mm2": 0.14,
+    "line_pF": 0.22,
+    "drop_if_broken_at_comb_pct": [
+     99,
+     100
+    ],
+    "neighbour_parallel_mm": 128,
+    "neighbour_pF": [
+     3.2,
+     5.1
+    ]
+   },
+   "mt1": {
+    "facing_edge_mm": 1582,
+    "comb_pF": [
+     28.0,
+     65.9
+    ],
+    "line_mm": 274,
+    "line_under_common_mm2": 0.56,
+    "line_pF": 0.87,
+    "drop_if_broken_at_comb_pct": [
+     97,
+     99
+    ],
+    "neighbour_parallel_mm": 271,
+    "neighbour_pF": [
+     6.8,
+     10.8
+    ]
+   },
+   "mt2": {
+    "facing_edge_mm": 2053,
+    "comb_pF": [
+     36.4,
+     85.4
+    ],
+    "line_mm": 105,
+    "line_under_common_mm2": 0.08,
+    "line_pF": 0.12,
+    "drop_if_broken_at_comb_pct": [
+     100,
+     100
+    ],
+    "neighbour_parallel_mm": 101,
+    "neighbour_pF": [
+     2.5,
+     4.0
+    ]
+   },
+   "mt3": {
+    "facing_edge_mm": 1914,
+    "comb_pF": [
+     33.9,
+     79.7
+    ],
+    "line_mm": 220,
+    "line_under_common_mm2": 0.29,
+    "line_pF": 0.45,
+    "drop_if_broken_at_comb_pct": [
+     99,
+     99
+    ],
+    "neighbour_parallel_mm": 218,
+    "neighbour_pF": [
+     5.5,
+     8.7
+    ]
+   },
+   "mt4": {
+    "facing_edge_mm": 1381,
+    "comb_pF": [
+     24.5,
+     57.5
+    ],
+    "line_mm": 149,
+    "line_under_common_mm2": 0.18,
+    "line_pF": 0.29,
+    "drop_if_broken_at_comb_pct": [
+     99,
+     100
+    ],
+    "neighbour_parallel_mm": 142,
+    "neighbour_pF": [
+     3.6,
+     5.7
+    ]
+   },
+   "mt5": {
+    "facing_edge_mm": 963,
+    "comb_pF": [
+     17.1,
+     40.1
+    ],
+    "line_mm": 225,
+    "line_under_common_mm2": 6.86,
+    "line_pF": 10.75,
+    "drop_if_broken_at_comb_pct": [
+     61,
+     79
+    ],
+    "neighbour_parallel_mm": 206,
+    "neighbour_pF": [
+     5.1,
+     8.2
+    ]
+   },
+   "toe1": {
+    "facing_edge_mm": 1511,
+    "comb_pF": [
+     26.8,
+     62.9
+    ],
+    "line_mm": 284,
+    "line_under_common_mm2": 0.86,
+    "line_pF": 1.34,
+    "drop_if_broken_at_comb_pct": [
+     95,
+     98
+    ],
+    "neighbour_parallel_mm": 270,
+    "neighbour_pF": [
+     6.7,
+     10.8
+    ]
+   },
+   "toe2": {
+    "facing_edge_mm": 791,
+    "comb_pF": [
+     14.0,
+     32.9
+    ],
+    "line_mm": 231,
+    "line_under_common_mm2": 1.01,
+    "line_pF": 1.58,
+    "drop_if_broken_at_comb_pct": [
+     90,
+     95
+    ],
+    "neighbour_parallel_mm": 225,
+    "neighbour_pF": [
+     5.6,
+     9.0
+    ]
+   },
+   "toe3": {
+    "facing_edge_mm": 739,
+    "comb_pF": [
+     13.1,
+     30.8
+    ],
+    "line_mm": 229,
+    "line_under_common_mm2": 0.66,
+    "line_pF": 1.03,
+    "drop_if_broken_at_comb_pct": [
+     93,
+     97
+    ],
+    "neighbour_parallel_mm": 220,
+    "neighbour_pF": [
+     5.5,
+     8.8
+    ]
+   },
+   "toe4": {
+    "facing_edge_mm": 557,
+    "comb_pF": [
+     9.9,
+     23.2
+    ],
+    "line_mm": 212,
+    "line_under_common_mm2": 0.36,
+    "line_pF": 0.56,
+    "drop_if_broken_at_comb_pct": [
+     95,
+     98
+    ],
+    "neighbour_parallel_mm": 204,
+    "neighbour_pF": [
+     5.1,
+     8.2
+    ]
+   },
+   "toe5": {
+    "facing_edge_mm": 437,
+    "comb_pF": [
+     7.7,
+     18.2
+    ],
+    "line_mm": 215,
+    "line_under_common_mm2": 0.41,
+    "line_pF": 0.65,
+    "drop_if_broken_at_comb_pct": [
+     92,
+     97
+    ],
+    "neighbour_parallel_mm": 206,
+    "neighbour_pF": [
+     5.1,
+     8.2
+    ]
+   }
+  },
+  "smallest_drop": [
+   "mt5",
+   [
+    61,
+    79
+   ]
+  ],
+  "comb_pF_range": [
+   7.7,
+   150.4
+  ],
+  "line_pF_max": 10.75,
+  "neighbour_pF_max": 10.8
+ },
+ "EU42 R 4ea1726398": {
+  "regions": {
+   "heel_post": {
+    "facing_edge_mm": 2009,
+    "comb_pF": [
+     35.6,
+     83.6
+    ],
+    "line_mm": 165,
+    "line_under_common_mm2": 0.02,
+    "line_pF": 0.04,
+    "drop_if_broken_at_comb_pct": [
+     100,
+     100
+    ],
+    "neighbour_parallel_mm": 106,
+    "neighbour_pF": [
+     2.6,
+     4.2
+    ]
+   },
+   "heel_med": {
+    "facing_edge_mm": 3102,
+    "comb_pF": [
+     54.9,
+     129.1
+    ],
+    "line_mm": 110,
+    "line_under_common_mm2": 0.02,
+    "line_pF": 0.04,
+    "drop_if_broken_at_comb_pct": [
+     100,
+     100
+    ],
+    "neighbour_parallel_mm": 105,
+    "neighbour_pF": [
+     2.6,
+     4.2
+    ]
+   },
+   "heel_lat": {
+    "facing_edge_mm": 3409,
+    "comb_pF": [
+     60.4,
+     141.9
+    ],
+    "line_mm": 136,
+    "line_under_common_mm2": 0.05,
+    "line_pF": 0.08,
+    "drop_if_broken_at_comb_pct": [
+     100,
+     100
+    ],
+    "neighbour_parallel_mm": 131,
+    "neighbour_pF": [
+     3.3,
+     5.2
+    ]
+   },
+   "arch_med": {
+    "facing_edge_mm": 4989,
+    "comb_pF": [
+     88.3,
+     207.6
+    ],
+    "line_mm": 107,
+    "line_under_common_mm2": 0.02,
+    "line_pF": 0.04,
+    "drop_if_broken_at_comb_pct": [
+     100,
+     100
+    ],
+    "neighbour_parallel_mm": 103,
+    "neighbour_pF": [
+     2.6,
+     4.1
+    ]
+   },
+   "mid_lat_prox": {
+    "facing_edge_mm": 3734,
+    "comb_pF": [
+     66.1,
+     155.4
+    ],
+    "line_mm": 136,
+    "line_under_common_mm2": 0.05,
+    "line_pF": 0.08,
+    "drop_if_broken_at_comb_pct": [
+     100,
+     100
+    ],
+    "neighbour_parallel_mm": 131,
+    "neighbour_pF": [
+     3.3,
+     5.2
+    ]
+   },
+   "mid_lat_dist": {
+    "facing_edge_mm": 2364,
+    "comb_pF": [
+     41.9,
+     98.4
+    ],
+    "line_mm": 146,
+    "line_under_common_mm2": 0.34,
+    "line_pF": 0.53,
+    "drop_if_broken_at_comb_pct": [
+     99,
+     99
+    ],
+    "neighbour_parallel_mm": 138,
+    "neighbour_pF": [
+     3.5,
+     5.5
+    ]
+   },
+   "mt1": {
+    "facing_edge_mm": 2236,
+    "comb_pF": [
+     39.6,
+     93.0
+    ],
+    "line_mm": 305,
+    "line_under_common_mm2": 0.4,
+    "line_pF": 0.63,
+    "drop_if_broken_at_comb_pct": [
+     98,
+     99
+    ],
+    "neighbour_parallel_mm": 302,
+    "neighbour_pF": [
+     7.5,
+     12.1
+    ]
+   },
+   "mt2": {
+    "facing_edge_mm": 2778,
+    "comb_pF": [
+     49.2,
+     115.6
+    ],
+    "line_mm": 279,
+    "line_under_common_mm2": 0.77,
+    "line_pF": 1.2,
+    "drop_if_broken_at_comb_pct": [
+     98,
+     99
+    ],
+    "neighbour_parallel_mm": 277,
+    "neighbour_pF": [
+     6.9,
+     11.1
+    ]
+   },
+   "mt3": {
+    "facing_edge_mm": 2515,
+    "comb_pF": [
+     44.5,
+     104.7
+    ],
+    "line_mm": 243,
+    "line_under_common_mm2": 0.66,
+    "line_pF": 1.04,
+    "drop_if_broken_at_comb_pct": [
+     98,
+     99
+    ],
+    "neighbour_parallel_mm": 241,
+    "neighbour_pF": [
+     6.0,
+     9.6
+    ]
+   },
+   "mt4": {
+    "facing_edge_mm": 1789,
+    "comb_pF": [
+     31.7,
+     74.4
+    ],
+    "line_mm": 234,
+    "line_under_common_mm2": 0.54,
+    "line_pF": 0.85,
+    "drop_if_broken_at_comb_pct": [
+     97,
+     99
+    ],
+    "neighbour_parallel_mm": 230,
+    "neighbour_pF": [
+     5.7,
+     9.2
+    ]
+   },
+   "mt5": {
+    "facing_edge_mm": 1313,
+    "comb_pF": [
+     23.2,
+     54.6
+    ],
+    "line_mm": 249,
+    "line_under_common_mm2": 0.23,
+    "line_pF": 0.36,
+    "drop_if_broken_at_comb_pct": [
+     98,
+     99
+    ],
+    "neighbour_parallel_mm": 230,
+    "neighbour_pF": [
+     5.7,
+     9.2
+    ]
+   },
+   "toe1": {
+    "facing_edge_mm": 2332,
+    "comb_pF": [
+     41.3,
+     97.0
+    ],
+    "line_mm": 311,
+    "line_under_common_mm2": 1.31,
+    "line_pF": 2.04,
+    "drop_if_broken_at_comb_pct": [
+     95,
+     98
+    ],
+    "neighbour_parallel_mm": 301,
+    "neighbour_pF": [
+     7.5,
+     12.0
+    ]
+   },
+   "toe2": {
+    "facing_edge_mm": 1154,
+    "comb_pF": [
+     20.4,
+     48.0
+    ],
+    "line_mm": 256,
+    "line_under_common_mm2": 1.28,
+    "line_pF": 2.0,
+    "drop_if_broken_at_comb_pct": [
+     91,
+     96
+    ],
+    "neighbour_parallel_mm": 249,
+    "neighbour_pF": [
+     6.2,
+     10.0
+    ]
+   },
+   "toe3": {
+    "facing_edge_mm": 1027,
+    "comb_pF": [
+     18.2,
+     42.7
+    ],
+    "line_mm": 254,
+    "line_under_common_mm2": 0.86,
+    "line_pF": 1.34,
+    "drop_if_broken_at_comb_pct": [
+     93,
+     97
+    ],
+    "neighbour_parallel_mm": 248,
+    "neighbour_pF": [
+     6.2,
+     9.9
+    ]
+   },
+   "toe4": {
+    "facing_edge_mm": 798,
+    "comb_pF": [
+     14.1,
+     33.2
+    ],
+    "line_mm": 233,
+    "line_under_common_mm2": 8.26,
+    "line_pF": 12.93,
+    "drop_if_broken_at_comb_pct": [
+     52,
+     72
+    ],
+    "neighbour_parallel_mm": 224,
+    "neighbour_pF": [
+     5.6,
+     9.0
+    ]
+   },
+   "toe5": {
+    "facing_edge_mm": 626,
+    "comb_pF": [
+     11.1,
+     26.0
+    ],
+    "line_mm": 235,
+    "line_under_common_mm2": 0.36,
+    "line_pF": 0.57,
+    "drop_if_broken_at_comb_pct": [
+     95,
+     98
+    ],
+    "neighbour_parallel_mm": 231,
+    "neighbour_pF": [
+     5.8,
+     9.2
+    ]
+   }
+  },
+  "smallest_drop": [
+   "toe4",
+   [
+    52,
+    72
+   ]
+  ],
+  "comb_pF_range": [
+   11.1,
+   207.6
+  ],
+  "line_pF_max": 12.93,
+  "neighbour_pF_max": 12.1
+ },
+ "EU46 R 4fb67c089d": {
+  "regions": {
+   "heel_post": {
+    "facing_edge_mm": 2500,
+    "comb_pF": [
+     44.3,
+     104.0
+    ],
+    "line_mm": 176,
+    "line_under_common_mm2": 0.03,
+    "line_pF": 0.04,
+    "drop_if_broken_at_comb_pct": [
+     100,
+     100
+    ],
+    "neighbour_parallel_mm": 117,
+    "neighbour_pF": [
+     2.9,
+     4.7
+    ]
+   },
+   "heel_med": {
+    "facing_edge_mm": 3927,
+    "comb_pF": [
+     69.5,
+     163.4
+    ],
+    "line_mm": 120,
+    "line_under_common_mm2": 0.03,
+    "line_pF": 0.04,
+    "drop_if_broken_at_comb_pct": [
+     100,
+     100
+    ],
+    "neighbour_parallel_mm": 116,
+    "neighbour_pF": [
+     2.9,
+     4.7
+    ]
+   },
+   "heel_lat": {
+    "facing_edge_mm": 4154,
+    "comb_pF": [
+     73.6,
+     172.9
+    ],
+    "line_mm": 144,
+    "line_under_common_mm2": 0.05,
+    "line_pF": 0.08,
+    "drop_if_broken_at_comb_pct": [
+     100,
+     100
+    ],
+    "neighbour_parallel_mm": 136,
+    "neighbour_pF": [
+     3.4,
+     5.4
+    ]
+   },
+   "arch_med": {
+    "facing_edge_mm": 6260,
+    "comb_pF": [
+     110.9,
+     260.5
+    ],
+    "line_mm": 111,
+    "line_under_common_mm2": 0.02,
+    "line_pF": 0.04,
+    "drop_if_broken_at_comb_pct": [
+     100,
+     100
+    ],
+    "neighbour_parallel_mm": 106,
+    "neighbour_pF": [
+     2.6,
+     4.2
+    ]
+   },
+   "mid_lat_prox": {
+    "facing_edge_mm": 4582,
+    "comb_pF": [
+     81.1,
+     190.7
+    ],
+    "line_mm": 144,
+    "line_under_common_mm2": 0.05,
+    "line_pF": 0.08,
+    "drop_if_broken_at_comb_pct": [
+     100,
+     100
+    ],
+    "neighbour_parallel_mm": 136,
+    "neighbour_pF": [
+     3.4,
+     5.4
+    ]
+   },
+   "mid_lat_dist": {
+    "facing_edge_mm": 2736,
+    "comb_pF": [
+     48.4,
+     113.8
+    ],
+    "line_mm": 153,
+    "line_under_common_mm2": 0.36,
+    "line_pF": 0.56,
+    "drop_if_broken_at_comb_pct": [
+     99,
+     100
+    ],
+    "neighbour_parallel_mm": 146,
+    "neighbour_pF": [
+     3.6,
+     5.8
+    ]
+   },
+   "mt1": {
+    "facing_edge_mm": 2990,
+    "comb_pF": [
+     52.9,
+     124.4
+    ],
+    "line_mm": 350,
+    "line_under_common_mm2": 0.59,
+    "line_pF": 0.93,
+    "drop_if_broken_at_comb_pct": [
+     98,
+     99
+    ],
+    "neighbour_parallel_mm": 345,
+    "neighbour_pF": [
+     8.6,
+     13.8
+    ]
+   },
+   "mt2": {
+    "facing_edge_mm": 3653,
+    "comb_pF": [
+     64.7,
+     152.0
+    ],
+    "line_mm": 320,
+    "line_under_common_mm2": 0.63,
+    "line_pF": 0.98,
+    "drop_if_broken_at_comb_pct": [
+     99,
+     99
+    ],
+    "neighbour_parallel_mm": 315,
+    "neighbour_pF": [
+     7.9,
+     12.6
+    ]
+   },
+   "mt3": {
+    "facing_edge_mm": 3492,
+    "comb_pF": [
+     61.8,
+     145.3
+    ],
+    "line_mm": 293,
+    "line_under_common_mm2": 0.95,
+    "line_pF": 1.49,
+    "drop_if_broken_at_comb_pct": [
+     98,
+     99
+    ],
+    "neighbour_parallel_mm": 285,
+    "neighbour_pF": [
+     7.1,
+     11.4
+    ]
+   },
+   "mt4": {
+    "facing_edge_mm": 1709,
+    "comb_pF": [
+     30.3,
+     71.1
+    ],
+    "line_mm": 166,
+    "line_under_common_mm2": 0.62,
+    "line_pF": 0.97,
+    "drop_if_broken_at_comb_pct": [
+     97,
+     99
+    ],
+    "neighbour_parallel_mm": 162,
+    "neighbour_pF": [
+     4.0,
+     6.5
+    ]
+   },
+   "mt5": {
+    "facing_edge_mm": 1423,
+    "comb_pF": [
+     25.2,
+     59.2
+    ],
+    "line_mm": 193,
+    "line_under_common_mm2": 0.37,
+    "line_pF": 0.57,
+    "drop_if_broken_at_comb_pct": [
+     98,
+     99
+    ],
+    "neighbour_parallel_mm": 187,
+    "neighbour_pF": [
+     4.7,
+     7.5
+    ]
+   },
+   "toe1": {
+    "facing_edge_mm": 3376,
+    "comb_pF": [
+     59.8,
+     140.5
+    ],
+    "line_mm": 352,
+    "line_under_common_mm2": 0.88,
+    "line_pF": 1.38,
+    "drop_if_broken_at_comb_pct": [
+     98,
+     99
+    ],
+    "neighbour_parallel_mm": 344,
+    "neighbour_pF": [
+     8.6,
+     13.8
+    ]
+   },
+   "toe2": {
+    "facing_edge_mm": 1758,
+    "comb_pF": [
+     31.1,
+     73.2
+    ],
+    "line_mm": 333,
+    "line_under_common_mm2": 1.88,
+    "line_pF": 2.94,
+    "drop_if_broken_at_comb_pct": [
+     91,
+     96
+    ],
+    "neighbour_parallel_mm": 307,
+    "neighbour_pF": [
+     7.7,
+     12.3
+    ]
+   },
+   "toe3": {
+    "facing_edge_mm": 1293,
+    "comb_pF": [
+     22.9,
+     53.8
+    ],
+    "line_mm": 315,
+    "line_under_common_mm2": 1.29,
+    "line_pF": 2.01,
+    "drop_if_broken_at_comb_pct": [
+     92,
+     96
+    ],
+    "neighbour_parallel_mm": 299,
+    "neighbour_pF": [
+     7.5,
+     11.9
+    ]
+   },
+   "toe4": {
+    "facing_edge_mm": 970,
+    "comb_pF": [
+     17.2,
+     40.4
+    ],
+    "line_mm": 293,
+    "line_under_common_mm2": 0.76,
+    "line_pF": 1.19,
+    "drop_if_broken_at_comb_pct": [
+     94,
+     97
+    ],
+    "neighbour_parallel_mm": 288,
+    "neighbour_pF": [
+     7.2,
+     11.5
+    ]
+   },
+   "toe5": {
+    "facing_edge_mm": 685,
+    "comb_pF": [
+     12.1,
+     28.5
+    ],
+    "line_mm": 250,
+    "line_under_common_mm2": 8.85,
+    "line_pF": 13.86,
+    "drop_if_broken_at_comb_pct": [
+     47,
+     67
+    ],
+    "neighbour_parallel_mm": 243,
+    "neighbour_pF": [
+     6.1,
+     9.7
+    ]
+   }
+  },
+  "smallest_drop": [
+   "toe5",
+   [
+    47,
+    67
+   ]
+  ],
+  "comb_pF_range": [
+   12.1,
+   260.5
+  ],
+  "line_pF_max": 13.86,
+  "neighbour_pF_max": 13.8
+ },
+ "F54cfa0 R 8a07f794d2": {
+  "regions": {
+   "heel_post": {
+    "facing_edge_mm": 1878,
+    "comb_pF": [
+     33.2,
+     78.1
+    ],
+    "line_mm": 162,
+    "line_under_common_mm2": 2.39,
+    "line_pF": 3.74,
+    "drop_if_broken_at_comb_pct": [
+     90,
+     95
+    ],
+    "neighbour_parallel_mm": 115,
+    "neighbour_pF": [
+     2.9,
+     4.6
+    ]
+   },
+   "heel_med": {
+    "facing_edge_mm": 4389,
+    "comb_pF": [
+     77.7,
+     182.6
+    ],
+    "line_mm": 79,
+    "line_under_common_mm2": 0.1,
+    "line_pF": 0.16,
+    "drop_if_broken_at_comb_pct": [
+     100,
+     100
+    ],
+    "neighbour_parallel_mm": 75,
+    "neighbour_pF": [
+     1.9,
+     3.0
+    ]
+   },
+   "heel_lat": {
+    "facing_edge_mm": 3064,
+    "comb_pF": [
+     54.3,
+     127.5
+    ],
+    "line_mm": 118,
+    "line_under_common_mm2": 0.73,
+    "line_pF": 1.15,
+    "drop_if_broken_at_comb_pct": [
+     98,
+     99
+    ],
+    "neighbour_parallel_mm": 114,
+    "neighbour_pF": [
+     2.9,
+     4.6
+    ]
+   },
+   "mid_lat_prox": {
+    "facing_edge_mm": 5861,
+    "comb_pF": [
+     103.8,
+     243.9
+    ],
+    "line_mm": 105,
+    "line_under_common_mm2": 0.15,
+    "line_pF": 0.23,
+    "drop_if_broken_at_comb_pct": [
+     100,
+     100
+    ],
+    "neighbour_parallel_mm": 98,
+    "neighbour_pF": [
+     2.4,
+     3.9
+    ]
+   },
+   "mid_lat_dist": {
+    "facing_edge_mm": 2389,
+    "comb_pF": [
+     42.3,
+     99.4
+    ],
+    "line_mm": 103,
+    "line_under_common_mm2": 0.16,
+    "line_pF": 0.25,
+    "drop_if_broken_at_comb_pct": [
+     99,
+     100
+    ],
+    "neighbour_parallel_mm": 98,
+    "neighbour_pF": [
+     2.4,
+     3.9
+    ]
+   },
+   "mt1": {
+    "facing_edge_mm": 2278,
+    "comb_pF": [
+     40.3,
+     94.8
+    ],
+    "line_mm": 237,
+    "line_under_common_mm2": 1.59,
+    "line_pF": 2.49,
+    "drop_if_broken_at_comb_pct": [
+     94,
+     97
+    ],
+    "neighbour_parallel_mm": 235,
+    "neighbour_pF": [
+     5.9,
+     9.4
+    ]
+   },
+   "mt2": {
+    "facing_edge_mm": 3811,
+    "comb_pF": [
+     67.5,
+     158.6
+    ],
+    "line_mm": 209,
+    "line_under_common_mm2": 0.59,
+    "line_pF": 0.93,
+    "drop_if_broken_at_comb_pct": [
+     99,
+     99
+    ],
+    "neighbour_parallel_mm": 207,
+    "neighbour_pF": [
+     5.2,
+     8.3
+    ]
+   },
+   "mt3": {
+    "facing_edge_mm": 2984,
+    "comb_pF": [
+     52.8,
+     124.2
+    ],
+    "line_mm": 207,
+    "line_under_common_mm2": 0.25,
+    "line_pF": 0.39,
+    "drop_if_broken_at_comb_pct": [
+     99,
+     100
+    ],
+    "neighbour_parallel_mm": 196,
+    "neighbour_pF": [
+     4.9,
+     7.8
+    ]
+   },
+   "mt4": {
+    "facing_edge_mm": 2046,
+    "comb_pF": [
+     36.2,
+     85.1
+    ],
+    "line_mm": 213,
+    "line_under_common_mm2": 0.24,
+    "line_pF": 0.38,
+    "drop_if_broken_at_comb_pct": [
+     99,
+     100
+    ],
+    "neighbour_parallel_mm": 208,
+    "neighbour_pF": [
+     5.2,
+     8.3
+    ]
+   },
+   "mt5": {
+    "facing_edge_mm": 1258,
+    "comb_pF": [
+     22.3,
+     52.4
+    ],
+    "line_mm": 239,
+    "line_under_common_mm2": 0.83,
+    "line_pF": 1.29,
+    "drop_if_broken_at_comb_pct": [
+     95,
+     98
+    ],
+    "neighbour_parallel_mm": 208,
+    "neighbour_pF": [
+     5.2,
+     8.3
+    ]
+   },
+   "toe1": {
+    "facing_edge_mm": 2399,
+    "comb_pF": [
+     42.5,
+     99.8
+    ],
+    "line_mm": 239,
+    "line_under_common_mm2": 0.31,
+    "line_pF": 0.48,
+    "drop_if_broken_at_comb_pct": [
+     99,
+     100
+    ],
+    "neighbour_parallel_mm": 233,
+    "neighbour_pF": [
+     5.8,
+     9.3
+    ]
+   },
+   "toe2": {
+    "facing_edge_mm": 1309,
+    "comb_pF": [
+     23.2,
+     54.5
+    ],
+    "line_mm": 213,
+    "line_under_common_mm2": 0.31,
+    "line_pF": 0.48,
+    "drop_if_broken_at_comb_pct": [
+     98,
+     99
+    ],
+    "neighbour_parallel_mm": 206,
+    "neighbour_pF": [
+     5.2,
+     8.3
+    ]
+   },
+   "toe3": {
+    "facing_edge_mm": 1023,
+    "comb_pF": [
+     18.1,
+     42.6
+    ],
+    "line_mm": 196,
+    "line_under_common_mm2": 0.23,
+    "line_pF": 0.35,
+    "drop_if_broken_at_comb_pct": [
+     98,
+     99
+    ],
+    "neighbour_parallel_mm": 189,
+    "neighbour_pF": [
+     4.7,
+     7.6
+    ]
+   },
+   "toe4": {
+    "facing_edge_mm": 772,
+    "comb_pF": [
+     13.7,
+     32.1
+    ],
+    "line_mm": 203,
+    "line_under_common_mm2": 0.22,
+    "line_pF": 0.35,
+    "drop_if_broken_at_comb_pct": [
+     98,
+     99
+    ],
+    "neighbour_parallel_mm": 196,
+    "neighbour_pF": [
+     4.9,
+     7.8
+    ]
+   }
+  },
+  "smallest_drop": [
+   "heel_post",
+   [
+    90,
+    95
+   ]
+  ],
+  "comb_pF_range": [
+   13.7,
+   243.9
+  ],
+  "line_pF_max": 3.74,
+  "neighbour_pF_max": 9.4
+ },
+ "T1-EU37 R 393cca5a99": {
+  "regions": {
+   "heel_pm": {
+    "facing_edge_mm": 882,
+    "comb_pF": [
+     15.6,
+     36.7
+    ],
+    "line_mm": 177,
+    "line_under_common_mm2": 0.12,
+    "line_pF": 0.18,
+    "drop_if_broken_at_comb_pct": [
+     99,
+     100
+    ],
+    "neighbour_parallel_mm": 165,
+    "neighbour_pF": [
+     4.1,
+     6.6
+    ]
+   },
+   "heel_pl": {
+    "facing_edge_mm": 883,
+    "comb_pF": [
+     15.6,
+     36.8
+    ],
+    "line_mm": 168,
+    "line_under_common_mm2": 0.08,
+    "line_pF": 0.12,
+    "drop_if_broken_at_comb_pct": [
+     99,
+     100
+    ],
+    "neighbour_parallel_mm": 164,
+    "neighbour_pF": [
+     4.1,
+     6.6
+    ]
+   },
+   "heel_am": {
+    "facing_edge_mm": 2470,
+    "comb_pF": [
+     43.7,
+     102.8
+    ],
+    "line_mm": 103,
+    "line_under_common_mm2": 0.03,
+    "line_pF": 0.04,
+    "drop_if_broken_at_comb_pct": [
+     100,
+     100
+    ],
+    "neighbour_parallel_mm": 92,
+    "neighbour_pF": [
+     2.3,
+     3.7
+    ]
+   },
+   "heel_al": {
+    "facing_edge_mm": 2280,
+    "comb_pF": [
+     40.4,
+     94.9
+    ],
+    "line_mm": 128,
+    "line_under_common_mm2": 0.05,
+    "line_pF": 0.08,
+    "drop_if_broken_at_comb_pct": [
+     100,
+     100
+    ],
+    "neighbour_parallel_mm": 123,
+    "neighbour_pF": [
+     3.1,
+     4.9
+    ]
+   },
+   "arch_med": {
+    "facing_edge_mm": 2658,
+    "comb_pF": [
+     47.1,
+     110.6
+    ],
+    "line_mm": 102,
+    "line_under_common_mm2": 0.02,
+    "line_pF": 0.04,
+    "drop_if_broken_at_comb_pct": [
+     100,
+     100
+    ],
+    "neighbour_parallel_mm": 91,
+    "neighbour_pF": [
+     2.3,
+     3.6
+    ]
+   },
+   "mid_lat_prox": {
+    "facing_edge_mm": 2700,
+    "comb_pF": [
+     47.8,
+     112.3
+    ],
+    "line_mm": 131,
+    "line_under_common_mm2": 0.66,
+    "line_pF": 1.04,
+    "drop_if_broken_at_comb_pct": [
+     98,
+     99
+    ],
+    "neighbour_parallel_mm": 103,
+    "neighbour_pF": [
+     2.6,
+     4.1
+    ]
+   },
+   "mid_lat_dist": {
+    "facing_edge_mm": 1084,
+    "comb_pF": [
+     19.2,
+     45.1
+    ],
+    "line_mm": 143,
+    "line_under_common_mm2": 0.51,
+    "line_pF": 0.8,
+    "drop_if_broken_at_comb_pct": [
+     96,
+     98
+    ],
+    "neighbour_parallel_mm": 104,
+    "neighbour_pF": [
+     2.6,
+     4.2
+    ]
+   },
+   "ffp_med": {
+    "facing_edge_mm": 1122,
+    "comb_pF": [
+     19.9,
+     46.7
+    ],
+    "line_mm": 150,
+    "line_under_common_mm2": 0.19,
+    "line_pF": 0.3,
+    "drop_if_broken_at_comb_pct": [
+     99,
+     99
+    ],
+    "neighbour_parallel_mm": 145,
+    "neighbour_pF": [
+     3.6,
+     5.8
+    ]
+   },
+   "ffp_cen": {
+    "facing_edge_mm": 1609,
+    "comb_pF": [
+     28.5,
+     67.0
+    ],
+    "line_mm": 110,
+    "line_under_common_mm2": 0.24,
+    "line_pF": 0.38,
+    "drop_if_broken_at_comb_pct": [
+     99,
+     99
+    ],
+    "neighbour_parallel_mm": 104,
+    "neighbour_pF": [
+     2.6,
+     4.2
+    ]
+   },
+   "mt1": {
+    "facing_edge_mm": 790,
+    "comb_pF": [
+     14.0,
+     32.9
+    ],
+    "line_mm": 190,
+    "line_under_common_mm2": 0.66,
+    "line_pF": 1.04,
+    "drop_if_broken_at_comb_pct": [
+     93,
+     97
+    ],
+    "neighbour_parallel_mm": 185,
+    "neighbour_pF": [
+     4.6,
+     7.4
+    ]
+   },
+   "mt2": {
+    "facing_edge_mm": 1611,
+    "comb_pF": [
+     28.5,
+     67.0
+    ],
+    "line_mm": 145,
+    "line_under_common_mm2": 0.34,
+    "line_pF": 0.53,
+    "drop_if_broken_at_comb_pct": [
+     98,
+     99
+    ],
+    "neighbour_parallel_mm": 140,
+    "neighbour_pF": [
+     3.5,
+     5.6
+    ]
+   },
+   "mt3": {
+    "facing_edge_mm": 1452,
+    "comb_pF": [
+     25.7,
+     60.4
+    ],
+    "line_mm": 212,
+    "line_under_common_mm2": 0.25,
+    "line_pF": 0.39,
+    "drop_if_broken_at_comb_pct": [
+     98,
+     99
+    ],
+    "neighbour_parallel_mm": 203,
+    "neighbour_pF": [
+     5.1,
+     8.1
+    ]
+   },
+   "mt4": {
+    "facing_edge_mm": 1314,
+    "comb_pF": [
+     23.3,
+     54.7
+    ],
+    "line_mm": 149,
+    "line_under_common_mm2": 0.29,
+    "line_pF": 0.45,
+    "drop_if_broken_at_comb_pct": [
+     98,
+     99
+    ],
+    "neighbour_parallel_mm": 142,
+    "neighbour_pF": [
+     3.6,
+     5.7
+    ]
+   },
+   "mt5": {
+    "facing_edge_mm": 963,
+    "comb_pF": [
+     17.1,
+     40.1
+    ],
+    "line_mm": 216,
+    "line_under_common_mm2": 7.78,
+    "line_pF": 12.17,
+    "drop_if_broken_at_comb_pct": [
+     58,
+     77
+    ],
+    "neighbour_parallel_mm": 198,
+    "neighbour_pF": [
+     4.9,
+     7.9
+    ]
+   },
+   "toe1_base": {
+    "facing_edge_mm": 595,
+    "comb_pF": [
+     10.5,
+     24.7
+    ],
+    "line_mm": 190,
+    "line_under_common_mm2": 0.67,
+    "line_pF": 1.05,
+    "drop_if_broken_at_comb_pct": [
+     91,
+     96
+    ],
+    "neighbour_parallel_mm": 186,
+    "neighbour_pF": [
+     4.6,
+     7.4
+    ]
+   },
+   "toe1_tip": {
+    "facing_edge_mm": 826,
+    "comb_pF": [
+     14.6,
+     34.4
+    ],
+    "line_mm": 213,
+    "line_under_common_mm2": 0.37,
+    "line_pF": 0.57,
+    "drop_if_broken_at_comb_pct": [
+     96,
+     98
+    ],
+    "neighbour_parallel_mm": 185,
+    "neighbour_pF": [
+     4.6,
+     7.4
+    ]
+   },
+   "toe2": {
+    "facing_edge_mm": 794,
+    "comb_pF": [
+     14.1,
+     33.0
+    ],
+    "line_mm": 217,
+    "line_under_common_mm2": 0.28,
+    "line_pF": 0.43,
+    "drop_if_broken_at_comb_pct": [
+     97,
+     99
+    ],
+    "neighbour_parallel_mm": 209,
+    "neighbour_pF": [
+     5.2,
+     8.4
+    ]
+   },
+   "toe3": {
+    "facing_edge_mm": 745,
+    "comb_pF": [
+     13.2,
+     31.0
+    ],
+    "line_mm": 216,
+    "line_under_common_mm2": 0.38,
+    "line_pF": 0.6,
+    "drop_if_broken_at_comb_pct": [
+     96,
+     98
+    ],
+    "neighbour_parallel_mm": 207,
+    "neighbour_pF": [
+     5.2,
+     8.3
+    ]
+   },
+   "toe4": {
+    "facing_edge_mm": 575,
+    "comb_pF": [
+     10.2,
+     23.9
+    ],
+    "line_mm": 1,
+    "line_under_common_mm2": 0.0,
+    "line_pF": 0.0,
+    "drop_if_broken_at_comb_pct": [
+     100,
+     100
+    ],
+    "neighbour_parallel_mm": 0,
+    "neighbour_pF": [
+     0.0,
+     0.0
+    ]
+   },
+   "toe5": {
+    "facing_edge_mm": 437,
+    "comb_pF": [
+     7.7,
+     18.2
+    ],
+    "line_mm": 203,
+    "line_under_common_mm2": 0.92,
+    "line_pF": 1.44,
+    "drop_if_broken_at_comb_pct": [
+     84,
+     93
+    ],
+    "neighbour_parallel_mm": 197,
+    "neighbour_pF": [
+     4.9,
+     7.9
+    ]
+   }
+  },
+  "smallest_drop": [
+   "mt5",
+   [
+    58,
+    77
+   ]
+  ],
+  "comb_pF_range": [
+   7.7,
+   112.3
+  ],
+  "line_pF_max": 12.17,
+  "neighbour_pF_max": 8.4
+ },
+ "T1-EU42 R 8bf33cb25b": {
+  "regions": {
+   "heel_pm": {
+    "facing_edge_mm": 1218,
+    "comb_pF": [
+     21.6,
+     50.7
+    ],
+    "line_mm": 194,
+    "line_under_common_mm2": 0.12,
+    "line_pF": 0.19,
+    "drop_if_broken_at_comb_pct": [
+     99,
+     100
+    ],
+    "neighbour_parallel_mm": 180,
+    "neighbour_pF": [
+     4.5,
+     7.2
+    ]
+   },
+   "heel_pl": {
+    "facing_edge_mm": 1209,
+    "comb_pF": [
+     21.4,
+     50.3
+    ],
+    "line_mm": 184,
+    "line_under_common_mm2": 0.08,
+    "line_pF": 0.12,
+    "drop_if_broken_at_comb_pct": [
+     99,
+     100
+    ],
+    "neighbour_parallel_mm": 179,
+    "neighbour_pF": [
+     4.5,
+     7.2
+    ]
+   },
+   "heel_am": {
+    "facing_edge_mm": 3283,
+    "comb_pF": [
+     58.1,
+     136.6
+    ],
+    "line_mm": 108,
+    "line_under_common_mm2": 0.03,
+    "line_pF": 0.04,
+    "drop_if_broken_at_comb_pct": [
+     100,
+     100
+    ],
+    "neighbour_parallel_mm": 105,
+    "neighbour_pF": [
+     2.6,
+     4.2
+    ]
+   },
+   "heel_al": {
+    "facing_edge_mm": 3087,
+    "comb_pF": [
+     54.7,
+     128.4
+    ],
+    "line_mm": 137,
+    "line_under_common_mm2": 0.05,
+    "line_pF": 0.08,
+    "drop_if_broken_at_comb_pct": [
+     100,
+     100
+    ],
+    "neighbour_parallel_mm": 133,
+    "neighbour_pF": [
+     3.3,
+     5.3
+    ]
+   },
+   "arch_med": {
+    "facing_edge_mm": 3749,
+    "comb_pF": [
+     66.4,
+     156.0
+    ],
+    "line_mm": 108,
+    "line_under_common_mm2": 0.02,
+    "line_pF": 0.04,
+    "drop_if_broken_at_comb_pct": [
+     100,
+     100
+    ],
+    "neighbour_parallel_mm": 96,
+    "neighbour_pF": [
+     2.4,
+     3.8
+    ]
+   },
+   "mid_lat_prox": {
+    "facing_edge_mm": 3606,
+    "comb_pF": [
+     63.8,
+     150.0
+    ],
+    "line_mm": 137,
+    "line_under_common_mm2": 0.05,
+    "line_pF": 0.08,
+    "drop_if_broken_at_comb_pct": [
+     100,
+     100
+    ],
+    "neighbour_parallel_mm": 128,
+    "neighbour_pF": [
+     3.2,
+     5.1
+    ]
+   },
+   "mid_lat_dist": {
+    "facing_edge_mm": 1480,
+    "comb_pF": [
+     26.2,
+     61.6
+    ],
+    "line_mm": 172,
+    "line_under_common_mm2": 0.27,
+    "line_pF": 0.42,
+    "drop_if_broken_at_comb_pct": [
+     98,
+     99
+    ],
+    "neighbour_parallel_mm": 153,
+    "neighbour_pF": [
+     3.8,
+     6.1
+    ]
+   },
+   "ffp_med": {
+    "facing_edge_mm": 1691,
+    "comb_pF": [
+     29.9,
+     70.4
+    ],
+    "line_mm": 93,
+    "line_under_common_mm2": 0.03,
+    "line_pF": 0.04,
+    "drop_if_broken_at_comb_pct": [
+     100,
+     100
+    ],
+    "neighbour_parallel_mm": 85,
+    "neighbour_pF": [
+     2.1,
+     3.4
+    ]
+   },
+   "ffp_cen": {
+    "facing_edge_mm": 2182,
+    "comb_pF": [
+     38.6,
+     90.8
+    ],
+    "line_mm": 115,
+    "line_under_common_mm2": 0.08,
+    "line_pF": 0.13,
+    "drop_if_broken_at_comb_pct": [
+     100,
+     100
+    ],
+    "neighbour_parallel_mm": 109,
+    "neighbour_pF": [
+     2.7,
+     4.4
+    ]
+   },
+   "mt1": {
+    "facing_edge_mm": 1794,
+    "comb_pF": [
+     31.8,
+     74.7
+    ],
+    "line_mm": 288,
+    "line_under_common_mm2": 0.47,
+    "line_pF": 0.74,
+    "drop_if_broken_at_comb_pct": [
+     98,
+     99
+    ],
+    "neighbour_parallel_mm": 285,
+    "neighbour_pF": [
+     7.1,
+     11.4
+    ]
+   },
+   "mt2": {
+    "facing_edge_mm": 1948,
+    "comb_pF": [
+     34.5,
+     81.1
+    ],
+    "line_mm": 142,
+    "line_under_common_mm2": 0.33,
+    "line_pF": 0.51,
+    "drop_if_broken_at_comb_pct": [
+     99,
+     99
+    ],
+    "neighbour_parallel_mm": 128,
+    "neighbour_pF": [
+     3.2,
+     5.1
+    ]
+   },
+   "mt3": {
+    "facing_edge_mm": 1823,
+    "comb_pF": [
+     32.3,
+     75.8
+    ],
+    "line_mm": 228,
+    "line_under_common_mm2": 0.76,
+    "line_pF": 1.18,
+    "drop_if_broken_at_comb_pct": [
+     96,
+     98
+    ],
+    "neighbour_parallel_mm": 225,
+    "neighbour_pF": [
+     5.6,
+     9.0
+    ]
+   },
+   "mt4": {
+    "facing_edge_mm": 1639,
+    "comb_pF": [
+     29.0,
+     68.2
+    ],
+    "line_mm": 219,
+    "line_under_common_mm2": 1.63,
+    "line_pF": 2.56,
+    "drop_if_broken_at_comb_pct": [
+     92,
+     96
+    ],
+    "neighbour_parallel_mm": 215,
+    "neighbour_pF": [
+     5.4,
+     8.6
+    ]
+   },
+   "mt5": {
+    "facing_edge_mm": 1313,
+    "comb_pF": [
+     23.2,
+     54.6
+    ],
+    "line_mm": 236,
+    "line_under_common_mm2": 0.67,
+    "line_pF": 1.05,
+    "drop_if_broken_at_comb_pct": [
+     96,
+     98
+    ],
+    "neighbour_parallel_mm": 216,
+    "neighbour_pF": [
+     5.4,
+     8.6
+    ]
+   },
+   "toe1_base": {
+    "facing_edge_mm": 868,
+    "comb_pF": [
+     15.4,
+     36.1
+    ],
+    "line_mm": 290,
+    "line_under_common_mm2": 0.49,
+    "line_pF": 0.77,
+    "drop_if_broken_at_comb_pct": [
+     95,
+     98
+    ],
+    "neighbour_parallel_mm": 284,
+    "neighbour_pF": [
+     7.1,
+     11.3
+    ]
+   },
+   "toe1_tip": {
+    "facing_edge_mm": 1151,
+    "comb_pF": [
+     20.4,
+     47.9
+    ],
+    "line_mm": 318,
+    "line_under_common_mm2": 1.9,
+    "line_pF": 2.98,
+    "drop_if_broken_at_comb_pct": [
+     87,
+     94
+    ],
+    "neighbour_parallel_mm": 275,
+    "neighbour_pF": [
+     6.9,
+     11.0
+    ]
+   },
+   "toe2": {
+    "facing_edge_mm": 1137,
+    "comb_pF": [
+     20.1,
+     47.3
+    ],
+    "line_mm": 249,
+    "line_under_common_mm2": 0.54,
+    "line_pF": 0.85,
+    "drop_if_broken_at_comb_pct": [
+     96,
+     98
+    ],
+    "neighbour_parallel_mm": 235,
+    "neighbour_pF": [
+     5.9,
+     9.4
+    ]
+   },
+   "toe3": {
+    "facing_edge_mm": 1027,
+    "comb_pF": [
+     18.2,
+     42.7
+    ],
+    "line_mm": 239,
+    "line_under_common_mm2": 0.4,
+    "line_pF": 0.62,
+    "drop_if_broken_at_comb_pct": [
+     97,
+     99
+    ],
+    "neighbour_parallel_mm": 232,
+    "neighbour_pF": [
+     5.8,
+     9.3
+    ]
+   },
+   "toe4": {
+    "facing_edge_mm": 798,
+    "comb_pF": [
+     14.1,
+     33.2
+    ],
+    "line_mm": 218,
+    "line_under_common_mm2": 0.32,
+    "line_pF": 0.5,
+    "drop_if_broken_at_comb_pct": [
+     97,
+     99
+    ],
+    "neighbour_parallel_mm": 209,
+    "neighbour_pF": [
+     5.2,
+     8.4
+    ]
+   },
+   "toe5": {
+    "facing_edge_mm": 632,
+    "comb_pF": [
+     11.2,
+     26.3
+    ],
+    "line_mm": 220,
+    "line_under_common_mm2": 5.45,
+    "line_pF": 8.53,
+    "drop_if_broken_at_comb_pct": [
+     57,
+     76
+    ],
+    "neighbour_parallel_mm": 216,
+    "neighbour_pF": [
+     5.4,
+     8.6
+    ]
+   }
+  },
+  "smallest_drop": [
+   "toe5",
+   [
+    57,
+    76
+   ]
+  ],
+  "comb_pF_range": [
+   11.2,
+   156.0
+  ],
+  "line_pF_max": 8.53,
+  "neighbour_pF_max": 11.4
+ },
+ "T1-EU46 R 4d6f6e20bd": {
+  "regions": {
+   "heel_pm": {
+    "facing_edge_mm": 1528,
+    "comb_pF": [
+     27.1,
+     63.6
+    ],
+    "line_mm": 206,
+    "line_under_common_mm2": 0.13,
+    "line_pF": 0.21,
+    "drop_if_broken_at_comb_pct": [
+     99,
+     100
+    ],
+    "neighbour_parallel_mm": 140,
+    "neighbour_pF": [
+     3.5,
+     5.6
+    ]
+   },
+   "heel_pl": {
+    "facing_edge_mm": 1522,
+    "comb_pF": [
+     27.0,
+     63.4
+    ],
+    "line_mm": 195,
+    "line_under_common_mm2": 0.08,
+    "line_pF": 0.12,
+    "drop_if_broken_at_comb_pct": [
+     100,
+     100
+    ],
+    "neighbour_parallel_mm": 140,
+    "neighbour_pF": [
+     3.5,
+     5.6
+    ]
+   },
+   "heel_am": {
+    "facing_edge_mm": 4060,
+    "comb_pF": [
+     71.9,
+     168.9
+    ],
+    "line_mm": 112,
+    "line_under_common_mm2": 0.03,
+    "line_pF": 0.04,
+    "drop_if_broken_at_comb_pct": [
+     100,
+     100
+    ],
+    "neighbour_parallel_mm": 107,
+    "neighbour_pF": [
+     2.7,
+     4.3
+    ]
+   },
+   "heel_al": {
+    "facing_edge_mm": 3838,
+    "comb_pF": [
+     68.0,
+     159.7
+    ],
+    "line_mm": 143,
+    "line_under_common_mm2": 0.05,
+    "line_pF": 0.08,
+    "drop_if_broken_at_comb_pct": [
+     100,
+     100
+    ],
+    "neighbour_parallel_mm": 140,
+    "neighbour_pF": [
+     3.5,
+     5.6
+    ]
+   },
+   "arch_med": {
+    "facing_edge_mm": 4720,
+    "comb_pF": [
+     83.6,
+     196.4
+    ],
+    "line_mm": 108,
+    "line_under_common_mm2": 0.02,
+    "line_pF": 0.04,
+    "drop_if_broken_at_comb_pct": [
+     100,
+     100
+    ],
+    "neighbour_parallel_mm": 103,
+    "neighbour_pF": [
+     2.6,
+     4.1
+    ]
+   },
+   "mid_lat_prox": {
+    "facing_edge_mm": 4423,
+    "comb_pF": [
+     78.3,
+     184.0
+    ],
+    "line_mm": 143,
+    "line_under_common_mm2": 0.05,
+    "line_pF": 0.08,
+    "drop_if_broken_at_comb_pct": [
+     100,
+     100
+    ],
+    "neighbour_parallel_mm": 135,
+    "neighbour_pF": [
+     3.4,
+     5.4
+    ]
+   },
+   "mid_lat_dist": {
+    "facing_edge_mm": 1792,
+    "comb_pF": [
+     31.7,
+     74.6
+    ],
+    "line_mm": 183,
+    "line_under_common_mm2": 0.18,
+    "line_pF": 0.28,
+    "drop_if_broken_at_comb_pct": [
+     99,
+     100
+    ],
+    "neighbour_parallel_mm": 177,
+    "neighbour_pF": [
+     4.4,
+     7.1
+    ]
+   },
+   "ffp_med": {
+    "facing_edge_mm": 2127,
+    "comb_pF": [
+     37.7,
+     88.5
+    ],
+    "line_mm": 96,
+    "line_under_common_mm2": 0.03,
+    "line_pF": 0.04,
+    "drop_if_broken_at_comb_pct": [
+     100,
+     100
+    ],
+    "neighbour_parallel_mm": 87,
+    "neighbour_pF": [
+     2.2,
+     3.5
+    ]
+   },
+   "ffp_cen": {
+    "facing_edge_mm": 2663,
+    "comb_pF": [
+     47.2,
+     110.8
+    ],
+    "line_mm": 120,
+    "line_under_common_mm2": 0.09,
+    "line_pF": 0.14,
+    "drop_if_broken_at_comb_pct": [
+     100,
+     100
+    ],
+    "neighbour_parallel_mm": 114,
+    "neighbour_pF": [
+     2.8,
+     4.6
+    ]
+   },
+   "mt1": {
+    "facing_edge_mm": 2419,
+    "comb_pF": [
+     42.8,
+     100.7
+    ],
+    "line_mm": 341,
+    "line_under_common_mm2": 0.63,
+    "line_pF": 0.99,
+    "drop_if_broken_at_comb_pct": [
+     98,
+     99
+    ],
+    "neighbour_parallel_mm": 338,
+    "neighbour_pF": [
+     8.4,
+     13.5
+    ]
+   },
+   "mt2": {
+    "facing_edge_mm": 2605,
+    "comb_pF": [
+     46.1,
+     108.4
+    ],
+    "line_mm": 315,
+    "line_under_common_mm2": 0.86,
+    "line_pF": 1.34,
+    "drop_if_broken_at_comb_pct": [
+     97,
+     99
+    ],
+    "neighbour_parallel_mm": 296,
+    "neighbour_pF": [
+     7.4,
+     11.8
+    ]
+   },
+   "mt3": {
+    "facing_edge_mm": 2496,
+    "comb_pF": [
+     44.2,
+     103.9
+    ],
+    "line_mm": 288,
+    "line_under_common_mm2": 1.41,
+    "line_pF": 2.2,
+    "drop_if_broken_at_comb_pct": [
+     95,
+     98
+    ],
+    "neighbour_parallel_mm": 283,
+    "neighbour_pF": [
+     7.1,
+     11.3
+    ]
+   },
+   "mt4": {
+    "facing_edge_mm": 1435,
+    "comb_pF": [
+     25.4,
+     59.7
+    ],
+    "line_mm": 168,
+    "line_under_common_mm2": 0.73,
+    "line_pF": 1.15,
+    "drop_if_broken_at_comb_pct": [
+     96,
+     98
+    ],
+    "neighbour_parallel_mm": 162,
+    "neighbour_pF": [
+     4.1,
+     6.5
+    ]
+   },
+   "mt5": {
+    "facing_edge_mm": 1403,
+    "comb_pF": [
+     24.8,
+     58.4
+    ],
+    "line_mm": 192,
+    "line_under_common_mm2": 0.47,
+    "line_pF": 0.73,
+    "drop_if_broken_at_comb_pct": [
+     97,
+     99
+    ],
+    "neighbour_parallel_mm": 186,
+    "neighbour_pF": [
+     4.6,
+     7.4
+    ]
+   },
+   "toe1_base": {
+    "facing_edge_mm": 1635,
+    "comb_pF": [
+     29.0,
+     68.0
+    ],
+    "line_mm": 344,
+    "line_under_common_mm2": 0.97,
+    "line_pF": 1.53,
+    "drop_if_broken_at_comb_pct": [
+     95,
+     98
+    ],
+    "neighbour_parallel_mm": 336,
+    "neighbour_pF": [
+     8.4,
+     13.5
+    ]
+   },
+   "toe1_tip": {
+    "facing_edge_mm": 1509,
+    "comb_pF": [
+     26.7,
+     62.8
+    ],
+    "line_mm": 366,
+    "line_under_common_mm2": 0.83,
+    "line_pF": 1.3,
+    "drop_if_broken_at_comb_pct": [
+     95,
+     98
+    ],
+    "neighbour_parallel_mm": 316,
+    "neighbour_pF": [
+     7.9,
+     12.6
+    ]
+   },
+   "toe2": {
+    "facing_edge_mm": 1730,
+    "comb_pF": [
+     30.6,
+     72.0
+    ],
+    "line_mm": 324,
+    "line_under_common_mm2": 0.69,
+    "line_pF": 1.08,
+    "drop_if_broken_at_comb_pct": [
+     97,
+     99
+    ],
+    "neighbour_parallel_mm": 311,
+    "neighbour_pF": [
+     7.8,
+     12.4
+    ]
+   },
+   "toe3": {
+    "facing_edge_mm": 1290,
+    "comb_pF": [
+     22.8,
+     53.7
+    ],
+    "line_mm": 303,
+    "line_under_common_mm2": 0.54,
+    "line_pF": 0.85,
+    "drop_if_broken_at_comb_pct": [
+     96,
+     98
+    ],
+    "neighbour_parallel_mm": 289,
+    "neighbour_pF": [
+     7.2,
+     11.5
+    ]
+   },
+   "toe4": {
+    "facing_edge_mm": 973,
+    "comb_pF": [
+     17.2,
+     40.5
+    ],
+    "line_mm": 282,
+    "line_under_common_mm2": 1.84,
+    "line_pF": 2.89,
+    "drop_if_broken_at_comb_pct": [
+     86,
+     93
+    ],
+    "neighbour_parallel_mm": 277,
+    "neighbour_pF": [
+     6.9,
+     11.1
+    ]
+   },
+   "toe5": {
+    "facing_edge_mm": 674,
+    "comb_pF": [
+     11.9,
+     28.1
+    ],
+    "line_mm": 250,
+    "line_under_common_mm2": 8.7,
+    "line_pF": 13.62,
+    "drop_if_broken_at_comb_pct": [
+     47,
+     67
+    ],
+    "neighbour_parallel_mm": 236,
+    "neighbour_pF": [
+     5.9,
+     9.4
+    ]
+   }
+  },
+  "smallest_drop": [
+   "toe5",
+   [
+    47,
+    67
+   ]
+  ],
+  "comb_pF_range": [
+   11.9,
+   196.4
+  ],
+  "line_pF_max": 13.62,
+  "neighbour_pF_max": 13.5
+ },
+ "T1-F54cfa0 R e9634e6328": {
+  "regions": {
+   "heel_pm": {
+    "facing_edge_mm": 1132,
+    "comb_pF": [
+     20.1,
+     47.1
+    ],
+    "line_mm": 177,
+    "line_under_common_mm2": 0.81,
+    "line_pF": 1.26,
+    "drop_if_broken_at_comb_pct": [
+     94,
+     97
+    ],
+    "neighbour_parallel_mm": 164,
+    "neighbour_pF": [
+     4.1,
+     6.5
+    ]
+   },
+   "heel_pl": {
+    "facing_edge_mm": 1122,
+    "comb_pF": [
+     19.9,
+     46.7
+    ],
+    "line_mm": 168,
+    "line_under_common_mm2": 0.31,
+    "line_pF": 0.49,
+    "drop_if_broken_at_comb_pct": [
+     98,
+     99
+    ],
+    "neighbour_parallel_mm": 163,
+    "neighbour_pF": [
+     4.1,
+     6.5
+    ]
+   },
+   "heel_am": {
+    "facing_edge_mm": 4046,
+    "comb_pF": [
+     71.7,
+     168.4
+    ],
+    "line_mm": 85,
+    "line_under_common_mm2": 0.03,
+    "line_pF": 0.04,
+    "drop_if_broken_at_comb_pct": [
+     100,
+     100
+    ],
+    "neighbour_parallel_mm": 80,
+    "neighbour_pF": [
+     2.0,
+     3.2
+    ]
+   },
+   "heel_al": {
+    "facing_edge_mm": 2944,
+    "comb_pF": [
+     52.1,
+     122.5
+    ],
+    "line_mm": 121,
+    "line_under_common_mm2": 0.07,
+    "line_pF": 0.11,
+    "drop_if_broken_at_comb_pct": [
+     100,
+     100
+    ],
+    "neighbour_parallel_mm": 117,
+    "neighbour_pF": [
+     2.9,
+     4.7
+    ]
+   },
+   "mid_lat_prox": {
+    "facing_edge_mm": 4422,
+    "comb_pF": [
+     78.3,
+     184.0
+    ],
+    "line_mm": 122,
+    "line_under_common_mm2": 0.09,
+    "line_pF": 0.14,
+    "drop_if_broken_at_comb_pct": [
+     100,
+     100
+    ],
+    "neighbour_parallel_mm": 116,
+    "neighbour_pF": [
+     2.9,
+     4.7
+    ]
+   },
+   "mid_lat_dist": {
+    "facing_edge_mm": 1496,
+    "comb_pF": [
+     26.5,
+     62.2
+    ],
+    "line_mm": 142,
+    "line_under_common_mm2": 0.62,
+    "line_pF": 0.97,
+    "drop_if_broken_at_comb_pct": [
+     96,
+     98
+    ],
+    "neighbour_parallel_mm": 95,
+    "neighbour_pF": [
+     2.4,
+     3.8
+    ]
+   },
+   "ffp_med": {
+    "facing_edge_mm": 1885,
+    "comb_pF": [
+     33.4,
+     78.4
+    ],
+    "line_mm": 144,
+    "line_under_common_mm2": 0.09,
+    "line_pF": 0.15,
+    "drop_if_broken_at_comb_pct": [
+     100,
+     100
+    ],
+    "neighbour_parallel_mm": 137,
+    "neighbour_pF": [
+     3.4,
+     5.5
+    ]
+   },
+   "ffp_cen": {
+    "facing_edge_mm": 3012,
+    "comb_pF": [
+     53.3,
+     125.3
+    ],
+    "line_mm": 99,
+    "line_under_common_mm2": 0.27,
+    "line_pF": 0.43,
+    "drop_if_broken_at_comb_pct": [
+     99,
+     100
+    ],
+    "neighbour_parallel_mm": 95,
+    "neighbour_pF": [
+     2.4,
+     3.8
+    ]
+   },
+   "mt1": {
+    "facing_edge_mm": 1479,
+    "comb_pF": [
+     26.2,
+     61.5
+    ],
+    "line_mm": 193,
+    "line_under_common_mm2": 0.25,
+    "line_pF": 0.39,
+    "drop_if_broken_at_comb_pct": [
+     99,
+     99
+    ],
+    "neighbour_parallel_mm": 188,
+    "neighbour_pF": [
+     4.7,
+     7.5
+    ]
+   },
+   "mt2": {
+    "facing_edge_mm": 1915,
+    "comb_pF": [
+     33.9,
+     79.7
+    ],
+    "line_mm": 143,
+    "line_under_common_mm2": 0.51,
+    "line_pF": 0.79,
+    "drop_if_broken_at_comb_pct": [
+     98,
+     99
+    ],
+    "neighbour_parallel_mm": 138,
+    "neighbour_pF": [
+     3.4,
+     5.5
+    ]
+   },
+   "mt3": {
+    "facing_edge_mm": 2232,
+    "comb_pF": [
+     39.5,
+     92.9
+    ],
+    "line_mm": 207,
+    "line_under_common_mm2": 0.05,
+    "line_pF": 0.08,
+    "drop_if_broken_at_comb_pct": [
+     100,
+     100
+    ],
+    "neighbour_parallel_mm": 203,
+    "neighbour_pF": [
+     5.1,
+     8.1
+    ]
+   },
+   "mt4": {
+    "facing_edge_mm": 1732,
+    "comb_pF": [
+     30.7,
+     72.1
+    ],
+    "line_mm": 230,
+    "line_under_common_mm2": 0.42,
+    "line_pF": 0.65,
+    "drop_if_broken_at_comb_pct": [
+     98,
+     99
+    ],
+    "neighbour_parallel_mm": 225,
+    "neighbour_pF": [
+     5.6,
+     9.0
+    ]
+   },
+   "mt5": {
+    "facing_edge_mm": 1258,
+    "comb_pF": [
+     22.3,
+     52.4
+    ],
+    "line_mm": 258,
+    "line_under_common_mm2": 0.14,
+    "line_pF": 0.22,
+    "drop_if_broken_at_comb_pct": [
+     99,
+     100
+    ],
+    "neighbour_parallel_mm": 225,
+    "neighbour_pF": [
+     5.6,
+     9.0
+    ]
+   },
+   "toe1_base": {
+    "facing_edge_mm": 1144,
+    "comb_pF": [
+     20.3,
+     47.6
+    ],
+    "line_mm": 195,
+    "line_under_common_mm2": 0.29,
+    "line_pF": 0.45,
+    "drop_if_broken_at_comb_pct": [
+     98,
+     99
+    ],
+    "neighbour_parallel_mm": 188,
+    "neighbour_pF": [
+     4.7,
+     7.5
+    ]
+   },
+   "toe1_tip": {
+    "facing_edge_mm": 1017,
+    "comb_pF": [
+     18.0,
+     42.3
+    ],
+    "line_mm": 220,
+    "line_under_common_mm2": 0.44,
+    "line_pF": 0.69,
+    "drop_if_broken_at_comb_pct": [
+     96,
+     98
+    ],
+    "neighbour_parallel_mm": 183,
+    "neighbour_pF": [
+     4.6,
+     7.3
+    ]
+   },
+   "toe2": {
+    "facing_edge_mm": 1304,
+    "comb_pF": [
+     23.1,
+     54.3
+    ],
+    "line_mm": 186,
+    "line_under_common_mm2": 0.29,
+    "line_pF": 0.45,
+    "drop_if_broken_at_comb_pct": [
+     98,
+     99
+    ],
+    "neighbour_parallel_mm": 182,
+    "neighbour_pF": [
+     4.5,
+     7.3
+    ]
+   },
+   "toe3": {
+    "facing_edge_mm": 1041,
+    "comb_pF": [
+     18.4,
+     43.3
+    ],
+    "line_mm": 202,
+    "line_under_common_mm2": 1.05,
+    "line_pF": 1.64,
+    "drop_if_broken_at_comb_pct": [
+     92,
+     96
+    ],
+    "neighbour_parallel_mm": 197,
+    "neighbour_pF": [
+     4.9,
+     7.9
+    ]
+   },
+   "toe4": {
+    "facing_edge_mm": 772,
+    "comb_pF": [
+     13.7,
+     32.1
+    ],
+    "line_mm": 220,
+    "line_under_common_mm2": 0.37,
+    "line_pF": 0.58,
+    "drop_if_broken_at_comb_pct": [
+     96,
+     98
+    ],
+    "neighbour_parallel_mm": 215,
+    "neighbour_pF": [
+     5.4,
+     8.6
+    ]
+   }
+  },
+  "smallest_drop": [
+   "toe3",
+   [
+    92,
+    96
+   ]
+  ],
+  "comb_pF_range": [
+   13.7,
+   184.0
+  ],
+  "line_pF_max": 1.64,
+  "neighbour_pF_max": 9.0
+ }
+}

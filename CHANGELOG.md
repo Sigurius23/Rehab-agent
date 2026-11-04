@@ -89,6 +89,25 @@
     - camera synchronisation to measure;
     - five-toe mechanical requirements (the toe slits end in a 1.0 mm radius at EU 37, 42 and 46);
     - validating both candidates the same way.
+  - **Higher-resolution candidate T1, beside the baseline** (`CANDIDATES.md`, `sole_candidate.py`,
+    `candidates/`). Design and analysis only. Sensing, fit and durability are untested; nothing is released or
+    fabricated.
+    - **What it is:** a targeted layout of 20 regions at EU 42. The heel is split 2 × 2, two regions sit behind
+      the metatarsal heads, and the big toe is split into base and tip.
+    - **How it is made:** with the generator, rules and checker unchanged, so the baseline boards and their
+      checks stay valid. The candidate's own IDs and maps are kept apart from the baseline's.
+    - **Result:** 6 of 8 configurations pass `verify_board.py`: EU 42, EU 46 and the synthetic foot, both
+      sides. EU 37 fails on both sides with 3 clearance errors at one spot. Fixing that needs router work in the
+      shared generator, which is left for a decision.
+    - **Cost of more regions:** the weakest region keeps 46–58 % of its tile on the passing boards, against
+      58–73 % for the baseline.
+    - **Latent bug:** a recursion in the shared `fracture()` is guarded in the candidate's entry point.
+    - **Compared with a dense matrix** on the same outlines, as geometry only: toe-pocket fit, routing, tail
+      width, readout complexity, spatial information.
+    - **Open sense lines:** with the proposed readout, a broken sense line may be indistinguishable from an
+      unloaded region. Diagnostics that could detect it were compared; a capacitive self-test looks
+      promising on estimates.
+    - **Crosstalk** is now stated as something to measure, not a property of floating lines.
 - **Flaky live-chain test fixed** (`test_live_chain_posture_to_suit_payloads`). It had failed in CI on nearly every
   run since 2026-10-24, and once in a local full-suite run.
   - The engine sent its cue correctly, but the suit bridge sometimes had not yet connected to the cue stream. LSL

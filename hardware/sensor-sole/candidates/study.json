@@ -1,0 +1,822 @@
+{
+ "EU37": {
+  "baseline": {
+   "board_id": "EU37 R 1ae8010c95",
+   "regions": 16,
+   "regions_per_zone": {
+    "heel": 3,
+    "midfoot": 3,
+    "forefoot": 5,
+    "toes": 5
+   },
+   "contacts": 18,
+   "tail_width_mm": 12.0,
+   "vias": 18,
+   "region_area_pct_of_sole": 71.1,
+   "conversions_per_s_per_foot_at_100Hz": 1600,
+   "r_gyration_mm": {
+    "heel": 14.3,
+    "midfoot": 14.9,
+    "forefoot": 14.5,
+    "toes": 9.5
+   },
+   "least_sensing_area": [
+    "mt4",
+    69
+   ],
+   "vias_in_bend_zone": [],
+   "line_in_toe_tabs_mm": 86,
+   "vias_in_toe_tabs": 4
+  },
+  "T1": {
+   "board_id": "T1-EU37 R 393cca5a99",
+   "regions": 20,
+   "regions_per_zone": {
+    "heel": 4,
+    "midfoot": 3,
+    "forefoot": 7,
+    "toes": 6
+   },
+   "contacts": 22,
+   "tail_width_mm": 14.0,
+   "vias": 24,
+   "region_area_pct_of_sole": 69.4,
+   "conversions_per_s_per_foot_at_100Hz": 2000,
+   "r_gyration_mm": {
+    "heel": 11.1,
+    "midfoot": 14.5,
+    "forefoot": 11.5,
+    "toes": 8.2
+   },
+   "least_sensing_area": [
+    "mt1",
+    47
+   ],
+   "vias_in_bend_zone": [],
+   "line_in_toe_tabs_mm": 99,
+   "vias_in_toe_tabs": 4
+  },
+  "matrix_5mm": {
+   "pitch_mm": 5.0,
+   "cell_side_mm": 3.8,
+   "cells": 588,
+   "cells_per_zone": {
+    "heel": 134,
+    "midfoot": 172,
+    "forefoot": 183,
+    "toes": 99
+   },
+   "toe_cells": [
+    36,
+    23,
+    18,
+    13,
+    9
+   ],
+   "toe_lengthwise_lines": [
+    4,
+    3,
+    3,
+    3,
+    2
+   ],
+   "lines_crossing": 74,
+   "lines_crossing_if_toe_pieces_linked": 47,
+   "lines_lengthwise": 17,
+   "lines_total": 91,
+   "contacts": 91,
+   "tail_width_mm": 48.5,
+   "vias": 625,
+   "vias_in_bend_band": 83,
+   "row_column_crossings_in_bend_band": 83,
+   "toe_piece_lines": 37,
+   "line_in_toe_tabs_mm": 1781,
+   "vias_in_toe_tabs": 136,
+   "edge_channel_at_tail_mm": {
+    "distal_side": 21.7,
+    "proximal_side": 14.9
+   },
+   "cell_area_pct_of_sole": 51.8,
+   "conversions_per_s_per_foot_at_100Hz": 58800,
+   "r_gyration_mm": {
+    "heel": 1.5,
+    "midfoot": 1.5,
+    "forefoot": 1.5,
+    "toes": 1.5
+   }
+  },
+  "matrix_7.5mm": {
+   "pitch_mm": 7.5,
+   "cell_side_mm": 6.3,
+   "cells": 257,
+   "cells_per_zone": {
+    "heel": 57,
+    "midfoot": 76,
+    "forefoot": 78,
+    "toes": 46
+   },
+   "toe_cells": [
+    19,
+    5,
+    9,
+    8,
+    5
+   ],
+   "toe_lengthwise_lines": [
+    3,
+    1,
+    2,
+    2,
+    2
+   ],
+   "lines_crossing": 49,
+   "lines_crossing_if_toe_pieces_linked": 31,
+   "lines_lengthwise": 12,
+   "lines_total": 61,
+   "contacts": 61,
+   "tail_width_mm": 33.5,
+   "vias": 281,
+   "vias_in_bend_band": 37,
+   "row_column_crossings_in_bend_band": 37,
+   "toe_piece_lines": 24,
+   "line_in_toe_tabs_mm": 1157,
+   "vias_in_toe_tabs": 70,
+   "edge_channel_at_tail_mm": {
+    "distal_side": 14.5,
+    "proximal_side": 10.5
+   },
+   "cell_area_pct_of_sole": 61.8,
+   "conversions_per_s_per_foot_at_100Hz": 25700,
+   "r_gyration_mm": {
+    "heel": 2.5,
+    "midfoot": 2.5,
+    "forefoot": 2.5,
+    "toes": 2.5
+   }
+  },
+  "matrix_10mm": {
+   "pitch_mm": 10.0,
+   "cell_side_mm": 8.8,
+   "cells": 142,
+   "cells_per_zone": {
+    "heel": 32,
+    "midfoot": 39,
+    "forefoot": 49,
+    "toes": 22
+   },
+   "toe_cells": [
+    10,
+    4,
+    3,
+    3,
+    2
+   ],
+   "toe_lengthwise_lines": [
+    2,
+    1,
+    1,
+    1,
+    1
+   ],
+   "lines_crossing": 38,
+   "lines_crossing_if_toe_pieces_linked": 23,
+   "lines_lengthwise": 9,
+   "lines_total": 47,
+   "contacts": 47,
+   "tail_width_mm": 26.5,
+   "vias": 159,
+   "vias_in_bend_band": 22,
+   "row_column_crossings_in_bend_band": 22,
+   "toe_piece_lines": 17,
+   "line_in_toe_tabs_mm": 804,
+   "vias_in_toe_tabs": 39,
+   "edge_channel_at_tail_mm": {
+    "distal_side": 10.5,
+    "proximal_side": 8.1
+   },
+   "cell_area_pct_of_sole": 66.1,
+   "conversions_per_s_per_foot_at_100Hz": 14200,
+   "r_gyration_mm": {
+    "heel": 3.6,
+    "midfoot": 3.6,
+    "forefoot": 3.6,
+    "toes": 3.5
+   }
+  }
+ },
+ "EU42": {
+  "baseline": {
+   "board_id": "EU42 R 4ea1726398",
+   "regions": 16,
+   "regions_per_zone": {
+    "heel": 3,
+    "midfoot": 3,
+    "forefoot": 5,
+    "toes": 5
+   },
+   "contacts": 18,
+   "tail_width_mm": 12.0,
+   "vias": 18,
+   "region_area_pct_of_sole": 74.4,
+   "conversions_per_s_per_foot_at_100Hz": 1600,
+   "r_gyration_mm": {
+    "heel": 16.5,
+    "midfoot": 17.1,
+    "forefoot": 16.8,
+    "toes": 11.0
+   },
+   "least_sensing_area": [
+    "mt4",
+    69
+   ],
+   "vias_in_bend_zone": [],
+   "line_in_toe_tabs_mm": 138,
+   "vias_in_toe_tabs": 5
+  },
+  "T1": {
+   "board_id": "T1-EU42 R 8bf33cb25b",
+   "regions": 20,
+   "regions_per_zone": {
+    "heel": 4,
+    "midfoot": 3,
+    "forefoot": 7,
+    "toes": 6
+   },
+   "contacts": 22,
+   "tail_width_mm": 14.0,
+   "vias": 22,
+   "region_area_pct_of_sole": 73.3,
+   "conversions_per_s_per_foot_at_100Hz": 2000,
+   "r_gyration_mm": {
+    "heel": 12.8,
+    "midfoot": 16.7,
+    "forefoot": 13.0,
+    "toes": 9.5
+   },
+   "least_sensing_area": [
+    "toe1_base",
+    58
+   ],
+   "vias_in_bend_zone": [],
+   "line_in_toe_tabs_mm": 205,
+   "vias_in_toe_tabs": 6
+  },
+  "matrix_5mm": {
+   "pitch_mm": 5.0,
+   "cell_side_mm": 3.8,
+   "cells": 776,
+   "cells_per_zone": {
+    "heel": 176,
+    "midfoot": 230,
+    "forefoot": 242,
+    "toes": 128
+   },
+   "toe_cells": [
+    53,
+    25,
+    21,
+    17,
+    12
+   ],
+   "toe_lengthwise_lines": [
+    5,
+    3,
+    3,
+    3,
+    2
+   ],
+   "lines_crossing": 88,
+   "lines_crossing_if_toe_pieces_linked": 53,
+   "lines_lengthwise": 20,
+   "lines_total": 108,
+   "contacts": 108,
+   "tail_width_mm": 57.0,
+   "vias": 817,
+   "vias_in_bend_band": 97,
+   "row_column_crossings_in_bend_band": 97,
+   "toe_piece_lines": 41,
+   "line_in_toe_tabs_mm": 2293,
+   "vias_in_toe_tabs": 169,
+   "edge_channel_at_tail_mm": {
+    "distal_side": 24.1,
+    "proximal_side": 17.3
+   },
+   "cell_area_pct_of_sole": 52.7,
+   "conversions_per_s_per_foot_at_100Hz": 77600,
+   "r_gyration_mm": {
+    "heel": 1.5,
+    "midfoot": 1.5,
+    "forefoot": 1.5,
+    "toes": 1.5
+   }
+  },
+  "matrix_7.5mm": {
+   "pitch_mm": 7.5,
+   "cell_side_mm": 6.3,
+   "cells": 341,
+   "cells_per_zone": {
+    "heel": 79,
+    "midfoot": 97,
+    "forefoot": 107,
+    "toes": 58
+   },
+   "toe_cells": [
+    21,
+    13,
+    11,
+    9,
+    4
+   ],
+   "toe_lengthwise_lines": [
+    3,
+    2,
+    2,
+    2,
+    1
+   ],
+   "lines_crossing": 59,
+   "lines_crossing_if_toe_pieces_linked": 35,
+   "lines_lengthwise": 13,
+   "lines_total": 72,
+   "contacts": 72,
+   "tail_width_mm": 39.0,
+   "vias": 370,
+   "vias_in_bend_band": 43,
+   "row_column_crossings_in_bend_band": 43,
+   "toe_piece_lines": 29,
+   "line_in_toe_tabs_mm": 1561,
+   "vias_in_toe_tabs": 87,
+   "edge_channel_at_tail_mm": {
+    "distal_side": 16.9,
+    "proximal_side": 11.7
+   },
+   "cell_area_pct_of_sole": 63.5,
+   "conversions_per_s_per_foot_at_100Hz": 34100,
+   "r_gyration_mm": {
+    "heel": 2.5,
+    "midfoot": 2.5,
+    "forefoot": 2.5,
+    "toes": 2.5
+   }
+  },
+  "matrix_10mm": {
+   "pitch_mm": 10.0,
+   "cell_side_mm": 8.8,
+   "cells": 188,
+   "cells_per_zone": {
+    "heel": 42,
+    "midfoot": 53,
+    "forefoot": 64,
+    "toes": 29
+   },
+   "toe_cells": [
+    11,
+    5,
+    4,
+    6,
+    3
+   ],
+   "toe_lengthwise_lines": [
+    2,
+    1,
+    1,
+    2,
+    1
+   ],
+   "lines_crossing": 46,
+   "lines_crossing_if_toe_pieces_linked": 27,
+   "lines_lengthwise": 10,
+   "lines_total": 56,
+   "contacts": 56,
+   "tail_width_mm": 31.0,
+   "vias": 209,
+   "vias_in_bend_band": 24,
+   "row_column_crossings_in_bend_band": 24,
+   "toe_piece_lines": 21,
+   "line_in_toe_tabs_mm": 1111,
+   "vias_in_toe_tabs": 50,
+   "edge_channel_at_tail_mm": {
+    "distal_side": 12.5,
+    "proximal_side": 8.9
+   },
+   "cell_area_pct_of_sole": 67.6,
+   "conversions_per_s_per_foot_at_100Hz": 18800,
+   "r_gyration_mm": {
+    "heel": 3.6,
+    "midfoot": 3.6,
+    "forefoot": 3.6,
+    "toes": 3.6
+   }
+  }
+ },
+ "EU46": {
+  "baseline": {
+   "board_id": "EU46 R 4fb67c089d",
+   "regions": 16,
+   "regions_per_zone": {
+    "heel": 3,
+    "midfoot": 3,
+    "forefoot": 5,
+    "toes": 5
+   },
+   "contacts": 18,
+   "tail_width_mm": 12.0,
+   "vias": 18,
+   "region_area_pct_of_sole": 76.9,
+   "conversions_per_s_per_foot_at_100Hz": 1600,
+   "r_gyration_mm": {
+    "heel": 18.4,
+    "midfoot": 18.8,
+    "forefoot": 19.3,
+    "toes": 12.3
+   },
+   "least_sensing_area": [
+    "mt4",
+    58
+   ],
+   "vias_in_bend_zone": [],
+   "line_in_toe_tabs_mm": 167,
+   "vias_in_toe_tabs": 5
+  },
+  "T1": {
+   "board_id": "T1-EU46 R 4d6f6e20bd",
+   "regions": 20,
+   "regions_per_zone": {
+    "heel": 4,
+    "midfoot": 3,
+    "forefoot": 7,
+    "toes": 6
+   },
+   "contacts": 22,
+   "tail_width_mm": 14.0,
+   "vias": 22,
+   "region_area_pct_of_sole": 76.2,
+   "conversions_per_s_per_foot_at_100Hz": 2000,
+   "r_gyration_mm": {
+    "heel": 14.2,
+    "midfoot": 18.5,
+    "forefoot": 13.9,
+    "toes": 10.9
+   },
+   "least_sensing_area": [
+    "mt4",
+    54
+   ],
+   "vias_in_bend_zone": [],
+   "line_in_toe_tabs_mm": 202,
+   "vias_in_toe_tabs": 6
+  },
+  "matrix_5mm": {
+   "pitch_mm": 5.0,
+   "cell_side_mm": 3.8,
+   "cells": 947,
+   "cells_per_zone": {
+    "heel": 211,
+    "midfoot": 280,
+    "forefoot": 286,
+    "toes": 170
+   },
+   "toe_cells": [
+    70,
+    38,
+    26,
+    22,
+    14
+   ],
+   "toe_lengthwise_lines": [
+    6,
+    4,
+    3,
+    3,
+    2
+   ],
+   "lines_crossing": 100,
+   "lines_crossing_if_toe_pieces_linked": 59,
+   "lines_lengthwise": 22,
+   "lines_total": 122,
+   "contacts": 122,
+   "tail_width_mm": 64.0,
+   "vias": 995,
+   "vias_in_bend_band": 106,
+   "row_column_crossings_in_bend_band": 106,
+   "toe_piece_lines": 48,
+   "line_in_toe_tabs_mm": 3008,
+   "vias_in_toe_tabs": 218,
+   "edge_channel_at_tail_mm": {
+    "distal_side": 27.3,
+    "proximal_side": 19.3
+   },
+   "cell_area_pct_of_sole": 53.1,
+   "conversions_per_s_per_foot_at_100Hz": 94700,
+   "r_gyration_mm": {
+    "heel": 1.5,
+    "midfoot": 1.5,
+    "forefoot": 1.5,
+    "toes": 1.5
+   }
+  },
+  "matrix_7.5mm": {
+   "pitch_mm": 7.5,
+   "cell_side_mm": 6.3,
+   "cells": 418,
+   "cells_per_zone": {
+    "heel": 93,
+    "midfoot": 126,
+    "forefoot": 129,
+    "toes": 70
+   },
+   "toe_cells": [
+    30,
+    14,
+    12,
+    9,
+    5
+   ],
+   "toe_lengthwise_lines": [
+    4,
+    2,
+    2,
+    2,
+    1
+   ],
+   "lines_crossing": 67,
+   "lines_crossing_if_toe_pieces_linked": 39,
+   "lines_lengthwise": 15,
+   "lines_total": 82,
+   "contacts": 82,
+   "tail_width_mm": 44.0,
+   "vias": 449,
+   "vias_in_bend_band": 48,
+   "row_column_crossings_in_bend_band": 48,
+   "toe_piece_lines": 31,
+   "line_in_toe_tabs_mm": 1868,
+   "vias_in_toe_tabs": 101,
+   "edge_channel_at_tail_mm": {
+    "distal_side": 18.1,
+    "proximal_side": 12.9
+   },
+   "cell_area_pct_of_sole": 64.6,
+   "conversions_per_s_per_foot_at_100Hz": 41800,
+   "r_gyration_mm": {
+    "heel": 2.5,
+    "midfoot": 2.5,
+    "forefoot": 2.5,
+    "toes": 2.5
+   }
+  },
+  "matrix_10mm": {
+   "pitch_mm": 10.0,
+   "cell_side_mm": 8.8,
+   "cells": 232,
+   "cells_per_zone": {
+    "heel": 50,
+    "midfoot": 68,
+    "forefoot": 69,
+    "toes": 45
+   },
+   "toe_cells": [
+    18,
+    11,
+    9,
+    4,
+    3
+   ],
+   "toe_lengthwise_lines": [
+    3,
+    2,
+    2,
+    1,
+    1
+   ],
+   "lines_crossing": 47,
+   "lines_crossing_if_toe_pieces_linked": 29,
+   "lines_lengthwise": 11,
+   "lines_total": 58,
+   "contacts": 58,
+   "tail_width_mm": 32.0,
+   "vias": 256,
+   "vias_in_bend_band": 27,
+   "row_column_crossings_in_bend_band": 27,
+   "toe_piece_lines": 24,
+   "line_in_toe_tabs_mm": 1455,
+   "vias_in_toe_tabs": 69,
+   "edge_channel_at_tail_mm": {
+    "distal_side": 14.1,
+    "proximal_side": 9.7
+   },
+   "cell_area_pct_of_sole": 69.3,
+   "conversions_per_s_per_foot_at_100Hz": 23200,
+   "r_gyration_mm": {
+    "heel": 3.6,
+    "midfoot": 3.6,
+    "forefoot": 3.6,
+    "toes": 3.6
+   }
+  }
+ },
+ "synthetic foot": {
+  "baseline": {
+   "board_id": "F54cfa0 R 8a07f794d2",
+   "regions": 14,
+   "regions_per_zone": {
+    "heel": 3,
+    "midfoot": 2,
+    "forefoot": 5,
+    "toes": 4
+   },
+   "contacts": 16,
+   "tail_width_mm": 11.0,
+   "vias": 16,
+   "region_area_pct_of_sole": 77.1,
+   "conversions_per_s_per_foot_at_100Hz": 1400,
+   "r_gyration_mm": {
+    "heel": 16.3,
+    "midfoot": 18.2,
+    "forefoot": 19.5,
+    "toes": 12.4
+   },
+   "least_sensing_area": [
+    "mt1",
+    73
+   ],
+   "vias_in_bend_zone": [],
+   "line_in_toe_tabs_mm": 134,
+   "vias_in_toe_tabs": 4
+  },
+  "T1": {
+   "board_id": "T1-F54cfa0 R e9634e6328",
+   "regions": 18,
+   "regions_per_zone": {
+    "heel": 4,
+    "midfoot": 2,
+    "forefoot": 7,
+    "toes": 5
+   },
+   "contacts": 20,
+   "tail_width_mm": 13.0,
+   "vias": 20,
+   "region_area_pct_of_sole": 74.8,
+   "conversions_per_s_per_foot_at_100Hz": 1800,
+   "r_gyration_mm": {
+    "heel": 12.5,
+    "midfoot": 14.9,
+    "forefoot": 15.3,
+    "toes": 9.5
+   },
+   "least_sensing_area": [
+    "ffp_med",
+    46
+   ],
+   "vias_in_bend_zone": [],
+   "line_in_toe_tabs_mm": 139,
+   "vias_in_toe_tabs": 5
+  },
+  "matrix_5mm": {
+   "pitch_mm": 5.0,
+   "cell_side_mm": 3.8,
+   "cells": 756,
+   "cells_per_zone": {
+    "heel": 163,
+    "midfoot": 216,
+    "forefoot": 248,
+    "toes": 129
+   },
+   "toe_cells": [
+    48,
+    28,
+    22,
+    15,
+    16
+   ],
+   "toe_lengthwise_lines": [
+    5,
+    3,
+    3,
+    3,
+    3
+   ],
+   "lines_crossing": 88,
+   "lines_crossing_if_toe_pieces_linked": 52,
+   "lines_lengthwise": 20,
+   "lines_total": 108,
+   "contacts": 108,
+   "tail_width_mm": 57.0,
+   "vias": 797,
+   "vias_in_bend_band": 100,
+   "row_column_crossings_in_bend_band": 100,
+   "toe_piece_lines": 41,
+   "line_in_toe_tabs_mm": 2264,
+   "vias_in_toe_tabs": 170,
+   "edge_channel_at_tail_mm": {
+    "distal_side": 23.7,
+    "proximal_side": 17.3
+   },
+   "cell_area_pct_of_sole": 52.9,
+   "conversions_per_s_per_foot_at_100Hz": 75600,
+   "r_gyration_mm": {
+    "heel": 1.5,
+    "midfoot": 1.5,
+    "forefoot": 1.5,
+    "toes": 1.5
+   }
+  },
+  "matrix_7.5mm": {
+   "pitch_mm": 7.5,
+   "cell_side_mm": 6.3,
+   "cells": 335,
+   "cells_per_zone": {
+    "heel": 76,
+    "midfoot": 103,
+    "forefoot": 103,
+    "toes": 53
+   },
+   "toe_cells": [
+    23,
+    12,
+    9,
+    5,
+    4
+   ],
+   "toe_lengthwise_lines": [
+    4,
+    2,
+    2,
+    1,
+    1
+   ],
+   "lines_crossing": 57,
+   "lines_crossing_if_toe_pieces_linked": 34,
+   "lines_lengthwise": 13,
+   "lines_total": 70,
+   "contacts": 70,
+   "tail_width_mm": 38.0,
+   "vias": 361,
+   "vias_in_bend_band": 43,
+   "row_column_crossings_in_bend_band": 43,
+   "toe_piece_lines": 26,
+   "line_in_toe_tabs_mm": 1393,
+   "vias_in_toe_tabs": 79,
+   "edge_channel_at_tail_mm": {
+    "distal_side": 15.7,
+    "proximal_side": 11.3
+   },
+   "cell_area_pct_of_sole": 64.2,
+   "conversions_per_s_per_foot_at_100Hz": 33500,
+   "r_gyration_mm": {
+    "heel": 2.5,
+    "midfoot": 2.5,
+    "forefoot": 2.5,
+    "toes": 2.5
+   }
+  },
+  "matrix_10mm": {
+   "pitch_mm": 10.0,
+   "cell_side_mm": 8.8,
+   "cells": 190,
+   "cells_per_zone": {
+    "heel": 41,
+    "midfoot": 58,
+    "forefoot": 59,
+    "toes": 32
+   },
+   "toe_cells": [
+    14,
+    5,
+    4,
+    7,
+    2
+   ],
+   "toe_lengthwise_lines": [
+    3,
+    1,
+    1,
+    2,
+    1
+   ],
+   "lines_crossing": 44,
+   "lines_crossing_if_toe_pieces_linked": 26,
+   "lines_lengthwise": 10,
+   "lines_total": 54,
+   "contacts": 54,
+   "tail_width_mm": 30.0,
+   "vias": 210,
+   "vias_in_bend_band": 24,
+   "row_column_crossings_in_bend_band": 24,
+   "toe_piece_lines": 20,
+   "line_in_toe_tabs_mm": 1100,
+   "vias_in_toe_tabs": 52,
+   "edge_channel_at_tail_mm": {
+    "distal_side": 12.1,
+    "proximal_side": 8.9
+   },
+   "cell_area_pct_of_sole": 69.9,
+   "conversions_per_s_per_foot_at_100Hz": 19000,
+   "r_gyration_mm": {
+    "heel": 3.6,
+    "midfoot": 3.6,
+    "forefoot": 3.6,
+    "toes": 3.6
+   }
+  }
+ }
+}

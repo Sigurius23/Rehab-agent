@@ -80,6 +80,8 @@ below is what counts.
 > 6. Dynamic flexing: what is your minimum bend radius for a two-layer part flexed millions of times, and do
 >    you have rules for copper on both layers inside the flex zone?
 > 7. Can the left and right soles share one panel, or must they be ordered as separate panels?
+> 8. Some comb pads are polygons whose outline touches itself at a single point (after rounding to 0.1 µm).
+>    KiCad's design-rule check accepts them. Does your CAM accept such outlines, or should they be split?
 
 The enquiry has not been sent. Sending it, choosing a fabricator and ordering need the project owner's
 approval.

@@ -78,8 +78,9 @@ The target shoe is the **Vibram FiveFingers KSO Trek** (kangaroo leather) in EU 
 bridges the combs, and the bridge conducts more as the load rises.
 - The combs are 0.2 mm fingers with 0.2 mm gaps, which fills 51–56 % of each region with copper.
 - The fingers run parallel to the toe-joint (MTP) bend line, so walking strains them least.
-- All regions share one common comb net. Each region has its own sense line, so there is no matrix and no
-  ghosting between regions.
+- All regions share one common comb net. Each region has its own sense line, so there is no matrix and none of
+  a matrix's sneak paths through other sensors. That does not make crosstalk zero; it is to be measured
+  (section 6).
 
 **Layer stack (proposed; thicknesses depend on the fabricator and the chosen film):**
 
@@ -278,7 +279,7 @@ where the anatomy needs it. Every size still has to pass the checks above first.
 |---|---|---|
 | MCU, radio, IMU, flash, charger | Seeed XIAO nRF52840 Sense: 6-axis LSM6DS3TR-C, 2 MB flash, BQ25101 charger, 6 analog pins | All on one 21 × 17.5 mm board; the IMU moves with the foot when the pod is on the instep |
 | Channel select | 16:1 analog multiplexer (CD74HC4067 class) | 16 sense lines into one readout |
-| Readout | Transimpedance amplifier with a zero-drift op-amp (OPA333 class); the common comb is driven at a reference voltage | Output is proportional to conductance, roughly linear in load; unselected lines float, so there is no crosstalk |
+| Readout | Transimpedance amplifier with a zero-drift op-amp (OPA333 class); the common comb is driven at a reference voltage | Output is proportional to conductance, roughly linear in load (to be measured). Unselected lines float, which leaves no DC path through other regions; crosstalk is expected to be low but is to be measured (below) |
 | Connector | 18-pin, 0.5 mm flat-flex connector | Takes the sole's tail |
 | Storage | microSD | 16 channels × 12 bit plus the IMU at 100 Hz is about 3.6 kB/s, or 13 MB an hour |
 | Battery | 150–250 mAh LiPo | Estimate of 6–10 mA while streaming, so tens of hours; to be measured |
@@ -288,6 +289,18 @@ Pin budget on the XIAO's 11 I/O pins:
 - 4 multiplexer address pins, 1 analog input, 4 for the SPI to the microSD, 1 sync input, 1 spare.
 
 Pod v1 (custom board, bare nRF52840 module) adds 32 channels, more storage and a smaller enclosure.
+
+**Crosstalk is to be measured, not assumed.** Floating unselected lines remove a matrix's sneak paths, but
+other paths remain:
+- capacitive coupling between neighbouring lines in a bundle: up to about 12 pF at EU 42 and 14 pF at EU 46,
+  where two lines run side by side for 300 mm or more. This is an estimate from the routed copper
+  (`candidates/open_line.py`). The readout has to settle through it after each switch;
+- the multiplexer's charge injection and off-leakage;
+- surface leakage between lines when sweat gets in;
+- film or moisture bridging between neighbouring film patches;
+- the common net's own resistance, shared by every region.
+The channel-isolation test (section 9.2) measures it: load one region and read its neighbours, at the chosen
+settling time, dry and humid.
 
 ## 7. Data and integration
 
@@ -346,6 +359,12 @@ The 16-region sole stays the baseline. These additions come from comparing it wi
 
 ### 9.1 A higher-resolution candidate, alongside the baseline
 
+**Status, 2026-11-03.** Candidate T1, a targeted layout with 20 regions at EU 42, has been generated beside
+the 16-region baseline with the same generator, rules and checker. 6 of its 8 configurations pass the checker;
+EU 37 fails at one spot. It is compared with a dense matrix in `CANDIDATES.md`. It is design and analysis
+only: not fabricated, fitted or measured. The 32-region figures below are preliminary arithmetic, not a routed
+or fit-validated design.
+
 - **Candidate subdivisions:**
   - big toe: tip and base;
   - lesser toes: one region each, as now; more only where a tab has room;
@@ -355,7 +374,7 @@ The 16-region sole stays the baseline. These additions come from comparing it wi
 - **Count and placement** come from fit, routing and measurement studies, not from a target number.
   - The generator can switch regions off already; the synthetic foot has 14.
   - Subdividing a region needs new anchors in `sole_gen.py`. That has not been tried.
-- **What more regions cost at the current rules.** This is arithmetic, not a routed design:
+- **What more regions cost at the current rules.** Preliminary arithmetic, not a routed or fit-validated design:
 
   | | 16 regions (now) | 32 regions |
   |---|---|---|
@@ -401,8 +420,10 @@ The 16-region sole stays the baseline. These additions come from comparing it wi
   date, rig and material lot. Zero and drift are re-checked at the start of every session.
 - **Warnings in the data:**
   - **Saturation.**
-  - **A suspected open line.** A region that never rises above zero while its neighbours do is flagged. A
-    broken sense line reads like an unloaded region, so it can only be suspected, not detected.
+  - **A suspected open line.** A region that never rises above zero while its neighbours do is flagged.
+    With the readout proposed in section 6, a broken sense line may be indistinguishable from an unloaded
+    region. Added diagnostics could detect it. A capacitive self-test, loop-back lines, a reference
+    conductance and test coupons are compared in `CANDIDATES.md`; none has been built or tested.
   - **Connector seating.** Contacts 1 and 18 both carry the common net. If the pod keeps them separate, it
     can check continuity between them. That shows both ends of the connector are seated; it does not test
     the sense lines.
@@ -466,8 +487,9 @@ The 16-region sole stays the baseline. These additions come from comparing it wi
 4. **Channels.** 16 on the XIAO prototype now, or go straight to a 32-channel custom pod.
 5. **Materials for the coupon test**, and the budget and fabricator for the flex boards.
 6. **Ethics and consent** (decision D8 in the review) before anyone other than the developers wears it.
-7. **Higher-resolution candidate.** Develop it in parallel with the 16-region baseline, or not yet.
-   Its region count would come from the studies in section 9 and also settles item 4.
+7. **Higher-resolution candidate.** Decided 2026-11-03: develop it in parallel with the 16-region baseline,
+   as design and analysis only, and keep both for a fair comparison (`CANDIDATES.md`). Still open: the region
+   count, from the studies in section 9, which also settles item 4.
 
 ## 11. Files and how to run
 

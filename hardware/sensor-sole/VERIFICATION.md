@@ -30,6 +30,7 @@ Nothing has been ordered, made or sent to a fabricator.
 | Measured length and width (`--length`, `--width`) | **No** | |
 | Real scanned feet | **No** | |
 | Heel tail exit, point mode | **No** | |
+| Higher-resolution candidate T1 (`candidates/T1/`) | Separately, in `CANDIDATES.md` | A different design; not covered by this summary, its identity tests or its negative controls |
 
 The router fixes of this session made all four checked configurations pass. Nothing in that says the untested
 ones will.

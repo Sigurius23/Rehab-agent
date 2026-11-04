@@ -139,8 +139,9 @@ DESIGN.md, section 7.
   centre-of-pressure estimates; for us that needs the coupon test and the force-plate comparison.
 - **Sizes and personal outlines:** a generator capability, not a demonstrated fit. Four configurations have
   been generated and checked, and none has been fitted.
-- **One line per region,** so there is no crossbar crosstalk to compensate. Spatial resolution is much lower
-  than smartinsole's 253 cells, though: a pressure peak cannot be located within a region.
+- **One line per region,** so there are no crossbar sneak paths to compensate. Other crosstalk paths remain
+  and are to be measured (DESIGN.md, section 6). Spatial resolution is much lower than smartinsole's 253
+  cells, though: a pressure peak cannot be located within a region.
 - **A passive, thin sole** with every component outside the shoe. KAKI documents the same split, and the same
   XIAO nRF52840 Sense pod.
 
@@ -157,7 +158,8 @@ DESIGN.md, section 7.
 - **Keep** the five-toe geometry and the 16-region sole as the baseline.
 - **From smartinsole:** study a higher-resolution candidate in parallel. That includes whether a denser layout
   can work with five separate toe tabs, accepting more routing, calibration and crosstalk work. More cells do
-  not by themselves mean better absolute accuracy.
+  not by themselves mean better absolute accuracy. Started 2026-11-03 as design and analysis only: the targeted
+  candidate T1 and a matrix study are in `CANDIDATES.md`.
 - **From KAKI:** the split between a passive sensing footbed and a reusable pod, and its data handling.
 - **From GRFMS:** a worked example of a force-platform comparison to plan ours against.
 - **No hardware is selected or combined** before our sole has been shown to fit, survive walking and give

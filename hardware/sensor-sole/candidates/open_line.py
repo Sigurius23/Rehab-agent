@@ -59,8 +59,9 @@ def main(paths):
         com = unary_union([LineString(v).buffer(c["com_w"] / 2, 8) for v in R["com"] if len(v) > 1])
         rows = {}
         for n, reg in d["regions"].items():
-            sense = unary_union([Polygon(q["pts"]) for q in reg["sense"]])
-            common = unary_union([Polygon(q["pts"]) for q in reg["common"]])
+            # buffer(0) cleans pad pieces that touch themselves at a point (seen in one candidate comb)
+            sense = unary_union([Polygon(q["pts"]).buffer(0) for q in reg["sense"]])
+            common = unary_union([Polygon(q["pts"]).buffer(0) for q in reg["common"]])
             L = facing_length(sense, common)                                  # mm
             comb = [EPS0 * e * L * 1e-3 * 1e12 for e in EPS_MEAN]              # pF
             lane = R["lanes"].get(n)

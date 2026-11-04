@@ -30,6 +30,9 @@ Moticon OpenGo, and the validation plan.
 | `manifest.py` | Writes `kicad/MANIFEST.json`: all committed boards with IDs, hashes and provenance |
 | `tests/` | `test_verify_drc.py` and `test_verify_negative.py` (checker, KiCad's Python); `test_channel_map.py` (resolver, in CI) |
 | `FABRICATION.md` | Fabrication assumptions against published flex-PCB capabilities, open questions, draft enquiry (not sent) |
+| `CANDIDATES.md` | Higher-resolution candidates, design and analysis only: the targeted candidate T1 beside the 16-region baseline, compared with a dense matrix; open-line diagnostics; crosstalk |
+| `sole_candidate.py` | Builds a candidate from a layout file with the generator unchanged, so the baseline boards stay valid |
+| `candidates/` | T1's layout, boards, check results and maps (kept apart from the baseline's); `study.py` (baseline, T1 and matrix on the same outlines) and `open_line.py` (capacitance estimates) |
 | `person_example.json` | Personalisation format (illustrative values, not a real person) |
 | `requirements.txt` | Python packages the generator needs |
 

@@ -140,8 +140,8 @@ def matrix(s, p):
         w0 = own_web[k] + 2
         tab_mm += sum(max(q["x"] for q in tc if q[along] == a) + c / 2 - w0 for a in {q[along] for q in tc})
         z = toe_zone[k]
-        width = z.bounds[3] - z.bounds[1]
-        tab_mm += sum(width + (x - w0) for x in {q["x"] for q in tc})
+        tab_w = z.bounds[3] - z.bounds[1]
+        tab_mm += sum(tab_w + (x - w0) for x in {q["x"] for q in tc})
     toe_cells = [sum(1 for q in cells if q["toe"] == k) for k in range(5)]
     toe_lengthwise = [len({q[along] for q in cells if q["toe"] == k}) for k in range(5)]
     return dict(
@@ -195,6 +195,48 @@ def direct(stem, folder, s=None):
         line_in_toe_tabs_mm=tab_mm, vias_in_toe_tabs=tab_vias)
 
 
+def figure(path, cfg="EU42", pitch=7.5):
+    """Baseline, T1 and the matrix side by side on one outline (right foot)."""
+    import matplotlib
+    matplotlib.use("Agg")
+    import matplotlib.pyplot as plt
+    b_stem, t_stem, arg = CONFIGS[cfg]
+    s, _ = spec_for(arg)
+    fig, axes = plt.subplots(1, 3, figsize=(15, 5.2))
+    panels = [("Baseline: 16 regions (routed, checked)", ROOT / "out" / f"{b_stem}.board.json"),
+              ("T1: targeted (routed, checked)", HERE / "T1" / "out" / f"{t_stem}.board.json"),
+              (f"Matrix at {pitch:g} mm: cells only (not routed)", None)]
+    for ax, (title, bj) in zip(axes, panels):
+        ax.set_aspect("equal"); ax.axis("off")
+        if bj is not None:
+            if not bj.exists():
+                ax.set_title(title + " - missing", fontsize=9); continue
+            d = json.loads(bj.read_text())
+            ax.plot(*Polygon(d["outline"]).exterior.xy, color="#222", lw=0.6)
+            for n, r in d["regions"].items():
+                poly = Polygon(r["outline"])
+                ax.fill(*poly.exterior.xy, fc="#9db8c7", ec="white", lw=0.6)
+                c = poly.centroid
+                ax.text(c.x, c.y, n, fontsize=4.5, ha="center", va="center")
+            for v in d["copper_routing"]["lanes"].values():
+                ax.plot(*zip(*v), color="#c2410c", lw=0.25)
+            ax.set_title(f"{title}\n{d['board_id']}, {len(d['regions'])} regions, tail {d['tail']['width']:g} mm",
+                         fontsize=9)
+        else:
+            m = matrix(dict(s), pitch)
+            sole, *_ = G.outline(s)
+            ax.plot(*sole.exterior.xy, color="#222", lw=0.6)
+            for q in m["_cells"]:
+                col = "#d97706" if q["in_band"] else ("#7c9a5b" if q["toe"] is not None else "#9db8c7")
+                ax.fill(*q["poly"].exterior.xy, fc=col, ec="white", lw=0.3)
+            ax.set_title(f"{title}\n{m['cells']} cells, {m['contacts']} lines, tail about {m['tail_width_mm']:g} mm; "
+                         f"orange: via in the bend band; green: in a toe tab", fontsize=9)
+    fig.suptitle(f"{cfg}, right foot. Design and analysis only: nothing fabricated, fitted or measured", fontsize=10)
+    fig.tight_layout()
+    fig.savefig(path, dpi=150)
+    plt.close(fig)
+
+
 def main():
     res = {}
     for name, (b_stem, t_stem, arg) in CONFIGS.items():
@@ -206,6 +248,7 @@ def main():
             row[f"matrix_{p:g}mm"] = m
         res[name] = row
     (HERE / "study.json").write_text(json.dumps(res, indent=1) + "\n")
+    figure(HERE / "compare_EU42.png")
     for name, row in res.items():
         print(f"== {name}")
         for k, v in row.items():
