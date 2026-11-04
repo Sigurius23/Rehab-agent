@@ -3,3 +3,5 @@ scipy>=1.11
 shapely>=2.0
 matplotlib>=3.8
 ezdxf>=1.1
+# printed prototype (sole_print.py) only
+manifold3d>=3.5

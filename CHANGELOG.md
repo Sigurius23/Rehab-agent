@@ -108,6 +108,28 @@
       unloaded region. Diagnostics that could detect it were compared; a capacitive self-test looks
       promising on estimates.
     - **Crosstalk** is now stated as something to measure, not a property of floating lines.
+  - **Order of work decided 2026-11-04:** simulation first, then a 3D-printed prototype, then the flex circuit.
+    - **Simulation** (`SIMULATION.md`, `sole_sim.py`). A sole is exported with regions, contact points and its
+      verified contact map, and added to an OpenSim model as a sensorised contact layer: one contact sphere per
+      point on `calcn` or `toes`, replacing the generic foot spheres, with the foot's overall contact stiffness
+      kept. Simulated forces are read out per region and in the pod's contact order, through an assumed sensor
+      model.
+      - First check: the scaled self-test model was dropped onto two EU 42 soles. It settles at 344.3 N per foot,
+        688.6 N against a 686.7 N body weight.
+      - The load pattern is not meaningful with the joints locked; tracking simulations and HPC sweeps are
+        planned.
+    - **Printed prototype** (`PRINTED.md`, `sole_print.py`). A TPU carrier is built from the same design:
+      - underside wire channels along the routing plan;
+      - a floor with one hole per region;
+      - a pocket per region on top, with walls of at least 2.4 mm;
+      - a separate cover.
+      The proposed sensor stack is through-mode (electrode, film, shared common fabric). Walls too thin to print
+      are removed on purpose and reported, and the bed fit is checked. EU 42 fits a 256 mm bed. Nothing has been
+      printed or bought.
+    - Tests: `tests/test_sim_print.py`.
+  - **T1 carried forward as a candidate, not a final selection; the matrix alternative stays open** (its figures
+    rest on one assumed architecture). Localisation figures and the capacitive open-line test are labelled as
+    estimates.
 - **Flaky live-chain test fixed** (`test_live_chain_posture_to_suit_payloads`). It had failed in CI on nearly every
   run since 2026-10-24, and once in a local full-suite run.
   - The engine sent its cue correctly, but the suit bridge sometimes had not yet connected to the cue stream. LSL

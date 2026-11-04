@@ -8,6 +8,10 @@ capability, not a demonstrated fit: four configurations have been generated and 
 fitted in a shoe. A thin passive flex circuit with 16 sensing regions lies in the shoe; a small pod outside
 the shoe reads it.
 
+**Order of work (decided 2026-11-04): simulation first, then a 3D-printed prototype, then the flex circuit.** The
+simulation model ([`SIMULATION.md`](SIMULATION.md)) and the printable parts ([`PRINTED.md`](PRINTED.md)) are
+generated from the same design as the flex boards. Nothing has been printed or bought.
+
 **Status: design only, not released for fabrication.** The layout, its generator and KiCad boards exist;
 nothing has been fabricated or measured. Physical sensing, fit in the shoe and durability are untested. No
 fabricator has confirmed the assumptions in [`FABRICATION.md`](FABRICATION.md). Check results per size and
@@ -28,11 +32,19 @@ Moticon OpenGo, and the validation plan.
 | `channel_map.py` | Resolves a sole's printed ID to exactly one verified channel map, or refuses (plain Python) |
 | `maps/` | Deployed channel maps, one per passing board, each tied to the board's design hash and file sha256 |
 | `manifest.py` | Writes `kicad/MANIFEST.json`: all committed boards with IDs, hashes and provenance |
-| `tests/` | `test_verify_drc.py` and `test_verify_negative.py` (checker, KiCad's Python); `test_channel_map.py` (resolver, in CI) |
+| `tests/` | `test_verify_drc.py` and `test_verify_negative.py` (checker, KiCad's Python); `test_channel_map.py` (resolver, in CI); `test_generator_regressions.py` (fail-closed splitting, valid export outlines, the EU 37 routing regression); `test_sim_print.py` (simulation export and readout, printed parts) |
 | `FABRICATION.md` | Fabrication assumptions against published flex-PCB capabilities, open questions, draft enquiry (not sent) |
 | `CANDIDATES.md` | Higher-resolution candidates, design and analysis only: the targeted candidate T1 beside the 16-region baseline, compared with a dense matrix; open-line diagnostics; crosstalk |
 | `sole_candidate.py` | Builds a candidate from a layout file with the generator unchanged, so the baseline boards stay valid |
 | `candidates/` | T1's layout, boards, check results and maps (kept apart from the baseline's); `study.py` (baseline, T1 and matrix on the same outlines) and `open_line.py` (capacitance estimates) |
+| `SIMULATION.md` | The sole in simulation: a sensorised contact layer in the OpenSim model, per-region readout, the first drop test, limits and next steps (including HPC) |
+| `sole_sim.py` | Exports a sole for simulation, adds it to an OpenSim model, and reads simulated forces out per region in the pod's contact order (assumed sensor model) |
+| `sim/` | Simulation exports of the current boards (`<id>.sole_sim.json`) |
+| `PRINTED.md` | The 3D-printed first prototype: TPU carrier with pockets, underside wire channels and a cover; proposed sensor stack; differences from the flex sole |
+| `sole_print.py` | Builds the printed carrier and cover (STL) from a sole design, with printability and bed-fit checks |
+| `print/` | Printable parts for EU 42 (carrier, cover, report, preview) |
+| `compare_boards.py` | Compares two boards item by item (copper, outline, keep-outs, openings, contacts, identity, rules, maps) |
+| `archive/` | Earlier verified board sets, kept unchanged for comparison |
 | `person_example.json` | Personalisation format (illustrative values, not a real person) |
 | `requirements.txt` | Python packages the generator needs |
 

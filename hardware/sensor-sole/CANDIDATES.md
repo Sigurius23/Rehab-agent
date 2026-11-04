@@ -98,7 +98,7 @@ assumptions are in `candidates/study.py`). Ranges across EU 37, 42, 46 and the s
 | Sensing elements | 16 regions | 20 regions | 341 cells | 188 cells |
 | … heel / midfoot / forefoot / toes | 3 / 3 / 5 / 5 | 4 / 3 / 7 / 6 | 79 / 97 / 107 / 58 | 42 / 53 / 64 / 29 |
 | Share of the sole that senses (outlines; geometric) | 74 % | 73 % | 64 %, before the edge channels below take their share | 68 %, the same caveat |
-| **Spatial information:** RMS localisation error from knowing only which element is loaded (median; heel / midfoot / forefoot / toes) | 16.5 / 17.1 / 16.8 / 11.0 mm | 12.8 / 16.7 / 13.0 / 9.5 mm | 2.5 mm everywhere | 3.6 mm everywhere |
+| **Spatial information** (geometric estimate, not measured): RMS localisation error from knowing only which element is loaded (median; heel / midfoot / forefoot / toes) | 16.5 / 17.1 / 16.8 / 11.0 mm | 12.8 / 16.7 / 13.0 / 9.5 mm | 2.5 mm everywhere | 3.6 mm everywhere |
 | Elements across the forefoot | 5 | 5, plus 2 behind them | about 13 | about 10 |
 | **Toe-pocket fit:** the outline, the tabs and the 2 mm slits with 1.0 mm round ends | Same | Same | Same | Same |
 | … copper lines inside the toe tabs | 138 mm | 205 mm (the big-toe tip's line runs along its tab) | about 1,560 mm | about 1,110 mm |
@@ -114,7 +114,8 @@ assumptions are in `candidates/study.py`). Ranges across EU 37, 42, 46 and the s
 | **Calibration:** curves per sole | 16 | 20 | 341, or a shared model with a gain per cell | 188 |
 
 **What each could give the twin.** None of this has been measured. Each column says what the geometry allows,
-not what the sole would deliver.
+not what the sole would deliver. The localisation figures above are geometric estimates (where an element's
+centre is), not measured localisation accuracy.
 - **Baseline:** one load signal per anatomical segment (heel, midfoot, each metatarsal head, each toe), with
   total force and centre of pressure estimated from 16 regions.
 - **T1 adds** the following, still with one aggregate signal per region, so a peak cannot be located inside a
@@ -126,25 +127,27 @@ not what the sole would deliver.
   is, and pressure gradients, so the twin could use a distribution rather than segment totals. The cost is
   hundreds of cells to calibrate, sneak paths to suppress, and coverage lost to the channels.
 
-**Recommendation, for you to decide: carry T1 forward, and keep the matrix as a studied alternative.** T1 adds
-information where the comparison suggested it (DESIGN.md, section 9.1) without changing what the sole asks of
-the shoe:
+**Decided 2026-11-04: T1 is carried forward as a candidate, not a final selection, and the matrix stays open.**
+T1 adds information where the comparison suggested it (DESIGN.md, section 9.1) without changing what the sole
+asks of the shoe:
 
 - the same outline and tabs;
 - 2 mm more tail;
 - no vias in the bend band;
 - the same one-channel-per-region readout.
 
-A matrix would need, against the current design rules:
+The matrix figures come from **one assumed architecture**: a two-layer flex, one via per cell, crossing lines cut
+by the toe slits. They are not evidence that matrix approaches are impractical in general. With that
+architecture, against the current design rules, a matrix would need:
 
 - vias in the bend band;
 - copper crossing inside the toe tabs;
 - a tail about three times as wide at the collar;
 - a different readout.
 
-Each of those is a fit, durability or electronics question the baseline avoided. A matrix is not ruled out. A
-layout with its own sub-array per toe, or more layers, could answer some of them, but that is a different
-design, not studied here.
+Each of those is a fit, durability or electronics question the baseline avoided. Other matrix architectures
+could answer some of them: a sub-array per toe, more layers, through-mode cells between two printed or flex
+layers (no via per cell), or a printed matrix. They are not studied here and stay open.
 
 ## 4. A broken sense line: can it be detected?
 
@@ -156,14 +159,14 @@ nothing measured):
 
 | Option | What changes | What it would detect | Cost and open questions |
 |---|---|---|---|
-| **Capacitive self-test** | Readout only: step the common net's drive and integrate the charge that flows into the selected line (an analog switch on the drive, a feedback capacitor and a reset switch on the amplifier) | A break in the sense line, its via or stub, or the connector; a comb that came off; partly a cut spine (part of the fingers lost) | Promising on the estimates below the table. Needs zero load (before the shoe goes on, or in swing), and a reference record per channel and per sole, because the multiplexer, connector and cable add capacitance of their own. The film's permittivity, humidity and temperature shift the reading. Not tested |
+| **Capacitive self-test** | Readout only: step the common net's drive and integrate the charge that flows into the selected line (an analog switch on the drive, a feedback capacitor and a reset switch on the amplifier) | A break in the sense line, its via or stub, or the connector; a comb that came off; partly a cut spine (part of the fingers lost) | Promising on estimates below the table; not measured. Needs zero load (before the shoe goes on, or in swing), and a reference record per channel and per sole, because the multiplexer, connector and cable add capacitance of their own. The film's permittivity, humidity and temperature shift the reading. Not tested |
 | **Loop-back lines** | Sole and pod: each sense comb joined to the tail by two lines, through its spine; continuity between the two contacts | Any break along the loop, including the spine; not a broken finger | Doubles the sense lines: 34 contacts for the baseline (tail about 20 mm), 42 for T1 at EU 42 (about 24 mm). More bundle width to carve out of the regions |
 | **Reference conductance** | Sole: a printed resistor across each comb, or a film with a stable conductance at zero load | An intact channel reads a known small value; an open line reads zero | Needs a printed-resistor process or a suitable film (coupon test). Adds an offset and its drift to every reading |
 | **Common-net continuity** | Pod only: the first and last contacts both carry the common net | That the connector is seated at both ends | Does not test the sense lines (DESIGN.md, section 9.3) |
 | **Test structures on the panel** | Fabrication: comb and via-chain coupons beside the soles, measured on receipt | Process defects in that batch | Not breaks that happen in use |
 | **Plausibility in the data** | Firmware: a channel flat at zero while its neighbours load | Suspicion only | Cannot confirm a break; an unloaded region looks the same |
 
-**Capacitive self-test, estimated from the routed copper** (`candidates/open_line.py`; nothing measured). Over
+**Capacitive self-test: estimates from the routed copper, not measured performance** (`candidates/open_line.py`). Over
 the four baseline configurations and T1:
 
 - **The comb** has 8–260 pF to the common net, depending on the region and the permittivity assumed.

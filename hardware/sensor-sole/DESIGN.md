@@ -11,7 +11,16 @@ estimate, marked as such, until the bench says otherwise.
 A pressure-sensing sole with five toe tabs, designed for a size-42 Vibram FiveFingers. Fit in the shoe has not
 been tested. The generator can produce it for other sizes (a layout-only sweep covered EU 36–47) and from a
 person's foot landmarks; so far EU 37, 42 and 46 and one synthetic foot have been generated and checked, and
-none has been fitted. Its sensing regions are anchored to the foot's anatomy. It has two parts:
+none has been fitted. Its sensing regions are anchored to the foot's anatomy.
+
+**Order of work, decided 2026-11-04:** simulation first, then a 3D-printed prototype, then the flex circuit.
+- **Simulation** (`SIMULATION.md`, `sole_sim.py`): the sole is loaded into the musculoskeletal model as a
+  sensorised contact layer and read out per region.
+- **Printed prototype** (`PRINTED.md`, `sole_print.py`): a TPU carrier with a pocket per region and wire
+  channels, from the same generator output.
+- **Flex circuit:** described below and in `kicad/`. It is the later stage.
+
+None of the three has been tested physically. It has two parts:
 
 - **The sole:** a passive, thin flex circuit in the shoe. Each sensing region is an interdigitated electrode
   pair under a piezoresistive film (a shunt-mode force-sensing resistor). There are no components under the foot.
@@ -488,8 +497,13 @@ or fit-validated design.
 5. **Materials for the coupon test**, and the budget and fabricator for the flex boards.
 6. **Ethics and consent** (decision D8 in the review) before anyone other than the developers wears it.
 7. **Higher-resolution candidate.** Decided 2026-11-03: develop it in parallel with the 16-region baseline,
-   as design and analysis only, and keep both for a fair comparison (`CANDIDATES.md`). Still open: the region
-   count, from the studies in section 9, which also settles item 4.
+   as design and analysis only, and keep both for a fair comparison (`CANDIDATES.md`). Decided 2026-11-04: T1
+   is carried forward as a candidate, not a final selection, and the dense-matrix alternative stays open. Still
+   open: the region count, from the studies in section 9, which also settles item 4.
+8. **Prototype order.** Decided 2026-11-04: simulation first, then a 3D-printed prototype, then the flex circuit
+   (`SIMULATION.md`, `PRINTED.md`). Still open: the printer, the filament and the film. Nothing is printed or
+   bought without approval.
+9. **High-performance computing** for simulation sweeps: to plan (`SIMULATION.md`, section 5).
 
 ## 11. Files and how to run
 
