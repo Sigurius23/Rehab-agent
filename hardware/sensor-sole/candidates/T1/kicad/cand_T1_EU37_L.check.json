@@ -1,17 +1,17 @@
 {
  "board": "cand_T1_EU37_L.kicad_pcb",
- "sha256": "61c2af30dd6b63c60b1f24aaf938f1442776bbb5d8df3199760e027321f7db40",
+ "sha256": "dbc563e95c9887485475b5126a9421c34202a9d67684abb7bef095ce468590a6",
  "project_sha256": "ad4cc8a801c027fd54ee79b945d5a7c1dfb90ddee493ed08f3b320f643ab4cf5",
  "kicad": "7.0.11+dfsg-1build4",
  "title": "Sensor sole v0 (L, foot 237 mm)",
  "title_block": [
   "CERN-OHL-S-2.0",
   "https://github.com/Sigurius23/Rehab-agent/tree/main/hardware/sensor-sole",
-  "sole_gen fbcd6bb25cd8 sole_route 72ed9bb8f9dd sole_candidate 3665782c8f0f layout fc0b8296fd1a kicad_export eb7da1c8654e",
-  "design 21e1be945003e6ba; git 5dd52ff08852; side L, size 37.0, exit arch"
+  "sole_gen cd2c6ce347e2 sole_route 72ed9bb8f9dd sole_candidate 385a9e999d8c layout fc0b8296fd1a kicad_export eb7da1c8654e",
+  "design 7b5c8400b6613c54; git 02578622dba4; side L, size 37.0, exit arch"
  ],
  "source_in_board": {
-  "sole_gen": "fbcd6bb25cd8",
+  "sole_gen": "cd2c6ce347e2",
   "sole_route": "72ed9bb8f9dd",
   "kicad_export": "eb7da1c8654e"
  },
@@ -41,8 +41,8 @@
   ],
   "contacts": 22,
   "dropped": {},
-  "board_id": "T1-EU37 L 21e1be9450",
-  "design_hash": "21e1be945003e6ba730bbbf8f41a1e14ca1f460b2a79012b2df59a489f97ad47",
+  "board_id": "T1-EU37 L 7b5c8400b6",
+  "design_hash": "7b5c8400b6613c540821fe96ebaa520cfe7ba0196a4227da97188e169464fcf6",
   "margin_keepouts": 1,
   "tools": {
    "python": "3.13.16",
@@ -54,12 +54,12 @@
    "kicad_export": "7.0.11+dfsg-1build4"
   }
  },
- "board_id": "T1-EU37 L 21e1be9450",
+ "board_id": "T1-EU37 L 7b5c8400b6",
  "provenance": {
-  "design_hash": "21e1be945003e6ba730bbbf8f41a1e14ca1f460b2a79012b2df59a489f97ad47",
-  "board_id": "T1-EU37 L 21e1be9450",
-  "inputs": "design 21e1be945003e6ba; git 5dd52ff08852; side L, size 37.0, exit arch",
-  "generator_files_at_run_start": "sole_gen fbcd6bb25cd8 sole_route 72ed9bb8f9dd sole_candidate 3665782c8f0f layout fc0b8296fd1a kicad_export eb7da1c8654e",
+  "design_hash": "7b5c8400b6613c540821fe96ebaa520cfe7ba0196a4227da97188e169464fcf6",
+  "board_id": "T1-EU37 L 7b5c8400b6",
+  "inputs": "design 7b5c8400b6613c54; git 02578622dba4; side L, size 37.0, exit arch",
+  "generator_files_at_run_start": "sole_gen cd2c6ce347e2 sole_route 72ed9bb8f9dd sole_candidate 385a9e999d8c layout fc0b8296fd1a kicad_export eb7da1c8654e",
   "tools": {
    "python": "3.13.16",
    "numpy": "2.5.4",
@@ -91,7 +91,7 @@
    "netclass_via_diameter": 0.45,
    "netclass_via_drill": 0.2
   },
-  "board_sha256": "61c2af30dd6b63c60b1f24aaf938f1442776bbb5d8df3199760e027321f7db40",
+  "board_sha256": "dbc563e95c9887485475b5126a9421c34202a9d67684abb7bef095ce468590a6",
   "project_sha256": "ad4cc8a801c027fd54ee79b945d5a7c1dfb90ddee493ed08f3b320f643ab4cf5",
   "checker": {
    "verify_board": "3815d9024f5d",
@@ -102,7 +102,7 @@
   "report": "cand_T1_EU37_L.drc.rpt",
   "written": true,
   "violations": 24,
-  "unconnected": 0,
+  "unconnected": 1,
   "footprint_errors": 0,
   "by_type": {
    "lib_footprint_issues": 21,
@@ -132,74 +132,18 @@
    "S20"
   ],
   "other_entries": [
-   "clearance: Clearance violation (netclass 'Default' clearance 0.1500 mm; actual 0.0073 mm)",
-   "clearance: Clearance violation (netclass 'Default' clearance 0.1500 mm; actual 0.0073 mm)",
-   "clearance: Clearance violation (netclass 'Default' clearance 0.1500 mm; actual 0.0073 mm)"
+   "clearance: Clearance violation (netclass 'Default' clearance 0.1500 mm; actual 0.1346 mm)",
+   "clearance: Clearance violation (netclass 'Default' clearance 0.1500 mm; actual 0.1346 mm)",
+   "clearance: Clearance violation (netclass 'Default' clearance 0.1500 mm; actual 0.1346 mm)"
   ]
  },
  "coverlay_openings_ok": true,
  "coverlay": {
-  "mid_lat_prox": {
-   "copper_mm2": 609.2,
-   "covered_mm2": 0.15,
-   "covered_pct": 0.02,
-   "sense_covered_mm2": 0.07,
-   "common_covered_mm2": 0.08,
-   "opening_pct_of_region": 100.0
-  },
-  "ffp_cen": {
-   "copper_mm2": 377.0,
-   "covered_mm2": 0.19,
-   "covered_pct": 0.05,
-   "sense_covered_mm2": 0.09,
-   "common_covered_mm2": 0.1,
-   "opening_pct_of_region": 100.0
-  },
-  "mt3": {
-   "copper_mm2": 349.2,
-   "covered_mm2": 0.13,
-   "covered_pct": 0.04,
-   "sense_covered_mm2": 0.06,
-   "common_covered_mm2": 0.07,
-   "opening_pct_of_region": 100.0
-  },
-  "mt5": {
-   "copper_mm2": 249.7,
-   "covered_mm2": 0.15,
-   "covered_pct": 0.06,
-   "sense_covered_mm2": 0.07,
-   "common_covered_mm2": 0.08,
-   "opening_pct_of_region": 100.0
-  },
   "mt4": {
-   "copper_mm2": 322.7,
-   "covered_mm2": 0.16,
+   "copper_mm2": 298.4,
+   "covered_mm2": 0.15,
    "covered_pct": 0.05,
-   "sense_covered_mm2": 0.07,
-   "common_covered_mm2": 0.09,
-   "opening_pct_of_region": 100.0
-  },
-  "toe1_base": {
-   "copper_mm2": 152.7,
-   "covered_mm2": 0.12,
-   "covered_pct": 0.08,
-   "sense_covered_mm2": 0.04,
-   "common_covered_mm2": 0.08,
-   "opening_pct_of_region": 99.9
-  },
-  "mid_lat_dist": {
-   "copper_mm2": 259.9,
-   "covered_mm2": 0.14,
-   "covered_pct": 0.05,
-   "sense_covered_mm2": 0.07,
-   "common_covered_mm2": 0.08,
-   "opening_pct_of_region": 100.0
-  },
-  "arch_med": {
-   "copper_mm2": 597.5,
-   "covered_mm2": 0.18,
-   "covered_pct": 0.03,
-   "sense_covered_mm2": 0.09,
+   "sense_covered_mm2": 0.06,
    "common_covered_mm2": 0.09,
    "opening_pct_of_region": 100.0
   },
@@ -212,44 +156,52 @@
    "opening_pct_of_region": 100.0
   },
   "toe3": {
-   "copper_mm2": 189.7,
-   "covered_mm2": 0.12,
+   "copper_mm2": 192.4,
+   "covered_mm2": 0.14,
    "covered_pct": 0.07,
-   "sense_covered_mm2": 0.07,
-   "common_covered_mm2": 0.06,
-   "opening_pct_of_region": 99.9
-  },
-  "ffp_med": {
-   "copper_mm2": 275.9,
-   "covered_mm2": 0.12,
-   "covered_pct": 0.04,
-   "sense_covered_mm2": 0.05,
-   "common_covered_mm2": 0.07,
+   "sense_covered_mm2": 0.06,
+   "common_covered_mm2": 0.08,
    "opening_pct_of_region": 100.0
   },
-  "toe4": {
-   "copper_mm2": 150.1,
-   "covered_mm2": 0.15,
-   "covered_pct": 0.1,
-   "sense_covered_mm2": 0.07,
+  "mt5": {
+   "copper_mm2": 223.3,
+   "covered_mm2": 0.14,
+   "covered_pct": 0.06,
+   "sense_covered_mm2": 0.06,
+   "common_covered_mm2": 0.08,
+   "opening_pct_of_region": 100.0
+  },
+  "toe5": {
+   "copper_mm2": 111.5,
+   "covered_mm2": 0.14,
+   "covered_pct": 0.12,
+   "sense_covered_mm2": 0.06,
    "common_covered_mm2": 0.08,
    "opening_pct_of_region": 99.9
   },
-  "toe5": {
-   "copper_mm2": 116.9,
-   "covered_mm2": 0.18,
-   "covered_pct": 0.15,
-   "sense_covered_mm2": 0.06,
-   "common_covered_mm2": 0.11,
+  "heel_am": {
+   "copper_mm2": 558.4,
+   "covered_mm2": 0.15,
+   "covered_pct": 0.03,
+   "sense_covered_mm2": 0.07,
+   "common_covered_mm2": 0.08,
+   "opening_pct_of_region": 100.0
+  },
+  "toe1_base": {
+   "copper_mm2": 152.7,
+   "covered_mm2": 0.12,
+   "covered_pct": 0.08,
+   "sense_covered_mm2": 0.04,
+   "common_covered_mm2": 0.08,
    "opening_pct_of_region": 99.9
   },
-  "toe1_tip": {
-   "copper_mm2": 201.6,
-   "covered_mm2": 0.14,
-   "covered_pct": 0.07,
-   "sense_covered_mm2": 0.07,
-   "common_covered_mm2": 0.07,
-   "opening_pct_of_region": 99.9
+  "mid_lat_prox": {
+   "copper_mm2": 612.3,
+   "covered_mm2": 0.13,
+   "covered_pct": 0.02,
+   "sense_covered_mm2": 0.05,
+   "common_covered_mm2": 0.08,
+   "opening_pct_of_region": 100.0
   },
   "toe2": {
    "copper_mm2": 214.1,
@@ -259,44 +211,92 @@
    "common_covered_mm2": 0.08,
    "opening_pct_of_region": 100.0
   },
-  "heel_pm": {
-   "copper_mm2": 223.4,
-   "covered_mm2": 0.13,
+  "mt2": {
+   "copper_mm2": 381.8,
+   "covered_mm2": 0.15,
+   "covered_pct": 0.04,
+   "sense_covered_mm2": 0.06,
+   "common_covered_mm2": 0.09,
+   "opening_pct_of_region": 100.0
+  },
+  "mt3": {
+   "copper_mm2": 380.3,
+   "covered_mm2": 0.14,
+   "covered_pct": 0.04,
+   "sense_covered_mm2": 0.07,
+   "common_covered_mm2": 0.07,
+   "opening_pct_of_region": 100.0
+  },
+  "ffp_cen": {
+   "copper_mm2": 374.9,
+   "covered_mm2": 0.16,
+   "covered_pct": 0.04,
+   "sense_covered_mm2": 0.07,
+   "common_covered_mm2": 0.09,
+   "opening_pct_of_region": 100.0
+  },
+  "mid_lat_dist": {
+   "copper_mm2": 254.0,
+   "covered_mm2": 0.14,
    "covered_pct": 0.06,
-   "sense_covered_mm2": 0.03,
+   "sense_covered_mm2": 0.06,
+   "common_covered_mm2": 0.08,
+   "opening_pct_of_region": 100.0
+  },
+  "heel_pl": {
+   "copper_mm2": 223.3,
+   "covered_mm2": 0.07,
+   "covered_pct": 0.03,
+   "sense_covered_mm2": 0.07,
+   "common_covered_mm2": 0.0,
+   "opening_pct_of_region": 100.0
+  },
+  "toe4": {
+   "copper_mm2": 150.5,
+   "covered_mm2": 0.14,
+   "covered_pct": 0.1,
+   "sense_covered_mm2": 0.06,
+   "common_covered_mm2": 0.08,
+   "opening_pct_of_region": 99.9
+  },
+  "ffp_med": {
+   "copper_mm2": 275.8,
+   "covered_mm2": 0.12,
+   "covered_pct": 0.04,
+   "sense_covered_mm2": 0.05,
+   "common_covered_mm2": 0.07,
+   "opening_pct_of_region": 100.0
+  },
+  "toe1_tip": {
+   "copper_mm2": 201.6,
+   "covered_mm2": 0.14,
+   "covered_pct": 0.07,
+   "sense_covered_mm2": 0.07,
+   "common_covered_mm2": 0.07,
+   "opening_pct_of_region": 99.9
+  },
+  "arch_med": {
+   "copper_mm2": 599.8,
+   "covered_mm2": 0.18,
+   "covered_pct": 0.03,
+   "sense_covered_mm2": 0.09,
    "common_covered_mm2": 0.09,
    "opening_pct_of_region": 100.0
   },
   "heel_al": {
-   "copper_mm2": 525.4,
+   "copper_mm2": 523.3,
    "covered_mm2": 0.13,
    "covered_pct": 0.03,
    "sense_covered_mm2": 0.06,
    "common_covered_mm2": 0.07,
    "opening_pct_of_region": 100.0
   },
-  "mt2": {
-   "copper_mm2": 381.9,
-   "covered_mm2": 0.16,
-   "covered_pct": 0.04,
-   "sense_covered_mm2": 0.06,
-   "common_covered_mm2": 0.1,
-   "opening_pct_of_region": 100.0
-  },
-  "heel_am": {
-   "copper_mm2": 564.3,
+  "heel_pm": {
+   "copper_mm2": 223.3,
    "covered_mm2": 0.13,
-   "covered_pct": 0.02,
-   "sense_covered_mm2": 0.05,
-   "common_covered_mm2": 0.08,
-   "opening_pct_of_region": 100.0
-  },
-  "heel_pl": {
-   "copper_mm2": 224.0,
-   "covered_mm2": 0.15,
    "covered_pct": 0.06,
-   "sense_covered_mm2": 0.06,
-   "common_covered_mm2": 0.08,
+   "sense_covered_mm2": 0.03,
+   "common_covered_mm2": 0.09,
    "opening_pct_of_region": 100.0
   }
  },
@@ -308,7 +308,7 @@
    "contact": 1,
    "net": "COM",
    "sense_regions": [],
-   "common_regions": 20,
+   "common_regions": 19,
    "shares_copper_with_contacts": [
     "22"
    ]
@@ -360,9 +360,9 @@
   },
   {
    "contact": 7,
-   "net": "S_toe4",
+   "net": "S_mt4",
    "sense_regions": [
-    "toe4"
+    "mt4"
    ],
    "common_regions": 0,
    "shares_copper_with_contacts": []
@@ -396,6 +396,15 @@
   },
   {
    "contact": 11,
+   "net": "S_toe4",
+   "sense_regions": [
+    "toe4"
+   ],
+   "common_regions": 0,
+   "shares_copper_with_contacts": []
+  },
+  {
+   "contact": 12,
    "net": "S_toe5",
    "sense_regions": [
     "toe5"
@@ -404,7 +413,7 @@
    "shares_copper_with_contacts": []
   },
   {
-   "contact": 12,
+   "contact": 13,
    "net": "S_mt5",
    "sense_regions": [
     "mt5"
@@ -413,25 +422,7 @@
    "shares_copper_with_contacts": []
   },
   {
-   "contact": 13,
-   "net": "S_mt4",
-   "sense_regions": [
-    "mt4"
-   ],
-   "common_regions": 0,
-   "shares_copper_with_contacts": []
-  },
-  {
    "contact": 14,
-   "net": "S_ffp_cen",
-   "sense_regions": [
-    "ffp_cen"
-   ],
-   "common_regions": 0,
-   "shares_copper_with_contacts": []
-  },
-  {
-   "contact": 15,
    "net": "S_mid_lat_dist",
    "sense_regions": [
     "mid_lat_dist"
@@ -440,19 +431,28 @@
    "shares_copper_with_contacts": []
   },
   {
-   "contact": 16,
-   "net": "S_mid_lat_prox",
+   "contact": 15,
+   "net": "S_ffp_cen",
    "sense_regions": [
-    "mid_lat_prox"
+    "ffp_cen"
+   ],
+   "common_regions": 0,
+   "shares_copper_with_contacts": []
+  },
+  {
+   "contact": 16,
+   "net": "S_arch_med",
+   "sense_regions": [
+    "arch_med"
    ],
    "common_regions": 0,
    "shares_copper_with_contacts": []
   },
   {
    "contact": 17,
-   "net": "S_arch_med",
+   "net": "S_mid_lat_prox",
    "sense_regions": [
-    "arch_med"
+    "mid_lat_prox"
    ],
    "common_regions": 0,
    "shares_copper_with_contacts": []
@@ -497,7 +497,7 @@
    "contact": 22,
    "net": "COM",
    "sense_regions": [],
-   "common_regions": 20,
+   "common_regions": 19,
    "shares_copper_with_contacts": [
     "1"
    ]
@@ -526,8 +526,8 @@
   "toe5"
  ],
  "channel_map": {
-  "board_sha256": "61c2af30dd6b63c60b1f24aaf938f1442776bbb5d8df3199760e027321f7db40",
-  "board_id": "T1-EU37 L 21e1be9450",
+  "board_sha256": "dbc563e95c9887485475b5126a9421c34202a9d67684abb7bef095ce468590a6",
+  "board_id": "T1-EU37 L 7b5c8400b6",
   "side": "L",
   "contact_to_region": {
    "1": "COM",
@@ -536,17 +536,17 @@
    "4": "toe1_base",
    "5": "mt1",
    "6": "mt2",
-   "7": "toe4",
+   "7": "mt4",
    "8": "mt3",
    "9": "toe2",
    "10": "toe3",
-   "11": "toe5",
-   "12": "mt5",
-   "13": "mt4",
-   "14": "ffp_cen",
-   "15": "mid_lat_dist",
-   "16": "mid_lat_prox",
-   "17": "arch_med",
+   "11": "toe4",
+   "12": "toe5",
+   "13": "mt5",
+   "14": "mid_lat_dist",
+   "15": "ffp_cen",
+   "16": "arch_med",
+   "17": "mid_lat_prox",
    "18": "heel_al",
    "19": "heel_pl",
    "20": "heel_pm",
@@ -555,7 +555,10 @@
   }
  },
  "problems": [
-  "DRC: {'clearance (error)': 3}"
+  "DRC: {'clearance (error)': 3}",
+  "DRC: 1 unconnected",
+  "common combs not reached from contact 1: ['heel_pl']",
+  "combs reached from no contact: ['heel_pl/2']"
  ],
  "ok": false
 }

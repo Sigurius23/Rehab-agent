@@ -5,8 +5,9 @@
 
 **2026-11-03. Status: not released for fabrication.**
 
-This summary covers the eight boards in `kicad/`, generated from commit 99c7468 and checked with
-`verify_board.py`.
+Sections 1–6 cover the eight boards generated from commit 99c7468 and checked with `verify_board.py`. Those
+boards are kept unchanged in `archive/baseline-99c7468/`. Section 7 covers the boards now in `kicad/`,
+regenerated on 2026-11-04 after the generator fixes, and compares them with the archived ones item by item.
 
 **What the checks establish:** the copper meets *our own* design rules, connects as intended, and carries a
 traceable identity.
