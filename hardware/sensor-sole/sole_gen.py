@@ -298,7 +298,8 @@ def _relocate_vias(names, full_idx, paths, load, lab, free, idx, X, Y, xx, yy, r
     return moved
 
 
-def route(sole, regs, tail_start, res=0.25, sense=None, band=None, relocate=True):
+def route(sole, regs, tail_start, res=0.25, sense=None, band=None, relocate=True, deep=frozenset(),
+          other_side=frozenset()):
     """Route every region's signal line to the tail along region borders; carve the bundles out.
 
     A label raster of the regions gives the borders (and the sole edge). The path cost rises steeply with
@@ -403,7 +404,9 @@ def route(sole, regs, tail_start, res=0.25, sense=None, band=None, relocate=True
                 pick.append((tr, -sg, e, sg))                # better tier first, then the default side
         if not pick:
             return ends, np.ones(len(ends), int)
-        tr, _, e, sg = min(pick, key=lambda q: (q[0], q[1]))
+        # better tier first, then the default side; a toe named in other_side (build(), when its via broke the
+        # plan's planarity) prefers the other side of its tab base
+        tr, _, e, sg = min(pick, key=lambda q: (q[0], -q[1] if n in other_side else q[1]))
         return e, np.full(len(e), sg)
 
     # Grow one tree from the tail, farthest region first. Each new path runs to the nearest point of the
@@ -420,7 +423,7 @@ def route(sole, regs, tail_start, res=0.25, sense=None, band=None, relocate=True
                                                                          # the line that will join them
     r_vv = vd + cl_ + 2 * (tw + cl_) + 0.3                               # via to via: a line fits between
     via_keep = vd / 2 + cl_ + tw / 2 + 0.2                               # no later line this close to a via
-    via_fallback = []
+    via_fallback, deep_vias = [], []
     for k in order_k:
         n = names[k]
         ends, sgns = both_sides(k, n)
@@ -444,6 +447,28 @@ def route(sole, regs, tail_start, res=0.25, sense=None, band=None, relocate=True
         ok_end = ~forb[yy[ends], xx[ends]]
         if ok_end.any():
             ends, sgns = ends[ok_end], sgns[ok_end]
+        elif n in deep and not n.startswith("toe"):
+            # No clear cell on its region's border, and that via broke the plan's planarity (build() asks for
+            # this only then): look deeper inside the region, clear of every bundle and via. The line then
+            # enters its region, which gives up a corridor to it. Toes keep their via at the tab base.
+            cells = idx[(lab == k) & free]
+            cells = cells[np.isfinite(D[cells])]
+            keep = ~forb[yy[cells], xx[cells]]
+            ex, ey = X[xx[cells]], Y[yy[cells]]
+            if band is not None:
+                bp, nrm, hw = band
+                keep &= np.abs((ex - bp[0]) * nrm[0] + (ey - bp[1]) * nrm[1]) >= hw
+            if sense is not None and n in sense:      # beside the sense comb's spine, as on the border
+                t_, split_ = sense[n]
+                for margin in (1.5, 0.5, -1e9):
+                    ok = keep & (ex * t_[0] + ey * t_[1] - split_ >= margin)
+                    if ok.any():
+                        keep = ok; break
+            if keep.any():
+                ends, sgns = cells[keep], np.ones(int(keep.sum()), int)
+                deep_vias.append(n)
+            else:
+                via_fallback.append(n)
         else:
             via_fallback.append(n)                    # no clear cell in its region: keep the nearest
         near = (ndimage.distance_transform_edt(~tree_mask) * res <= near_r) & ~tree_mask
@@ -500,7 +525,7 @@ def route(sole, regs, tail_start, res=0.25, sense=None, band=None, relocate=True
     usable = sole.buffer(-FAB["edge_margin"] + FAB["route_clear"])
     spill = carve.difference(usable).area
     worst = {"corridor_outside_sole_mm2": round(spill, 1), "vias_moved_clear_of_bundles": relocated,
-             "vias_without_clear_cell": via_fallback}
+             "vias_without_clear_cell": via_fallback, "vias_inside_region": deep_vias}
     return paths, load, worst, carve, (X, Y, res), side
 
 
@@ -527,16 +552,54 @@ def build(s, names, mode, exit, side="R"):
         nrm = -nrm
     bend_pt = m5 + nrm * 8.0
     split = {n: float(np.dot(np.asarray(r.centroid.coords[0]), t)) for n, r in regs.items()}
-    paths, load, spill, carve, _grid, sense_side = route(sole, regs, tail_start, sense={n: (t, split[n]) for n in regs},
-                                             band=(bend_pt, nrm, FAB["bend_band"]))
-    # final regions: the gap between neighbours, then room for the bundles; keep the largest piece
-    before = {n: r.area for n, r in regs.items()}
-    regs = {n: r.buffer(-FAB["region_gap"] / 2) for n, r in regs.items()}
-    if not carve.is_empty:
-        regs = {n: r.difference(carve) for n, r in regs.items()}
-    for n, r in list(regs.items()):
-        if isinstance(r, MultiPolygon):
-            regs[n] = max(r.geoms, key=lambda g: g.area)
+    tiles = regs
+
+    def routed(deep=frozenset(), other_side=frozenset()):
+        paths, load, spill, carve, _grid, sense_side = route(sole, tiles, tail_start,
+                                                             sense={n: (t, split[n]) for n in tiles},
+                                                             band=(bend_pt, nrm, FAB["bend_band"]), deep=deep,
+                                                             other_side=other_side)
+        # final regions: the gap between neighbours, then room for the bundles; keep the largest piece
+        regs = {n: r.buffer(-FAB["region_gap"] / 2) for n, r in tiles.items()}
+        if not carve.is_empty:
+            regs = {n: r.difference(carve) for n, r in regs.items()}
+        for n, r in list(regs.items()):
+            if isinstance(r, MultiPolygon):
+                regs[n] = max(r.geoms, key=lambda g: g.area)
+        return paths, load, spill, carve, sense_side, regs
+
+    paths, load, spill, carve, sense_side, regs = routed()
+    before = {n: r.area for n, r in tiles.items()}
+    # A via that found no clear cell, or that had to be moved clear of a bundle, can end up beside the bundle
+    # so that its line must cross the bundle to reach its place in it: an odd crossing the side search cannot
+    # remove (T1 at EU 37, where the fine pass then could not keep the lines apart). Only in that case, route
+    # again with those lines' vias placed differently: a toe takes the other side of its tab base (as a narrow
+    # toe already may), any other region may take a via deeper inside itself, clear of the bundles. Up to three
+    # rounds; a result is kept only if it has fewer odd crossings. A plan that is already planar is not
+    # touched, so every board that routed cleanly before routes exactly the same.
+    if mode == "region":
+        odd = planar_plan(paths, regs, sd, tail_start, tail_dir, tail_end, n_lines)[2]
+        deep, flip, rounds = set(), set(), []
+        for _ in range(3):
+            if not odd:
+                break
+            placed = set(spill["vias_without_clear_cell"]) | set(spill["vias_moved_clear_of_bundles"])
+            culprits = {x for pair in odd for x in pair} & placed
+            new = culprits - deep - flip
+            if not new:
+                break
+            deep |= {n for n in new if not n.startswith("toe")}
+            flip |= {n for n in new if n.startswith("toe")}
+            retry = routed(frozenset(deep), frozenset(flip))
+            odd2 = planar_plan(retry[0], retry[5], sd, tail_start, tail_dir, tail_end, n_lines)[2]
+            rounds.append(dict(deeper=sorted(deep), other_side=sorted(flip), odd_crossings_before=len(odd),
+                               odd_crossings_after=len(odd2), kept=len(odd2) < len(odd)))
+            if len(odd2) >= len(odd):
+                break
+            paths, load, spill, carve, sense_side, regs = retry
+            odd = odd2
+        if rounds:
+            spill["planarity_retry"] = rounds
     # Fillets where the tail meets the sole. A sharp inside corner in a flex outline is where it starts to
     # tear, and the copper-free margin along both edges of a sharp corner left a bundle arriving at an angle no
     # room to turn into the tail (the personalised foot). The fillet adds outline, so the margin follows it.
@@ -563,6 +626,7 @@ def build(s, names, mode, exit, side="R"):
         corridor_outside_sole_mm2=spill["corridor_outside_sole_mm2"],
         vias_moved_clear_of_bundles_mm=spill.get("vias_moved_clear_of_bundles", {}),
         vias_without_clear_cell=spill.get("vias_without_clear_cell", []),
+        vias_inside_region=spill.get("vias_inside_region", []), planarity_retry=spill.get("planarity_retry"),
         smallest_region=min(((n, round(r.area)) for n, r in regs.items()), key=lambda x: x[1]),
         least_area_kept=min(((n, round(100 * v)) for n, v in kept.items()), key=lambda x: x[1]),
         vias_in_bend_zone=in_bend,
@@ -623,20 +687,20 @@ TAIL_FILLET = 5.0                                    # mm, fillet radius where t
 CONTACT = dict(pad_len=4.0, pad_w=0.30, edge_gap=0.5, sense_w=0.12, com_w=0.20, via_d=0.45, via_drill=0.20, clear=0.15)
 
 
-def route_copper(sole, tail, regs, copper, paths, seeds, tail_start, tail_end, tail_dir, n_pins, checks):
-    """Real copper: sense lanes on B.Cu, stubs and the common net on F.Cu, vias, contact pads (sole_route.py)."""
+def planar_plan(paths, regs, seeds, tail_start, tail_dir, tail_end, n_pins):
+    """The lane plan (sole_route.build_lanes) after the planarity search. A line ending where its bundle
+    continues may sit on either side of it; sides are flipped while that reduces the pairs of lines that cross
+    an odd number of times (crossings no router can remove). Returns (plan, flips, odd pairs)."""
     import sys
     here = str(Path(__file__).resolve().parent)
     if here not in sys.path:                                  # also under `python -I`
         sys.path.insert(0, here)
-    from sole_route import build_lanes, crossings, maze_refine, odd_crossings, route_common, stubs_to_combs
+    from sole_route import build_lanes, odd_crossings
     C = CONTACT
     plan = lambda flips: build_lanes({n: paths[n] for n in regs if paths.get(n)}, 0.25, tail_start, tail_dir,
                                      tail_end, seeds, FAB["pitch"], FAB["ffc_pitch"], C["pad_len"], C["edge_gap"],
                                      n_pins, track_w=C["sense_w"], via_d=C["via_d"], clear=C["clear"],
                                      regions=regs, flips=flips)
-    # planarity search: a line ending where its bundle continues may sit on either side of it; flip sides
-    # while that reduces the pairs that cross an odd number of times (crossings no router can remove)
     flips = set()
     lan = plan(flips); odd = odd_crossings(lan["lanes"])
     for _ in range(12):
@@ -651,6 +715,18 @@ def route_copper(sole, tail, regs, copper, paths, seeds, tail_start, tail_end, t
         if best is None:
             break
         flips, lan, odd = best
+    return lan, flips, odd
+
+
+def route_copper(sole, tail, regs, copper, paths, seeds, tail_start, tail_end, tail_dir, n_pins, checks):
+    """Real copper: sense lanes on B.Cu, stubs and the common net on F.Cu, vias, contact pads (sole_route.py)."""
+    import sys
+    here = str(Path(__file__).resolve().parent)
+    if here not in sys.path:                                  # also under `python -I`
+        sys.path.insert(0, here)
+    from sole_route import crossings, maze_refine, route_common, stubs_to_combs
+    C = CONTACT
+    lan, flips, odd = planar_plan(paths, regs, seeds, tail_start, tail_dir, tail_end, n_pins)
     # copper stays out of the sole's copper-free margin (as regions, the routing plan and the common net do);
     # 0.3 mm to the edge applies only in the tail. Allowing the margin let the fine-grid pass take shortcuts
     # along the outline that bypass the planned lane order, so lines crossed (the personalised foot).
@@ -907,20 +983,40 @@ def to_png(geo, checks, path, title):
     fig.tight_layout(); fig.savefig(path, dpi=110); plt.close(fig)
 
 
+class FractureError(RuntimeError):
+    """A polygon with holes could not be split into hole-free pieces."""
+
+
 def fracture(poly):
     """Split a polygon with holes into hole-free pieces (KiCad custom pads need hole-free outlines).
-    Each split runs through a hole, so no copper is lost; the pieces touch and stay one net."""
+    Each split runs through a hole, so no copper is lost; the pieces touch and stay one net.
+
+    The cut is a vertical line through the first hole. Every split must make progress: more pieces, or fewer
+    holes. On a mirrored comb (T1, synthetic foot, left side) that cut once returned the polygon unchanged, and
+    the recursion never ended. A cut that makes no progress is therefore replaced by a horizontal one through
+    the same point, then by vertical and horizontal cuts through the hole's centroid. If none of them makes
+    progress, this stops with FractureError instead of looping. Where the vertical cut works, the result is
+    the same as before."""
     from shapely.ops import split
     if poly.is_empty:
         return []
     if not poly.interiors:
         return [poly]
-    x = Polygon(poly.interiors[0]).representative_point().x
+    hole = Polygon(poly.interiors[0])
+    rp, c = hole.representative_point(), hole.centroid
     minx, miny, maxx, maxy = poly.bounds
+    vert = lambda x: LineString([(x, miny - 1), (x, maxy + 1)])
+    horz = lambda y: LineString([(minx - 1, y), (maxx + 1, y)])
+    for cut in (vert(rp.x), horz(rp.y), vert(c.x), horz(c.y)):
+        parts = [p for p in split(poly, cut).geoms if p.geom_type == "Polygon" and p.area > 1e-4]
+        if len(parts) > 1 or (len(parts) == 1 and len(parts[0].interiors) < len(poly.interiors)):
+            break
+    else:
+        raise FractureError(f"no cut through a hole splits this polygon ({len(poly.interiors)} holes, "
+                            f"area {poly.area:.3f} mm2, bounds {tuple(round(v, 3) for v in poly.bounds)})")
     out = []
-    for part in split(poly, LineString([(x, miny - 1), (x, maxy + 1)])).geoms:
-        if part.geom_type == "Polygon" and part.area > 1e-4:
-            out += fracture(part)
+    for part in parts:
+        out += fracture(part)
     return out
 
 
@@ -935,6 +1031,88 @@ def pad_pieces(poly, overlap=0.02):
             elif g.geom_type == "Polygon":
                 out += fracture(g)
     return out
+
+
+# ------------------------------------------------------------------------------------- export precision
+EXPORT_GRID = 1e-4                    # mm: the board file keeps 4 decimals (0.1 um)
+SLIVER_MM2 = 1e-4                     # fracture() drops pieces this small (10 x 10 um), far below any etchable copper
+
+
+class ExportGeometryError(RuntimeError):
+    """An exported outline is invalid, or differs from the geometry by more than rounding."""
+
+
+def _ring(r):
+    """A ring as the board file stores it: 4 decimals, without the closing point."""
+    return [[round(x, 4), round(y, 4)] for x, y in np.asarray(r.coords)[:-1]]
+
+
+def on_grid_pieces(geom):
+    """Hole-free polygons snapped to the export grid, each with a valid rounded outline.
+
+    Rounding a valid outline to 0.1 um can make it invalid: a spike that goes out by a fraction of a micron and
+    straight back, two vertices that round to the same point, or a keyhole slit whose two sides cross once
+    rounded. Snapping the whole polygon to the grid first (shapely.set_precision keeps it valid) and fracturing
+    any holes gives outlines that stay valid when written. Stops with ExportGeometryError if one does not."""
+    from shapely import set_precision
+    out, queue, steps = [], [set_precision(geom, EXPORT_GRID)], 0
+    while queue:
+        steps += 1
+        if steps > 10000:
+            raise ExportGeometryError("snapping to the export grid did not converge")
+        g = queue.pop()
+        if g.is_empty:
+            continue
+        if g.geom_type in ("MultiPolygon", "GeometryCollection"):
+            queue += [x for x in g.geoms if not x.is_empty]
+            continue
+        if g.geom_type != "Polygon" or g.area < 1e-9:          # lines or points left by snapping: no area
+            continue
+        if g.interiors:
+            queue += [set_precision(f, EXPORT_GRID) for f in fracture(g)]
+            continue
+        r = _ring(g.exterior)
+        if not Polygon(r).is_valid:
+            from shapely.validation import explain_validity
+            raise ExportGeometryError(f"outline still invalid on the export grid: {explain_validity(Polygon(r))}")
+        out.append(r)
+    return out
+
+
+def export_rings(geom, pieces, what, connected):
+    """Rings for the board file from hole-free `pieces` of `geom`, and a check that they still are `geom`.
+
+    A piece whose rounded outline is valid is written as before. Only a piece that rounding makes invalid is
+    rebuilt on the grid (on_grid_pieces). Nothing is repaired silently. Every exported set is checked against
+    `geom`: each separate piece of difference must be rounding (nothing thicker than 0.2 um) or a sliver no
+    larger than SLIVER_MM2, the size below which fracture() drops a piece. Anything larger stops the export.
+    If `connected`, the pieces must also stay one connected shape (pieces touching at a single point do not
+    count). Returns [(ring, anchor point)], the number of rebuilt pieces and the sliver area in mm2."""
+    from shapely.validation import explain_validity
+    out, rebuilt = [], 0
+    for p in pieces:
+        r = _ring(p.exterior)
+        if Polygon(r).is_valid:
+            out.append((r, list(p.representative_point().coords[0])))
+            continue
+        rebuilt += 1
+        out += [(q, list(Polygon(q).representative_point().coords[0])) for q in on_grid_pieces(p)]
+    for r, _ in out:
+        if not Polygon(r).is_valid:
+            raise ExportGeometryError(f"{what}: invalid outline ({explain_validity(Polygon(r))})")
+    got = unary_union([Polygon(r) for r, _ in out]) if out else Polygon()
+    sliver = 0.0
+    for g in getattr(got.symmetric_difference(geom), "geoms", [got.symmetric_difference(geom)]):
+        if g.is_empty or g.area == 0 or g.buffer(-2 * EXPORT_GRID).is_empty:
+            continue                                           # rounding
+        if g.area > SLIVER_MM2:
+            raise ExportGeometryError(f"{what}: exported outlines differ from the geometry by {g.area:.5f} mm2 "
+                                      f"near {tuple(round(v, 3) for v in g.bounds)}, more than rounding")
+        sliver += g.area
+    if connected and geom.geom_type == "Polygon" and got.geom_type != "Polygon":
+        raise ExportGeometryError(f"{what}: exported pieces are no longer one connected shape "
+                                  f"({len(getattr(got, 'geoms', []))} parts)")
+    return out, rebuilt, sliver
 
 
 def _source_at_start():
@@ -976,8 +1154,9 @@ def source_stamp(args):
 
 def to_board_json(geo, s, args, path, requested=None, checks=None):
     """Everything the KiCad exporter needs, in the foot frame (mm)."""
-    ring = lambda r: [[round(x, 4), round(y, 4)] for x, y in np.asarray(r.coords)[:-1]]
+    ring = _ring
     regions = {}
+    rebuilt, slivers = {}, {}
     # a fixed region order (heel to toes, as in DEFAULT_SENSORS), so footprint references S01..S16 name the same
     # regions on every run; dict order inside the generator can vary with Python's string hashing
     rank = {n: i for i, n in enumerate(DEFAULT_SENSORS)}
@@ -997,11 +1176,26 @@ def to_board_json(geo, s, args, path, requested=None, checks=None):
     for n, r in sorted(geo["regions"].items(), key=lambda kv: (rank.get(kv[0], len(rank)), kv[0])):
         common, sense = geo["copper"].get(n, (Polygon(), Polygon()))
         via = geo["paths"].get(n)
+        # each comb as hole-free pads; an outline that rounding makes invalid is rebuilt on the grid, and the
+        # pads must still be the comb (export_rings stops otherwise)
+        pads = {}
+        for kind, comb in (("common", common), ("sense", sense)):
+            rings, k, sl = export_rings(comb, pad_pieces(comb), f"{n} {kind} comb", connected=True)
+            pads[kind] = [dict(pts=q, anchor=a) for q, a in rings]
+            if k:
+                rebuilt[f"{n} {kind}"] = k
+            if sl:
+                slivers[f"{n} {kind}"] = round(sl, 7)
+        outline, opening_ring = ring(r.exterior), ring(opening(r).exterior)
+        for what, q in (("outline", outline), ("coverlay opening", opening_ring)):
+            if not Polygon(q).is_valid:
+                from shapely.validation import explain_validity
+                raise ExportGeometryError(f"{n}: {what} invalid once rounded ({explain_validity(Polygon(q))})")
         regions[n] = dict(
-            outline=ring(r.exterior),
-            opening=ring(opening(r).exterior),
-            common=[dict(pts=ring(p.exterior), anchor=list(p.representative_point().coords[0])) for p in pad_pieces(common)],
-            sense=[dict(pts=ring(p.exterior), anchor=list(p.representative_point().coords[0])) for p in pad_pieces(sense)],
+            outline=outline,
+            opening=opening_ring,
+            common=pads["common"],
+            sense=pads["sense"],
             via_hint=[round(v, 3) for v in via[0]] if via else None)
     bp, bt = geo["bend"]
     bp, bt = np.asarray(bp, float), np.asarray(bt, float)
@@ -1020,7 +1214,13 @@ def to_board_json(geo, s, args, path, requested=None, checks=None):
     # copper-free margin as keep-out polygons (hole-free pieces), so KiCad's DRC itself flags copper in it
     margin = geo["plate"].difference(geo["body"].buffer(-FAB["edge_margin"]).union(geo["tail"]))
     margin_parts = [g for g in getattr(margin, "geoms", [margin]) if g.geom_type == "Polygon" and g.area > 1e-3]
-    margin_keepout = [ring(p.exterior) for g in margin_parts for p in fracture(g)]
+    keep, k, sl = export_rings(unary_union(margin_parts), [p for g in margin_parts for p in fracture(g)],
+                               "copper-free margin", connected=False)
+    if sl:
+        slivers["copper-free margin"] = round(sl, 7)
+    margin_keepout = [q for q, _ in keep]
+    if k:
+        rebuilt["copper-free margin"] = k
     out = dict(generator="sole_gen v0", source=source_stamp(args), config=config, side=args.side, foot_length=s["L"], ball_width=s["W"],
                outline=outline_ring, margin_keepout=margin_keepout, fab=FAB, regions=regions,
                bend=dict(point=[float(bp[0]), float(bp[1])], dir=[float(bt[0]), float(bt[1])], half_width=FAB["bend_band"],
@@ -1033,6 +1233,10 @@ def to_board_json(geo, s, args, path, requested=None, checks=None):
     # regions, combs, routing, pin order, configuration, side, rules) and nothing about how or when it was
     # made. Two different designs never share it; regenerating the same design gives the same hash, so the
     # printed ID resolves to exactly one map. The label in front is for people only.
+    # outlines that rounding would have made invalid, rebuilt on the export grid (export_rings): recorded with
+    # the source, outside the design hash
+    out["source"]["export_rebuilt_outlines"] = rebuilt
+    out["source"]["export_slivers_mm2"] = slivers         # pieces of difference below SLIVER_MM2, per comb
     design = {k: v for k, v in out.items() if k not in ("generator", "source")}
     dh = hashlib.sha256(json.dumps(design, sort_keys=True, separators=(",", ":"), default=float).encode()).hexdigest()
     src = out["source"]

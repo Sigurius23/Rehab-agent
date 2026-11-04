@@ -95,41 +95,7 @@ def install(layout):
         return {n: out[n] for n in names if n in out}, sd
 
     G.seeds, G.regions = seeds, regions
-    G.fracture = fracture
     G.DEFAULT_SENSORS = [r["name"] for r in layout["regions"]]   # footprint order S01.. follows the layout
-
-
-_base_fracture = G.fracture
-
-
-def fracture(poly):
-    """sole_gen.fracture with a guard. The shared version splits a polygon by a vertical line through its first
-    hole and recurses. On the mirrored synthetic foot with T1's regions, one comb has a hole where that split
-    makes no progress, and the recursion never ends. Where the vertical split works, this does exactly what
-    sole_gen.fracture does. Where it makes no progress, it splits horizontally through the hole instead, then
-    through the hole's centroid. If nothing works, it stops with an error rather than looping. The shared
-    function is left unchanged, because the baseline boards record its hash."""
-    from shapely.geometry import LineString, Polygon
-    from shapely.ops import split
-    if poly.is_empty:
-        return []
-    if not poly.interiors:
-        return [poly]
-    h = Polygon(poly.interiors[0])
-    rp, c = h.representative_point(), h.centroid
-    minx, miny, maxx, maxy = poly.bounds
-    vert = lambda x: LineString([(x, miny - 1), (x, maxy + 1)])
-    horz = lambda y: LineString([(minx - 1, y), (maxx + 1, y)])
-    for cut in (vert(rp.x), horz(rp.y), vert(c.x), horz(c.y)):
-        parts = [q for q in split(poly, cut).geoms if q.geom_type == "Polygon" and q.area > 1e-4]
-        if len(parts) > 1 or (parts and len(parts[0].interiors) < len(poly.interiors)):
-            break
-    else:
-        raise RuntimeError(f"cannot split a comb piece with {len(poly.interiors)} hole(s) into hole-free pads")
-    out = []
-    for q in parts:
-        out += fracture(q)
-    return out
 
 
 def stamp_candidate_files(layout_path):
