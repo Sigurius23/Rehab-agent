@@ -1,0 +1,87 @@
+{
+ "format": "sensor-sole-channel-map/1",
+ "board_id": "F54cfa0 R 6b6695e4db",
+ "design_hash": "6b6695e4dbf3ac6b25af64bd2cb8556f405439aa194303131bb67553910a1bde",
+ "side": "R",
+ "contacts": 16,
+ "regions": [
+  "heel_lat",
+  "heel_med",
+  "heel_post",
+  "mid_lat_dist",
+  "mid_lat_prox",
+  "mt1",
+  "mt2",
+  "mt3",
+  "mt4",
+  "mt5",
+  "toe1",
+  "toe2",
+  "toe3",
+  "toe4"
+ ],
+ "map": {
+  "1": "COM",
+  "2": "heel_med",
+  "3": "heel_post",
+  "4": "heel_lat",
+  "5": "mid_lat_prox",
+  "6": "mid_lat_dist",
+  "7": "mt4",
+  "8": "mt5",
+  "9": "toe4",
+  "10": "mt3",
+  "11": "toe3",
+  "12": "toe2",
+  "13": "toe1",
+  "14": "mt1",
+  "15": "mt2",
+  "16": "COM"
+ },
+ "verified": {
+  "board": "sole_person_example_R.kicad_pcb",
+  "board_sha256": "456645a0c33d7ceb0cad52385d2c8fabc5e2c9d5d13858da89f579bb2c7770e9",
+  "project_sha256": "71d97b02850e28004572cb69aad953ca5836afef45851e4547b6cdff1aed9ea7",
+  "check_sha256": "2a71f94a08768f18884cf04e21a26b25df866b869e37682bfef3a02740c9981b",
+  "checker": {
+   "verify_board": "3815d9024f5d",
+   "kicad": "7.0.11+dfsg-1build4"
+  }
+ },
+ "provenance": {
+  "inputs": "design 6b6695e4dbf3ac6b; git b5b0b1447b7f; side R, size 42.0, exit arch; foot person_example.json 54cfa09d05ac366a81b90f0c2c38bc2c92313d3fa83629e715d83c769865d465",
+  "generator_files_at_run_start": "sole_gen cd2c6ce347e2 sole_route 72ed9bb8f9dd kicad_export eb7da1c8654e",
+  "tools": {
+   "python": "3.13.16",
+   "numpy": "2.5.4",
+   "scipy": "1.18.1",
+   "shapely": "2.2.0",
+   "matplotlib": "3.11.2",
+   "ezdxf": "1.4.5",
+   "kicad_export": "7.0.11+dfsg-1build4"
+  },
+  "project_rules": {
+   "min_clearance": 0.15,
+   "min_connection": 0.0,
+   "min_copper_edge_clearance": 0.3,
+   "min_hole_clearance": 0.25,
+   "min_hole_to_hole": 0.25,
+   "min_microvia_diameter": 0.2,
+   "min_microvia_drill": 0.1,
+   "min_resolved_spokes": 2,
+   "min_silk_clearance": 0.0,
+   "min_text_height": 0.8,
+   "min_text_thickness": 0.08,
+   "min_through_hole_diameter": 0.2,
+   "min_track_width": 0.1,
+   "min_via_annular_width": 0.1,
+   "min_via_diameter": 0.4,
+   "solder_mask_to_copper_clearance": 0.15,
+   "netclass_clearance": 0.15,
+   "netclass_track_width": 0.15,
+   "netclass_via_diameter": 0.45,
+   "netclass_via_drill": 0.2
+  }
+ },
+ "map_sha256": "953ffa07dd09ee13f95ec28ea1900239bc3e5c01b1eb95a2ef91398c1c0927a3"
+}
