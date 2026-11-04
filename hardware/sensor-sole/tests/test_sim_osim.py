@@ -283,5 +283,54 @@ class ResidualsAndPerturbation(unittest.TestCase):
                 SS.add_to_osim(model, sj, Path(d) / "c.osim", perturb=dict(shear=1.0))
 
 
+@unittest.skipIf(osim is None, "needs the opensim package")
+class AssumedContact(unittest.TestCase):
+    def test_calibration_hits_the_target_force(self):
+        c = SS.ASSUMED_CONTACT_V1
+        r, target, depth = 0.0075, 22.5, 0.003
+        E = SS.calibrate_stiffness(r, target, depth, c)
+        m = osim.Model(); g = m.getGround()
+        b = osim.Body("b", 1.0, osim.Vec3(0), osim.Inertia(1e-3)); m.addBody(b)
+        m.addJoint(osim.SliderJoint("j", g, osim.Vec3(0), osim.Vec3(0, 0, 1.5707963267949), b, osim.Vec3(0),
+                                    osim.Vec3(0, 0, 1.5707963267949)))
+        hs = osim.ContactHalfSpace(osim.Vec3(0), osim.Vec3(0, 0, -1.5707963267949), g, "floor"); m.addContactGeometry(hs)
+        sp = osim.ContactSphere(r, osim.Vec3(0), b, "s"); m.addContactGeometry(sp)
+        f = osim.SmoothSphereHalfSpaceForce("c", sp, hs); f.set_stiffness(E)
+        for k in ("dissipation", "static_friction", "dynamic_friction", "viscous_friction", "transition_velocity",
+                  "constant_contact_force", "hertz_smoothing", "hunt_crossley_smoothing"):
+            getattr(f, f"set_{k}")(c[k])
+        m.addForce(f)
+        st = m.initSystem(); q = m.getCoordinateSet().get(0)
+        got = {}
+        for d in (-0.002, 0.001, 0.003, 0.006):
+            q.setValue(st, r - d); m.realizeDynamics(st)
+            lab, val = f.getRecordLabels(), f.getRecordValues(st)
+            got[d] = [val.get(i) for i in range(lab.size()) if lab.get(i).endswith(".Sphere.force.Y")][0]
+        self.assertAlmostEqual(got[0.003], target, delta=1e-6 * target)
+        self.assertAlmostEqual(got[0.006] / got[0.003], 2 ** 1.5, delta=0.01)       # Hertz exponent
+        self.assertAlmostEqual(got[0.001] / got[0.003], (1 / 3) ** 1.5, delta=0.01)
+        self.assertLess(got[-0.002], 1e-3 * target)                                 # nothing above the floor
+
+    def test_same_law_whatever_the_model_contact(self):
+        with tempfile.TemporaryDirectory() as d:
+            _, sj = small_sole(d)
+            soft, stiff = Path(d) / "soft.osim", Path(d) / "stiff.osim"
+            foot2(soft)
+            text = soft.read_text().replace("<stiffness>1000000</stiffness>", "<stiffness>10000000</stiffness>")
+            self.assertIn("<stiffness>10000000</stiffness>", text)
+            stiff.write_text(text)
+            a = SS.add_to_osim(soft, sj, Path(d) / "a.osim", contact=SS.ASSUMED_CONTACT_V1)
+            b = SS.add_to_osim(stiff, sj, Path(d) / "b.osim", contact=SS.ASSUMED_CONTACT_V1)
+            self.assertEqual(a["stiffness_per_sphere"], b["stiffness_per_sphere"])
+            self.assertEqual(a["contact_model"]["status"], "assumed, not measured")
+            n1 = SS.add_to_osim(soft, sj, Path(d) / "n1.osim"); n2 = SS.add_to_osim(stiff, sj, Path(d) / "n2.osim")
+            self.assertAlmostEqual(n2["stiffness_per_sphere"] / n1["stiffness_per_sphere"], 10.0, places=6)
+            self.assertEqual(n1["contact_model"]["name"], "native")
+            m = osim.Model(str(Path(d) / "a.osim"))
+            f = osim.SmoothSphereHalfSpaceForce.safeDownCast(m.getForceSet().get("force_sole_r_heel_00"))
+            self.assertEqual(f.get_hertz_smoothing(), 2000.0)
+            self.assertEqual(f.get_constant_contact_force(), 1e-8)
+
+
 if __name__ == "__main__":
     unittest.main(verbosity=2)

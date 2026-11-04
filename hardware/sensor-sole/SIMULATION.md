@@ -61,9 +61,17 @@ python sole_sim.py readout forces.sto sim/EU42_R_<hash>.sole_sim.json -o reading
      transforms. A toe joint that hangs from a forefoot segment is therefore located correctly.
    - **Plantar plane:** the bottom of the model's `calcn` contact spheres.
    - **They replace the generic contact spheres on every segment of that foot** (`--keep-generic` keeps them).
-   - **Contact parameters** are copied from the model's own foot contact. The stiffness is scaled so the foot as a
-     whole keeps the same contact stiffness: Hertz contact grows with the square root of the radius per sphere,
-     so 55 small spheres with the generic stiffness would make the foot several times stiffer.
+   - **Contact parameters**, one of two choices (`--contact`):
+     - `native` (the default): copied from the model's own foot contact. The stiffness is scaled so the foot as
+       a whole keeps the same contact stiffness: Hertz contact grows with the square root of the radius per
+       sphere, so 55 small spheres with the generic stiffness would make the foot several times stiffer.
+     - `assumed-v1` (`sole_sim.ASSUMED_CONTACT_V1`): the same law on every model, whatever contact it brings.
+       Each sphere carries p = 100 kPa × (indentation / 3 mm)^1.5 over its grid cell; its stiffness is
+       calibrated numerically. **Assumed, not measured:** it stands in for the sole stack and plantar soft
+       tissue until the coupon test gives a measured curve. It also uses smaller smoothing terms (constant
+       contact force 1e-8, Hertz smoothing 2000 /m). OpenSim's defaults, which the models' native contact
+       uses, act like about 3 mm of minimum indentation and let a sphere 2 mm above the floor carry 22 % of
+       its force at 3 mm.
 3. **Readout.** It takes the simulation's force report (OpenSim `ForceReporter`) and gives:
    - each region's normal force;
    - the total force and the centre of pressure, from the region centroids;
@@ -136,22 +144,29 @@ An earlier version of this section, from the first multi-segment run (commit acf
   registration.
 - **Segment boundaries** on a multi-segment foot are lines through each joint centre along its measured axis. A
   sphere near a boundary may ride on the neighbouring segment.
-- **Contact stiffness is inherited from each model's generic contact.** The same sole is therefore stiffer on
-  some models than on others, and that alone changes regional shares by several points (`FOOT_MODELS.md`,
-  section 5.1).
-- **The registration uses two landmarks** (heel and toe joint). The model's toe-joint axis is more oblique (about
-  35°) than the sole's bend line (about 13°), so the toe-joint line is matched at the foot's long axis only.
+- **Contact.** With `native`, the contact is inherited from each model's generic contact, so the same sole is
+  stiffer on some models than on others, and that alone changed regional shares by 3–8 points. With
+  `assumed-v1` the law is the same on every model, but it is an assumption. Switching between the two changes
+  D'Hondt's regional shares by up to 14 points (`FOOT_MODELS.md`, sections 5.1 and 5.4). Neither is measured.
+- **Length is registered on two landmarks** (heel and toe joint). The self-test model's toe-joint axis is more
+  oblique (about 35°) than the sole's bend line (about 13°), so the toe-joint line is matched at the foot's long
+  axis only.
 
 ## 4. Next steps in simulation (planned, not done)
 
 1. **Tracking simulation** (OpenSim Moco) of a squat and of walking, with the sensorised soles as the foot
-   contact. Region loads and centre of pressure over time, set against the pipeline's estimated ground forces.
+   contact. Region loads and centre of pressure over time. The pipeline's estimated ground forces are not a
+   reference: the comparison is against measured force plates (`VALIDATION_PLAN.md`, stage A), and it is
+   reported separately from the passive, prescribed-centre-of-pressure control in `FOOT_MODELS.md`.
 2. **MuJoCo / MyoSuite.** Export the same contact layer as an MJCF fragment for models converted with
    `myoconverter`.
 3. **Sensor variants.** Run the same motion through the baseline, T1 and a printed-prototype region set to see
    what each could resolve. These would still be simulated, not measured.
-4. **Validation path.** Once the printed prototype exists: the same motion recorded on the bench or a force
-   plate against the simulated readings. Thresholds are set before the data is seen.
+4. **Validation path** (`VALIDATION_PLAN.md`): three separate stages, each with candidate public datasets.
+   First the current foot-to-ground model against force plates; then regional barefoot plantar pressure; then
+   foot–insole contact, which needs the footbed and shoe layers and the sole's measured response first. Once the
+   printed prototype exists, the same motion can be recorded on the bench or a force plate against the
+   simulated readings. Thresholds are set before the data is seen.
 
 ## 5. High-performance computing: to plan, not started
 

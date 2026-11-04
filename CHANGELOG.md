@@ -155,16 +155,49 @@
           - Posture-based balance, with the centre of pressure under the centre of mass.
           - Controlled loading, with the centre of pressure prescribed for every model.
           - Sensitivity runs (scale, lateral offset, pitch, boundaries, stiffness, spacing).
-          - A contact-spacing convergence study.
+          - Contact-spacing runs (a discretisation sensitivity).
           Every equilibrium was solved and checked (support within 0.034 %).
-        - **Findings, within these simulations:**
+        - **Findings, within these simulations** (each model's native contact; *now the sensitivity analysis*, see
+          the entry below):
           - Freeing the midtarsal joint moves load onto the arch: +2 points at a centre of pressure of 0.45, +6 at
             0.75, at every spacing tried.
           - Freeing the MTP joint moves 6–8 points of toe load onto the metatarsals at 0.75.
           - Contact spacing and the contact stiffness the sole inherits change regional shares by as much: up to
             6 and 3–8 points.
           - The two-segment and D'Hondt rigid feet agree once the stiffness is matched.
-          - Absolute shares are not converged to better than about ±3 points.
+          - *Corrected wording:* the spacing results are a discretisation sensitivity (shares not converged in
+            spacing), not a ±3-point confidence interval or the total uncertainty.
+      - **One assumed sole contact across the foot models** (2026-11-04; `FOOT_MODELS.md`). Experimental; no model
+        is selected; simulation only.
+        - `sole_sim.ASSUMED_CONTACT_V1`: p = 100 kPa × (indentation / 3 mm)^1.5 per grid cell, with stiffness
+          calibrated numerically per sphere. **Assumed, not measured.** `sole_sim.py osim --contact assumed-v1`;
+          native contact stays the default.
+        - **Finding:** OpenSim's default contact smoothing (used by all three models) is not Hertz-like at
+          millimetre scale. It acts like about 3 mm of minimum indentation, and a sphere 2 mm above the floor
+          still carries 22 % of its force at 3 mm. The assumed law uses smaller smoothing terms and is within
+          about 1 % of Hertz from 1 mm (`tests/test_sim_osim.py`, `AssumedContact`).
+        - **The main comparison** now uses the assumed contact. Each model's native contact is kept as a separate
+          sensitivity analysis. The prescribed centre of pressure on a passive foot is reported as a control, not
+          as a predicted movement; no muscle-driven squat or gait was simulated.
+        - **Within these simulations:** with one contact law, the rigid two-segment and D'Hondt feet agree within
+          0.2 points. Freeing D'Hondt's midtarsal joint moves load onto the arch (+6 points at 0.45 and +20 to +22
+          at 0.75, against +2 and +6 with native contact). Freeing the MTP joint at 0.75 raises the metatarsal
+          share by 13–19 points and lowers the toe share by 11–15. Native instead of assumed contact changes D'Hondt's shares by up to
+          14 points. Neither contact model is measured.
+        - **Discretisation sensitivity** (15, 10, 7.5, 5 mm): absolute shares change by up to 7.9, 2.5 and 3.4
+          points between successive spacings. Reported as sensitivity to one modelling choice, not as a confidence
+          interval or the total uncertainty.
+        - **Out-of-range postures:** D'Hondt's 60° and 80° squat frames exceed its coordinate ranges. They are
+          flagged and not interpreted; nothing here describes valid deep-squat behaviour.
+        - **Reproducibility:** `foot_models/PROVENANCE.json` (model, kinematics, sole, saved-function and
+          transcribed-source hashes; the port's deterministic output hashes; tool versions), checked by
+          `tests/test_dhondt_port.py`. `foot_models/results_2026-11-04.json` holds the 244 runs.
+        - **Test record:** `TEST_RUNS.md` (written by `tests/run_suites.py`) lists which tests ran and which skipped
+          in each environment, and why: several need the external models or CasADi.
+        - **Validation plan** (`VALIDATION_PLAN.md`; a plan, nothing downloaded, bought or contacted): a
+          force-plate comparison of the current foot-to-ground model first (OpenCap LabValidation as first
+          choice), then regional barefoot plantar pressure, then foot–insole contact, each with candidate public
+          datasets and reference equipment.
         - **Synergy foot:** a kinematic comparison on bone landmarks. The sole's lateral regions (mt3–mt5,
           toe4–toe5) do not line up with that generic skeleton, and all five toes turn together. Sikidar is still
           to inspect.

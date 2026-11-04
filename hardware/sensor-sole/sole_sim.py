@@ -360,14 +360,62 @@ def contact_inventory(model, model_path, chain, keep_generic):
 # --------------------------------------------------------------------------------------------- OpenSim
 PERTURB_KEYS = ("scale", "lateral_mm", "pitch_deg", "boundary_mm", "stiffness")
 
+# One assumed sole-contact model, used identically on every foot model in controlled comparisons. ASSUMED, NOT
+# MEASURED: it stands in for the sole stack plus the plantar soft tissue until the coupon test gives a measured
+# curve. Pressure on each sphere's grid cell follows p = pressure_kpa * (indentation / indentation_mm) ** 1.5 (the
+# Hertz exponent). The per-sphere stiffness is calibrated numerically in OpenSim for that (calibrate_stiffness),
+# so the assumed law is the same at any contact spacing. The smoothing is tightened from OpenSim's defaults
+# (constant_contact_force 1e-5, hertz_smoothing 300), which act like a ~3 mm minimum indentation and let a sphere
+# 2 mm above the floor carry a fifth of its 3 mm force; with these values the law is within ~1 % of Hertz from
+# 1 mm indentation, and a sphere above the floor carries almost nothing. Dissipation and friction are the values
+# the two-segment and D'Hondt models share.
+ASSUMED_CONTACT_V1 = dict(
+    name="assumed sole contact v1", status="assumed, not measured",
+    pressure_kpa=100.0, indentation_mm=3.0,
+    dissipation=2.0, static_friction=0.8, dynamic_friction=0.8, viscous_friction=0.5, transition_velocity=0.2,
+    constant_contact_force=1e-8, hertz_smoothing=2000.0, hunt_crossley_smoothing=50.0)
+_CONTACT_PARAMS = ("dissipation", "static_friction", "dynamic_friction", "viscous_friction", "transition_velocity",
+                   "constant_contact_force", "hertz_smoothing", "hunt_crossley_smoothing")
 
-def add_to_osim(model_path, sole_json, out_path, radius_mm=None, keep_generic=False, perturb=None):
+
+def calibrate_stiffness(radius_m, force_n, indentation_m, params):
+    """The SmoothSphereHalfSpaceForce stiffness at which one sphere of this radius, with these smoothing and
+    friction parameters, pushes back with force_n at indentation_m at rest. Measured in OpenSim (the force is
+    linear in stiffness, checked here) rather than taken from a formula."""
+    import opensim as osim
+
+    def unit(E):
+        m = osim.Model(); g = m.getGround()
+        b = osim.Body("b", 1.0, osim.Vec3(0), osim.Inertia(1e-3)); m.addBody(b)
+        m.addJoint(osim.SliderJoint("j", g, osim.Vec3(0), osim.Vec3(0, 0, math.pi / 2), b, osim.Vec3(0),
+                                    osim.Vec3(0, 0, math.pi / 2)))
+        hs = osim.ContactHalfSpace(osim.Vec3(0), osim.Vec3(0, 0, -math.pi / 2), g, "floor"); m.addContactGeometry(hs)
+        sp = osim.ContactSphere(radius_m, osim.Vec3(0), b, "s"); m.addContactGeometry(sp)
+        f = osim.SmoothSphereHalfSpaceForce("c", sp, hs); f.set_stiffness(E)
+        for k in _CONTACT_PARAMS:
+            getattr(f, f"set_{k}")(params[k])
+        m.addForce(f)
+        st = m.initSystem(); c = m.getCoordinateSet().get(0)
+        c.setValue(st, radius_m - indentation_m); m.realizeDynamics(st)
+        lab, val = f.getRecordLabels(), f.getRecordValues(st)
+        return [val.get(i) for i in range(lab.size()) if lab.get(i).endswith(".Sphere.force.Y")][0]
+    f1, f2 = unit(1e6), unit(2e6)
+    if abs(f2 / f1 - 2.0) > 1e-3:
+        raise RuntimeError(f"contact force is not linear in stiffness here ({f1}, {f2}): cannot calibrate")
+    return 1e6 * force_n / f1
+
+
+def add_to_osim(model_path, sole_json, out_path, radius_mm=None, keep_generic=False, perturb=None, contact=None):
     """Write a copy of the model whose foot meets the ground through the sole's contact points. Experimental.
 
     perturb (sensitivity checks only): scale (factor on the registered scale), lateral_mm (shift of the sole along
     the calcn z axis), pitch_deg (tilt of the sole plane about the heel point, toe up for positive), boundary_mm
     (shift of every segment boundary and the toe line, for assigning points only), stiffness (factor)."""
     import opensim as osim
+    if contact is not None:
+        missing = {"pressure_kpa", "indentation_mm", *_CONTACT_PARAMS} - set(contact)
+        if missing:
+            raise ValueError(f"contact model lacks {sorted(missing)}")
     perturb = dict(perturb or {})
     bad = set(perturb) - set(PERTURB_KEYS)
     if bad:
@@ -439,9 +487,19 @@ def add_to_osim(model_path, sole_json, out_path, radius_mm=None, keep_generic=Fa
     # spheres of radius r get stiffness k * (n_generic * sqrt(R_generic)) / (n * sqrt(r)). Otherwise 55 spheres with
     # the generic stiffness make the foot several times stiffer than the model it came from.
     n_sole = len(plan)
-    k_scale = (sum(math.sqrt(q[2]) for q in gen) / (n_sole * math.sqrt(r))) if gen else 1.0
-    params = dict(params)
-    params["stiffness"] = params["stiffness"] * k_scale * perturb.get("stiffness", 1.0)
+    if contact is None:                                 # native: the model's own contact, overall stiffness kept
+        k_scale = (sum(math.sqrt(q[2]) for q in gen) / (n_sole * math.sqrt(r))) if gen else 1.0
+        params = dict(params)
+        params["stiffness"] = params["stiffness"] * k_scale * perturb.get("stiffness", 1.0)
+        contact_model = dict(name="native", status="the model's own generic contact parameters (incl. its smoothing), "
+                             "stiffness scaled so the sole keeps the generic foot's overall contact stiffness")
+    else:                                               # one assumed law for every model
+        k_scale = None
+        cell_m2 = (sole["point_spacing_mm"] * scale_used / 1000.0) ** 2
+        force = contact["pressure_kpa"] * 1000.0 * cell_m2
+        params = {k: contact[k] for k in _CONTACT_PARAMS}
+        params["stiffness"] = calibrate_stiffness(r, force, contact["indentation_mm"] / 1000.0, params) * perturb.get("stiffness", 1.0)
+        contact_model = dict(contact, cell_area_mm2=round(cell_m2 * 1e6, 3), force_per_sphere_at_reference_N=round(force, 4))
     placed = []
     for n, k, body, loc in plan:
         name = f"sole_{s}_{n}_{k:02d}"
@@ -465,7 +523,8 @@ def add_to_osim(model_path, sole_json, out_path, radius_mm=None, keep_generic=Fa
                 spheres=len(placed), radius_m=r, replaced_generic=not keep_generic,
                 replaced_forces=forces_old if not keep_generic else [],
                 replaced_spheres=spheres_old if not keep_generic else [],
-                stiffness_scale=round(k_scale, 4), stiffness_per_sphere=params["stiffness"],
+                contact_model=contact_model,
+                stiffness_scale=None if k_scale is None else round(k_scale, 4), stiffness_per_sphere=params["stiffness"],
                 registration=dict(heel_x=foot["heel_x"], plantar_y=foot["plantar_y"],
                                   mtp_point=foot["mtp_point"].tolist(), mtp_axis=np.round(foot["mtp_axis"], 4).tolist()),
                 registration_residuals=residuals,
@@ -556,6 +615,8 @@ def main():
     e.add_argument("--spacing", type=float, default=15.0)
     o = sub.add_parser("osim"); o.add_argument("model"); o.add_argument("sole_json"); o.add_argument("-o", required=True)
     o.add_argument("--radius-mm", type=float); o.add_argument("--keep-generic", action="store_true")
+    o.add_argument("--contact", choices=["native", "assumed-v1"], default="native",
+                   help="native: the model's own contact (default); assumed-v1: ASSUMED_CONTACT_V1, assumed, not measured")
     o.add_argument("--perturb", action="append", default=[], metavar="KEY=VALUE",
                    help=f"sensitivity checks only; keys {', '.join(PERTURB_KEYS)}")
     r = sub.add_parser("readout"); r.add_argument("forces_sto"); r.add_argument("sole_json"); r.add_argument("-o", required=True)
@@ -570,7 +631,8 @@ def main():
     elif a.cmd == "osim":
         pert = {k: float(v) for k, v in (kv.split("=", 1) for kv in a.perturb)}
         try:
-            meta = add_to_osim(a.model, a.sole_json, a.o, a.radius_mm, a.keep_generic, pert)
+            meta = add_to_osim(a.model, a.sole_json, a.o, a.radius_mm, a.keep_generic, pert,
+                               ASSUMED_CONTACT_V1 if a.contact == "assumed-v1" else None)
         except UnsupportedModel as e:
             raise SystemExit(f"refused: {e}")
         print(json.dumps(meta, indent=1, default=float))

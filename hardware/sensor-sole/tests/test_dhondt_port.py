@@ -82,6 +82,19 @@ class Equations(unittest.TestCase):
         self.assertTrue(DP.out_of_range(math.radians(31)) and not DP.out_of_range(math.radians(29.9)))
 
 
+class Provenance(unittest.TestCase):
+    """foot_models/PROVENANCE.json records the hashes needed to reproduce the port; they must agree with the code."""
+    def test_recorded_hashes_agree_with_the_port(self):
+        import json
+        prov = json.loads((HERE / "foot_models" / "PROVENANCE.json").read_text())
+        recorded = set(prov["dhondt"]["models"].values())
+        self.assertEqual(recorded, set(DP.NOMINAL))
+        self.assertEqual(prov["dhondt"]["saved_function"]["Polynomials/Fal_s1_mtjcf3_FK_sc_FDB2_MTc5/f_getMtjLigamentMoment_exp5"],
+                         DP.table()["source"]["sha256"])
+        self.assertEqual(prov["port"]["table_sha256"],
+                         hashlib.sha256((HERE / "foot_models" / "dhondt2024_mtj_ligament_moment.json").read_bytes()).hexdigest())
+
+
 @unittest.skipIf(casadi is None or not EXP5, "needs casadi and DHONDT_EXP5")
 class OriginalBspline(unittest.TestCase):
     def test_table_equals_the_saved_function(self):
@@ -167,6 +180,14 @@ class PortedModels(unittest.TestCase):
                         c.setValue(s, q, False); c.setSpeedValue(s, qd); m.realizeDynamics(s)
                         want = -k * q - dmp * qd + float(DP.falisse_passive(q, qd, K, th))
                         self.assertAlmostEqual(f.getForceMagnitude(s), want, delta=1e-6 * max(1, abs(want)))
+
+    def test_port_output_matches_the_recorded_hashes(self):
+        import json
+        if osim.__version__ != "4.6":
+            self.skipTest(f"output hashes were recorded with OpenSim 4.6, this is {osim.__version__}")
+        prov = json.loads((HERE / "foot_models" / "PROVENANCE.json").read_text())["port"]["outputs_sha256"]
+        self.assertEqual(hashlib.sha256((self.d / "p4.osim").read_bytes()).hexdigest(), prov["4-segment ported"])
+        self.assertEqual(hashlib.sha256((self.d / "p3.osim").read_bytes()).hexdigest(), prov["3-segment ported"])
 
     def test_other_files_are_refused(self):
         bad = self.d / "altered.osim"

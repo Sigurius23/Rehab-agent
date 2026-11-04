@@ -6,7 +6,12 @@
 **2026-11-04. Experimental. No foot model is selected by this comparison.**
 
 **What this is:** the same sensor-sole design (EU 42, `EU42 R 636645a928` / `EU42 L 40fe8e1d0c`), loaded onto
-different OpenSim foot models through the same adapter (`sole_sim.py`), under the same quasi-static loading.
+different OpenSim foot models through the same adapter (`sole_sim.py`), under the same quasi-static, passive
+loading.
+- **Contact:** one sole-contact model on every foot model (`ASSUMED_CONTACT_V1`), **assumed, not measured**.
+  The models' own native contact is a separate sensitivity analysis.
+- **What the main experiment is:** a passive foot with a prescribed centre of pressure. It is a **control**, not
+  a predicted movement. No muscle-driven squat or gait was simulated, and none of these results is one.
 
 **What it is not:**
 - **Not foot–insole contact.** It is simulated foot-to-ground contact through a virtual sole: the foot pressing
@@ -110,90 +115,132 @@ earlier XML query missed it. The subject file's curve is a generic, much weaker 
   0.9 mm below slack.
 - **MTP:** exact.
 
-## 4. The tasks
+## 4. Contact, and the tasks
 
-Passive below the ankle: muscles are removed. The posture comes from OpenCap's squat (the standing frame, and
-knee flexion 30°, 60° and 80°), the same on left and right.
+**The assumed sole contact** (`sole_sim.ASSUMED_CONTACT_V1`), the same on every foot model. It is **assumed,
+not measured**: it stands in for the sole stack plus the plantar soft tissue until the coupon test gives a
+measured curve.
+- **Law:** each sphere carries p = 100 kPa × (indentation / 3 mm)^1.5 over its grid cell (the Hertz exponent).
+  Its stiffness is calibrated numerically in OpenSim, so the law is the same at any spacing.
+- **Smoothing:** constant-contact term 1e-8 and Hertz smoothing 2000 /m, instead of OpenSim's defaults (1e-5 and
+  300).
+- **Dissipation and friction:** the values the two-segment and D'Hondt models already share.
+
+**Why the smoothing changed.** All three models use OpenSim's default smoothing, which is not Hertz-like at
+millimetre scale:
+- it acts like a minimum indentation of about 3 mm;
+- a sphere 2 mm **above** the floor still carries 22 % of its force at 3 mm indentation.
+With the assumed values, the law is within about 1 % of Hertz from 1 mm indentation, and a sphere above the floor
+carries almost nothing (`tests/test_sim_osim.py`, `AssumedContact`).
+
+**Native contact** (the sensitivity analysis): each model's own contact parameters, including that smoothing,
+with the stiffness scaled so the sole keeps the generic foot's overall contact stiffness. Per sphere, at 15 mm
+spacing:
+
+| | Two-segment | D'Hondt |
+|---|---|---|
+| Native | 2.3 × 10⁵ | 1.6 × 10⁶ |
+| Assumed (cells larger on the two-segment foot, scale 1.16) | 4.5 × 10⁶ | 3.3 × 10⁶ |
+
+**The tasks.** Every task is passive below the ankle: muscles are removed. The posture comes from OpenCap's squat
+(the standing frame, and knee flexion 30°, 60° and 80°), the same on left and right.
+- **Controlled loading: the main experiment, and a control.** Each foot's centre of pressure is prescribed at
+  0.30, 0.45, 0.60 or 0.75 of the sole's heel-to-bend length. The body is held at the pelvis, so every foot model
+  is loaded at the same centre of pressure. **It does not predict where a person's centre of pressure would
+  be.**
 - **Posture-based balance.** The ankle torque is solved so that each foot's centre of pressure lies under the
-  body's centre of mass, as in quasi-static standing. The result depends on each body's centre of mass, so it
-  compares bodies and postures as much as feet.
-- **Controlled loading (the main comparison).** Each foot's centre of pressure is prescribed at 0.30, 0.45, 0.60
-  or 0.75 of the sole's heel-to-bend length. The body is held at the pelvis. Every foot model is then loaded at
-  the same centre of pressure.
+  body's centre of mass. It depends on each body's centre of mass, so it compares bodies and postures as much as
+  feet. It is a passive quasi-static posture, not a squat movement.
 
-**Why solved, not simulated.** On this soft contact, letting a passive rigid body settle tips it over. With a
+**Why solved, not simulated.** On soft contact, letting a passive rigid body settle tips it over. With a
 whole-body tilt as the only rotation, the centre of pressure moves almost as fast as the centre of mass (about
 880 against 920 mm/rad), so that equilibrium is ill-conditioned. The equilibria are therefore solved with damped
-Newton (`foot_models/compare_feet.py`), and every one is checked:
-- support within 0.034 % of body weight;
-- centre of pressure on its target within 0.05 mm.
-Whether an equilibrium is stable is not claimed.
+Newton (`foot_models/compare_feet.py`).
+- **All 244 runs solved:** support within 0.034 % of body weight, centre of pressure on target within 0.05 mm.
+- No midtarsal angle left the paper's ±30° range.
+- Whether an equilibrium is stable is not claimed.
 
 ## 5. Results
 
 Shares of one foot's load (right; left is the mirror): **heel / arch and midfoot / metatarsals / toes, %.**
 
-**5.1 Internal controls.**
-- D'Hondt 3- and 4-segment with the foot locked are the same rigid foot, and give identical results in every
+**5.1 Internal controls (assumed contact).**
+- D'Hondt 3- and 4-segment with the foot locked are the same rigid foot. They give identical results in every
   `.osim`-only and ported combination.
-- The two-segment and D'Hondt rigid feet differ at the same centre of pressure, by 3–8 points at 0.45. That
-  difference is **entirely the contact stiffness** the sole inherits from each model's own generic contact:
-  1.6 × 10⁶ against 2.3 × 10⁵ per sphere. With the stiffness matched, the two-segment foot gives
-  50.3 / 32.0 / 13.0 / 4.7, against D'Hondt's 50.2 / 32.0 / 13.2 / 4.6.
+- The two-segment and D'Hondt rigid feet agree within 0.2 points at every spacing and centre of pressure. Under
+  native contact they differed by 3–8 points, which was entirely the contact each model brought with it.
 
-**5.2 Controlled loading, 15 mm contact spacing.**
+**5.2 Controlled loading, assumed contact, 15 mm spacing.** These are discretisation-sensitive (5.3).
+
+| Model | COP at 0.30 | 0.45 | 0.60 | 0.75 |
+|---|---|---|---|---|
+| Two-segment, rigid | 66.6 / 32.1 / 1.2 / 0.1 | 45.1 / 40.2 / 12.7 / 2.0 | 31.9 / 36.3 / 21.4 / 10.3 | 20.6 / 30.5 / 27.4 / 21.4 |
+| D'Hondt, rigid (3- or 4-segment; `.osim` only or ported) | 66.4 / 32.4 / 1.1 / 0.0 | 45.1 / 40.1 / 12.7 / 2.0 | 31.9 / 36.3 / 21.4 / 10.4 | 20.6 / 30.5 / 27.4 / 21.4 |
+| D'Hondt 3-segment ported, MTP free | 66.4 / 32.5 / 1.1 / 0.0 | 44.6 / 40.5 / 13.7 / 1.1 | 28.6 / 38.0 / 29.5 / 3.9 | 13.9 / 33.0 / 46.3 / 6.8 |
+| D'Hondt 4-segment ported, midtarsal and MTP free | 66.6 / 32.0 / 1.3 / 0.0 | 42.1 / 45.9 / 10.2 / 1.8 | 23.2 / 50.7 / 19.2 / 6.9 | 6.8 / 50.8 / 29.5 / 12.9 |
+| D'Hondt 4-segment `.osim` only, midtarsal and MTP free | 66.8 / 32.0 / 0.6 / 0.6 | 42.3 / 47.2 / 6.6 / 3.9 | 23.5 / 51.6 / 16.1 / 8.8 | 7.4 / 50.6 / 27.7 / 14.3 |
+
+Foot angles (ported): midtarsal up to 2.4°, MTP up to 1.8°. The `.osim`-only foot has no MTP passive torque, and
+its MTP extends to −2.3° at a centre of pressure of 0.30.
+
+**5.3 Discretisation sensitivity** (contact spacing 15, 10, 7.5 and 5 mm). This is the sensitivity to one
+modelling choice. **It is not a confidence interval and not the total uncertainty.** With the assumed contact,
+absolute shares changed:
+- by up to 7.9 points from 15 to 10 mm;
+- by up to 2.5 points from 10 to 7.5 mm;
+- by up to 3.4 points from 7.5 to 5 mm.
+
+They are not converged. Paired differences (two models, same spacing and centre of pressure), heel / arch /
+metatarsals / toes in percentage points, at 15 / 10 / 7.5 / 5 mm:
+
+| Difference | Contact | COP | 15 mm | 10 mm | 7.5 mm | 5 mm |
+|---|---|---|---|---|---|---|
+| 4-segment, midtarsal and MTP free, minus rigid | assumed | 0.45 | −3.0/+5.8/−2.6/−0.2 | −3.1/+6.2/−2.8/−0.3 | −3.2/+6.2/−2.5/−0.5 | −3.2/+6.3/−2.9/−0.2 |
+| | assumed | 0.75 | −13.9/+20.3/+2.1/−8.5 | −14.1/+22.3/−2.0/−6.2 | −14.1/+22.1/−1.1/−6.8 | −13.4/+21.9/−3.5/−5.0 |
+| | native | 0.45 | −1.5/+2.7/−0.6/−0.6 | −1.0/+2.1/−0.8/−0.3 | −1.1/+2.3/−0.8/−0.3 | −1.1/+2.2/−1.0/−0.2 |
+| | native | 0.75 | −5.2/+6.2/+4.6/−5.5 | −4.0/+5.8/+1.3/−3.0 | −4.1/+5.9/+1.2/−3.0 | −3.7/+5.8/−0.1/−2.0 |
+| 3-segment, MTP free, minus rigid | assumed | 0.75 | −6.7/+2.5/+18.9/−14.6 | −6.1/+3.9/+14.6/−12.3 | −6.3/+3.7/+15.6/−13.0 | −5.4/+3.2/+13.2/−11.0 |
+| | native | 0.75 | −3.6/+1.3/+10.5/−8.1 | −2.8/+1.2/+8.4/−6.8 | −2.8/+1.2/+8.3/−6.6 | −2.4/+0.8/+7.4/−5.8 |
+| Two-segment minus D'Hondt, both rigid | assumed | 0.45 | −0.0/+0.1/−0.0/−0.0 | −0.2/+0.2/−0.0/−0.1 | −0.1/+0.2/−0.0/−0.1 | −0.1/+0.2/+0.0/−0.1 |
+| | native | 0.45 | −4.4/+7.8/−1.2/−2.3 | −3.0/+5.5/−1.0/−1.5 | −3.5/+6.4/−1.2/−1.8 | −3.1/+5.8/−1.3/−1.4 |
+
+**5.4 Sensitivity** (largest change in any group, percentage points, against each case's assumed-contact
+baseline at 15 mm):
+
+| Change | Two-segment, COP under COM | Two-segment, COP at 0.45 | D'Hondt 4-segment free, COP under COM | D'Hondt 4-segment free, COP at 0.45 |
+|---|---|---|---|---|
+| Scale −5 % / +5 % | 3.1 / 2.8 | 0.2 / 0.2 | 4.1 / 3.6 | 0.8 / 0.9 |
+| Lateral −5 / +5 mm | 0.0 / 0.0 | 0.1 / 0.1 | 0.3 / 0.4 | 0.1 / 0.1 |
+| Sole-plane pitch −2° / +2° | 1.0 / 0.9 | 0.8 / 0.5 | 1.3 / 1.4 | 0.5 / 0.5 |
+| Segment boundaries −5 / +5 mm | 0.0 / 0.0 | 0.0 / 0.0 | 0.2 / 0.1 | 0.0 / 0.0 |
+| Assumed contact stiffness ×0.5 / ×2 | 0.1 / 0.3 | 0.6 / 1.7 | 5.3 / 4.0 | 1.2 / 0.8 |
+| **Native contact instead of the assumed** | 0.5 | 0.7 | **14.3** | **11.2** |
+| Contact spacing 10 mm (from 15) | 3.1 | 7.9 | 2.7 | 7.7 |
+
+**5.5 Native contact (sensitivity analysis): controlled loading, 15 mm.**
 
 | Model | COP at 0.30 | 0.45 | 0.60 | 0.75 |
 |---|---|---|---|---|
 | Two-segment, rigid | 67.2 / 31.7 / 1.1 / 0.0 | 45.8 / 39.9 / 12.0 / 2.4 | 32.0 / 36.3 / 21.6 / 10.1 | 20.6 / 30.5 / 27.8 / 21.1 |
-| D'Hondt, rigid (3- or 4-segment; `.osim` only or ported) | 70.1 / 25.2 / 4.2 / 0.5 | 50.2 / 32.0 / 13.2 / 4.6 | 34.1 / 33.2 / 20.7 / 12.0 | 20.7 / 30.4 / 27.7 / 21.2 |
+| D'Hondt, rigid | 70.1 / 25.2 / 4.2 / 0.5 | 50.2 / 32.0 / 13.2 / 4.6 | 34.1 / 33.2 / 20.7 / 12.0 | 20.7 / 30.4 / 27.7 / 21.2 |
 | D'Hondt 3-segment ported, MTP free | 70.0 / 25.2 / 4.3 / 0.5 | 49.5 / 32.8 / 14.1 / 3.7 | 31.8 / 35.3 / 24.6 / 8.3 | 17.1 / 31.7 / 38.2 / 13.1 |
 | D'Hondt 4-segment ported, midtarsal and MTP free | 69.9 / 25.6 / 4.1 / 0.4 | 48.7 / 34.7 / 12.6 / 4.0 | 30.2 / 39.2 / 21.0 / 9.6 | 15.4 / 36.6 / 32.3 / 15.7 |
 | D'Hondt 4-segment `.osim` only, midtarsal and MTP free | 70.5 / 25.3 / 2.5 / 1.7 | 49.2 / 34.8 / 10.4 / 5.6 | 30.5 / 39.1 / 20.1 / 10.2 | 15.6 / 36.2 / 32.5 / 15.6 |
 
-Foot angles: midtarsal 0.3–2.4° (ported) and MTP up to 4.2° (3-segment), within the paper's range. In the
-`.osim`-only foot, the MTP joint has no passive torque, and it extends to −6.1° when the forefoot is lightly
-loaded (COP at 0.30).
-
-**5.3 Convergence in contact spacing.** **Absolute shares are not converged.** From 15 to 10 mm they change by
-up to 6 points; between 7.5 and 5 mm, by up to 3. No single regional share here is better than about ±3 points.
-
-**Paired differences** (two models at the same spacing and centre of pressure) are steadier: heel / arch /
-metatarsals / toes, percentage points, at 15 / 10 / 7.5 / 5 mm:
-
-| Difference | COP | 15 mm | 10 mm | 7.5 mm | 5 mm |
-|---|---|---|---|---|---|
-| 4-segment, midtarsal and MTP free, minus rigid | 0.45 | −1.5/+2.7/−0.6/−0.6 | −1.0/+2.1/−0.8/−0.3 | −1.1/+2.3/−0.8/−0.3 | −1.1/+2.2/−1.0/−0.2 |
-| | 0.75 | −5.2/+6.2/+4.6/−5.5 | −4.0/+5.8/+1.3/−3.0 | −4.1/+5.9/+1.2/−3.0 | −3.7/+5.8/−0.1/−2.0 |
-| 3-segment, MTP free, minus rigid | 0.45 | −0.7/+0.8/+0.9/−1.0 | −0.4/+0.5/+0.6/−0.7 | −0.5/+0.6/+0.6/−0.7 | −0.4/+0.4/+0.5/−0.5 |
-| | 0.75 | −3.6/+1.3/+10.5/−8.1 | −2.8/+1.2/+8.4/−6.8 | −2.8/+1.2/+8.3/−6.6 | −2.4/+0.8/+7.4/−5.8 |
-
-**5.4 Sensitivity** (largest change in any group, percentage points, against each case's baseline):
-
-| Change | Two-segment, COP under COM | Two-segment, COP at 0.45 | D'Hondt 4-segment free, COP under COM | D'Hondt 4-segment free, COP at 0.45 |
-|---|---|---|---|---|
-| Scale −5 % / +5 % | 3.4 / 2.9 | 0.0 / 0.0 | 4.3 / 2.9 | 0.5 / 0.5 |
-| Lateral −5 / +5 mm | 0.0 / 0.0 | 0.0 / 0.0 | 0.4 / 0.4 | 0.1 / 0.0 |
-| Sole-plane pitch −2° / +2° | 1.0 / 0.9 | 0.0 / 0.0 | 1.4 / 1.4 | 0.2 / 0.1 |
-| Segment boundaries −5 / +5 mm | 0.0 / 0.0 | 0.0 / 0.0 | 0.1 / 0.0 | 0.0 / 0.0 |
-| Contact stiffness ×0.5 / ×2 | 0.1 / 0.1 | 0.8 / 1.6 | 1.2 / 0.1 | 2.1 / 2.7 |
-| Contact spacing 10 mm (from 15) | 2.9 | 5.9 | 2.7 | 5.0 |
-
-**5.5 Posture-based balance** (centre of pressure under each body's centre of mass):
+**5.6 Posture-based balance, assumed contact** (centre of pressure under each body's centre of mass).
 
 | Model | Standing | Squat, knee 30° | knee 60° | knee 80° |
 |---|---|---|---|---|
-| Two-segment, rigid | 20.3 / 30.4 / 27.9 / 21.4 | 18.9 / 29.5 / 28.9 / 22.7 | 25.6 / 33.1 / 25.7 / 15.6 | 36.7 / 37.6 / 19.1 / 6.6 |
-| D'Hondt, rigid | 20.6 / 30.4 / 27.7 / 21.2 | 5.5 / 16.3 / 30.8 / 47.3 | 5.7 / 16.2 / 31.5 / 46.6 * | 11.7 / 23.0 / 32.1 / 33.1 * |
-| D'Hondt 4-segment ported, free | 14.8 / 36.1 / 33.1 / 16.1 | 0.1 / 7.1 / 63.1 / 29.7 | 0.2 / 8.1 / 62.0 / 29.8 * | 5.3 / 24.5 / 47.4 / 22.8 * |
+| Two-segment, rigid | 20.2 / 30.3 / 27.6 / 21.9 | 19.0 / 29.1 / 30.4 / 21.4 | 26.7 / 29.4 / 31.5 / 12.4 | 39.4 / 30.5 / 24.7 / 5.3 |
+| D'Hondt, rigid | 20.6 / 30.4 / 27.5 / 21.5 | 4.7 / 17.0 / 35.4 / 42.9 | *out of range* | *out of range* |
+| D'Hondt 4-segment ported, free | 6.2 / 50.4 / 30.1 / 13.2 | 0.0 / 11.9 / 60.8 / 27.3 | *out of range* | *out of range* |
 
-\* The posture lies outside the D'Hondt model's own ranges: hip flexion 80–100° against 50°, lumbar −34° to −45°
-against ±30°.
-- The two bodies' centres of mass sit differently over their feet, and the self-test model's multi-level lumbar
-  spine was left at 0, since the data's lumbar angle has no single counterpart there. These columns compare
-  bodies and postures as much as feet.
-- In a real squat a person keeps the centre of pressure near mid-foot. These passive postures don't, which is
-  another reason the controlled loading is the main comparison.
+- **Out of range:** the 60° and 80° frames exceed the D'Hondt model's own coordinate ranges (hip flexion 80–100°
+  against 50°, lumbar −34° to −45° against ±30°). They were run, flagged (`posture_outside_model_range` in the
+  results) and are **not interpreted**: nothing here describes valid deep-squat behaviour.
+- **Confounds:** the bodies' centres of mass sit differently over their feet, and the self-test model's
+  multi-level lumbar spine was left at 0. These are passive postures; a person keeps the centre of pressure
+  nearer mid-foot in a real squat.
 
 ## 6. Synergy foot: a five-toe kinematic comparison
 
@@ -234,26 +281,32 @@ values.
 
 ## 7. What the results show, and what they do not
 
-Within these simulations only:
-- **Freeing the D'Hondt midtarsal joint moves load onto the arch:** about +2 points at a centre of pressure of
-  0.45 and about +6 at 0.75, at every contact spacing tried.
-- **Freeing the MTP joint moves load from the toes onto the metatarsals:** about −6 to −8 points of toe load at
-  0.75.
-- **The `.osim`-only and ported 4-segment feet agree within 1 point** at centres of pressure of 0.60 and
-  above. Inside ±15° the nominal file's ligaments and fascia are close to the paper's laws. With less load on the
-  forefoot they differ by up to 2.2 points (metatarsals and toes at 0.45), because the `.osim` has no MTP torque.
-- **These effects are no larger than the modelling uncertainties around them:** contact spacing (up to 6
-  points), the contact stiffness the sole inherits (3–8 points between models), and registration scale (3–4
-  points when the centre of pressure follows the centre of mass).
+Within these simulations only, and for a passive foot with a prescribed centre of pressure:
+- **Directions consistent across both contact models and all four spacings:**
+  - freeing D'Hondt's midtarsal joint moves load from the heel onto the arch;
+  - freeing the MTP joint moves load from the toes onto the metatarsals.
+- **Sizes depend strongly on the contact model.** At a centre of pressure of 0.75, the arch share rises by +20 to
+  +22 points with the assumed contact, against +6 with native contact. At 0.45 the figures are +6 against +2. The
+  native smoothing lets spheres that are not touching carry load, which hides the arch's deformation. Which
+  size is closer to a real foot is not known: **neither contact model is measured.**
+- **With one contact law, the rigid two-segment and D'Hondt feet are equivalent.** Their earlier differences were
+  the contact each model brought with it.
+- **The `.osim`-only and ported 4-segment feet differ by up to 3.6 points** with the assumed contact (0.7 at a
+  centre of pressure of 0.30, 3.6 at 0.45, 3.0 at 0.60, 1.8 at 0.75), most of it metatarsal load moved onto the
+  toes: the `.osim` has no MTP torque. With native contact the difference is up to 2.2 points.
 - **Not shown:**
   - that any model is more accurate for a real foot;
-  - that the sole would read these loads inside a shoe;
-  - anything about walking or dynamic loading.
+  - where a person's centre of pressure would be, which the controlled experiment prescribes;
+  - anything about a muscle-driven squat, walking, deep squats, or contact inside a shoe.
 
 ## 8. Limits
 
-- **Contact:** Hertz spheres on a rigid floor, a coarse grid not yet converged, and stiffness inherited from
-  each model's own contact. There is no sole, footbed or shoe compliance.
+- **Contact:**
+  - the assumed law is a stated assumption, not a measurement;
+  - Hertz spheres on a rigid floor;
+  - not converged in spacing (5.3);
+  - no sole, footbed or shoe compliance;
+  - native contact differs from it by up to 14 points (5.4).
 - **Passive below the ankle:** no muscle supports the arch or holds the toes. The ankle torque is a single
   solved number, and the body is rigid in each posture.
 - **Registration:**
@@ -261,34 +314,46 @@ Within these simulations only:
   - segment boundaries are lines through joint centres;
   - toe regions are assigned by name.
 - **Models:**
-  - D'Hondt's other joints' passive torques are not ported, and its squat postures exceed its coordinate ranges;
+  - D'Hondt's other joints' passive torques are not ported, and its 60° and 80° squat frames exceed its
+    coordinate ranges;
   - the Synergy foot is kinematic only, with landmark registration on one generic skeleton;
   - Sikidar is not inspected.
-- **Data:** one example subject's squat kinematics (OpenCap's example data), mapped onto other bodies.
+- **Data:** one example subject's squat kinematics (OpenCap's example data, which has no force plates), mapped
+  onto other bodies.
 
-## 9. Proposed next steps (not started)
+## 9. Next steps (not started)
 
-1. **One sole contact model for every foot model**, set from the sole's own compliance (the coupon test, or a
-   stated assumption), instead of inheriting each model's contact stiffness.
-2. **Converge the contact spacing**, at 5 mm or finer, before quoting any absolute share.
-3. **Compare with measurement:** a pressure insole or a force plate, standing and squatting, against the
-   controlled-loading and posture-based results, with agreement thresholds set before looking at the data.
-4. **A muscle-driven tracking simulation** (OpenSim Moco) of the squat on the D'Hondt port, so the arch has
-   muscle support and the centre of pressure follows a real movement.
+1. **Validation against measurement**, in three separate stages (`VALIDATION_PLAN.md`):
+   - a force-plate comparison of the current foot-to-ground model first (OpenCap LabValidation as first choice);
+   - regional plantar pressure, barefoot;
+   - foot–insole contact.
+2. **Replace the assumed contact law** with the sole's measured response once the coupon test exists. Keep the
+   assumed law as the comparison's reference.
+3. **Converge the contact spacing** (5 mm or finer) before quoting absolute shares.
+4. **A muscle-driven tracking simulation** (OpenSim Moco) of the squat on the D'Hondt port, reported separately
+   from this passive control.
 5. **Synergy foot:** per-toe placement in the adapter, a contact model, and a measured foot to register on.
 6. **Sikidar:** inspect the package once it is downloaded.
 
 ## 10. Reproducing
+
+- **Hashes:** every external input (models, the paper's saved function, the transcribed source files,
+  kinematics, soles), the port's deterministic output, and the tool versions are in
+  `foot_models/PROVENANCE.json`. `tests/test_dhondt_port.py` checks the port against them.
+- **Test record:** `TEST_RUNS.md` lists which tests ran and which skipped in each environment, and why. Several
+  need the external models, or CasADi, and skip without them.
+- **Results:** `foot_models/results_2026-11-04.json` holds the summary of all 244 runs that the tables here
+  come from.
 
 ```
 # the pipeline's Python (opensim, numpy, scipy)
 python foot_models/dhondt_port.py DHondt_2024_4-segment_foot_fixed_knee.osim ported_4seg.osim
 python foot_models/run_comparison.py --selftest model_scaled.osim --dhondt <nominal models folder> \
     --mot squats1_videoAndMocap.mot --sole-r sim/EU42_R_636645a928.sole_sim.json \
-    --sole-l sim/EU42_L_40fe8e1d0c.sole_sim.json --sole-r10 <10 mm R> --sole-l10 <10 mm L> --out runs/
-python foot_models/run_comparison.py ... --only convergence --spacing-soles <10 mm dir> <7.5 mm dir> <5 mm dir>
+    --sole-l sim/EU42_L_40fe8e1d0c.sole_sim.json --sole-r10 <10 mm R> --sole-l10 <10 mm L> \
+    --spacing-soles <10 mm dir> <7.5 mm dir> <5 mm dir> --out runs/
 python foot_models/synergy_kinematics.py synergy_foot_r.osim sim/EU42_R_636645a928.sole_sim.json -o synergy.json
-# tests (they skip without the external models)
+# tests (several skip without the external models; see TEST_RUNS.md)
 DHONDT_NOMINAL_DIR=... python tests/test_dhondt_port.py      # and DHONDT_EXP5=... with casadi for the bspline check
 DHONDT_NOMINAL_DIR=... SYNERGY_MODEL=... python tests/test_foot_comparison.py
 python tests/test_sim_osim.py

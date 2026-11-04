@@ -110,7 +110,8 @@ def _coupled(model):
     return dep
 
 
-def build(model_in, sole_r, sole_l, out_dir, posture_deg=None, free_foot=False, perturb=None, radius_mm=None):
+def build(model_in, sole_r, sole_l, out_dir, posture_deg=None, free_foot=False, perturb=None, radius_mm=None,
+          contact=None):
     """Model with both soles, held in the posture with the feet level: every coordinate locked except pelvis_tx,
     pelvis_ty, the ankles and (with free_foot) the foot joints; a CoordinateActuator on each ankle for the solved
     ankle torque. Returns (model path, sole metadata per side, removed forces)."""
@@ -120,8 +121,8 @@ def build(model_in, sole_r, sole_l, out_dir, posture_deg=None, free_foot=False, 
     removed = strip_model(model_in, stripped)
     meta = {}
     a = out_dir / "with_R.osim"; b = out_dir / "with_soles.osim"
-    meta["R"] = SS.add_to_osim(stripped, sole_r, a, radius_mm=radius_mm, perturb=perturb)
-    meta["L"] = SS.add_to_osim(a, sole_l, b, radius_mm=radius_mm, perturb=perturb)
+    meta["R"] = SS.add_to_osim(stripped, sole_r, a, radius_mm=radius_mm, perturb=perturb, contact=contact)
+    meta["L"] = SS.add_to_osim(a, sole_l, b, radius_mm=radius_mm, perturb=perturb, contact=contact)
     m = osim.Model(str(b))
     cs = m.getCoordinateSet()
     free = {"pelvis_tx", "pelvis_ty", "ankle_angle_r", "ankle_angle_l"}
@@ -316,14 +317,16 @@ def symmetric(posture_deg):
 
 
 def run(model_in, sole_r, sole_l, out_dir, posture_deg=None, free_foot=False, perturb=None, label="", radius_mm=None,
-        keep_models=False, cop_target=None):
-    path, meta, removed = build(model_in, sole_r, sole_l, out_dir, posture_deg, free_foot, perturb, radius_mm)
+        keep_models=False, cop_target=None, contact=None):
+    """contact: None for each model's native contact, or a contact model such as sole_sim.ASSUMED_CONTACT_V1."""
+    path, meta, removed = build(model_in, sole_r, sole_l, out_dir, posture_deg, free_foot, perturb, radius_mm, contact)
     res = equilibrium(path, sole_r, sole_l, cop_target=cop_target)
     if not keep_models:                                  # the models can be rebuilt from the inputs; keep disk free
         for f in Path(out_dir).glob("*.osim"):
             f.unlink()
     res.update(label=label, model=str(model_in), free_foot=free_foot, posture_deg=posture_deg, perturbation=perturb or {},
-               posture_applied=meta["posture"],
+               posture_applied=meta["posture"], contact_model=meta["R"]["contact_model"],
+               stiffness_per_sphere=meta["R"]["stiffness_per_sphere"],
                removed_forces=removed,
                registration={s: dict(scale=meta[s]["scale"], scale_used=meta[s]["scale_used"],
                                      spheres_per_body=meta[s]["spheres_per_body"],

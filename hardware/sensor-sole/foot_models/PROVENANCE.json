@@ -1,0 +1,96 @@
+{
+ "what": "Provenance of the experimental foot-model comparison and the D'Hondt port (FOOT_MODELS.md). None of the external files is in this repository; fetch them from the sources below and check these sha256 values.",
+ "recorded": "2026-11-04",
+ "dhondt": {
+  "repository": "https://github.com/Lars-DHondt-KUL/3dpredictsim",
+  "branch": "four-segment_foot_model",
+  "commit": "e963f4a",
+  "licence": "MIT (Copyright (c) 2019 antoinefalisse)",
+  "models": {
+   "OpenSimModel/Nominal models/DHondt_2024_3-segment_foot_fixed_knee.osim": "f78df97841b566ad5fbfbf5e50a3b9dce2a82ac9308153579875bd93e9608e4b",
+   "OpenSimModel/Nominal models/DHondt_2024_4-segment_foot_fixed_knee.osim": "241eb5dd064f823e619088248e5ac6805762c349dc3ce46d5ee099342050d959"
+  },
+  "saved_function": {
+   "Polynomials/Fal_s1_mtjcf3_FK_sc_FDB2_MTc5/f_getMtjLigamentMoment_exp5": "7159a867c2c49d19a9e3ed2d7df229b70bbc2ddb753a6402302ae260762bd85b",
+   "evaluated_with": "casadi 3.8.2 (the file was saved by the paper's CasADi 3.5.5 code)"
+  },
+  "transcribed_from": {
+   "FootModel/f_getPlantarFasciaStiffnessModelCasADiFunction.m": "039a54fd9e099048dff35dc88be7d72ece0ad63d19f3e9b1631da19613671537",
+   "CasADiFunctions/CreateCasadiFunctions.m": "5f8f1819859c5ebb589942c10214259d21a3960667250af25fbef01771d70c5a",
+   "OCP/f_PredSim_Gait92_FootModel.m": "c41939e37eafce12566562f46faa816bff6ca2209a9b4f3b6c20964a4a95bb01",
+   "FootModel/getMidtarsalJointPassiveMoment.m": "b072f9e3299a4ed27c7e7227ecd8bf912948b4f73d9b071922e9f11045b22f7e",
+   "FootModel/fitPlantarLigamentMoment.m": "00d856cfe65c733c60b7b27cc3d32a5ac88f684430fc5950999553f4a69d9a15",
+   "PassiveMoments/PassiveMomentsData.m": "1bfa8b99b737038b1588d952cc60179d5923db6b461c8123efbc8428a568a6a8",
+   "FootModel/f_staticFootCompression_v7.m": "b0f9c3e6b4a99ac51ba43ca1123d9c2c1e068aa7dda71381db32040b9eb51f76"
+  },
+  "inspected_not_used": {
+   "OpenSimModel/subject1/Fal_s1_mtjcf3_FK_sc_FDB2_MTc5_cspx10_cg9_o1x10.osim": "fea9ebbb54bc209ff464f8c6b3af16d5fa24952e47ea3a834f630a0d6958f570"
+  }
+ },
+ "port": {
+  "code": "foot_models/dhondt_port.py",
+  "table": "foot_models/dhondt2024_mtj_ligament_moment.json",
+  "table_sha256": "dc999454046b1db5cde4e70a64c9e02a4aa7eb4870f390807d858fa576424ada",
+  "outputs_sha256": {
+   "3-segment ported": "52aadeea51068838b5b7639bfc93a83602f73718f4d2cfd9fef2af2f8470a37d",
+   "4-segment ported": "f3a8f2aaef9177be63e01824a59b932b902bef4657a8f43940694d956096ea03"
+  },
+  "deterministic": "two runs gave identical files (OpenSim 4.6, Python 3.13.16)"
+ },
+ "synergy": {
+  "repository": "https://github.com/modenaxe/synergy-based-foot-model-opensim",
+  "commit": "0015fc7ba2f08ba56eb2b7259a70a32efede52d4",
+  "licence": "Apache-2.0",
+  "model": {
+   "generic_foot_model_r/synergy_foot_r.osim": "91e9a5c156b8b5791c12e612172e1a09ce7d9c9acc0f3e4a1fd44e31eec9cec3"
+  },
+  "geometry_digest": {
+   "files": 19,
+   "sha256_of_names_and_hashes": "e77c93894465ede2050f0dbf078c5e49a2c13cb211aaa5e323909eb58a719d68"
+  }
+ },
+ "two_segment": {
+  "model": "the pipeline's self-test output, opensim/model_scaled.osim (python -m rehabtwin selftest <dir>; synthetic squat)",
+  "sha256": "b124c3cfc8940d3e93d9837621c3d69dc90221c3e509dd40be673b7730b4fc26",
+  "note": "regenerating it may give a different file if the pipeline has changed; this hash identifies the file used"
+ },
+ "kinematics": {
+  "file": "Moco/exampleSquat/squats1_videoAndMocap.mot",
+  "repository": "https://github.com/stanfordnmbl/opencap-processing",
+  "commit": "72b5416bf6172fe3d9b42b01e1a02252362b20fc",
+  "licence": "Apache-2.0 (repository)",
+  "sha256": "2ac8d4f9e0ea31cef3ff4075e9b4433501055099171feda907fa9f1b21c09257",
+  "contains_force_plate_data": false
+ },
+ "soles": {
+  "sim/EU42_L_40fe8e1d0c.sole_sim.json": "99d777069ed8b83c7965128ecb615c22d77a7c1621d57afc383b54c3d69b09e9",
+  "sim/EU42_R_636645a928.sole_sim.json": "dbf4be9cfb1d5689abec1227e01ada14bbf957f1cc67f90ddea7343bab2d0170",
+  "spacing 10 mm/EU42_L_40fe8e1d0c.sole_sim.json": "5511e53fa46ad695a23d17c7fcb12f7ccdffe2cc83f48bacc9e77422b62d9a1f",
+  "spacing 10 mm/EU42_R_636645a928.sole_sim.json": "51b8b66ae72b41ffa1176041dc9a6d375568fc52b83614e0e00790d0796ae722",
+  "spacing 7.5 mm/EU42_L_40fe8e1d0c.sole_sim.json": "a5ccd9a16e45b7344853337c39975c0df70630c7ecb19060797afc196cbfea3f",
+  "spacing 7.5 mm/EU42_R_636645a928.sole_sim.json": "1e2e930e8910f6af054dfdaebf0cf489f805bd18fa9053a4e1cc83bffd8b25d0",
+  "spacing 5 mm/EU42_L_40fe8e1d0c.sole_sim.json": "fb32645eca324f823446e06700c1f6c6de501621663540aa2490015177842eac",
+  "spacing 5 mm/EU42_R_636645a928.sole_sim.json": "b0f2fde533591de0011f6d05b4aed2435e799f8f46adfd89aefe2f762f764722",
+  "other spacings made with": "python sole_sim.py export out/sole_EU42_<side>.board.json --map maps/EU42_<side>_<hash>.json --spacing <mm> (generator commit 0257862; design hashes 636645a928..., 40fe8e1d0c...)"
+ },
+ "environments": {
+  "pipeline (OpenSim)": {
+   "python": "3.13.16",
+   "opensim": "4.6",
+   "numpy": "2.5.4",
+   "scipy": "1.18.1"
+  },
+  "CasADi check": {
+   "python": "3.13.16",
+   "casadi": "3.8.2",
+   "numpy": "2.5.4",
+   "scipy": "1.18.1"
+  },
+  "generator": {
+   "python": "3.13.16",
+   "numpy": "2.5.4",
+   "scipy": "1.18.1",
+   "shapely": "2.2.0"
+  }
+ }
+}

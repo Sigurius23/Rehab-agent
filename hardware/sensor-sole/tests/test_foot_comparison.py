@@ -37,13 +37,19 @@ SOLE_L = HERE / "sim" / "EU42_L_40fe8e1d0c.sole_sim.json"
 @unittest.skipIf(osim is None or not NOMINAL, "needs opensim and DHONDT_NOMINAL_DIR")
 class Harness(unittest.TestCase):
     def test_rigid_three_and_four_segment_feet_agree(self):
+        for contact in (CF.SS.ASSUMED_CONTACT_V1, None):
+            with self.subTest(contact=contact and contact["name"]):
+                self._rigid_agree(contact)
+
+    def _rigid_agree(self, contact):
         with tempfile.TemporaryDirectory() as d:
             d = Path(d)
             res = {}
             for k in ("3", "4"):
                 ported = d / f"p{k}.osim"
                 DP.port(Path(NOMINAL) / f"DHondt_2024_{k}-segment_foot_fixed_knee.osim", ported)
-                res[k] = CF.run(ported, SOLE_R, SOLE_L, d / k, None, False, cop_target=0.45)
+                res[k] = CF.run(ported, SOLE_R, SOLE_L, d / k, None, False, cop_target=0.45, contact=contact)
+                self.assertEqual(res[k]["contact_model"]["name"], contact["name"] if contact else "native")
             for k, r in res.items():
                 self.assertTrue(r["solved"], k)
                 self.assertLess(abs(r["support_error_pct"]), 0.1)
