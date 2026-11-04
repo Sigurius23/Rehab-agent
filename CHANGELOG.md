@@ -125,10 +125,51 @@
         - It now follows the joints from calcn to the toes and reads the landmarks through OpenSim's frame
           transforms. Each point is put on the segment it lies under, and generic spheres are replaced on every
           segment. A foot without that chain is refused.
-        - **Results:** on the four-segment model, scale 0.996, every sphere on the plantar plane, and a drop
-          test that carries the body weight (608.4 N against 608.2 N). On the self-test model the output is
-          unchanged (sphere positions within 2e-16 m).
+        - **Results:** on the four-segment model, scale 0.996, and a drop test that carries the body weight
+          (608.4 N against 608.2 N). The spheres lie on the plantar plane by construction, which is not evidence
+          of registration. On the self-test model the output is unchanged (sphere positions within 2e-16 m).
+          *Superseded by the entry below:* this change went beyond the read-only inspection that was asked for.
+          It still read the toe-joint axis from the joint's frame, and its contact removal could change a model
+          silently.
         - **Tests:** `tests/test_sim_osim.py`, which fails on the old code.
+      - **Experimental foot-model comparison on the same sole** (2026-11-04; `FOOT_MODELS.md`, `foot_models/`).
+        No model is selected. This is simulated foot-to-ground contact, not foot–insole contact, and nothing is
+        validated against measurement.
+        - **Adapter fixes, with negative controls** (`tests/test_sim_osim.py`, 14 cases).
+          - Each joint's axis is measured, and segment boundaries follow it.
+          - Contact removal fails closed: geometry used by other forces or by none, non-sphere geometry, a
+            half-space on the foot, differing contact parameters, contact on the talus, and multi-coordinate joints
+            are all refused before anything is written. The earlier adapter changed or broke the model silently in
+            these cases.
+          - A registration residual report.
+          - Sensitivity perturbations.
+          - Supported models documented in `sole_sim.py` and SIMULATION.md.
+        - **D'Hondt et al. (2024):**
+          - The published nominal 3- and 4-segment models (MIT) are pinned by sha256.
+          - Their `.osim` alone was measured against the paper's foot laws.
+          - The laws were ported into OpenSim (`foot_models/dhondt_port.py`) and verified against the original
+            equations before use (`tests/test_dhondt_port.py`): the midtarsal ligament moment against the paper's
+            own saved bspline evaluated with CasADi (within 0.15 N·m over ±30°), the fascia against the Natali
+            law (within 0.05 N + 0.2 %; OpenSim applies no compression below slack), and the MTP torque exactly.
+        - **Tasks:** quasi-static, passive below the ankle, solved rather than simulated.
+          - Posture-based balance, with the centre of pressure under the centre of mass.
+          - Controlled loading, with the centre of pressure prescribed for every model.
+          - Sensitivity runs (scale, lateral offset, pitch, boundaries, stiffness, spacing).
+          - A contact-spacing convergence study.
+          Every equilibrium was solved and checked (support within 0.034 %).
+        - **Findings, within these simulations:**
+          - Freeing the midtarsal joint moves load onto the arch: +2 points at a centre of pressure of 0.45, +6 at
+            0.75, at every spacing tried.
+          - Freeing the MTP joint moves 6–8 points of toe load onto the metatarsals at 0.75.
+          - Contact spacing and the contact stiffness the sole inherits change regional shares by as much: up to
+            6 and 3–8 points.
+          - The two-segment and D'Hondt rigid feet agree once the stiffness is matched.
+          - Absolute shares are not converged to better than about ±3 points.
+        - **Synergy foot:** a kinematic comparison on bone landmarks. The sole's lateral regions (mt3–mt5,
+          toe4–toe5) do not line up with that generic skeleton, and all five toes turn together. Sikidar is still
+          to inspect.
+        - **Board docs:** VERIFICATION.md section 7.2's copper sentence and the CANDIDATES.md and CHANGELOG
+          wording now say that both T1 synthetic-foot boards exceed the 1e-4 mm² threshold.
     - **Printed prototype** (`PRINTED.md`, `sole_print.py`). A TPU carrier is built from the same design:
       - underside wire channels along the routing plan;
       - a floor with one hole per region;
@@ -167,7 +208,8 @@
       areas, contacts, rules, title block and maps.
       - All 8 baseline boards, and T1 at EU 42 and EU 46: same geometry within 1e-4 mm², with the same
         contacts, rules and maps.
-      - T1 synthetic foot: mt2's COM comb differs by under 0.0003 mm²; it passes with the same map.
+      - T1 synthetic foot, both boards (R and L): mt2's COM comb exceeds the 1e-4 mm² threshold (0.00029 mm²
+        less, 0.00008 mm² more); both pass with the same map.
       - IDs changed throughout, because rebuilt margin and pad outlines change the design hash.
     - **Re-checked:** DRC, the physical copper trace, coverlay, margin and provenance were re-run on all 16
       boards. 14 pass and have maps.

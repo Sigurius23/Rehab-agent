@@ -66,8 +66,9 @@ results. The 5dd52ff boards are in `archive/T1-5dd52ff/`.
 | Synthetic foot, R and L | 18 | 20; 13 mm | Clean | Pass | ffp_med, 46 % | 0.83 mm² | 0.20 mm² |
 | *Baseline, same configurations* | *16 (14)* | *18; 12 mm (16; 11 mm)* | *Clean* | *8 of 8 pass* | *mt4 69 % (EU 37, 42), mt4 58 % (EU 46), mt1 73 % (synthetic)* | *0, except EU 46: 0.43 mm²* | *0.20 mm² worst* |
 
-- **Unchanged by the regeneration:** the copper of the EU 42 and EU 46 boards. The synthetic foot's boards
-  differ only in one comb, mt2's COM, by under 0.0003 mm² (VERIFICATION.md, section 7.3).
+- **Unchanged by the regeneration:** the copper of the EU 42 and EU 46 boards, within the comparison's 1e-4 mm²
+  threshold. Both synthetic-foot boards (R and L) exceed that threshold in one comb, mt2's COM: 0.00029 mm²
+  less and 0.00008 mm² more (VERIFICATION.md, section 7.3).
 - **The last column now gives the checker's figure.** It is the largest `covered_mm2` over the regions in
   `.check.json`. The earlier table gave 0.13–0.18 mm², and its source could not be traced. The checker
   reports 0.19–0.20 mm² on the archived 5dd52ff boards too.

@@ -334,14 +334,16 @@ The configuration text differs only in `board_id` and `design_hash`, and the tit
 comments that carry them. The most comb copper under coverlay in any one region is 0.18–0.20 mm². On the eight
 baseline boards it is 0.19–0.20 mm², against at most 0.20 mm² before (section 4).
 
-**Why the IDs changed though the copper did not.** The design hash covers the exported coordinate lists.
+**Why every ID changed, though on 12 of the 14 passing boards the copper did not.** The design hash covers the
+exported coordinate lists.
 - **Margin keep-out.** On every board, the copper-free margin outline became invalid once rounded. It touches
   itself at a point on 6 boards, for example at (119.4588, −39.5504) on EU 42 R, and crosses itself on 10. It
   is now written as a valid ring, for example 3196 → 3191 vertices on EU 42 R. KiCad's reading of the keep-out
   area is the same as before on every board (XOR 0).
 - **Pad pieces.** A few pieces with self-touching or crossing rings (7.3) were rebuilt.
 
-New vertex lists give a new hash, and so a new ID, although the copper differs by less than 1e-4 mm². This
+New vertex lists give a new hash, and so a new ID. On 12 of the 14 passing boards the copper differs by less
+than 1e-4 mm². The two T1 synthetic-foot boards (R and L) exceed that threshold in mt2's COM comb (7.3). This
 is why the comparison above is item by item, not by bytes or IDs.
 
 **Maps and the manifest.**
