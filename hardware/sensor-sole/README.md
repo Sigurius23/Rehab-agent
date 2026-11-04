@@ -35,7 +35,7 @@ Moticon OpenGo, and the validation plan.
 | `tests/` | `test_verify_drc.py` and `test_verify_negative.py` (checker, KiCad's Python); `test_channel_map.py` (resolver, in CI); `test_generator_regressions.py` (fail-closed splitting, valid export outlines, the EU 37 routing regression); `test_sim_print.py` (simulation export and readout, printed parts) |
 | `FABRICATION.md` | Fabrication assumptions against published flex-PCB capabilities, open questions, draft enquiry (not sent) |
 | `CANDIDATES.md` | Higher-resolution candidates, design and analysis only: the targeted candidate T1 beside the 16-region baseline, compared with a dense matrix; open-line diagnostics; crosstalk |
-| `sole_candidate.py` | Builds a candidate from a layout file with the generator unchanged, so the baseline boards stay valid |
+| `sole_candidate.py` | Builds a candidate from a layout file with the shared generator, rules and checker, and no code of its own |
 | `candidates/` | T1's layout, boards, check results and maps (kept apart from the baseline's); `study.py` (baseline, T1 and matrix on the same outlines) and `open_line.py` (capacitance estimates) |
 | `SIMULATION.md` | The sole in simulation: a sensorised contact layer in the OpenSim model, per-region readout, the first drop test, limits and next steps (including HPC) |
 | `sole_sim.py` | Exports a sole for simulation, adds it to an OpenSim model, and reads simulated forces out per region in the pod's contact order (assumed sensor model) |

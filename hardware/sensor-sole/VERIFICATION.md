@@ -3,11 +3,13 @@
 
 # Sensor sole: verification and risk summary
 
-**2026-11-03. Status: not released for fabrication.**
+**2026-11-03, section 7 added 2026-11-04. Status: not released for fabrication.**
 
 Sections 1–6 cover the eight boards generated from commit 99c7468 and checked with `verify_board.py`. Those
-boards are kept unchanged in `archive/baseline-99c7468/`. Section 7 covers the boards now in `kicad/`,
-regenerated on 2026-11-04 after the generator fixes, and compares them with the archived ones item by item.
+boards are kept unchanged in `archive/baseline-99c7468/`, and the IDs, hashes and map paths in sections 2–5
+are theirs. Section 7 covers the boards now in `kicad/`, regenerated on 2026-11-04 after the generator fixes,
+and compares them with the archived ones item by item. The geometry figures in section 5 still hold for the
+regenerated baseline boards, because their copper is the same (section 7.2).
 
 **What the checks establish:** the copper meets *our own* design rules, connects as intended, and carries a
 traceable identity.
@@ -75,6 +77,9 @@ On top of that, every export of the same design was a different file, because Ki
   - a map that does not name each region exactly once with COM on the end contacts;
   - any unreadable file in the map set.
   Ten unit tests cover these and run in CI (`tests/test_channel_map.py`).
+
+The boards checked in 99c7468 (now in `archive/baseline-99c7468/`, map packages in its `maps/`; the regenerated
+boards and their IDs are in section 7):
 
 | Board | Printed ID | Board file sha256 (first 12) | Map package |
 |---|---|---|---|
@@ -231,3 +236,184 @@ Measured from each board's copper (shapely, edge to edge):
   length.
 - **Force plates:** total force and centre of pressure. Left/right sync. Durability over cycles. Delamination
   at the stiffener. Legibility of the printed ID after wear.
+
+## 7. Regenerated boards (2026-11-04)
+
+### 7.1 What changed, and what did not
+
+**The generator changed in commit 0257862** (`sole_gen.py`; `sole_route.py` unchanged):
+- **`fracture()` fails closed.** It splits a comb with holes into hole-free KiCad pads. When no cut made
+  progress, it used to recurse without end; on T1's mirrored synthetic foot it never returned. It now stops
+  with `FractureError`.
+- **Exported outlines stay valid at the board file's 0.1 µm precision.** Rounding a valid outline to that
+  grid can make it invalid: a spike, two vertices on one point, or a keyhole slit whose two sides cross.
+  - Only a piece that rounding makes invalid is rebuilt on the grid. Valid pieces are written as before.
+  - Every exported set is compared with the unrounded copper. Any difference thicker than rounding and larger
+    than 1e-4 mm² stops the export, as does a comb that falls into separate parts. A join at a single point
+    does not count as connected.
+  - Region outlines and coverlay openings must also be valid on the grid, or the export stops.
+  - The board file records what was rebuilt (`source.export_rebuilt_outlines`) and any sliver dropped
+    (`source.export_slivers_mm2`). No board dropped one.
+  - There is no `buffer(0)` repair anywhere in the export.
+- **Planarity-triggered re-route.** If the plan leaves sense lines that cross an odd number of times, the
+  router re-routes only those regions, up to three rounds. Non-toe regions get deeper vias; toes switch to the
+  other side of the tab base. A round is kept only if it reduces the odd crossings.
+
+**Unchanged:**
+- the checker `verify_board.py` (sha256 `3815d9024f5d…`), the exporter `kicad_export.py` and the resolver
+  `channel_map.py`;
+- the design rules (`.kicad_pro`), KiCad 7.0.11 and the Python tool versions of section 3.
+
+**Regression tests** (`tests/test_generator_regressions.py`). Eight fast cases:
+- the captured mirrored-foot comb splits;
+- a cut that makes no progress falls back to the next one;
+- no progress at all raises `FractureError`;
+- a sub-grid slit is rebuilt;
+- a larger difference fails closed;
+- a sub-grid neck fails closed;
+- a valid outline is written unchanged;
+- the mirrored comb exports valid pads.
+
+Three slow cases run with `SOLE_SLOW_TESTS=1`: the T1 EU 37 R plan is planar; T1 on the mirrored synthetic foot
+exports; and the T1 EU 37 R fine pass is clean. The last one is marked as an expected failure until that
+board passes (7.4).
+
+### 7.2 All sixteen boards, checked again
+
+Each board was generated, exported and checked with `verify_board.py` in its own run. The checks are:
+- DRC with the project rules;
+- the physical copper trace from every contact;
+- contact numbering;
+- coverlay openings;
+- copper-free margin keep-outs;
+- provenance (generator hashes at the run's start, git revision 0257862, tool versions, rules).
+
+The source files matched on every board. Comparisons use `compare_boards.py` (old board against new). It
+checks, item by item:
+- the Edge.Cuts outline (area of the XOR);
+- tracks and vias as multisets;
+- comb copper per footprint and net (XOR area and pad count);
+- coverlay openings;
+- rule areas, including the margin keep-outs;
+- J1's contacts;
+- the configuration text and title block;
+- the `.kicad_pro` rules;
+- the deployed map's contact → region map, regions and side.
+
+"Same geometry" means every XOR is below 1e-4 mm².
+
+| Board | Archived ID → regenerated ID | Check | Compared with the archived board |
+|---|---|---|---|
+| EU 37 R | `EU37 R 1ae8010c95` → `EU37 R 990884049b` | passes | same geometry; 2 pad pieces and the margin rebuilt |
+| EU 37 L | `EU37 L be318d6216` → `EU37 L 188e8665af` | passes | same geometry; 2 pad pieces and the margin rebuilt |
+| EU 42 R | `EU42 R 4ea1726398` → `EU42 R 636645a928` | passes | same geometry; the margin rebuilt |
+| EU 42 L | `EU42 L 7d4eecd3c9` → `EU42 L 40fe8e1d0c` | passes | same geometry; the margin rebuilt |
+| EU 46 R | `EU46 R 4fb67c089d` → `EU46 R 0ce24d7591` | passes | same geometry; 3 pad pieces and the margin rebuilt |
+| EU 46 L | `EU46 L 55351e5576` → `EU46 L 8c0b4df473` | passes | same geometry; 3 pad pieces and the margin rebuilt |
+| Personal (synthetic) R | `F54cfa0 R 8a07f794d2` → `F54cfa0 R 6b6695e4db` | passes | same geometry; 1 pad piece and the margin rebuilt |
+| Personal (synthetic) L | `F54cfa0 L 1ad600b888` → `F54cfa0 L 8ad4cd74ee` | passes | same geometry; 1 pad piece and the margin rebuilt |
+| T1 EU 37 R | `T1-EU37 R 393cca5a99` → `T1-EU37 R e2034da2e5` | **fails** | routing changed (7.4) |
+| T1 EU 37 L | `T1-EU37 L 21e1be9450` → `T1-EU37 L 7b5c8400b6` | **fails** | routing changed (7.4) |
+| T1 EU 42 R | `T1-EU42 R 8bf33cb25b` → `T1-EU42 R 54183ab293` | passes | same geometry; 1 pad piece and the margin rebuilt |
+| T1 EU 42 L | `T1-EU42 L 4372223cc1` → `T1-EU42 L 1139ebcea9` | passes | same geometry; 1 pad piece and the margin rebuilt |
+| T1 EU 46 R | `T1-EU46 R 4d6f6e20bd` → `T1-EU46 R 0874227edb` | passes | same geometry; 4 pad pieces and the margin rebuilt |
+| T1 EU 46 L | `T1-EU46 L f5bfbc77d2` → `T1-EU46 L a01d3f4fa7` | passes | same geometry; 4 pad pieces and the margin rebuilt |
+| T1 synthetic R | `T1-F54cfa0 R e9634e6328` → `T1-F54cfa0 R d049ca37a1` | passes | mt2 COM comb: 0.00029 mm² less, 0.00008 mm² more; 8 → 12 pads (7.3) |
+| T1 synthetic L | `T1-F54cfa0 L 0bb63af7f4` → `T1-F54cfa0 L a628dcb9a3` | passes | the same as R, mirrored |
+
+**What is the same on all 14 passing boards:**
+- the outline (XOR 0);
+- every track and via (identical multisets);
+- every rule area, including the margin keep-out;
+- the coverlay openings;
+- J1's contacts;
+- the project rules;
+- the map: contact → region, regions and side.
+
+The configuration text differs only in `board_id` and `design_hash`, and the title block only in the two
+comments that carry them. The most comb copper under coverlay in any one region is 0.18–0.20 mm². On the eight
+baseline boards it is 0.19–0.20 mm², against at most 0.20 mm² before (section 4).
+
+**Why the IDs changed though the copper did not.** The design hash covers the exported coordinate lists.
+- **Margin keep-out.** On every board, the copper-free margin outline became invalid once rounded. It touches
+  itself at a point on 6 boards, for example at (119.4588, −39.5504) on EU 42 R, and crosses itself on 10. It
+  is now written as a valid ring, for example 3196 → 3191 vertices on EU 42 R. KiCad's reading of the keep-out
+  area is the same as before on every board (XOR 0).
+- **Pad pieces.** A few pieces with self-touching or crossing rings (7.3) were rebuilt.
+
+New vertex lists give a new hash, and so a new ID, although the copper differs by less than 1e-4 mm². This
+is why the comparison above is item by item, not by bytes or IDs.
+
+**Maps and the manifest.**
+- Maps were written for the 14 passing boards: 8 in `maps/` and 6 in `candidates/T1/maps/`.
+- `kicad/MANIFEST.json` was rewritten: all 8 baseline boards pass, IDs are unique, every board file matches
+  its check result, and every passing board has a map.
+- `channel_map.py` refuses the archived IDs against the current `maps/`. For example, `EU42 R 4ea1726398`
+  gets "no verified map". Those IDs resolve only from the archive folders.
+
+### 7.3 Self-touching and crossing pad outlines
+
+**What the archived boards had.** Their board files held pad pieces whose rounded outline was not a valid
+polygon:
+
+| | EU 37 | EU 42 | EU 46 | Personal | T1 EU 37 | T1 EU 42 | T1 EU 46 | T1 synthetic |
+|---|---|---|---|---|---|---|---|---|
+| Pieces per board (R and L alike) | 2 | 0 | 3 | 1 | 7 | 1 | 4 | 1 |
+| Kind | touch at a point | — | touch at a point | touch at a point | 4 touch, 3 cross | touch at a point | touch at a point | **crosses itself** |
+
+Each one was checked before deciding what to change; none was repaired with `buffer(0)`:
+- **No piece splits into separate lobes.** Read as `make_valid`, none falls apart, so no copper hung on a
+  zero-width point.
+- **KiCad built the copper intended.** It matches `make_valid` within 0.00033 mm² per piece, except T1 EU 46,
+  at 0.005 mm². That difference lies under other pieces of the same comb, so the comb's copper is unchanged.
+- **The crossing piece.** On the T1 synthetic foot, mt2's COM comb piece (230.69 mm²) has keyhole slits whose
+  sides cross once rounded. `make_valid` reads it as one polygon with four holes. KiCad's copper has the same
+  area, 230.6919 mm², and leaves the same places bare.
+- **What the archived checks rested on.** Their DRC and copper trace passed on these boards. The trace counts
+  a single-point touch as a connection (below), so it does not tell a self-touch from a real join.
+
+**What the regenerated boards have.** No invalid pad outline remains on any of the 16 boards; each was
+rebuilt as described in 7.1. On 12 of the 14 passing boards, the comb copper is unchanged within 1e-4 mm².
+
+**The T1 synthetic foot, on both sides, is the exception.** Its crossing piece became 5 valid pieces, so the comb has 12 pads
+instead of 8. Against the `make_valid` reading of the old piece:
+- 0.00029 mm² went;
+- 0.00008 mm² came;
+- the comb is still one connected shape;
+- the board passes with the same contacts and map.
+
+**Checker limit, still open.** The copper trace joins two shapes when KiCad's `Collide(…, 0)` reports a
+touch, and that includes a touch at a single point. A comb whose pieces met only at a point would be
+reported as connected, though it would not be one piece of copper. The exporter now refuses such joins, so
+the regenerated boards cannot contain one, but the checker would not catch one on its own. A negative
+control for it, and a minimum-overlap rule in the trace, are not built yet.
+
+### 7.4 T1 EU 37: changed, still failing
+
+| | Archived (5dd52ff) | Regenerated (0257862) |
+|---|---|---|
+| Lines crossing an odd number of times in the plan | 6 pairs; one jumper (toe4 / mt3) | **0**; no jumper. One re-route round: deeper vias for ffp_cen and mt4; toe3–toe5 on the other side of the tab base |
+| Fine pass did not finish | ffp_med, mt3, toe1_tip, toe4 | mt3, mt4 |
+| Vias | 24 | 22 |
+| DRC clearance errors (rule 0.15 mm) | 3: S_ffp_med to S_toe1_tip on B.Cu, 0.0073 mm apart | 3: S_mt3 to S_mt4 on B.Cu at the forefoot, 0.1346 mm apart |
+| Common net | reaches every region | **does not reach heel_pl**: KiCad reports 1 unconnected item between the COM pads of S02 and S04; the copper trace finds heel_pl's COM comb reached from no contact |
+| Map | none | none |
+
+**Assessment.**
+- The fix removed the conflict it was aimed at: the odd crossings and the near-short between ffp_med and
+  toe1_tip.
+- It did not make the board pass. The mt3 and mt4 lines are squeezed 0.015 mm under the rule at one spot.
+  The new via layout leaves heel_pl's common comb cut off.
+- Running the fine pass with 16 or 32 negotiation rounds did not clear the squeeze.
+- Moving T1's anchors at EU 37 would be a design decision, and it was not taken. Nor were the rules relaxed.
+
+Both sides fail the same way, mirrored. They stay without a map, and the slow regression test stays an
+expected failure.
+
+### 7.5 Not done in this round
+
+- **Exact reproduction** of the regenerated boards in a clean worktree. Section 3's spot check was for 99c7468.
+- **Negative controls on a regenerated board.** The checker is unchanged, and the controls were run on the
+  archived EU 42 R (section 4).
+- **Fabrication.** Nothing was sent to a fabricator, ordered or made. None of these boards is released for
+  fabrication.

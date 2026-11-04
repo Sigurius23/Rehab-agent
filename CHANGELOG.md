@@ -130,6 +130,38 @@
   - **T1 carried forward as a candidate, not a final selection; the matrix alternative stays open** (its figures
     rest on one assumed architecture). Localisation figures and the capacitive open-line test are labelled as
     estimates.
+  - **Shared splitting and routing fixed; all 16 boards regenerated and checked again** (commit 0257862;
+    `VERIFICATION.md`, section 7). None is released for fabrication.
+    - **`fracture()` fails closed.** A cut that makes no progress falls back to the next one. If none works, it
+      raises an error instead of recursing forever, as it did on T1's mirrored synthetic foot. The candidate's
+      private guard is removed.
+    - **Exported outlines stay valid at 0.1 µm.** Only a piece that rounding makes invalid is rebuilt. Each
+      export is compared with the unrounded copper and fails closed on any real difference or lost
+      connectivity. There is no `buffer(0)` repair.
+      - Before deciding, every self-touching or crossing pad piece on the archived boards was checked against
+        what KiCad built: no copper hung on a single point.
+      - No invalid outline remains on any board.
+    - **Planarity-triggered re-route.** It removed T1 EU 37's six odd crossings and its jumper. EU 37 still
+      fails, on both sides, for a different reason:
+      - mt3's and mt4's lines are 0.135 mm apart against 0.15 mm;
+      - the common net misses heel_pl.
+      No map was written, no rule was relaxed, and no anchor was moved.
+    - **Regression tests** (`tests/test_generator_regressions.py`):
+      - eight fast cases: the captured mirrored-foot comb, fail-closed splitting, rebuilt and refused outlines;
+      - three slow cases, among them the EU 37 plan and its fine pass. The fine-pass case is an expected failure
+        until the board passes.
+    - **Kept for comparison:** the verified sets, moved unchanged with `git mv` to `archive/baseline-99c7468/`
+      and `archive/T1-5dd52ff/`.
+    - **Compared item by item** with `compare_boards.py`: outline, tracks, vias, comb copper, openings, rule
+      areas, contacts, rules, title block and maps.
+      - All 8 baseline boards, and T1 at EU 42 and EU 46: same geometry within 1e-4 mm², with the same
+        contacts, rules and maps.
+      - T1 synthetic foot: mt2's COM comb differs by under 0.0003 mm²; it passes with the same map.
+      - IDs changed throughout, because rebuilt margin and pad outlines change the design hash.
+    - **Re-checked:** DRC, the physical copper trace, coverlay, margin and provenance were re-run on all 16
+      boards. 14 pass and have maps.
+    - **Corrected:** CANDIDATES.md's T1 coverlay column now gives the checker's figures, 0.18–0.20 mm².
+    - **Still open:** the copper trace counts a single-point touch as a connection.
 - **Flaky live-chain test fixed** (`test_live_chain_posture_to_suit_payloads`). It had failed in CI on nearly every
   run since 2026-10-24, and once in a local full-suite run.
   - The engine sent its cue correctly, but the suit bridge sometimes had not yet connected to the cue stream. LSL

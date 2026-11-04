@@ -15,17 +15,23 @@
 | | Baseline | Candidate T1 (targeted) | Matrix |
 |---|---|---|---|
 | What it is | 16 regions, one sense line each | The same method with more regions where they add information: 20 at EU 42 | Rows and columns crossing at cells, one line per row and per column |
-| Status | Generated, routed, checked: 8 boards pass `verify_board.py` | Generated, routed and checked with the same rules and checker: 6 of 8 boards pass; EU 37 fails on both sides | **Geometry study only**: not routed, not checked |
+| Status | Generated, routed, checked: 8 boards pass `verify_board.py` | Generated, routed and checked with the same rules and checker: 6 of 8 boards pass; EU 37 fails on both sides | **Geometry study only**: not routed, not checked. One assumed architecture (section 3), not the only possible matrix |
 | Files | `out/`, `kicad/`, `maps/` | `candidates/T1/` | `candidates/study.py`, results in `candidates/study.json` |
 
 **Both designs are kept for a fair comparison.**
-- **The baseline is untouched.** `sole_candidate.py` makes the candidate from `candidates/T1/layout.json`. It
-  uses `sole_gen.py`, `sole_route.py`, `kicad_export.py` and `verify_board.py` unchanged, and none of their
-  files has changed. The baseline boards and their checks therefore stay valid.
-- **It still regenerates exactly.** EU 42 R, regenerated in this session's environment (same package
-  versions), gives the committed design hash `4ea172639860ff2e`.
+- **One generator for both.** `sole_candidate.py` makes the candidate from `candidates/T1/layout.json` with the
+  shared `sole_gen.py`, `sole_route.py`, `kicad_export.py` and `verify_board.py`. It has no generator code of its
+  own.
+- **The shared generator was fixed on 2026-11-04** (commit 0257862; VERIFICATION.md, section 7):
+  - `fracture()` fails closed;
+  - exported outlines stay valid on the board file's grid;
+  - lines whose vias break the plan's planarity are re-routed.
+  Both designs were regenerated with it and checked again. The baseline's copper, outlines, rules and maps are
+  unchanged, but its IDs are new, because rebuilt outlines change the design hash.
+- **The earlier sets are kept unchanged**, for comparison: the baseline in `archive/baseline-99c7468/` and T1
+  in `archive/T1-5dd52ff/`.
 - **Candidate soles cannot be mistaken for baseline ones.**
-  - Their IDs carry the layout name, for example `T1-EU42 R 8bf33cb25b`.
+  - Their IDs carry the layout name, for example `T1-EU42 R 54183ab293`.
   - Their deployed maps live in `candidates/T1/maps/`.
   - Their title blocks also record the candidate script and layout file hashes. `verify_board.py` checks
     only the three shared generator files (see section 7).
@@ -49,15 +55,22 @@
 
 ### Results, with the same rules and the same checker as the baseline
 
-Generated from commit 5dd52ff. Left and right are mirrors and give the same results.
+Generated from commit 0257862, the fixed shared generator. Left and right are mirrors and give the same
+results. The 5dd52ff boards are in `archive/T1-5dd52ff/`.
 
-| Configuration | Regions | Contacts; tail | Fine routing pass | `verify_board.py` | Weakest region (sensing area as a share of its tile) | Copper on both layers in the bend band | Most covered copper under coverlay |
+| Configuration | Regions | Contacts; tail | Fine routing pass | `verify_board.py` | Weakest region (sensing area as a share of its tile) | Copper on both layers in the bend band | Most comb copper under coverlay, any region |
 |---|---|---|---|---|---|---|---|
-| EU 37, R and L | 20 | 22; 14 mm | 4 lines left in conflict, 1 jumper | **Fail**: 3 clearance errors at one spot (0.007 mm against the 0.15 mm rule). No short; every contact still traces to its region. No map written | mt1, 47 % | 0.31 mm² | 0.18 mm² |
-| EU 42, R and L | 20 | 22; 14 mm | Clean | Pass | toe1_base, 58 % | 0 | 0.15 mm² |
-| EU 46, R and L | 20 | 22; 14 mm | Clean | Pass | mt4, 54 % | 0 | 0.14 mm² |
-| Synthetic foot, R and L | 18 | 20; 13 mm | Clean | Pass | ffp_med, 46 % | 0.83 mm² | 0.13 mm² |
+| EU 37, R and L | 20 | 22; 14 mm | 2 lines left in conflict (mt3, mt4); no jumper; the plan is now planar | **Fail**. 3 clearance errors at one spot, S_mt3 to S_mt4, 0.135 mm against the 0.15 mm rule. The common net does not reach heel_pl (1 unconnected). No map written | mt1, 47 % | 0.74 mm² | 0.18 mm² |
+| EU 42, R and L | 20 | 22; 14 mm | Clean | Pass | toe1_base, 58 % | 0 | 0.19 mm² |
+| EU 46, R and L | 20 | 22; 14 mm | Clean | Pass | mt4, 54 % | 0 | 0.20 mm² |
+| Synthetic foot, R and L | 18 | 20; 13 mm | Clean | Pass | ffp_med, 46 % | 0.83 mm² | 0.20 mm² |
 | *Baseline, same configurations* | *16 (14)* | *18; 12 mm (16; 11 mm)* | *Clean* | *8 of 8 pass* | *mt4 69 % (EU 37, 42), mt4 58 % (EU 46), mt1 73 % (synthetic)* | *0, except EU 46: 0.43 mm²* | *0.20 mm² worst* |
+
+- **Unchanged by the regeneration:** the copper of the EU 42 and EU 46 boards. The synthetic foot's boards
+  differ only in one comb, mt2's COM, by under 0.0003 mm² (VERIFICATION.md, section 7.3).
+- **The last column now gives the checker's figure.** It is the largest `covered_mm2` over the regions in
+  `.check.json`. The earlier table gave 0.13–0.18 mm², and its source could not be traced. The checker
+  reports 0.19–0.20 mm² on the archived 5dd52ff boards too.
 
 - **The cost of more regions.** Smaller regions lose a larger share to the bundles that pass them. On the
   passing T1 boards the weakest region keeps 46–58 % of its tile; on the baseline, 58–73 %.
@@ -65,22 +78,36 @@ Generated from commit 5dd52ff. Left and right are mirrors and give the same resu
   - The share that senses is a geometric estimate; how a part-covered region responds is for the coupon test.
 - **Copper on both layers in the bend band.** T1 removes EU 46's 0.43 mm² but adds 0.83 mm² on the synthetic
   foot. Either way it is a durability question for the bend test.
-- **Why EU 37 fails.** The router puts ffp_med's via at the far corner of its region, so ffp_med's line runs
-  back beside the big-toe bundle. The fine pass cannot separate it from toe1_tip's line in eight rounds.
-  - **Fixing it needs router work** in `sole_gen.py` or `sole_route.py`, as EU 37, EU 46 and the synthetic
-    foot needed for the baseline. That changes the generator files the baseline boards record. All eight
-    baseline boards would then have to be regenerated and re-checked, to show that their copper is unchanged.
-  - **Not done.** It is a decision to take. It was not tuned away by moving T1's anchors at EU 37 alone.
-- **A latent bug in the shared generator, found on the way.** `fracture()`, which splits a comb into hole-free
+- **Why EU 37 failed at 5dd52ff.**
+  - Six pairs of sense lines crossed an odd number of times in the plan, so one needed a jumper.
+  - ffp_med's via sat at the far corner of its region, and its line ran back beside the big-toe bundle.
+  - The fine pass could not separate it from toe1_tip's line: 0.007 mm apart.
+- **What the router fix changed** (commit 0257862). When the plan is not planar, the router now re-routes the
+  regions involved. On EU 37 one round did it:
+  - deeper vias for ffp_cen and mt4;
+  - toe3–toe5 leave from the other side of their tab base.
+  The plan became planar, with no jumper, and the ffp_med / toe1_tip conflict is gone.
+- **Why EU 37 still fails.**
+  - **mt3 and mt4.** Their lines are now squeezed together at the forefoot, 0.135 mm apart against 0.15 mm.
+    The fine pass leaves them there with 8 negotiation rounds, and also with 16 or 32.
+  - **heel_pl.** The new via layout cuts its common comb off from contact 1.
+  - **Copper in the bend band** rose from 0.31 to 0.74 mm².
+  - **Not tuned away.** T1's anchors were not moved at EU 37 alone, and no rule was relaxed. Both would be
+    design decisions.
+  - **The regression test** for the clean fine pass stays an expected failure until the board passes
+    (`tests/test_generator_regressions.py`, slow cases).
+- **The splitting bug is fixed in the shared generator.** `fracture()`, which splits a comb into hole-free
   KiCad pads, recursed forever on the mirrored synthetic foot with T1's regions.
-  - `sole_candidate.py` guards it. The guard behaves exactly as before wherever the old split works:
-    regenerating T1 at EU 42 R gave the same design hash before and after it.
-  - The baseline is unaffected, because all of its boards were built. The shared function is left as it is
-    for now, for the same reason as the router fix.
-- **Self-touching pad outlines, in both designs.** After rounding, some comb pieces in the board files touch
-  themselves at a single point: 0–3 per baseline board and 1–7 per T1 board. KiCad's DRC and the copper
-  connectivity check pass on all of them. Whether every fabricator's tools accept such outlines is a question
-  to add to FABRICATION.md's list.
+  - It now fails closed: a split that makes no progress tries the next cut, and stops with an error if none
+    works.
+  - `sole_candidate.py` no longer carries its own guard.
+  - A regression test uses the captured comb (`tests/fixtures/t1_mirrored_comb.wkt`).
+- **Self-touching and crossing pad outlines: resolved.** After rounding, some comb pieces touched themselves
+  at a point, or crossed themselves: 0–3 per baseline board and 1–7 per T1 board.
+  - On the archived boards, KiCad's copper matched what was intended, and no copper hung on a single point.
+  - The export now rebuilds such pieces on the grid, and checks that the copper and its connectivity are
+    unchanged.
+  - No invalid outline remains on any regenerated board. Details are in VERIFICATION.md, section 7.3.
 - **IDs and maps.** All 8 T1 IDs differ from each other and from the baseline's.
   - `channel_map.py` resolves the 6 passing ones from `candidates/T1/maps/`.
   - It refuses every T1 ID against the baseline's `maps/`.
@@ -105,7 +132,7 @@ assumptions are in `candidates/study.py`). Ranges across EU 37, 42, 46 and the s
 | … vias inside the toe tabs | 5 | 6 | about 87 | about 50 |
 | … layers crossing inside the tabs | No: one comb pair per toe, lines leave at the base | The same; one more line runs along the big-toe tab | Yes, at every toe cell: stiffer tabs | The same |
 | **Tail:** contacts at 0.5 mm, and width | 18; 12 mm | 22; 14 mm | 72 (48 if the toe pieces are linked behind the slits); 39 mm (27 mm) | 56 (37); 31 mm (21.5 mm) |
-| **Routing** | Routed; 8 of 8 boards pass | Routed; 6 of 8 boards pass. EU 37 fails: 3 clearance errors at one spot | Not routed. A line crossing the foot is cut by every toe slit, so each toe's piece needs its own line out of the tab, on the other layer, with one extra via: 29 pieces | 21 pieces |
+| **Routing** | Routed; 8 of 8 boards pass | Routed; 6 of 8 boards pass. EU 37 fails: 3 clearance errors at one spot, and the common net misses one region | Not routed. A line crossing the foot is cut by every toe slit, so each toe's piece needs its own line out of the tab, on the other layer, with one extra via: 29 pieces | 21 pieces |
 | … vias in the toe-joint bend band, where the baseline rules allow none | 0 | 0 | 43: one per cell there, unless those cells are dropped | 24 |
 | … edge channels beside the tail, distal / proximal side | Carved per bundle; checked | The same | about 17 / 12 mm wide, eating into the cells there | about 12.5 / 9 mm |
 | **Readout:** conversions per second per foot at 100 Hz | 1,600 | 2,000 | 34,100 | 18,800 |
@@ -222,7 +249,8 @@ python candidates/open_line.py out/sole_EU42_R.board.json candidates/T1/out/cand
   The study and open-line scripts read the board files there, so generate them first. Their results are
   committed as `candidates/study.json` and `candidates/open_line.json`.
 - **No fabrication files:** `make_fab.sh` is not used for candidates, and none are made for them.
-- **Provenance:** the boards were generated from commit 5dd52ff, with no generator file modified. Their title
-  blocks record the hashes of `sole_gen`, `sole_route`, `sole_candidate`, `layout` and `kicad_export`.
+- **Provenance:** the boards were generated from commit 0257862, with no generator file modified. Their title
+  blocks record the hashes of `sole_gen`, `sole_route`, `sole_candidate`, `layout` and `kicad_export`. The
+  boards from 5dd52ff are kept in `archive/T1-5dd52ff/`.
 - **What `verify_board.py` checks:** the three shared files. The candidate script and layout hashes are
   recorded for tracing, but not checked by it.
