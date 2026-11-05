@@ -204,6 +204,21 @@ metatarsals / toes in percentage points, at 15 / 10 / 7.5 / 5 mm:
 | Two-segment minus D'Hondt, both rigid | assumed | 0.45 | −0.0/+0.1/−0.0/−0.0 | −0.2/+0.2/−0.0/−0.1 | −0.1/+0.2/−0.0/−0.1 | −0.1/+0.2/+0.0/−0.1 |
 | | native | 0.45 | −4.4/+7.8/−1.2/−2.3 | −3.0/+5.5/−1.0/−1.5 | −3.5/+6.4/−1.2/−1.8 | −3.1/+5.8/−1.3/−1.4 |
 
+**Convergence criterion for finer spacings** (written on 2026-11-05, before the 3.75 and 2.5 mm runs, and not to
+be changed after them): “Converged: the largest change between the two finest spacings is at most 1.0
+percentage point, for every absolute share and every paired difference in the section 5.3 table, and the
+changes shrink from one step to the next.” If it is not met, the result is reported as not converged. Nothing is
+tuned to make it pass. How it is evaluated, also fixed before the runs:
+- **Quantities:** the four absolute shares of every discretisation case (4 models × centre of pressure 0.45 and
+  0.75 × assumed and native contact: 64 values), and the 32 paired differences of the table above (8 rows × 4
+  shares).
+- **Change:** the absolute difference between successive spacings, taken from the results' values (two
+  decimals), not from the rounded table. "At most 1.0" means at most 1.00 at the step from 3.75 to 2.5 mm, for
+  every quantity.
+- **Shrinking:** the largest change over all 96 quantities is strictly smaller at each step than at the step
+  before, over the steps 7.5 → 5, 5 → 3.75 and 3.75 → 2.5 mm. Counted from 15 mm, it already fails before any new
+  run: 8.06, 2.63, then 3.45 points.
+
 **5.4 Sensitivity** (largest change in any group, percentage points, against each case's assumed-contact
 baseline at 15 mm):
 
