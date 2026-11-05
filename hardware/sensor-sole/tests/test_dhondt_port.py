@@ -98,7 +98,7 @@ class Provenance(unittest.TestCase):
         import json
         soles = {k: v for k, v in json.loads((HERE / "foot_models" / "PROVENANCE.json").read_text())["soles"].items()
                  if k.startswith("sim/")}
-        self.assertEqual(len(soles), 8)                        # 15, 10, 7.5 and 5 mm, right and left
+        self.assertEqual(len(soles), 12)                       # 15, 10, 7.5, 5, 3.75, 2.5 mm; R and L
         for rel, want in soles.items():
             self.assertEqual(hashlib.sha256((HERE / rel).read_bytes()).hexdigest(), want, rel)
 

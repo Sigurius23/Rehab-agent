@@ -100,7 +100,11 @@
   "sim/spacing/7.5mm/EU42_R_636645a928.sole_sim.json": "1e2e930e8910f6af054dfdaebf0cf489f805bd18fa9053a4e1cc83bffd8b25d0",
   "sim/spacing/5mm/EU42_L_40fe8e1d0c.sole_sim.json": "fb32645eca324f823446e06700c1f6c6de501621663540aa2490015177842eac",
   "sim/spacing/5mm/EU42_R_636645a928.sole_sim.json": "b0f2fde533591de0011f6d05b4aed2435e799f8f46adfd89aefe2f762f764722",
-  "other spacings made with": "python sole_sim.py export out/sole_EU42_<side>.board.json --map maps/EU42_<side>_<hash>.json --spacing <mm> (generator commit 0257862; design hashes 636645a928..., 40fe8e1d0c...). Regenerating the EU 42 R board on 2026-11-04 and exporting it at 15 and 5 mm reproduced these files byte for byte"
+  "sim/spacing/3.75mm/EU42_L_40fe8e1d0c.sole_sim.json": "fc5f98ccd0c9c88154f711d12dfb64fb0314486b33a277567e6b204738654c5d",
+  "sim/spacing/3.75mm/EU42_R_636645a928.sole_sim.json": "0f537548a4a3207a6e8169f28c051a5bd605000ace7b2ff3b1db528ba7de13f4",
+  "sim/spacing/2.5mm/EU42_L_40fe8e1d0c.sole_sim.json": "e14289720b7a6e0f7b6bab6711b94639ce5622c988635de46ce7548b9079603a",
+  "sim/spacing/2.5mm/EU42_R_636645a928.sole_sim.json": "4c6d168a5ebb1dfea13efd7e0c939998388d2bb8445f7a06aa9a4839b445f5c2",
+  "other spacings made with": "python sole_sim.py export out/sole_EU42_<side>.board.json --map maps/EU42_<side>_<hash>.json --spacing <mm> (generator commit 0257862; design hashes 636645a928..., 40fe8e1d0c...). Regenerating the EU 42 R board on 2026-11-04 and exporting it at 15 and 5 mm reproduced these files byte for byte. The 3.75 and 2.5 mm soles were made on 2026-11-05 on that same machine with workstation/setup.sh soles 3.75 2.5: it regenerated the EU 42 R and L boards, checked that both reproduce the committed 15 mm soles byte for byte, and exported them with the deployed maps. On the lab laptop the regenerated boards had other design hashes (R 82647223b9, L 553b446206), so the deployed maps refused them; the generator's output, like the self-test model, is not the same on every machine"
  },
  "environments": {
   "pipeline (OpenSim)": {

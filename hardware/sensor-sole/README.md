@@ -39,7 +39,7 @@ Moticon OpenGo, and the validation plan.
 | `candidates/` | T1's layout, boards, check results and maps (kept apart from the baseline's); `study.py` (baseline, T1 and matrix on the same outlines) and `open_line.py` (capacitance estimates) |
 | `SIMULATION.md` | The sole in simulation: a sensorised contact layer in the OpenSim model, per-region readout, the first drop test, limits and next steps (including HPC) |
 | `sole_sim.py` | Exports a sole for simulation, adds it to an OpenSim model, and reads simulated forces out per region in the pod's contact order (assumed sensor model) |
-| `sim/` | Simulation exports of the current boards (`<id>.sole_sim.json`); `sim/spacing/` the EU 42 soles at 10, 7.5 and 5 mm contact spacing |
+| `sim/` | Simulation exports of the current boards (`<id>.sole_sim.json`); `sim/spacing/` the EU 42 soles at 10, 7.5, 5, 3.75 and 2.5 mm contact spacing |
 | `FOOT_MODELS.md` | Experimental controlled comparison of foot models on the same virtual sole, with one assumed (not measured) contact law and each model's native contact as a sensitivity analysis: adapter limits, D'Hondt port and its verification, results, discretisation sensitivity, Synergy kinematics; no model selected |
 | `VALIDATION_PLAN.md` | Plan, not a result: force-plate comparison of the current foot-to-ground model first, then regional barefoot plantar pressure, then foot–insole contact; candidate public datasets and reference equipment (nothing downloaded, bought or contacted) |
 | `TEST_RUNS.md` | Which tests ran and which skipped in each environment, and why (written by `tests/run_suites.py`) |
