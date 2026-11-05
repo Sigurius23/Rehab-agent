@@ -189,9 +189,10 @@
           at 0.75, against +2 and +6 with native contact). Freeing the MTP joint at 0.75 raises the metatarsal
           share by 13–19 points and lowers the toe share by 11–15. Native instead of assumed contact changes D'Hondt's shares by up to
           14 points. Neither contact model is measured.
-        - **Discretisation sensitivity** (15, 10, 7.5, 5 mm): absolute shares change by up to 7.9, 2.5 and 3.4
-          points between successive spacings. Reported as sensitivity to one modelling choice, not as a confidence
-          interval or the total uncertainty.
+        - **Discretisation sensitivity** (15, 10, 7.5, 5 mm): absolute shares change by up to 8.1, 2.6 and 3.5
+          points between successive spacings (corrected on 2026-11-05: 7.9, 2.5 and 3.4 were the two-segment
+          model's alone). Reported as sensitivity to one modelling choice, not as a confidence interval or the
+          total uncertainty. Extended to 3.75 and 2.5 mm below.
         - **Out-of-range postures:** D'Hondt's 60° and 80° squat frames exceed its coordinate ranges. They are
           flagged and not interpreted; nothing here describes valid deep-squat behaviour.
         - **Reproducibility:** `foot_models/PROVENANCE.json` (model, kinematics, sole, saved-function and
@@ -252,6 +253,19 @@
           from. Each process now logs to its own file under `--out/opensim_logs/<start time>-<pid>/`, and
           `setup.sh tests` runs the suites from `test_runs/`, so their log lands there. The case fingerprints are
           unchanged: a rerun reused all 244 cases.
+        - **Contact spacing down to 2.5 mm: not converged** (2026-11-05; FOOT_MODELS.md 5.3,
+          `foot_models/results_spacing_2026-11-05.json`).
+          - The convergence criterion was written into 5.3 and pushed before any 3.75 or 2.5 mm result existed.
+          - The 3.75 and 2.5 mm soles were made on the machine that made the others. The lab laptop's regenerated
+            boards had other design hashes, and without the deployed map its left sole would have mapped 16 of 18
+            pins to other regions.
+          - 96 runs at six spacings, all solved; the 64 at 15–5 mm equal `results_2026-11-04.json` in every field.
+          - From 3.75 to 2.5 mm, 14 arch-and-midfoot shares still change by more than 1.0 point (up to 1.67). The
+            largest change per step does shrink (3.45, 2.78, 1.67), and the paired differences stay within 0.89.
+            Individual shares do not settle steadily, so no extrapolated value is given.
+          - One 2.5 mm case takes about 10 minutes alone, against 20 s at 5 mm.
+          - `run_comparison.sh`: with `--out` given, its hand-check hint named the default summary. It now uses the
+            `--out` folder, and a full run into another folder is checked too.
     - **Printed prototype** (`PRINTED.md`, `sole_print.py`). A TPU carrier is built from the same design:
       - underside wire channels along the routing plan;
       - a floor with one hole per region;

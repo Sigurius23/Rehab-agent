@@ -77,16 +77,20 @@ JOBS=8 workstation/run_comparison.sh
 - **Sleep:** start long runs inside `tmux`, or with `nohup`, so closing the terminal doesn't stop them. On
   Windows, a laptop that sleeps pauses WSL. Set the lid to do nothing while plugged in, if the lab allows it.
 
-**Finer contact spacing** (the discretisation sensitivity, `FOOT_MODELS.md` section 5.3). The soles at 15, 10,
-7.5 and 5 mm are committed in `sim/`. For finer ones:
+**Finer contact spacing** (the discretisation sensitivity, `FOOT_MODELS.md` section 5.3). The EU 42 soles at 15,
+10, 7.5, 5, 3.75 and 2.5 mm are committed in `sim/` and `sim/spacing/`. All six, into their own folder so that
+the full run's `summary.json` stays as it is (14 minutes on the lab laptop; each 2.5 mm case takes 6–12 minutes):
 
 ```
-workstation/setup.sh soles 3.75 2.5        # regenerates the EU 42 boards once (a few minutes each)
-SPACING_SOLES="$HOME/rehab-agent-data/sensor-sole/soles/3.75mm $HOME/rehab-agent-data/sensor-sole/soles/2.5mm" \
-    workstation/run_comparison.sh --only discretisation
+SPACING_SOLES="$PWD/sim/spacing/3.75mm $PWD/sim/spacing/2.5mm" \
+    workstation/run_comparison.sh --only discretisation --out ~/rehab-agent-data/sensor-sole/runs/spacing
+python3 foot_models/compare_results.py ~/rehab-agent-data/sensor-sole/runs/spacing/summary.json \
+    --reference foot_models/results_spacing_2026-11-05.json
 ```
 
-The regenerated boards must reproduce the committed 15 mm soles byte for byte, or `setup.sh soles` stops.
+`workstation/setup.sh soles <mm> ...` makes soles at other spacings. It regenerates the EU 42 boards and stops
+unless they reproduce the committed 15 mm soles byte for byte. They do not on every machine: on the lab laptop the
+boards came out with other design hashes, so the 3.75 and 2.5 mm soles were made where the others were.
 
 ## Bringing results back
 

@@ -36,11 +36,14 @@ OUT="$DATA/runs/comparison"
   --spacing-soles "$SOLE/sim/spacing/10mm" "$SOLE/sim/spacing/7.5mm" "$SOLE/sim/spacing/5mm" ${SPACING_SOLES:-} \
   --out "$OUT" --jobs "$JOBS" "$@"
 
-# A full run is checked against the recorded results. --only (one group), extra soles or another --out give a
-# different set of cases or another file, so those are not checked here.
-full=1
+# A full run is checked against the recorded results. --only (one group) or extra soles give a different set of
+# cases, so those are not checked here. A later --out (also abbreviated) replaces the folder, as in argparse.
+full=1; prev=""
 for arg in "$@"; do
-  case "$arg" in --on*|--sp*|--ou*) full=0 ;; esac          # --only, --spacing-soles, --out (or abbreviated)
+  case "$prev" in --ou|--out) OUT=$arg ;; esac
+  case "$arg" in --ou=*|--out=*) OUT=${arg#*=} ;; esac
+  case "$arg" in --on*|--sp*) full=0 ;; esac                # --only, --spacing-soles (or abbreviated)
+  prev=$arg
 done
 [ -z "${SPACING_SOLES:-}" ] || full=0
 check=(python3 -I "$SOLE/foot_models/compare_results.py" "$OUT/summary.json")

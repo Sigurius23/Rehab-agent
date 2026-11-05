@@ -1,0 +1,4624 @@
+{
+ "note": "Summary of the experimental contact-spacing study of 2026-11-05 (foot_models/run_comparison.py --only discretisation, spacings 15, 10, 7.5, 5, 3.75 and 2.5 mm), run on the lab laptop (Intel Core Ultra 9 290HX Plus, 22 cases at a time), copied from the run's summary.json with local paths reduced to file names; 'spacing_soles' (the sole files of each spacing) was added. Simulation only: not measured, not validated. A discretisation sensitivity, not a confidence interval or the total uncertainty (FOOT_MODELS.md 5.3, where the convergence criterion and verdict are). 'seconds' is each case's wall time with 22 cases running at once. The two-segment model is this machine's rebuild (sha256 e0898ca7..., PROVENANCE.json two_segment); the 15-5 mm cases equal results_2026-11-04.json in every field.",
+ "status": "experimental: simulated foot-to-ground contact through a virtual sole, not foot-insole contact inside a shoe; registration is approximate (see registration_residuals); not validated against measurements; passive below the ankle (no muscles; ankle torque solved); quasi-static posture",
+ "assumed_contact": {
+  "name": "assumed sole contact v1",
+  "status": "assumed, not measured",
+  "pressure_kpa": 100.0,
+  "indentation_mm": 3.0,
+  "dissipation": 2.0,
+  "static_friction": 0.8,
+  "dynamic_friction": 0.8,
+  "viscous_friction": 0.5,
+  "transition_velocity": 0.2,
+  "constant_contact_force": 1e-08,
+  "hertz_smoothing": 2000.0,
+  "hunt_crossley_smoothing": 50.0
+ },
+ "inputs": {
+  "selftest": {
+   "path": "model_scaled.osim",
+   "sha256": "e0898ca7ba6a380235a981ba5f49a88a4ced64fbfc179ccd7a501f9b53d7a958"
+  },
+  "mot": {
+   "path": "squats1_videoAndMocap.mot",
+   "sha256": "2ac8d4f9e0ea31cef3ff4075e9b4433501055099171feda907fa9f1b21c09257"
+  },
+  "sole_r": {
+   "path": "sim/EU42_R_636645a928.sole_sim.json",
+   "sha256": "dbf4be9cfb1d5689abec1227e01ada14bbf957f1cc67f90ddea7343bab2d0170"
+  },
+  "sole_l": {
+   "path": "sim/EU42_L_40fe8e1d0c.sole_sim.json",
+   "sha256": "99d777069ed8b83c7965128ecb615c22d77a7c1621d57afc383b54c3d69b09e9"
+  },
+  "dhondt_3seg": {
+   "path": "DHondt_2024_3-segment_foot_fixed_knee.osim",
+   "sha256": "f78df97841b566ad5fbfbf5e50a3b9dce2a82ac9308153579875bd93e9608e4b"
+  },
+  "dhondt_3seg_ported": {
+   "sha256": "52aadeea51068838b5b7639bfc93a83602f73718f4d2cfd9fef2af2f8470a37d"
+  },
+  "dhondt_4seg": {
+   "path": "DHondt_2024_4-segment_foot_fixed_knee.osim",
+   "sha256": "241eb5dd064f823e619088248e5ac6805762c349dc3ce46d5ee099342050d959"
+  },
+  "dhondt_4seg_ported": {
+   "sha256": "f3a8f2aaef9177be63e01824a59b932b902bef4657a8f43940694d956096ea03"
+  }
+ },
+ "postures_from_mot_s": {
+  "standing": 0.0,
+  "squat_knee30": 0.51,
+  "squat_knee60": 2.2,
+  "squat_knee80": 2.46
+ },
+ "cop_targets": [
+  0.3,
+  0.45,
+  0.6,
+  0.75
+ ],
+ "environment": {
+  "python": "3.13.16",
+  "opensim": "4.6",
+  "numpy": "2.5.4",
+  "scipy": "1.18.1",
+  "machine": "x86_64",
+  "system": "Linux"
+ },
+ "code_sha256": {
+  "foot_models/compare_feet.py": "9afc94ed06c1fdcf14c35b1ba444cd1a55b5faa40c874483164df5c1efd35ddf",
+  "sole_sim.py": "3cd31ce1061fd47ff8da4d129a9ffccf186c6acbf4e3a28eba46017e1cd1f9c5",
+  "foot_models/dhondt_port.py": "fa92f84b7f363869af60370ba3542d551d51e473caf9cd21fcf617bb8541768a",
+  "foot_models/dhondt2024_mtj_ligament_moment.json": "dc999454046b1db5cde4e70a64c9e02a4aa7eb4870f390807d858fa576424ada"
+ },
+ "controlled_cop": {},
+ "posture_based": {},
+ "native_contact": {
+  "controlled_cop": {},
+  "posture_based": {}
+ },
+ "sensitivity": {},
+ "discretisation": {
+  "assumed": {
+   "two-segment (self-test), foot rigid": {
+    "0.45": {
+     "15 mm": {
+      "solved": true,
+      "support_error_pct": -0.034,
+      "ankle_angle_deg": 7.493,
+      "ankle_torque_Nm": -5.2,
+      "foot_angles_deg": {},
+      "mtj_outside_paper_range": false,
+      "cop_sole_mm": [
+       83.2,
+       -1.7
+      ],
+      "foot_N": 343.23,
+      "heel_pct": 45.11,
+      "arch_midfoot_pct": 40.23,
+      "metatarsal_pct": 12.69,
+      "toes_pct": 1.99,
+      "regions_pct": {
+       "heel_post": 16.55,
+       "heel_med": 14.88,
+       "heel_lat": 13.68,
+       "arch_med": 24.87,
+       "mid_lat_prox": 13.2,
+       "mid_lat_dist": 2.16,
+       "mt1": 7.11,
+       "mt2": 3.1,
+       "mt3": 1.72,
+       "mt4": 0.53,
+       "mt5": 0.23,
+       "toe1": 1.29,
+       "toe2": 0.29,
+       "toe3": 0.13,
+       "toe4": 0.13,
+       "toe5": 0.15
+      },
+      "scale": 1.1622,
+      "posture_outside_model_range": [],
+      "posture_notes": [
+       "lumbar_extension = -5.2 deg: not in this model, left at 0"
+      ],
+      "contact": "assumed sole contact v1",
+      "stiffness_per_sphere": 4526803.861364434,
+      "seconds": 1.3,
+      "reused_from_earlier_run": false
+     },
+     "10 mm": {
+      "solved": true,
+      "support_error_pct": -0.034,
+      "ankle_angle_deg": 7.369,
+      "ankle_torque_Nm": -5.12,
+      "foot_angles_deg": {},
+      "mtj_outside_paper_range": false,
+      "cop_sole_mm": [
+       83.2,
+       -2.5
+      ],
+      "foot_N": 343.23,
+      "heel_pct": 52.74,
+      "arch_midfoot_pct": 32.32,
+      "metatarsal_pct": 12.63,
+      "toes_pct": 2.3,
+      "regions_pct": {
+       "heel_post": 12.81,
+       "heel_med": 24.21,
+       "heel_lat": 15.72,
+       "arch_med": 20.54,
+       "mid_lat_prox": 8.95,
+       "mid_lat_dist": 2.83,
+       "mt1": 5.12,
+       "mt2": 4.2,
+       "mt3": 2.52,
+       "mt4": 0.7,
+       "mt5": 0.09,
+       "toe1": 1.57,
+       "toe2": 0.53,
+       "toe3": 0.09,
+       "toe4": 0.04,
+       "toe5": 0.07
+      },
+      "scale": 1.1622,
+      "posture_outside_model_range": [],
+      "posture_notes": [
+       "lumbar_extension = -5.2 deg: not in this model, left at 0"
+      ],
+      "contact": "assumed sole contact v1",
+      "stiffness_per_sphere": 2464079.9168896596,
+      "seconds": 2.6,
+      "reused_from_earlier_run": false
+     },
+     "7.5 mm": {
+      "solved": true,
+      "support_error_pct": -0.034,
+      "ankle_angle_deg": 7.43,
+      "ankle_torque_Nm": -5.17,
+      "foot_angles_deg": {},
+      "mtj_outside_paper_range": false,
+      "cop_sole_mm": [
+       83.2,
+       -1.9
+      ],
+      "foot_N": 343.23,
+      "heel_pct": 50.76,
+      "arch_midfoot_pct": 34.82,
+      "metatarsal_pct": 11.68,
+      "toes_pct": 2.73,
+      "regions_pct": {
+       "heel_post": 13.88,
+       "heel_med": 21.59,
+       "heel_lat": 15.29,
+       "arch_med": 21.11,
+       "mid_lat_prox": 11.09,
+       "mid_lat_dist": 2.62,
+       "mt1": 5.37,
+       "mt2": 3.52,
+       "mt3": 2.19,
+       "mt4": 0.46,
+       "mt5": 0.14,
+       "toe1": 2.41,
+       "toe2": 0.17,
+       "toe3": 0.05,
+       "toe4": 0.05,
+       "toe5": 0.05
+      },
+      "scale": 1.1622,
+      "posture_outside_model_range": [],
+      "posture_notes": [
+       "lumbar_extension = -5.2 deg: not in this model, left at 0"
+      ],
+      "contact": "assumed sole contact v1",
+      "stiffness_per_sphere": 1600466.8537361196,
+      "seconds": 4.4,
+      "reused_from_earlier_run": false
+     },
+     "5 mm": {
+      "solved": true,
+      "support_error_pct": -0.034,
+      "ankle_angle_deg": 7.414,
+      "ankle_torque_Nm": -5.16,
+      "foot_angles_deg": {},
+      "mtj_outside_paper_range": false,
+      "cop_sole_mm": [
+       83.2,
+       -2.1
+      ],
+      "foot_N": 343.23,
+      "heel_pct": 50.83,
+      "arch_midfoot_pct": 34.36,
+      "metatarsal_pct": 12.55,
+      "toes_pct": 2.28,
+      "regions_pct": {
+       "heel_post": 13.94,
+       "heel_med": 21.59,
+       "heel_lat": 15.3,
+       "arch_med": 21.4,
+       "mid_lat_prox": 10.16,
+       "mid_lat_dist": 2.8,
+       "mt1": 5.25,
+       "mt2": 4.28,
+       "mt3": 2.27,
+       "mt4": 0.6,
+       "mt5": 0.15,
+       "toe1": 1.98,
+       "toe2": 0.18,
+       "toe3": 0.06,
+       "toe4": 0.03,
+       "toe5": 0.03
+      },
+      "scale": 1.1622,
+      "posture_outside_model_range": [],
+      "posture_notes": [
+       "lumbar_extension = -5.2 deg: not in this model, left at 0"
+      ],
+      "contact": "assumed sole contact v1",
+      "stiffness_per_sphere": 871183.8093091312,
+      "seconds": 22.7,
+      "reused_from_earlier_run": false
+     },
+     "3.75 mm": {
+      "solved": true,
+      "support_error_pct": -0.034,
+      "ankle_angle_deg": 7.429,
+      "ankle_torque_Nm": -5.18,
+      "foot_angles_deg": {},
+      "mtj_outside_paper_range": false,
+      "cop_sole_mm": [
+       83.2,
+       -1.8
+      ],
+      "foot_N": 343.23,
+      "heel_pct": 51.34,
+      "arch_midfoot_pct": 34.16,
+      "metatarsal_pct": 12.16,
+      "toes_pct": 2.35,
+      "regions_pct": {
+       "heel_post": 13.71,
+       "heel_med": 21.6,
+       "heel_lat": 16.03,
+       "arch_med": 20.83,
+       "mid_lat_prox": 10.48,
+       "mid_lat_dist": 2.85,
+       "mt1": 5.38,
+       "mt2": 4.06,
+       "mt3": 2.12,
+       "mt4": 0.47,
+       "mt5": 0.13,
+       "toe1": 1.94,
+       "toe2": 0.27,
+       "toe3": 0.06,
+       "toe4": 0.04,
+       "toe5": 0.04
+      },
+      "scale": 1.1622,
+      "posture_outside_model_range": [],
+      "posture_notes": [
+       "lumbar_extension = -5.2 deg: not in this model, left at 0"
+      ],
+      "contact": "assumed sole contact v1",
+      "stiffness_per_sphere": 565850.4826705542,
+      "seconds": 79.4,
+      "reused_from_earlier_run": false
+     },
+     "2.5 mm": {
+      "solved": true,
+      "support_error_pct": -0.034,
+      "ankle_angle_deg": 7.396,
+      "ankle_torque_Nm": -5.17,
+      "foot_angles_deg": {},
+      "mtj_outside_paper_range": false,
+      "cop_sole_mm": [
+       83.2,
+       -1.8
+      ],
+      "foot_N": 343.23,
+      "heel_pct": 52.12,
+      "arch_midfoot_pct": 32.49,
+      "metatarsal_pct": 12.78,
+      "toes_pct": 2.6,
+      "regions_pct": {
+       "heel_post": 14.25,
+       "heel_med": 20.75,
+       "heel_lat": 17.12,
+       "arch_med": 19.72,
+       "mid_lat_prox": 10.04,
+       "mid_lat_dist": 2.73,
+       "mt1": 5.5,
+       "mt2": 4.46,
+       "mt3": 2.2,
+       "mt4": 0.49,
+       "mt5": 0.13,
+       "toe1": 2.15,
+       "toe2": 0.27,
+       "toe3": 0.08,
+       "toe4": 0.05,
+       "toe5": 0.05
+      },
+      "scale": 1.1622,
+      "posture_outside_model_range": [],
+      "posture_notes": [
+       "lumbar_extension = -5.2 deg: not in this model, left at 0"
+      ],
+      "contact": "assumed sole contact v1",
+      "stiffness_per_sphere": 308009.98961120745,
+      "seconds": 397.8,
+      "reused_from_earlier_run": false
+     }
+    },
+    "0.75": {
+     "15 mm": {
+      "solved": true,
+      "support_error_pct": -0.034,
+      "ankle_angle_deg": 7.052,
+      "ankle_torque_Nm": -26.7,
+      "foot_angles_deg": {},
+      "mtj_outside_paper_range": false,
+      "cop_sole_mm": [
+       138.7,
+       -1.9
+      ],
+      "foot_N": 343.23,
+      "heel_pct": 20.65,
+      "arch_midfoot_pct": 30.49,
+      "metatarsal_pct": 27.44,
+      "toes_pct": 21.42,
+      "regions_pct": {
+       "heel_post": 6.67,
+       "heel_med": 7.93,
+       "heel_lat": 6.05,
+       "arch_med": 19.18,
+       "mid_lat_prox": 8.71,
+       "mid_lat_dist": 2.6,
+       "mt1": 11.57,
+       "mt2": 6.48,
+       "mt3": 4.73,
+       "mt4": 2.88,
+       "mt5": 1.78,
+       "toe1": 8.18,
+       "toe2": 5.81,
+       "toe3": 4.3,
+       "toe4": 1.94,
+       "toe5": 1.19
+      },
+      "scale": 1.1622,
+      "posture_outside_model_range": [],
+      "posture_notes": [
+       "lumbar_extension = -5.2 deg: not in this model, left at 0"
+      ],
+      "contact": "assumed sole contact v1",
+      "stiffness_per_sphere": 4526803.861364434,
+      "seconds": 0.9,
+      "reused_from_earlier_run": false
+     },
+     "10 mm": {
+      "solved": true,
+      "support_error_pct": -0.034,
+      "ankle_angle_deg": 6.944,
+      "ankle_torque_Nm": -26.65,
+      "foot_angles_deg": {},
+      "mtj_outside_paper_range": false,
+      "cop_sole_mm": [
+       138.7,
+       -1.8
+      ],
+      "foot_N": 343.23,
+      "heel_pct": 23.6,
+      "arch_midfoot_pct": 28.24,
+      "metatarsal_pct": 29.75,
+      "toes_pct": 18.42,
+      "regions_pct": {
+       "heel_post": 4.5,
+       "heel_med": 12.75,
+       "heel_lat": 6.35,
+       "arch_med": 17.96,
+       "mid_lat_prox": 6.12,
+       "mid_lat_dist": 4.16,
+       "mt1": 9.37,
+       "mt2": 9.37,
+       "mt3": 6.26,
+       "mt4": 3.47,
+       "mt5": 1.28,
+       "toe1": 7.32,
+       "toe2": 5.48,
+       "toe3": 2.55,
+       "toe4": 1.85,
+       "toe5": 1.22
+      },
+      "scale": 1.1622,
+      "posture_outside_model_range": [],
+      "posture_notes": [
+       "lumbar_extension = -5.2 deg: not in this model, left at 0"
+      ],
+      "contact": "assumed sole contact v1",
+      "stiffness_per_sphere": 2464079.9168896596,
+      "seconds": 1.7,
+      "reused_from_earlier_run": false
+     },
+     "7.5 mm": {
+      "solved": true,
+      "support_error_pct": -0.034,
+      "ankle_angle_deg": 7.004,
+      "ankle_torque_Nm": -26.59,
+      "foot_angles_deg": {},
+      "mtj_outside_paper_range": false,
+      "cop_sole_mm": [
+       138.7,
+       -4.0
+      ],
+      "foot_N": 343.23,
+      "heel_pct": 23.4,
+      "arch_midfoot_pct": 29.1,
+      "metatarsal_pct": 27.58,
+      "toes_pct": 19.92,
+      "regions_pct": {
+       "heel_post": 5.27,
+       "heel_med": 11.62,
+       "heel_lat": 6.51,
+       "arch_med": 17.87,
+       "mid_lat_prox": 7.62,
+       "mid_lat_dist": 3.61,
+       "mt1": 10.21,
+       "mt2": 7.66,
+       "mt3": 6.01,
+       "mt4": 2.48,
+       "mt5": 1.22,
+       "toe1": 13.09,
+       "toe2": 3.18,
+       "toe3": 2.0,
+       "toe4": 1.12,
+       "toe5": 0.53
+      },
+      "scale": 1.1622,
+      "posture_outside_model_range": [],
+      "posture_notes": [
+       "lumbar_extension = -5.2 deg: not in this model, left at 0"
+      ],
+      "contact": "assumed sole contact v1",
+      "stiffness_per_sphere": 1600466.8537361196,
+      "seconds": 5.4,
+      "reused_from_earlier_run": false
+     },
+     "5 mm": {
+      "solved": true,
+      "support_error_pct": -0.034,
+      "ankle_angle_deg": 6.955,
+      "ankle_torque_Nm": -26.6,
+      "foot_angles_deg": {},
+      "mtj_outside_paper_range": false,
+      "cop_sole_mm": [
+       138.7,
+       -3.2
+      ],
+      "foot_N": 343.23,
+      "heel_pct": 22.14,
+      "arch_midfoot_pct": 29.61,
+      "metatarsal_pct": 31.0,
+      "toes_pct": 17.28,
+      "regions_pct": {
+       "heel_post": 4.9,
+       "heel_med": 11.1,
+       "heel_lat": 6.14,
+       "arch_med": 18.56,
+       "mid_lat_prox": 6.95,
+       "mid_lat_dist": 4.1,
+       "mt1": 10.28,
+       "mt2": 9.8,
+       "mt3": 6.35,
+       "mt4": 3.09,
+       "mt5": 1.48,
+       "toe1": 10.86,
+       "toe2": 2.54,
+       "toe3": 2.35,
+       "toe4": 0.98,
+       "toe5": 0.55
+      },
+      "scale": 1.1622,
+      "posture_outside_model_range": [],
+      "posture_notes": [
+       "lumbar_extension = -5.2 deg: not in this model, left at 0"
+      ],
+      "contact": "assumed sole contact v1",
+      "stiffness_per_sphere": 871183.8093091312,
+      "seconds": 19.5,
+      "reused_from_earlier_run": false
+     },
+     "3.75 mm": {
+      "solved": true,
+      "support_error_pct": -0.034,
+      "ankle_angle_deg": 6.999,
+      "ankle_torque_Nm": -26.6,
+      "foot_angles_deg": {},
+      "mtj_outside_paper_range": false,
+      "cop_sole_mm": [
+       138.7,
+       -3.7
+      ],
+      "foot_N": 343.23,
+      "heel_pct": 23.47,
+      "arch_midfoot_pct": 28.87,
+      "metatarsal_pct": 28.3,
+      "toes_pct": 19.36,
+      "regions_pct": {
+       "heel_post": 5.2,
+       "heel_med": 11.5,
+       "heel_lat": 6.77,
+       "arch_med": 17.87,
+       "mid_lat_prox": 7.08,
+       "mid_lat_dist": 3.92,
+       "mt1": 10.26,
+       "mt2": 8.68,
+       "mt3": 5.75,
+       "mt4": 2.45,
+       "mt5": 1.16,
+       "toe1": 11.21,
+       "toe2": 4.17,
+       "toe3": 2.34,
+       "toe4": 1.22,
+       "toe5": 0.42
+      },
+      "scale": 1.1622,
+      "posture_outside_model_range": [],
+      "posture_notes": [
+       "lumbar_extension = -5.2 deg: not in this model, left at 0"
+      ],
+      "contact": "assumed sole contact v1",
+      "stiffness_per_sphere": 565850.4826705542,
+      "seconds": 56.2,
+      "reused_from_earlier_run": false
+     },
+     "2.5 mm": {
+      "solved": true,
+      "support_error_pct": -0.034,
+      "ankle_angle_deg": 6.994,
+      "ankle_torque_Nm": -26.61,
+      "foot_angles_deg": {},
+      "mtj_outside_paper_range": false,
+      "cop_sole_mm": [
+       138.7,
+       -3.4
+      ],
+      "foot_N": 343.23,
+      "heel_pct": 23.89,
+      "arch_midfoot_pct": 27.76,
+      "metatarsal_pct": 29.17,
+      "toes_pct": 19.17,
+      "regions_pct": {
+       "heel_post": 5.46,
+       "heel_med": 11.08,
+       "heel_lat": 7.35,
+       "arch_med": 17.14,
+       "mid_lat_prox": 6.81,
+       "mid_lat_dist": 3.81,
+       "mt1": 10.18,
+       "mt2": 9.31,
+       "mt3": 5.96,
+       "mt4": 2.58,
+       "mt5": 1.14,
+       "toe1": 10.97,
+       "toe2": 3.65,
+       "toe3": 2.61,
+       "toe4": 1.42,
+       "toe5": 0.52
+      },
+      "scale": 1.1622,
+      "posture_outside_model_range": [],
+      "posture_notes": [
+       "lumbar_extension = -5.2 deg: not in this model, left at 0"
+      ],
+      "contact": "assumed sole contact v1",
+      "stiffness_per_sphere": 308009.98961120745,
+      "seconds": 409.1,
+      "reused_from_earlier_run": false
+     }
+    }
+   },
+   "D'Hondt 4-segment ported, foot rigid": {
+    "0.45": {
+     "15 mm": {
+      "solved": true,
+      "support_error_pct": -0.034,
+      "ankle_angle_deg": 7.645,
+      "ankle_torque_Nm": -4.63,
+      "foot_angles_deg": {},
+      "mtj_outside_paper_range": false,
+      "cop_sole_mm": [
+       83.2,
+       -2.1
+      ],
+      "foot_N": 304.01,
+      "heel_pct": 45.13,
+      "arch_midfoot_pct": 40.13,
+      "metatarsal_pct": 12.73,
+      "toes_pct": 2.02,
+      "regions_pct": {
+       "heel_post": 16.61,
+       "heel_med": 15.04,
+       "heel_lat": 13.48,
+       "arch_med": 25.11,
+       "mid_lat_prox": 12.94,
+       "mid_lat_dist": 2.08,
+       "mt1": 7.34,
+       "mt2": 3.13,
+       "mt3": 1.66,
+       "mt4": 0.43,
+       "mt5": 0.17,
+       "toe1": 1.38,
+       "toe2": 0.28,
+       "toe3": 0.12,
+       "toe4": 0.12,
+       "toe5": 0.12
+      },
+      "scale": 0.9979,
+      "posture_outside_model_range": [],
+      "posture_notes": [
+       "knee_angle_r: flexion is negative in this model, sign flipped",
+       "knee_angle_l: flexion is negative in this model, sign flipped"
+      ],
+      "contact": "assumed sole contact v1",
+      "stiffness_per_sphere": 3337427.696818837,
+      "seconds": 1.7,
+      "reused_from_earlier_run": false
+     },
+     "10 mm": {
+      "solved": true,
+      "support_error_pct": -0.034,
+      "ankle_angle_deg": 7.481,
+      "ankle_torque_Nm": -4.55,
+      "foot_angles_deg": {},
+      "mtj_outside_paper_range": false,
+      "cop_sole_mm": [
+       83.2,
+       -2.9
+      ],
+      "foot_N": 304.01,
+      "heel_pct": 52.9,
+      "arch_midfoot_pct": 32.07,
+      "metatarsal_pct": 12.67,
+      "toes_pct": 2.36,
+      "regions_pct": {
+       "heel_post": 12.86,
+       "heel_med": 24.53,
+       "heel_lat": 15.51,
+       "arch_med": 20.75,
+       "mid_lat_prox": 8.68,
+       "mid_lat_dist": 2.64,
+       "mt1": 5.29,
+       "mt2": 4.26,
+       "mt3": 2.46,
+       "mt4": 0.6,
+       "mt5": 0.06,
+       "toe1": 1.66,
+       "toe2": 0.52,
+       "toe3": 0.07,
+       "toe4": 0.04,
+       "toe5": 0.07
+      },
+      "scale": 0.9979,
+      "posture_outside_model_range": [],
+      "posture_notes": [
+       "knee_angle_r: flexion is negative in this model, sign flipped",
+       "knee_angle_l: flexion is negative in this model, sign flipped"
+      ],
+      "contact": "assumed sole contact v1",
+      "stiffness_per_sphere": 1816665.5356973847,
+      "seconds": 2.4,
+      "reused_from_earlier_run": false
+     },
+     "7.5 mm": {
+      "solved": true,
+      "support_error_pct": -0.034,
+      "ankle_angle_deg": 7.564,
+      "ankle_torque_Nm": -4.61,
+      "foot_angles_deg": {},
+      "mtj_outside_paper_range": false,
+      "cop_sole_mm": [
+       83.2,
+       -2.3
+      ],
+      "foot_N": 304.01,
+      "heel_pct": 50.91,
+      "arch_midfoot_pct": 34.57,
+      "metatarsal_pct": 11.7,
+      "toes_pct": 2.82,
+      "regions_pct": {
+       "heel_post": 13.93,
+       "heel_med": 21.87,
+       "heel_lat": 15.11,
+       "arch_med": 21.32,
+       "mid_lat_prox": 10.81,
+       "mid_lat_dist": 2.44,
+       "mt1": 5.54,
+       "mt2": 3.55,
+       "mt3": 2.11,
+       "mt4": 0.39,
+       "mt5": 0.11,
+       "toe1": 2.53,
+       "toe2": 0.15,
+       "toe3": 0.04,
+       "toe4": 0.05,
+       "toe5": 0.05
+      },
+      "scale": 0.9979,
+      "posture_outside_model_range": [],
+      "posture_notes": [
+       "knee_angle_r: flexion is negative in this model, sign flipped",
+       "knee_angle_l: flexion is negative in this model, sign flipped"
+      ],
+      "contact": "assumed sole contact v1",
+      "stiffness_per_sphere": 1179958.8780702006,
+      "seconds": 4.6,
+      "reused_from_earlier_run": false
+     },
+     "5 mm": {
+      "solved": true,
+      "support_error_pct": -0.034,
+      "ankle_angle_deg": 7.541,
+      "ankle_torque_Nm": -4.6,
+      "foot_angles_deg": {},
+      "mtj_outside_paper_range": false,
+      "cop_sole_mm": [
+       83.2,
+       -2.5
+      ],
+      "foot_N": 304.01,
+      "heel_pct": 50.97,
+      "arch_midfoot_pct": 34.12,
+      "metatarsal_pct": 12.55,
+      "toes_pct": 2.36,
+      "regions_pct": {
+       "heel_post": 14.0,
+       "heel_med": 21.86,
+       "heel_lat": 15.11,
+       "arch_med": 21.61,
+       "mid_lat_prox": 9.89,
+       "mid_lat_dist": 2.62,
+       "mt1": 5.42,
+       "mt2": 4.32,
+       "mt3": 2.2,
+       "mt4": 0.51,
+       "mt5": 0.1,
+       "toe1": 2.08,
+       "toe2": 0.17,
+       "toe3": 0.05,
+       "toe4": 0.03,
+       "toe5": 0.03
+      },
+      "scale": 0.9979,
+      "posture_outside_model_range": [],
+      "posture_notes": [
+       "knee_angle_r: flexion is negative in this model, sign flipped",
+       "knee_angle_l: flexion is negative in this model, sign flipped"
+      ],
+      "contact": "assumed sole contact v1",
+      "stiffness_per_sphere": 642288.2597197563,
+      "seconds": 24.9,
+      "reused_from_earlier_run": false
+     },
+     "3.75 mm": {
+      "solved": true,
+      "support_error_pct": -0.034,
+      "ankle_angle_deg": 7.563,
+      "ankle_torque_Nm": -4.62,
+      "foot_angles_deg": {},
+      "mtj_outside_paper_range": false,
+      "cop_sole_mm": [
+       83.2,
+       -2.2
+      ],
+      "foot_N": 304.01,
+      "heel_pct": 51.49,
+      "arch_midfoot_pct": 33.9,
+      "metatarsal_pct": 12.18,
+      "toes_pct": 2.43,
+      "regions_pct": {
+       "heel_post": 13.77,
+       "heel_med": 21.87,
+       "heel_lat": 15.85,
+       "arch_med": 21.03,
+       "mid_lat_prox": 10.21,
+       "mid_lat_dist": 2.66,
+       "mt1": 5.55,
+       "mt2": 4.1,
+       "mt3": 2.04,
+       "mt4": 0.4,
+       "mt5": 0.09,
+       "toe1": 2.04,
+       "toe2": 0.26,
+       "toe3": 0.05,
+       "toe4": 0.05,
+       "toe5": 0.03
+      },
+      "scale": 0.9979,
+      "posture_outside_model_range": [],
+      "posture_notes": [
+       "knee_angle_r: flexion is negative in this model, sign flipped",
+       "knee_angle_l: flexion is negative in this model, sign flipped"
+      ],
+      "contact": "assumed sole contact v1",
+      "stiffness_per_sphere": 417178.4621023546,
+      "seconds": 60.8,
+      "reused_from_earlier_run": false
+     },
+     "2.5 mm": {
+      "solved": true,
+      "support_error_pct": -0.034,
+      "ankle_angle_deg": 7.519,
+      "ankle_torque_Nm": -4.6,
+      "foot_angles_deg": {},
+      "mtj_outside_paper_range": false,
+      "cop_sole_mm": [
+       83.2,
+       -2.3
+      ],
+      "foot_N": 304.01,
+      "heel_pct": 52.27,
+      "arch_midfoot_pct": 32.23,
+      "metatarsal_pct": 12.81,
+      "toes_pct": 2.68,
+      "regions_pct": {
+       "heel_post": 14.32,
+       "heel_med": 21.02,
+       "heel_lat": 16.93,
+       "arch_med": 19.92,
+       "mid_lat_prox": 9.77,
+       "mid_lat_dist": 2.54,
+       "mt1": 5.69,
+       "mt2": 4.5,
+       "mt3": 2.12,
+       "mt4": 0.41,
+       "mt5": 0.09,
+       "toe1": 2.26,
+       "toe2": 0.25,
+       "toe3": 0.06,
+       "toe4": 0.06,
+       "toe5": 0.05
+      },
+      "scale": 0.9979,
+      "posture_outside_model_range": [],
+      "posture_notes": [
+       "knee_angle_r: flexion is negative in this model, sign flipped",
+       "knee_angle_l: flexion is negative in this model, sign flipped"
+      ],
+      "contact": "assumed sole contact v1",
+      "stiffness_per_sphere": 227083.1919621731,
+      "seconds": 418.2,
+      "reused_from_earlier_run": false
+     }
+    },
+    "0.75": {
+     "15 mm": {
+      "solved": true,
+      "support_error_pct": -0.034,
+      "ankle_angle_deg": 7.059,
+      "ankle_torque_Nm": -20.92,
+      "foot_angles_deg": {},
+      "mtj_outside_paper_range": false,
+      "cop_sole_mm": [
+       138.7,
+       -2.5
+      ],
+      "foot_N": 304.01,
+      "heel_pct": 20.65,
+      "arch_midfoot_pct": 30.48,
+      "metatarsal_pct": 27.42,
+      "toes_pct": 21.43,
+      "regions_pct": {
+       "heel_post": 6.69,
+       "heel_med": 8.05,
+       "heel_lat": 5.91,
+       "arch_med": 19.44,
+       "mid_lat_prox": 8.51,
+       "mid_lat_dist": 2.53,
+       "mt1": 11.89,
+       "mt2": 6.55,
+       "mt3": 4.68,
+       "mt4": 2.73,
+       "mt5": 1.57,
+       "toe1": 8.41,
+       "toe2": 5.86,
+       "toe3": 4.25,
+       "toe4": 1.85,
+       "toe5": 1.06
+      },
+      "scale": 0.9979,
+      "posture_outside_model_range": [],
+      "posture_notes": [
+       "knee_angle_r: flexion is negative in this model, sign flipped",
+       "knee_angle_l: flexion is negative in this model, sign flipped"
+      ],
+      "contact": "assumed sole contact v1",
+      "stiffness_per_sphere": 3337427.696818837,
+      "seconds": 1.3,
+      "reused_from_earlier_run": false
+     },
+     "10 mm": {
+      "solved": true,
+      "support_error_pct": -0.034,
+      "ankle_angle_deg": 6.917,
+      "ankle_torque_Nm": -20.87,
+      "foot_angles_deg": {},
+      "mtj_outside_paper_range": false,
+      "cop_sole_mm": [
+       138.7,
+       -2.4
+      ],
+      "foot_N": 304.01,
+      "heel_pct": 23.71,
+      "arch_midfoot_pct": 28.08,
+      "metatarsal_pct": 29.76,
+      "toes_pct": 18.46,
+      "regions_pct": {
+       "heel_post": 4.51,
+       "heel_med": 12.99,
+       "heel_lat": 6.21,
+       "arch_med": 18.21,
+       "mid_lat_prox": 5.9,
+       "mid_lat_dist": 3.97,
+       "mt1": 9.61,
+       "mt2": 9.47,
+       "mt3": 6.21,
+       "mt4": 3.31,
+       "mt5": 1.16,
+       "toe1": 7.51,
+       "toe2": 5.52,
+       "toe3": 2.52,
+       "toe4": 1.78,
+       "toe5": 1.13
+      },
+      "scale": 0.9979,
+      "posture_outside_model_range": [],
+      "posture_notes": [
+       "knee_angle_r: flexion is negative in this model, sign flipped",
+       "knee_angle_l: flexion is negative in this model, sign flipped"
+      ],
+      "contact": "assumed sole contact v1",
+      "stiffness_per_sphere": 1816665.5356973847,
+      "seconds": 2.2,
+      "reused_from_earlier_run": false
+     },
+     "7.5 mm": {
+      "solved": true,
+      "support_error_pct": -0.034,
+      "ankle_angle_deg": 6.999,
+      "ankle_torque_Nm": -20.83,
+      "foot_angles_deg": {},
+      "mtj_outside_paper_range": false,
+      "cop_sole_mm": [
+       138.7,
+       -4.6
+      ],
+      "foot_N": 304.01,
+      "heel_pct": 23.52,
+      "arch_midfoot_pct": 28.94,
+      "metatarsal_pct": 27.49,
+      "toes_pct": 20.03,
+      "regions_pct": {
+       "heel_post": 5.3,
+       "heel_med": 11.84,
+       "heel_lat": 6.38,
+       "arch_med": 18.11,
+       "mid_lat_prox": 7.39,
+       "mid_lat_dist": 3.44,
+       "mt1": 10.45,
+       "mt2": 7.72,
+       "mt3": 5.92,
+       "mt4": 2.33,
+       "mt5": 1.07,
+       "toe1": 13.36,
+       "toe2": 3.18,
+       "toe3": 1.96,
+       "toe4": 1.06,
+       "toe5": 0.47
+      },
+      "scale": 0.9979,
+      "posture_outside_model_range": [],
+      "posture_notes": [
+       "knee_angle_r: flexion is negative in this model, sign flipped",
+       "knee_angle_l: flexion is negative in this model, sign flipped"
+      ],
+      "contact": "assumed sole contact v1",
+      "stiffness_per_sphere": 1179958.8780702006,
+      "seconds": 5.7,
+      "reused_from_earlier_run": false
+     },
+     "5 mm": {
+      "solved": true,
+      "support_error_pct": -0.034,
+      "ankle_angle_deg": 6.933,
+      "ankle_torque_Nm": -20.83,
+      "foot_angles_deg": {},
+      "mtj_outside_paper_range": false,
+      "cop_sole_mm": [
+       138.7,
+       -3.7
+      ],
+      "foot_N": 304.01,
+      "heel_pct": 22.26,
+      "arch_midfoot_pct": 29.44,
+      "metatarsal_pct": 30.94,
+      "toes_pct": 17.37,
+      "regions_pct": {
+       "heel_post": 4.93,
+       "heel_med": 11.31,
+       "heel_lat": 6.02,
+       "arch_med": 18.79,
+       "mid_lat_prox": 6.74,
+       "mid_lat_dist": 3.91,
+       "mt1": 10.52,
+       "mt2": 9.88,
+       "mt3": 6.27,
+       "mt4": 2.94,
+       "mt5": 1.33,
+       "toe1": 11.08,
+       "toe2": 2.55,
+       "toe3": 2.3,
+       "toe4": 0.94,
+       "toe5": 0.5
+      },
+      "scale": 0.9979,
+      "posture_outside_model_range": [],
+      "posture_notes": [
+       "knee_angle_r: flexion is negative in this model, sign flipped",
+       "knee_angle_l: flexion is negative in this model, sign flipped"
+      ],
+      "contact": "assumed sole contact v1",
+      "stiffness_per_sphere": 642288.2597197563,
+      "seconds": 23.8,
+      "reused_from_earlier_run": false
+     },
+     "3.75 mm": {
+      "solved": true,
+      "support_error_pct": -0.034,
+      "ankle_angle_deg": 6.993,
+      "ankle_torque_Nm": -20.84,
+      "foot_angles_deg": {},
+      "mtj_outside_paper_range": false,
+      "cop_sole_mm": [
+       138.7,
+       -4.3
+      ],
+      "foot_N": 304.01,
+      "heel_pct": 23.6,
+      "arch_midfoot_pct": 28.7,
+      "metatarsal_pct": 28.25,
+      "toes_pct": 19.45,
+      "regions_pct": {
+       "heel_post": 5.24,
+       "heel_med": 11.71,
+       "heel_lat": 6.65,
+       "arch_med": 18.1,
+       "mid_lat_prox": 6.87,
+       "mid_lat_dist": 3.73,
+       "mt1": 10.51,
+       "mt2": 8.74,
+       "mt3": 5.67,
+       "mt4": 2.31,
+       "mt5": 1.02,
+       "toe1": 11.44,
+       "toe2": 4.18,
+       "toe3": 2.29,
+       "toe4": 1.16,
+       "toe5": 0.38
+      },
+      "scale": 0.9979,
+      "posture_outside_model_range": [],
+      "posture_notes": [
+       "knee_angle_r: flexion is negative in this model, sign flipped",
+       "knee_angle_l: flexion is negative in this model, sign flipped"
+      ],
+      "contact": "assumed sole contact v1",
+      "stiffness_per_sphere": 417178.4621023546,
+      "seconds": 62.4,
+      "reused_from_earlier_run": false
+     },
+     "2.5 mm": {
+      "solved": true,
+      "support_error_pct": -0.034,
+      "ankle_angle_deg": 6.985,
+      "ankle_torque_Nm": -20.85,
+      "foot_angles_deg": {},
+      "mtj_outside_paper_range": false,
+      "cop_sole_mm": [
+       138.7,
+       -3.9
+      ],
+      "foot_N": 304.01,
+      "heel_pct": 24.02,
+      "arch_midfoot_pct": 27.59,
+      "metatarsal_pct": 29.14,
+      "toes_pct": 19.25,
+      "regions_pct": {
+       "heel_post": 5.5,
+       "heel_med": 11.29,
+       "heel_lat": 7.23,
+       "arch_med": 17.37,
+       "mid_lat_prox": 6.6,
+       "mid_lat_dist": 3.62,
+       "mt1": 10.44,
+       "mt2": 9.4,
+       "mt3": 5.88,
+       "mt4": 2.43,
+       "mt5": 0.99,
+       "toe1": 11.22,
+       "toe2": 3.66,
+       "toe3": 2.56,
+       "toe4": 1.35,
+       "toe5": 0.46
+      },
+      "scale": 0.9979,
+      "posture_outside_model_range": [],
+      "posture_notes": [
+       "knee_angle_r: flexion is negative in this model, sign flipped",
+       "knee_angle_l: flexion is negative in this model, sign flipped"
+      ],
+      "contact": "assumed sole contact v1",
+      "stiffness_per_sphere": 227083.1919621731,
+      "seconds": 397.0,
+      "reused_from_earlier_run": false
+     }
+    }
+   },
+   "D'Hondt 3-segment ported, MTP free": {
+    "0.45": {
+     "15 mm": {
+      "solved": true,
+      "support_error_pct": -0.034,
+      "ankle_angle_deg": 7.619,
+      "ankle_torque_Nm": -4.63,
+      "foot_angles_deg": {
+       "mtp_angle_r": 0.407
+      },
+      "mtj_outside_paper_range": false,
+      "cop_sole_mm": [
+       83.2,
+       -1.9
+      ],
+      "foot_N": 304.01,
+      "heel_pct": 44.61,
+      "arch_midfoot_pct": 40.55,
+      "metatarsal_pct": 13.74,
+      "toes_pct": 1.11,
+      "regions_pct": {
+       "heel_post": 16.33,
+       "heel_med": 14.92,
+       "heel_lat": 13.36,
+       "arch_med": 25.32,
+       "mid_lat_prox": 13.05,
+       "mid_lat_dist": 2.18,
+       "mt1": 7.73,
+       "mt2": 3.39,
+       "mt3": 1.88,
+       "mt4": 0.54,
+       "mt5": 0.2,
+       "toe1": 0.62,
+       "toe2": 0.15,
+       "toe3": 0.15,
+       "toe4": 0.1,
+       "toe5": 0.09
+      },
+      "scale": 0.9979,
+      "posture_outside_model_range": [],
+      "posture_notes": [
+       "knee_angle_r: flexion is negative in this model, sign flipped",
+       "knee_angle_l: flexion is negative in this model, sign flipped"
+      ],
+      "contact": "assumed sole contact v1",
+      "stiffness_per_sphere": 3337427.696818837,
+      "seconds": 1.0,
+      "reused_from_earlier_run": false
+     },
+     "10 mm": {
+      "solved": true,
+      "support_error_pct": -0.034,
+      "ankle_angle_deg": 7.453,
+      "ankle_torque_Nm": -4.55,
+      "foot_angles_deg": {
+       "mtp_angle_r": 0.415
+      },
+      "mtj_outside_paper_range": false,
+      "cop_sole_mm": [
+       83.2,
+       -2.7
+      ],
+      "foot_N": 304.01,
+      "heel_pct": 52.2,
+      "arch_midfoot_pct": 32.72,
+      "metatarsal_pct": 13.81,
+      "toes_pct": 1.27,
+      "regions_pct": {
+       "heel_post": 12.58,
+       "heel_med": 24.3,
+       "heel_lat": 15.32,
+       "arch_med": 21.08,
+       "mid_lat_prox": 8.8,
+       "mid_lat_dist": 2.84,
+       "mt1": 5.63,
+       "mt2": 4.64,
+       "mt3": 2.73,
+       "mt4": 0.73,
+       "mt5": 0.08,
+       "toe1": 0.87,
+       "toe2": 0.18,
+       "toe3": 0.06,
+       "toe4": 0.08,
+       "toe5": 0.08
+      },
+      "scale": 0.9979,
+      "posture_outside_model_range": [],
+      "posture_notes": [
+       "knee_angle_r: flexion is negative in this model, sign flipped",
+       "knee_angle_l: flexion is negative in this model, sign flipped"
+      ],
+      "contact": "assumed sole contact v1",
+      "stiffness_per_sphere": 1816665.5356973847,
+      "seconds": 2.9,
+      "reused_from_earlier_run": false
+     },
+     "7.5 mm": {
+      "solved": true,
+      "support_error_pct": -0.034,
+      "ankle_angle_deg": 7.529,
+      "ankle_torque_Nm": -4.6,
+      "foot_angles_deg": {
+       "mtp_angle_r": 0.447
+      },
+      "mtj_outside_paper_range": false,
+      "cop_sole_mm": [
+       83.2,
+       -2.0
+      ],
+      "foot_N": 304.01,
+      "heel_pct": 50.09,
+      "arch_midfoot_pct": 35.35,
+      "metatarsal_pct": 13.09,
+      "toes_pct": 1.48,
+      "regions_pct": {
+       "heel_post": 13.59,
+       "heel_med": 21.62,
+       "heel_lat": 14.88,
+       "arch_med": 21.7,
+       "mid_lat_prox": 10.98,
+       "mid_lat_dist": 2.67,
+       "mt1": 6.04,
+       "mt2": 3.96,
+       "mt3": 2.45,
+       "mt4": 0.5,
+       "mt5": 0.14,
+       "toe1": 1.25,
+       "toe2": 0.07,
+       "toe3": 0.06,
+       "toe4": 0.06,
+       "toe5": 0.04
+      },
+      "scale": 0.9979,
+      "posture_outside_model_range": [],
+      "posture_notes": [
+       "knee_angle_r: flexion is negative in this model, sign flipped",
+       "knee_angle_l: flexion is negative in this model, sign flipped"
+      ],
+      "contact": "assumed sole contact v1",
+      "stiffness_per_sphere": 1179958.8780702006,
+      "seconds": 5.4,
+      "reused_from_earlier_run": false
+     },
+     "5 mm": {
+      "solved": true,
+      "support_error_pct": -0.034,
+      "ankle_angle_deg": 7.514,
+      "ankle_torque_Nm": -4.6,
+      "foot_angles_deg": {
+       "mtp_angle_r": 0.404
+      },
+      "mtj_outside_paper_range": false,
+      "cop_sole_mm": [
+       83.2,
+       -2.2
+      ],
+      "foot_N": 304.01,
+      "heel_pct": 50.3,
+      "arch_midfoot_pct": 34.74,
+      "metatarsal_pct": 13.69,
+      "toes_pct": 1.27,
+      "regions_pct": {
+       "heel_post": 13.72,
+       "heel_med": 21.65,
+       "heel_lat": 14.93,
+       "arch_med": 21.92,
+       "mid_lat_prox": 10.01,
+       "mid_lat_dist": 2.81,
+       "mt1": 5.78,
+       "mt2": 4.7,
+       "mt3": 2.46,
+       "mt4": 0.62,
+       "mt5": 0.13,
+       "toe1": 1.08,
+       "toe2": 0.06,
+       "toe3": 0.06,
+       "toe4": 0.04,
+       "toe5": 0.03
+      },
+      "scale": 0.9979,
+      "posture_outside_model_range": [],
+      "posture_notes": [
+       "knee_angle_r: flexion is negative in this model, sign flipped",
+       "knee_angle_l: flexion is negative in this model, sign flipped"
+      ],
+      "contact": "assumed sole contact v1",
+      "stiffness_per_sphere": 642288.2597197563,
+      "seconds": 27.1,
+      "reused_from_earlier_run": false
+     },
+     "3.75 mm": {
+      "solved": true,
+      "support_error_pct": -0.034,
+      "ankle_angle_deg": 7.533,
+      "ankle_torque_Nm": -4.61,
+      "foot_angles_deg": {
+       "mtp_angle_r": 0.411
+      },
+      "mtj_outside_paper_range": false,
+      "cop_sole_mm": [
+       83.2,
+       -1.9
+      ],
+      "foot_N": 304.01,
+      "heel_pct": 50.76,
+      "arch_midfoot_pct": 34.58,
+      "metatarsal_pct": 13.41,
+      "toes_pct": 1.25,
+      "regions_pct": {
+       "heel_post": 13.48,
+       "heel_med": 21.65,
+       "heel_lat": 15.63,
+       "arch_med": 21.37,
+       "mid_lat_prox": 10.34,
+       "mid_lat_dist": 2.87,
+       "mt1": 5.98,
+       "mt2": 4.5,
+       "mt3": 2.32,
+       "mt4": 0.49,
+       "mt5": 0.12,
+       "toe1": 0.99,
+       "toe2": 0.1,
+       "toe3": 0.07,
+       "toe4": 0.06,
+       "toe5": 0.03
+      },
+      "scale": 0.9979,
+      "posture_outside_model_range": [],
+      "posture_notes": [
+       "knee_angle_r: flexion is negative in this model, sign flipped",
+       "knee_angle_l: flexion is negative in this model, sign flipped"
+      ],
+      "contact": "assumed sole contact v1",
+      "stiffness_per_sphere": 417178.4621023546,
+      "seconds": 100.6,
+      "reused_from_earlier_run": false
+     },
+     "2.5 mm": {
+      "solved": true,
+      "support_error_pct": -0.034,
+      "ankle_angle_deg": 7.488,
+      "ankle_torque_Nm": -4.6,
+      "foot_angles_deg": {
+       "mtp_angle_r": 0.433
+      },
+      "mtj_outside_paper_range": false,
+      "cop_sole_mm": [
+       83.2,
+       -1.9
+      ],
+      "foot_N": 304.01,
+      "heel_pct": 51.48,
+      "arch_midfoot_pct": 32.97,
+      "metatarsal_pct": 14.18,
+      "toes_pct": 1.39,
+      "regions_pct": {
+       "heel_post": 13.99,
+       "heel_med": 20.79,
+       "heel_lat": 16.7,
+       "arch_med": 20.28,
+       "mid_lat_prox": 9.92,
+       "mid_lat_dist": 2.77,
+       "mt1": 6.14,
+       "mt2": 4.96,
+       "mt3": 2.44,
+       "mt4": 0.52,
+       "mt5": 0.12,
+       "toe1": 1.09,
+       "toe2": 0.09,
+       "toe3": 0.09,
+       "toe4": 0.08,
+       "toe5": 0.04
+      },
+      "scale": 0.9979,
+      "posture_outside_model_range": [],
+      "posture_notes": [
+       "knee_angle_r: flexion is negative in this model, sign flipped",
+       "knee_angle_l: flexion is negative in this model, sign flipped"
+      ],
+      "contact": "assumed sole contact v1",
+      "stiffness_per_sphere": 227083.1919621731,
+      "seconds": 527.9,
+      "reused_from_earlier_run": false
+     }
+    },
+    "0.75": {
+     "15 mm": {
+      "solved": true,
+      "support_error_pct": -0.034,
+      "ankle_angle_deg": 6.731,
+      "ankle_torque_Nm": -20.84,
+      "foot_angles_deg": {
+       "mtp_angle_r": 1.783
+      },
+      "mtj_outside_paper_range": false,
+      "cop_sole_mm": [
+       138.7,
+       -1.2
+      ],
+      "foot_N": 304.01,
+      "heel_pct": 13.94,
+      "arch_midfoot_pct": 32.99,
+      "metatarsal_pct": 46.28,
+      "toes_pct": 6.78,
+      "regions_pct": {
+       "heel_post": 3.69,
+       "heel_med": 6.19,
+       "heel_lat": 4.06,
+       "arch_med": 20.5,
+       "mid_lat_prox": 8.8,
+       "mid_lat_dist": 3.69,
+       "mt1": 17.14,
+       "mt2": 10.44,
+       "mt3": 8.29,
+       "mt4": 6.04,
+       "mt5": 4.37,
+       "toe1": 4.33,
+       "toe2": 1.57,
+       "toe3": 0.71,
+       "toe4": 0.08,
+       "toe5": 0.09
+      },
+      "scale": 0.9979,
+      "posture_outside_model_range": [],
+      "posture_notes": [
+       "knee_angle_r: flexion is negative in this model, sign flipped",
+       "knee_angle_l: flexion is negative in this model, sign flipped"
+      ],
+      "contact": "assumed sole contact v1",
+      "stiffness_per_sphere": 3337427.696818837,
+      "seconds": 0.8,
+      "reused_from_earlier_run": false
+     },
+     "10 mm": {
+      "solved": true,
+      "support_error_pct": -0.034,
+      "ankle_angle_deg": 6.675,
+      "ankle_torque_Nm": -20.82,
+      "foot_angles_deg": {
+       "mtp_angle_r": 1.622
+      },
+      "mtj_outside_paper_range": false,
+      "cop_sole_mm": [
+       138.7,
+       -1.2
+      ],
+      "foot_N": 304.01,
+      "heel_pct": 17.61,
+      "arch_midfoot_pct": 31.93,
+      "metatarsal_pct": 44.31,
+      "toes_pct": 6.16,
+      "regions_pct": {
+       "heel_post": 2.58,
+       "heel_med": 10.61,
+       "heel_lat": 4.42,
+       "arch_med": 19.92,
+       "mid_lat_prox": 6.3,
+       "mid_lat_dist": 5.71,
+       "mt1": 12.93,
+       "mt2": 13.56,
+       "mt3": 9.35,
+       "mt4": 5.95,
+       "mt5": 2.52,
+       "toe1": 3.87,
+       "toe2": 1.66,
+       "toe3": 0.39,
+       "toe4": 0.15,
+       "toe5": 0.09
+      },
+      "scale": 0.9979,
+      "posture_outside_model_range": [],
+      "posture_notes": [
+       "knee_angle_r: flexion is negative in this model, sign flipped",
+       "knee_angle_l: flexion is negative in this model, sign flipped"
+      ],
+      "contact": "assumed sole contact v1",
+      "stiffness_per_sphere": 1816665.5356973847,
+      "seconds": 2.5,
+      "reused_from_earlier_run": false
+     },
+     "7.5 mm": {
+      "solved": true,
+      "support_error_pct": -0.034,
+      "ankle_angle_deg": 6.731,
+      "ankle_torque_Nm": -20.81,
+      "foot_angles_deg": {
+       "mtp_angle_r": 1.758
+      },
+      "mtj_outside_paper_range": false,
+      "cop_sole_mm": [
+       138.7,
+       -2.3
+      ],
+      "foot_N": 304.01,
+      "heel_pct": 17.17,
+      "arch_midfoot_pct": 32.67,
+      "metatarsal_pct": 43.09,
+      "toes_pct": 7.07,
+      "regions_pct": {
+       "heel_post": 3.08,
+       "heel_med": 9.58,
+       "heel_lat": 4.51,
+       "arch_med": 19.73,
+       "mid_lat_prox": 7.86,
+       "mid_lat_dist": 5.08,
+       "mt1": 14.69,
+       "mt2": 11.5,
+       "mt3": 9.65,
+       "mt4": 4.63,
+       "mt5": 2.62,
+       "toe1": 6.24,
+       "toe2": 0.54,
+       "toe3": 0.21,
+       "toe4": 0.05,
+       "toe5": 0.03
+      },
+      "scale": 0.9979,
+      "posture_outside_model_range": [],
+      "posture_notes": [
+       "knee_angle_r: flexion is negative in this model, sign flipped",
+       "knee_angle_l: flexion is negative in this model, sign flipped"
+      ],
+      "contact": "assumed sole contact v1",
+      "stiffness_per_sphere": 1179958.8780702006,
+      "seconds": 5.1,
+      "reused_from_earlier_run": false
+     },
+     "5 mm": {
+      "solved": true,
+      "support_error_pct": -0.034,
+      "ankle_angle_deg": 6.708,
+      "ankle_torque_Nm": -20.81,
+      "foot_angles_deg": {
+       "mtp_angle_r": 1.646
+      },
+      "mtj_outside_paper_range": false,
+      "cop_sole_mm": [
+       138.7,
+       -2.0
+      ],
+      "foot_N": 304.01,
+      "heel_pct": 16.85,
+      "arch_midfoot_pct": 32.62,
+      "metatarsal_pct": 44.12,
+      "toes_pct": 6.39,
+      "regions_pct": {
+       "heel_post": 3.06,
+       "heel_med": 9.35,
+       "heel_lat": 4.44,
+       "arch_med": 20.24,
+       "mid_lat_prox": 7.04,
+       "mid_lat_dist": 5.34,
+       "mt1": 13.82,
+       "mt2": 13.62,
+       "mt3": 9.18,
+       "mt4": 4.92,
+       "mt5": 2.58,
+       "toe1": 5.3,
+       "toe2": 0.67,
+       "toe3": 0.34,
+       "toe4": 0.05,
+       "toe5": 0.03
+      },
+      "scale": 0.9979,
+      "posture_outside_model_range": [],
+      "posture_notes": [
+       "knee_angle_r: flexion is negative in this model, sign flipped",
+       "knee_angle_l: flexion is negative in this model, sign flipped"
+      ],
+      "contact": "assumed sole contact v1",
+      "stiffness_per_sphere": 642288.2597197563,
+      "seconds": 19.1,
+      "reused_from_earlier_run": false
+     },
+     "3.75 mm": {
+      "solved": true,
+      "support_error_pct": -0.034,
+      "ankle_angle_deg": 6.727,
+      "ankle_torque_Nm": -20.8,
+      "foot_angles_deg": {
+       "mtp_angle_r": 1.715
+      },
+      "mtj_outside_paper_range": false,
+      "cop_sole_mm": [
+       138.7,
+       -2.4
+      ],
+      "foot_N": 304.01,
+      "heel_pct": 17.22,
+      "arch_midfoot_pct": 32.54,
+      "metatarsal_pct": 43.65,
+      "toes_pct": 6.6,
+      "regions_pct": {
+       "heel_post": 3.07,
+       "heel_med": 9.45,
+       "heel_lat": 4.7,
+       "arch_med": 19.83,
+       "mid_lat_prox": 7.24,
+       "mid_lat_dist": 5.47,
+       "mt1": 14.69,
+       "mt2": 12.9,
+       "mt3": 9.14,
+       "mt4": 4.49,
+       "mt5": 2.43,
+       "toe1": 5.19,
+       "toe2": 1.02,
+       "toe3": 0.3,
+       "toe4": 0.07,
+       "toe5": 0.02
+      },
+      "scale": 0.9979,
+      "posture_outside_model_range": [],
+      "posture_notes": [
+       "knee_angle_r: flexion is negative in this model, sign flipped",
+       "knee_angle_l: flexion is negative in this model, sign flipped"
+      ],
+      "contact": "assumed sole contact v1",
+      "stiffness_per_sphere": 417178.4621023546,
+      "seconds": 81.1,
+      "reused_from_earlier_run": false
+     },
+     "2.5 mm": {
+      "solved": true,
+      "support_error_pct": -0.034,
+      "ankle_angle_deg": 6.74,
+      "ankle_torque_Nm": -20.81,
+      "foot_angles_deg": {
+       "mtp_angle_r": 1.631
+      },
+      "mtj_outside_paper_range": false,
+      "cop_sole_mm": [
+       138.7,
+       -2.1
+      ],
+      "foot_N": 304.01,
+      "heel_pct": 17.64,
+      "arch_midfoot_pct": 31.38,
+      "metatarsal_pct": 44.58,
+      "toes_pct": 6.41,
+      "regions_pct": {
+       "heel_post": 3.28,
+       "heel_med": 9.14,
+       "heel_lat": 5.22,
+       "arch_med": 19.09,
+       "mid_lat_prox": 6.97,
+       "mid_lat_dist": 5.32,
+       "mt1": 14.38,
+       "mt2": 13.68,
+       "mt3": 9.4,
+       "mt4": 4.72,
+       "mt5": 2.4,
+       "toe1": 5.15,
+       "toe2": 0.84,
+       "toe3": 0.3,
+       "toe4": 0.08,
+       "toe5": 0.04
+      },
+      "scale": 0.9979,
+      "posture_outside_model_range": [],
+      "posture_notes": [
+       "knee_angle_r: flexion is negative in this model, sign flipped",
+       "knee_angle_l: flexion is negative in this model, sign flipped"
+      ],
+      "contact": "assumed sole contact v1",
+      "stiffness_per_sphere": 227083.1919621731,
+      "seconds": 480.3,
+      "reused_from_earlier_run": false
+     }
+    }
+   },
+   "D'Hondt 4-segment ported, midtarsal and MTP free": {
+    "0.45": {
+     "15 mm": {
+      "solved": true,
+      "support_error_pct": -0.034,
+      "ankle_angle_deg": 7.309,
+      "ankle_torque_Nm": -4.55,
+      "foot_angles_deg": {
+       "mtj_angle_r": 0.674,
+       "mtp_angle_r": -0.477
+      },
+      "mtj_outside_paper_range": false,
+      "cop_sole_mm": [
+       83.2,
+       -1.9
+      ],
+      "foot_N": 304.01,
+      "heel_pct": 42.12,
+      "arch_midfoot_pct": 45.89,
+      "metatarsal_pct": 10.18,
+      "toes_pct": 1.81,
+      "regions_pct": {
+       "heel_post": 14.27,
+       "heel_med": 14.6,
+       "heel_lat": 13.25,
+       "arch_med": 28.56,
+       "mid_lat_prox": 15.27,
+       "mid_lat_dist": 2.06,
+       "mt1": 6.56,
+       "mt2": 2.32,
+       "mt3": 0.97,
+       "mt4": 0.19,
+       "mt5": 0.14,
+       "toe1": 1.26,
+       "toe2": 0.21,
+       "toe3": 0.1,
+       "toe4": 0.12,
+       "toe5": 0.12
+      },
+      "scale": 0.9979,
+      "posture_outside_model_range": [],
+      "posture_notes": [
+       "knee_angle_r: flexion is negative in this model, sign flipped",
+       "knee_angle_l: flexion is negative in this model, sign flipped"
+      ],
+      "contact": "assumed sole contact v1",
+      "stiffness_per_sphere": 3337427.696818837,
+      "seconds": 2.1,
+      "reused_from_earlier_run": false
+     },
+     "10 mm": {
+      "solved": true,
+      "support_error_pct": -0.034,
+      "ankle_angle_deg": 7.126,
+      "ankle_torque_Nm": -4.48,
+      "foot_angles_deg": {
+       "mtj_angle_r": 0.725,
+       "mtp_angle_r": -0.497
+      },
+      "mtj_outside_paper_range": false,
+      "cop_sole_mm": [
+       83.2,
+       -2.6
+      ],
+      "foot_N": 304.01,
+      "heel_pct": 49.79,
+      "arch_midfoot_pct": 38.23,
+      "metatarsal_pct": 9.89,
+      "toes_pct": 2.1,
+      "regions_pct": {
+       "heel_post": 10.68,
+       "heel_med": 24.05,
+       "heel_lat": 15.06,
+       "arch_med": 24.66,
+       "mid_lat_prox": 10.99,
+       "mid_lat_dist": 2.58,
+       "mt1": 4.5,
+       "mt2": 3.19,
+       "mt3": 1.77,
+       "mt4": 0.34,
+       "mt5": 0.09,
+       "toe1": 1.5,
+       "toe2": 0.42,
+       "toe3": 0.05,
+       "toe4": 0.05,
+       "toe5": 0.08
+      },
+      "scale": 0.9979,
+      "posture_outside_model_range": [],
+      "posture_notes": [
+       "knee_angle_r: flexion is negative in this model, sign flipped",
+       "knee_angle_l: flexion is negative in this model, sign flipped"
+      ],
+      "contact": "assumed sole contact v1",
+      "stiffness_per_sphere": 1816665.5356973847,
+      "seconds": 4.3,
+      "reused_from_earlier_run": false
+     },
+     "7.5 mm": {
+      "solved": true,
+      "support_error_pct": -0.034,
+      "ankle_angle_deg": 7.207,
+      "ankle_torque_Nm": -4.53,
+      "foot_angles_deg": {
+       "mtj_angle_r": 0.715,
+       "mtp_angle_r": -0.451
+      },
+      "mtj_outside_paper_range": false,
+      "cop_sole_mm": [
+       83.2,
+       -2.0
+      ],
+      "foot_N": 304.01,
+      "heel_pct": 47.69,
+      "arch_midfoot_pct": 40.78,
+      "metatarsal_pct": 9.17,
+      "toes_pct": 2.36,
+      "regions_pct": {
+       "heel_post": 11.7,
+       "heel_med": 21.37,
+       "heel_lat": 14.62,
+       "arch_med": 25.07,
+       "mid_lat_prox": 13.28,
+       "mid_lat_dist": 2.43,
+       "mt1": 4.61,
+       "mt2": 2.73,
+       "mt3": 1.49,
+       "mt4": 0.24,
+       "mt5": 0.1,
+       "toe1": 2.11,
+       "toe2": 0.1,
+       "toe3": 0.04,
+       "toe4": 0.06,
+       "toe5": 0.05
+      },
+      "scale": 0.9979,
+      "posture_outside_model_range": [],
+      "posture_notes": [
+       "knee_angle_r: flexion is negative in this model, sign flipped",
+       "knee_angle_l: flexion is negative in this model, sign flipped"
+      ],
+      "contact": "assumed sole contact v1",
+      "stiffness_per_sphere": 1179958.8780702006,
+      "seconds": 12.1,
+      "reused_from_earlier_run": false
+     },
+     "5 mm": {
+      "solved": true,
+      "support_error_pct": -0.034,
+      "ankle_angle_deg": 7.181,
+      "ankle_torque_Nm": -4.52,
+      "foot_angles_deg": {
+       "mtj_angle_r": 0.734,
+       "mtp_angle_r": -0.513
+      },
+      "mtj_outside_paper_range": false,
+      "cop_sole_mm": [
+       83.2,
+       -2.2
+      ],
+      "foot_N": 304.01,
+      "heel_pct": 47.77,
+      "arch_midfoot_pct": 40.44,
+      "metatarsal_pct": 9.64,
+      "toes_pct": 2.14,
+      "regions_pct": {
+       "heel_post": 11.76,
+       "heel_med": 21.34,
+       "heel_lat": 14.67,
+       "arch_med": 25.55,
+       "mid_lat_prox": 12.31,
+       "mid_lat_dist": 2.58,
+       "mt1": 4.5,
+       "mt2": 3.25,
+       "mt3": 1.53,
+       "mt4": 0.28,
+       "mt5": 0.08,
+       "toe1": 1.91,
+       "toe2": 0.14,
+       "toe3": 0.03,
+       "toe4": 0.03,
+       "toe5": 0.03
+      },
+      "scale": 0.9979,
+      "posture_outside_model_range": [],
+      "posture_notes": [
+       "knee_angle_r: flexion is negative in this model, sign flipped",
+       "knee_angle_l: flexion is negative in this model, sign flipped"
+      ],
+      "contact": "assumed sole contact v1",
+      "stiffness_per_sphere": 642288.2597197563,
+      "seconds": 28.0,
+      "reused_from_earlier_run": false
+     },
+     "3.75 mm": {
+      "solved": true,
+      "support_error_pct": -0.034,
+      "ankle_angle_deg": 7.206,
+      "ankle_torque_Nm": -4.54,
+      "foot_angles_deg": {
+       "mtj_angle_r": 0.724,
+       "mtp_angle_r": -0.495
+      },
+      "mtj_outside_paper_range": false,
+      "cop_sole_mm": [
+       83.2,
+       -1.9
+      ],
+      "foot_N": 304.01,
+      "heel_pct": 48.36,
+      "arch_midfoot_pct": 40.06,
+      "metatarsal_pct": 9.45,
+      "toes_pct": 2.14,
+      "regions_pct": {
+       "heel_post": 11.61,
+       "heel_med": 21.41,
+       "heel_lat": 15.34,
+       "arch_med": 24.81,
+       "mid_lat_prox": 12.62,
+       "mid_lat_dist": 2.63,
+       "mt1": 4.56,
+       "mt2": 3.15,
+       "mt3": 1.43,
+       "mt4": 0.22,
+       "mt5": 0.09,
+       "toe1": 1.82,
+       "toe2": 0.19,
+       "toe3": 0.04,
+       "toe4": 0.05,
+       "toe5": 0.04
+      },
+      "scale": 0.9979,
+      "posture_outside_model_range": [],
+      "posture_notes": [
+       "knee_angle_r: flexion is negative in this model, sign flipped",
+       "knee_angle_l: flexion is negative in this model, sign flipped"
+      ],
+      "contact": "assumed sole contact v1",
+      "stiffness_per_sphere": 417178.4621023546,
+      "seconds": 177.8,
+      "reused_from_earlier_run": false
+     },
+     "2.5 mm": {
+      "solved": true,
+      "support_error_pct": -0.034,
+      "ankle_angle_deg": 7.153,
+      "ankle_torque_Nm": -4.52,
+      "foot_angles_deg": {
+       "mtj_angle_r": 0.747,
+       "mtp_angle_r": -0.494
+      },
+      "mtj_outside_paper_range": false,
+      "cop_sole_mm": [
+       83.2,
+       -1.8
+      ],
+      "foot_N": 304.01,
+      "heel_pct": 48.93,
+      "arch_midfoot_pct": 38.84,
+      "metatarsal_pct": 9.92,
+      "toes_pct": 2.3,
+      "regions_pct": {
+       "heel_post": 11.91,
+       "heel_med": 20.54,
+       "heel_lat": 16.48,
+       "arch_med": 23.91,
+       "mid_lat_prox": 12.4,
+       "mid_lat_dist": 2.53,
+       "mt1": 4.68,
+       "mt2": 3.45,
+       "mt3": 1.46,
+       "mt4": 0.23,
+       "mt5": 0.1,
+       "toe1": 1.96,
+       "toe2": 0.17,
+       "toe3": 0.05,
+       "toe4": 0.07,
+       "toe5": 0.05
+      },
+      "scale": 0.9979,
+      "posture_outside_model_range": [],
+      "posture_notes": [
+       "knee_angle_r: flexion is negative in this model, sign flipped",
+       "knee_angle_l: flexion is negative in this model, sign flipped"
+      ],
+      "contact": "assumed sole contact v1",
+      "stiffness_per_sphere": 227083.1919621731,
+      "seconds": 720.3,
+      "reused_from_earlier_run": false
+     }
+    },
+    "0.75": {
+     "15 mm": {
+      "solved": true,
+      "support_error_pct": -0.034,
+      "ankle_angle_deg": 5.411,
+      "ankle_torque_Nm": -20.58,
+      "foot_angles_deg": {
+       "mtj_angle_r": 2.375,
+       "mtp_angle_r": -0.136
+      },
+      "mtj_outside_paper_range": false,
+      "cop_sole_mm": [
+       138.7,
+       -4.1
+      ],
+      "foot_N": 304.01,
+      "heel_pct": 6.75,
+      "arch_midfoot_pct": 50.76,
+      "metatarsal_pct": 29.53,
+      "toes_pct": 12.95,
+      "regions_pct": {
+       "heel_post": 0.13,
+       "heel_med": 3.97,
+       "heel_lat": 2.65,
+       "arch_med": 31.29,
+       "mid_lat_prox": 15.67,
+       "mid_lat_dist": 3.8,
+       "mt1": 14.92,
+       "mt2": 7.3,
+       "mt3": 4.62,
+       "mt4": 1.92,
+       "mt5": 0.77,
+       "toe1": 6.93,
+       "toe2": 3.68,
+       "toe3": 1.93,
+       "toe4": 0.35,
+       "toe5": 0.06
+      },
+      "scale": 0.9979,
+      "posture_outside_model_range": [],
+      "posture_notes": [
+       "knee_angle_r: flexion is negative in this model, sign flipped",
+       "knee_angle_l: flexion is negative in this model, sign flipped"
+      ],
+      "contact": "assumed sole contact v1",
+      "stiffness_per_sphere": 3337427.696818837,
+      "seconds": 1.9,
+      "reused_from_earlier_run": false
+     },
+     "10 mm": {
+      "solved": true,
+      "support_error_pct": -0.034,
+      "ankle_angle_deg": 5.329,
+      "ankle_torque_Nm": -20.62,
+      "foot_angles_deg": {
+       "mtj_angle_r": 2.418,
+       "mtp_angle_r": -0.368
+      },
+      "mtj_outside_paper_range": false,
+      "cop_sole_mm": [
+       138.7,
+       -3.3
+      ],
+      "foot_N": 304.01,
+      "heel_pct": 9.61,
+      "arch_midfoot_pct": 50.36,
+      "metatarsal_pct": 27.81,
+      "toes_pct": 12.22,
+      "regions_pct": {
+       "heel_post": 0.16,
+       "heel_med": 6.91,
+       "heel_lat": 2.54,
+       "arch_med": 32.08,
+       "mid_lat_prox": 12.7,
+       "mid_lat_dist": 5.58,
+       "mt1": 10.63,
+       "mt2": 9.27,
+       "mt3": 5.73,
+       "mt4": 1.89,
+       "mt5": 0.29,
+       "toe1": 6.22,
+       "toe2": 3.76,
+       "toe3": 1.38,
+       "toe4": 0.66,
+       "toe5": 0.2
+      },
+      "scale": 0.9979,
+      "posture_outside_model_range": [],
+      "posture_notes": [
+       "knee_angle_r: flexion is negative in this model, sign flipped",
+       "knee_angle_l: flexion is negative in this model, sign flipped"
+      ],
+      "contact": "assumed sole contact v1",
+      "stiffness_per_sphere": 1816665.5356973847,
+      "seconds": 3.0,
+      "reused_from_earlier_run": false
+     },
+     "7.5 mm": {
+      "solved": true,
+      "support_error_pct": -0.034,
+      "ankle_angle_deg": 5.414,
+      "ankle_torque_Nm": -20.59,
+      "foot_angles_deg": {
+       "mtj_angle_r": 2.395,
+       "mtp_angle_r": -0.251
+      },
+      "mtj_outside_paper_range": false,
+      "cop_sole_mm": [
+       138.7,
+       -4.9
+      ],
+      "foot_N": 304.01,
+      "heel_pct": 9.42,
+      "arch_midfoot_pct": 51.05,
+      "metatarsal_pct": 26.34,
+      "toes_pct": 13.2,
+      "regions_pct": {
+       "heel_post": 0.14,
+       "heel_med": 6.63,
+       "heel_lat": 2.65,
+       "arch_med": 31.29,
+       "mid_lat_prox": 14.8,
+       "mid_lat_dist": 4.96,
+       "mt1": 11.49,
+       "mt2": 7.88,
+       "mt3": 5.26,
+       "mt4": 1.33,
+       "mt5": 0.38,
+       "toe1": 10.35,
+       "toe2": 1.79,
+       "toe3": 0.82,
+       "toe4": 0.21,
+       "toe5": 0.03
+      },
+      "scale": 0.9979,
+      "posture_outside_model_range": [],
+      "posture_notes": [
+       "knee_angle_r: flexion is negative in this model, sign flipped",
+       "knee_angle_l: flexion is negative in this model, sign flipped"
+      ],
+      "contact": "assumed sole contact v1",
+      "stiffness_per_sphere": 1179958.8780702006,
+      "seconds": 7.4,
+      "reused_from_earlier_run": false
+     },
+     "5 mm": {
+      "solved": true,
+      "support_error_pct": -0.034,
+      "ankle_angle_deg": 5.379,
+      "ankle_torque_Nm": -20.6,
+      "foot_angles_deg": {
+       "mtj_angle_r": 2.424,
+       "mtp_angle_r": -0.443
+      },
+      "mtj_outside_paper_range": false,
+      "cop_sole_mm": [
+       138.7,
+       -4.2
+      ],
+      "foot_N": 304.01,
+      "heel_pct": 8.87,
+      "arch_midfoot_pct": 51.37,
+      "metatarsal_pct": 27.41,
+      "toes_pct": 12.35,
+      "regions_pct": {
+       "heel_post": 0.14,
+       "heel_med": 6.15,
+       "heel_lat": 2.58,
+       "arch_med": 32.42,
+       "mid_lat_prox": 13.71,
+       "mid_lat_dist": 5.24,
+       "mt1": 10.93,
+       "mt2": 9.3,
+       "mt3": 5.19,
+       "mt4": 1.59,
+       "mt5": 0.4,
+       "toe1": 8.98,
+       "toe2": 1.71,
+       "toe3": 1.23,
+       "toe4": 0.34,
+       "toe5": 0.09
+      },
+      "scale": 0.9979,
+      "posture_outside_model_range": [],
+      "posture_notes": [
+       "knee_angle_r: flexion is negative in this model, sign flipped",
+       "knee_angle_l: flexion is negative in this model, sign flipped"
+      ],
+      "contact": "assumed sole contact v1",
+      "stiffness_per_sphere": 642288.2597197563,
+      "seconds": 24.8,
+      "reused_from_earlier_run": false
+     },
+     "3.75 mm": {
+      "solved": true,
+      "support_error_pct": -0.034,
+      "ankle_angle_deg": 5.419,
+      "ankle_torque_Nm": -20.61,
+      "foot_angles_deg": {
+       "mtj_angle_r": 2.401,
+       "mtp_angle_r": -0.302
+      },
+      "mtj_outside_paper_range": false,
+      "cop_sole_mm": [
+       138.7,
+       -4.6
+      ],
+      "foot_N": 304.01,
+      "heel_pct": 9.5,
+      "arch_midfoot_pct": 50.97,
+      "metatarsal_pct": 26.84,
+      "toes_pct": 12.69,
+      "regions_pct": {
+       "heel_post": 0.14,
+       "heel_med": 6.61,
+       "heel_lat": 2.75,
+       "arch_med": 31.66,
+       "mid_lat_prox": 13.97,
+       "mid_lat_dist": 5.34,
+       "mt1": 11.36,
+       "mt2": 8.88,
+       "mt3": 4.96,
+       "mt4": 1.3,
+       "mt5": 0.34,
+       "toe1": 8.82,
+       "toe2": 2.52,
+       "toe3": 1.03,
+       "toe4": 0.29,
+       "toe5": 0.03
+      },
+      "scale": 0.9979,
+      "posture_outside_model_range": [],
+      "posture_notes": [
+       "knee_angle_r: flexion is negative in this model, sign flipped",
+       "knee_angle_l: flexion is negative in this model, sign flipped"
+      ],
+      "contact": "assumed sole contact v1",
+      "stiffness_per_sphere": 417178.4621023546,
+      "seconds": 103.8,
+      "reused_from_earlier_run": false
+     },
+     "2.5 mm": {
+      "solved": true,
+      "support_error_pct": -0.034,
+      "ankle_angle_deg": 5.42,
+      "ankle_torque_Nm": -20.62,
+      "foot_angles_deg": {
+       "mtj_angle_r": 2.411,
+       "mtp_angle_r": -0.361
+      },
+      "mtj_outside_paper_range": false,
+      "cop_sole_mm": [
+       138.7,
+       -4.4
+      ],
+      "foot_N": 304.01,
+      "heel_pct": 9.49,
+      "arch_midfoot_pct": 50.75,
+      "metatarsal_pct": 27.26,
+      "toes_pct": 12.52,
+      "regions_pct": {
+       "heel_post": 0.16,
+       "heel_med": 6.11,
+       "heel_lat": 3.22,
+       "arch_med": 31.35,
+       "mid_lat_prox": 14.1,
+       "mid_lat_dist": 5.3,
+       "mt1": 11.28,
+       "mt2": 9.45,
+       "mt3": 4.98,
+       "mt4": 1.26,
+       "mt5": 0.29,
+       "toe1": 8.78,
+       "toe2": 2.21,
+       "toe3": 1.16,
+       "toe4": 0.34,
+       "toe5": 0.03
+      },
+      "scale": 0.9979,
+      "posture_outside_model_range": [],
+      "posture_notes": [
+       "knee_angle_r: flexion is negative in this model, sign flipped",
+       "knee_angle_l: flexion is negative in this model, sign flipped"
+      ],
+      "contact": "assumed sole contact v1",
+      "stiffness_per_sphere": 227083.1919621731,
+      "seconds": 580.7,
+      "reused_from_earlier_run": false
+     }
+    }
+   }
+  },
+  "native": {
+   "two-segment (self-test), foot rigid": {
+    "0.45": {
+     "15 mm": {
+      "solved": true,
+      "support_error_pct": -0.034,
+      "ankle_angle_deg": 10.888,
+      "ankle_torque_Nm": -6.89,
+      "foot_angles_deg": {},
+      "mtj_outside_paper_range": false,
+      "cop_sole_mm": [
+       83.2,
+       3.6
+      ],
+      "foot_N": 343.23,
+      "heel_pct": 45.81,
+      "arch_midfoot_pct": 39.86,
+      "metatarsal_pct": 11.98,
+      "toes_pct": 2.36,
+      "regions_pct": {
+       "heel_post": 16.6,
+       "heel_med": 13.1,
+       "heel_lat": 16.11,
+       "arch_med": 21.01,
+       "mid_lat_prox": 15.86,
+       "mid_lat_dist": 2.99,
+       "mt1": 3.77,
+       "mt2": 2.3,
+       "mt3": 2.12,
+       "mt4": 1.85,
+       "mt5": 1.94,
+       "toe1": 0.6,
+       "toe2": 0.54,
+       "toe3": 0.53,
+       "toe4": 0.32,
+       "toe5": 0.37
+      },
+      "scale": 1.1622,
+      "posture_outside_model_range": [],
+      "posture_notes": [
+       "lumbar_extension = -5.2 deg: not in this model, left at 0"
+      ],
+      "contact": "native",
+      "stiffness_per_sphere": 225337.21287024973,
+      "seconds": 1.3,
+      "reused_from_earlier_run": false
+     },
+     "10 mm": {
+      "solved": true,
+      "support_error_pct": -0.034,
+      "ankle_angle_deg": 9.985,
+      "ankle_torque_Nm": -6.54,
+      "foot_angles_deg": {},
+      "mtj_outside_paper_range": false,
+      "cop_sole_mm": [
+       83.2,
+       3.4
+      ],
+      "foot_N": 343.23,
+      "heel_pct": 51.69,
+      "arch_midfoot_pct": 34.19,
+      "metatarsal_pct": 11.9,
+      "toes_pct": 2.23,
+      "regions_pct": {
+       "heel_post": 12.77,
+       "heel_med": 20.56,
+       "heel_lat": 18.36,
+       "arch_med": 16.95,
+       "mid_lat_prox": 12.11,
+       "mid_lat_dist": 5.13,
+       "mt1": 2.72,
+       "mt2": 3.14,
+       "mt3": 2.89,
+       "mt4": 2.07,
+       "mt5": 1.08,
+       "toe1": 0.64,
+       "toe2": 0.57,
+       "toe3": 0.32,
+       "toe4": 0.33,
+       "toe5": 0.37
+      },
+      "scale": 1.1622,
+      "posture_outside_model_range": [],
+      "posture_notes": [
+       "lumbar_extension = -5.2 deg: not in this model, left at 0"
+      ],
+      "contact": "native",
+      "stiffness_per_sphere": 117666.14549463739,
+      "seconds": 1.7,
+      "reused_from_earlier_run": false
+     },
+     "7.5 mm": {
+      "solved": true,
+      "support_error_pct": -0.034,
+      "ankle_angle_deg": 10.245,
+      "ankle_torque_Nm": -6.69,
+      "foot_angles_deg": {},
+      "mtj_outside_paper_range": false,
+      "cop_sole_mm": [
+       83.2,
+       3.7
+      ],
+      "foot_N": 343.23,
+      "heel_pct": 49.75,
+      "arch_midfoot_pct": 36.54,
+      "metatarsal_pct": 11.5,
+      "toes_pct": 2.2,
+      "regions_pct": {
+       "heel_post": 13.76,
+       "heel_med": 18.37,
+       "heel_lat": 17.62,
+       "arch_med": 17.56,
+       "mid_lat_prox": 14.24,
+       "mid_lat_dist": 4.74,
+       "mt1": 2.87,
+       "mt2": 2.82,
+       "mt3": 2.86,
+       "mt4": 1.63,
+       "mt5": 1.32,
+       "toe1": 1.2,
+       "toe2": 0.32,
+       "toe3": 0.28,
+       "toe4": 0.21,
+       "toe5": 0.19
+      },
+      "scale": 1.1622,
+      "posture_outside_model_range": [],
+      "posture_notes": [
+       "lumbar_extension = -5.2 deg: not in this model, left at 0"
+      ],
+      "contact": "native",
+      "stiffness_per_sphere": 79668.73563711507,
+      "seconds": 5.5,
+      "reused_from_earlier_run": false
+     },
+     "5 mm": {
+      "solved": true,
+      "support_error_pct": -0.034,
+      "ankle_angle_deg": 10.05,
+      "ankle_torque_Nm": -6.61,
+      "foot_angles_deg": {},
+      "mtj_outside_paper_range": false,
+      "cop_sole_mm": [
+       83.2,
+       3.5
+      ],
+      "foot_N": 343.23,
+      "heel_pct": 49.86,
+      "arch_midfoot_pct": 35.97,
+      "metatarsal_pct": 12.29,
+      "toes_pct": 1.87,
+      "regions_pct": {
+       "heel_post": 13.72,
+       "heel_med": 18.5,
+       "heel_lat": 17.64,
+       "arch_med": 17.89,
+       "mid_lat_prox": 13.13,
+       "mid_lat_dist": 4.95,
+       "mt1": 2.86,
+       "mt2": 3.39,
+       "mt3": 2.84,
+       "mt4": 1.84,
+       "mt5": 1.36,
+       "toe1": 0.97,
+       "toe2": 0.26,
+       "toe3": 0.32,
+       "toe4": 0.16,
+       "toe5": 0.16
+      },
+      "scale": 1.1622,
+      "posture_outside_model_range": [],
+      "posture_notes": [
+       "lumbar_extension = -5.2 deg: not in this model, left at 0"
+      ],
+      "contact": "native",
+      "stiffness_per_sphere": 45770.26137313002,
+      "seconds": 18.2,
+      "reused_from_earlier_run": false
+     },
+     "3.75 mm": {
+      "solved": true,
+      "support_error_pct": -0.034,
+      "ankle_angle_deg": 10.255,
+      "ankle_torque_Nm": -6.73,
+      "foot_angles_deg": {},
+      "mtj_outside_paper_range": false,
+      "cop_sole_mm": [
+       83.2,
+       3.7
+      ],
+      "foot_N": 343.23,
+      "heel_pct": 50.37,
+      "arch_midfoot_pct": 35.87,
+      "metatarsal_pct": 11.64,
+      "toes_pct": 2.12,
+      "regions_pct": {
+       "heel_post": 13.48,
+       "heel_med": 18.54,
+       "heel_lat": 18.35,
+       "arch_med": 17.34,
+       "mid_lat_prox": 13.46,
+       "mid_lat_dist": 5.07,
+       "mt1": 2.85,
+       "mt2": 3.21,
+       "mt3": 2.72,
+       "mt4": 1.6,
+       "mt5": 1.26,
+       "toe1": 0.97,
+       "toe2": 0.44,
+       "toe3": 0.33,
+       "toe4": 0.24,
+       "toe5": 0.14
+      },
+      "scale": 1.1622,
+      "posture_outside_model_range": [],
+      "posture_notes": [
+       "lumbar_extension = -5.2 deg: not in this model, left at 0"
+      ],
+      "contact": "native",
+      "stiffness_per_sphere": 28167.151608781216,
+      "seconds": 67.5,
+      "reused_from_earlier_run": false
+     },
+     "2.5 mm": {
+      "solved": true,
+      "support_error_pct": -0.034,
+      "ankle_angle_deg": 10.168,
+      "ankle_torque_Nm": -6.71,
+      "foot_angles_deg": {},
+      "mtj_outside_paper_range": false,
+      "cop_sole_mm": [
+       83.2,
+       4.0
+      ],
+      "foot_N": 343.23,
+      "heel_pct": 51.02,
+      "arch_midfoot_pct": 34.48,
+      "metatarsal_pct": 12.27,
+      "toes_pct": 2.25,
+      "regions_pct": {
+       "heel_post": 13.9,
+       "heel_med": 17.64,
+       "heel_lat": 19.48,
+       "arch_med": 16.28,
+       "mid_lat_prox": 13.11,
+       "mid_lat_dist": 5.09,
+       "mt1": 2.85,
+       "mt2": 3.45,
+       "mt3": 2.84,
+       "mt4": 1.78,
+       "mt5": 1.35,
+       "toe1": 0.98,
+       "toe2": 0.4,
+       "toe3": 0.37,
+       "toe4": 0.3,
+       "toe5": 0.2
+      },
+      "scale": 1.1622,
+      "posture_outside_model_range": [],
+      "posture_notes": [
+       "lumbar_extension = -5.2 deg: not in this model, left at 0"
+      ],
+      "contact": "native",
+      "stiffness_per_sphere": 14133.084514719014,
+      "seconds": 419.5,
+      "reused_from_earlier_run": false
+     }
+    },
+    "0.75": {
+     "15 mm": {
+      "solved": true,
+      "support_error_pct": -0.034,
+      "ankle_angle_deg": 7.344,
+      "ankle_torque_Nm": -27.15,
+      "foot_angles_deg": {},
+      "mtj_outside_paper_range": false,
+      "cop_sole_mm": [
+       138.7,
+       5.8
+      ],
+      "foot_N": 343.23,
+      "heel_pct": 20.58,
+      "arch_midfoot_pct": 30.54,
+      "metatarsal_pct": 27.8,
+      "toes_pct": 21.08,
+      "regions_pct": {
+       "heel_post": 6.39,
+       "heel_med": 6.34,
+       "heel_lat": 7.85,
+       "arch_med": 15.81,
+       "mid_lat_prox": 11.2,
+       "mid_lat_dist": 3.53,
+       "mt1": 7.57,
+       "mt2": 5.39,
+       "mt3": 5.17,
+       "mt4": 4.91,
+       "mt5": 4.76,
+       "toe1": 5.25,
+       "toe2": 4.97,
+       "toe3": 4.8,
+       "toe4": 3.07,
+       "toe5": 2.99
+      },
+      "scale": 1.1622,
+      "posture_outside_model_range": [],
+      "posture_notes": [
+       "lumbar_extension = -5.2 deg: not in this model, left at 0"
+      ],
+      "contact": "native",
+      "stiffness_per_sphere": 225337.21287024973,
+      "seconds": 1.1,
+      "reused_from_earlier_run": false
+     },
+     "10 mm": {
+      "solved": true,
+      "support_error_pct": -0.034,
+      "ankle_angle_deg": 6.473,
+      "ankle_torque_Nm": -26.75,
+      "foot_angles_deg": {},
+      "mtj_outside_paper_range": false,
+      "cop_sole_mm": [
+       138.7,
+       5.7
+      ],
+      "foot_N": 343.23,
+      "heel_pct": 22.13,
+      "arch_midfoot_pct": 30.29,
+      "metatarsal_pct": 29.72,
+      "toes_pct": 17.85,
+      "regions_pct": {
+       "heel_post": 4.28,
+       "heel_med": 9.6,
+       "heel_lat": 8.25,
+       "arch_med": 14.56,
+       "mid_lat_prox": 9.01,
+       "mid_lat_dist": 6.72,
+       "mt1": 6.34,
+       "mt2": 7.88,
+       "mt3": 6.7,
+       "mt4": 5.66,
+       "mt5": 3.14,
+       "toe1": 5.01,
+       "toe2": 4.82,
+       "toe3": 2.79,
+       "toe4": 2.68,
+       "toe5": 2.55
+      },
+      "scale": 1.1622,
+      "posture_outside_model_range": [],
+      "posture_notes": [
+       "lumbar_extension = -5.2 deg: not in this model, left at 0"
+      ],
+      "contact": "native",
+      "stiffness_per_sphere": 117666.14549463739,
+      "seconds": 2.4,
+      "reused_from_earlier_run": false
+     },
+     "7.5 mm": {
+      "solved": true,
+      "support_error_pct": -0.034,
+      "ankle_angle_deg": 6.76,
+      "ankle_torque_Nm": -26.79,
+      "foot_angles_deg": {},
+      "mtj_outside_paper_range": false,
+      "cop_sole_mm": [
+       138.7,
+       3.6
+      ],
+      "foot_N": 343.23,
+      "heel_pct": 21.7,
+      "arch_midfoot_pct": 31.2,
+      "metatarsal_pct": 28.8,
+      "toes_pct": 18.29,
+      "regions_pct": {
+       "heel_post": 4.87,
+       "heel_med": 8.73,
+       "heel_lat": 8.1,
+       "arch_med": 14.63,
+       "mid_lat_prox": 10.53,
+       "mid_lat_dist": 6.04,
+       "mt1": 7.1,
+       "mt2": 6.79,
+       "mt3": 7.0,
+       "mt4": 4.47,
+       "mt5": 3.44,
+       "toe1": 9.54,
+       "toe2": 3.06,
+       "toe3": 2.45,
+       "toe4": 1.89,
+       "toe5": 1.35
+      },
+      "scale": 1.1622,
+      "posture_outside_model_range": [],
+      "posture_notes": [
+       "lumbar_extension = -5.2 deg: not in this model, left at 0"
+      ],
+      "contact": "native",
+      "stiffness_per_sphere": 79668.73563711507,
+      "seconds": 3.7,
+      "reused_from_earlier_run": false
+     },
+     "5 mm": {
+      "solved": true,
+      "support_error_pct": -0.034,
+      "ankle_angle_deg": 6.443,
+      "ankle_torque_Nm": -26.65,
+      "foot_angles_deg": {},
+      "mtj_outside_paper_range": false,
+      "cop_sole_mm": [
+       138.7,
+       4.0
+      ],
+      "foot_N": 343.23,
+      "heel_pct": 20.56,
+      "arch_midfoot_pct": 31.57,
+      "metatarsal_pct": 31.92,
+      "toes_pct": 15.96,
+      "regions_pct": {
+       "heel_post": 4.46,
+       "heel_med": 8.36,
+       "heel_lat": 7.74,
+       "arch_med": 15.32,
+       "mid_lat_prox": 9.68,
+       "mid_lat_dist": 6.57,
+       "mt1": 7.3,
+       "mt2": 8.68,
+       "mt3": 7.18,
+       "mt4": 5.12,
+       "mt5": 3.64,
+       "toe1": 8.06,
+       "toe2": 2.41,
+       "toe3": 2.82,
+       "toe4": 1.49,
+       "toe5": 1.18
+      },
+      "scale": 1.1622,
+      "posture_outside_model_range": [],
+      "posture_notes": [
+       "lumbar_extension = -5.2 deg: not in this model, left at 0"
+      ],
+      "contact": "native",
+      "stiffness_per_sphere": 45770.26137313002,
+      "seconds": 14.7,
+      "reused_from_earlier_run": false
+     },
+     "3.75 mm": {
+      "solved": true,
+      "support_error_pct": -0.034,
+      "ankle_angle_deg": 6.726,
+      "ankle_torque_Nm": -26.77,
+      "foot_angles_deg": {},
+      "mtj_outside_paper_range": false,
+      "cop_sole_mm": [
+       138.7,
+       3.5
+      ],
+      "foot_N": 343.23,
+      "heel_pct": 21.76,
+      "arch_midfoot_pct": 31.03,
+      "metatarsal_pct": 29.14,
+      "toes_pct": 18.08,
+      "regions_pct": {
+       "heel_post": 4.71,
+       "heel_med": 8.73,
+       "heel_lat": 8.32,
+       "arch_med": 14.71,
+       "mid_lat_prox": 9.84,
+       "mid_lat_dist": 6.48,
+       "mt1": 7.15,
+       "mt2": 7.68,
+       "mt3": 6.69,
+       "mt4": 4.38,
+       "mt5": 3.24,
+       "toe1": 8.19,
+       "toe2": 3.98,
+       "toe3": 2.85,
+       "toe4": 2.03,
+       "toe5": 1.03
+      },
+      "scale": 1.1622,
+      "posture_outside_model_range": [],
+      "posture_notes": [
+       "lumbar_extension = -5.2 deg: not in this model, left at 0"
+      ],
+      "contact": "native",
+      "stiffness_per_sphere": 28167.151608781216,
+      "seconds": 66.2,
+      "reused_from_earlier_run": false
+     },
+     "2.5 mm": {
+      "solved": true,
+      "support_error_pct": -0.034,
+      "ankle_angle_deg": 6.713,
+      "ankle_torque_Nm": -26.8,
+      "foot_angles_deg": {},
+      "mtj_outside_paper_range": false,
+      "cop_sole_mm": [
+       138.7,
+       4.5
+      ],
+      "foot_N": 343.23,
+      "heel_pct": 22.18,
+      "arch_midfoot_pct": 30.0,
+      "metatarsal_pct": 29.84,
+      "toes_pct": 17.98,
+      "regions_pct": {
+       "heel_post": 4.91,
+       "heel_med": 8.31,
+       "heel_lat": 8.96,
+       "arch_med": 13.92,
+       "mid_lat_prox": 9.61,
+       "mid_lat_dist": 6.47,
+       "mt1": 6.87,
+       "mt2": 8.02,
+       "mt3": 6.86,
+       "mt4": 4.71,
+       "mt5": 3.38,
+       "toe1": 7.69,
+       "toe2": 3.44,
+       "toe3": 3.12,
+       "toe4": 2.36,
+       "toe5": 1.37
+      },
+      "scale": 1.1622,
+      "posture_outside_model_range": [],
+      "posture_notes": [
+       "lumbar_extension = -5.2 deg: not in this model, left at 0"
+      ],
+      "contact": "native",
+      "stiffness_per_sphere": 14133.084514719014,
+      "seconds": 414.2,
+      "reused_from_earlier_run": false
+     }
+    }
+   },
+   "D'Hondt 4-segment ported, foot rigid": {
+    "0.45": {
+     "15 mm": {
+      "solved": true,
+      "support_error_pct": -0.034,
+      "ankle_angle_deg": 9.547,
+      "ankle_torque_Nm": -5.47,
+      "foot_angles_deg": {},
+      "mtj_outside_paper_range": false,
+      "cop_sole_mm": [
+       83.2,
+       2.6
+      ],
+      "foot_N": 304.01,
+      "heel_pct": 50.18,
+      "arch_midfoot_pct": 32.02,
+      "metatarsal_pct": 13.16,
+      "toes_pct": 4.63,
+      "regions_pct": {
+       "heel_post": 20.91,
+       "heel_med": 14.22,
+       "heel_lat": 15.05,
+       "arch_med": 17.52,
+       "mid_lat_prox": 12.09,
+       "mid_lat_dist": 2.41,
+       "mt1": 4.02,
+       "mt2": 2.59,
+       "mt3": 2.38,
+       "mt4": 2.1,
+       "mt5": 2.07,
+       "toe1": 1.27,
+       "toe2": 1.09,
+       "toe3": 1.03,
+       "toe4": 0.6,
+       "toe5": 0.64
+      },
+      "scale": 0.9979,
+      "posture_outside_model_range": [],
+      "posture_notes": [
+       "knee_angle_r: flexion is negative in this model, sign flipped",
+       "knee_angle_l: flexion is negative in this model, sign flipped"
+      ],
+      "contact": "native",
+      "stiffness_per_sphere": 1639324.6994990907,
+      "seconds": 1.4,
+      "reused_from_earlier_run": false
+     },
+     "10 mm": {
+      "solved": true,
+      "support_error_pct": -0.034,
+      "ankle_angle_deg": 9.124,
+      "ankle_torque_Nm": -5.33,
+      "foot_angles_deg": {},
+      "mtj_outside_paper_range": false,
+      "cop_sole_mm": [
+       83.2,
+       2.3
+      ],
+      "foot_N": 304.01,
+      "heel_pct": 54.66,
+      "arch_midfoot_pct": 28.69,
+      "metatarsal_pct": 12.91,
+      "toes_pct": 3.76,
+      "regions_pct": {
+       "heel_post": 15.46,
+       "heel_med": 21.8,
+       "heel_lat": 17.4,
+       "arch_med": 14.62,
+       "mid_lat_prox": 9.66,
+       "mid_lat_dist": 4.41,
+       "mt1": 2.98,
+       "mt2": 3.46,
+       "mt3": 3.03,
+       "mt4": 2.25,
+       "mt5": 1.19,
+       "toe1": 1.13,
+       "toe2": 0.98,
+       "toe3": 0.55,
+       "toe4": 0.54,
+       "toe5": 0.56
+      },
+      "scale": 0.9979,
+      "posture_outside_model_range": [],
+      "posture_notes": [
+       "knee_angle_r: flexion is negative in this model, sign flipped",
+       "knee_angle_l: flexion is negative in this model, sign flipped"
+      ],
+      "contact": "native",
+      "stiffness_per_sphere": 856019.3682491381,
+      "seconds": 2.9,
+      "reused_from_earlier_run": false
+     },
+     "7.5 mm": {
+      "solved": true,
+      "support_error_pct": -0.034,
+      "ankle_angle_deg": 9.267,
+      "ankle_torque_Nm": -5.41,
+      "foot_angles_deg": {},
+      "mtj_outside_paper_range": false,
+      "cop_sole_mm": [
+       83.2,
+       2.5
+      ],
+      "foot_N": 304.01,
+      "heel_pct": 53.23,
+      "arch_midfoot_pct": 30.16,
+      "metatarsal_pct": 12.67,
+      "toes_pct": 3.95,
+      "regions_pct": {
+       "heel_post": 16.83,
+       "heel_med": 19.65,
+       "heel_lat": 16.75,
+       "arch_med": 14.95,
+       "mid_lat_prox": 11.21,
+       "mid_lat_dist": 4.0,
+       "mt1": 3.27,
+       "mt2": 3.1,
+       "mt3": 3.09,
+       "mt4": 1.8,
+       "mt5": 1.41,
+       "toe1": 2.21,
+       "toe2": 0.59,
+       "toe3": 0.49,
+       "toe4": 0.36,
+       "toe5": 0.3
+      },
+      "scale": 0.9979,
+      "posture_outside_model_range": [],
+      "posture_notes": [
+       "knee_angle_r: flexion is negative in this model, sign flipped",
+       "knee_angle_l: flexion is negative in this model, sign flipped"
+      ],
+      "contact": "native",
+      "stiffness_per_sphere": 579588.8057912032,
+      "seconds": 6.3,
+      "reused_from_earlier_run": false
+     },
+     "5 mm": {
+      "solved": true,
+      "support_error_pct": -0.034,
+      "ankle_angle_deg": 9.155,
+      "ankle_torque_Nm": -5.37,
+      "foot_angles_deg": {},
+      "mtj_outside_paper_range": false,
+      "cop_sole_mm": [
+       83.2,
+       2.3
+      ],
+      "foot_N": 304.01,
+      "heel_pct": 52.94,
+      "arch_midfoot_pct": 30.17,
+      "metatarsal_pct": 13.6,
+      "toes_pct": 3.3,
+      "regions_pct": {
+       "heel_post": 16.62,
+       "heel_med": 19.65,
+       "heel_lat": 16.67,
+       "arch_med": 15.42,
+       "mid_lat_prox": 10.48,
+       "mid_lat_dist": 4.27,
+       "mt1": 3.26,
+       "mt2": 3.78,
+       "mt3": 3.08,
+       "mt4": 2.03,
+       "mt5": 1.45,
+       "toe1": 1.75,
+       "toe2": 0.47,
+       "toe3": 0.55,
+       "toe4": 0.28,
+       "toe5": 0.25
+      },
+      "scale": 0.9979,
+      "posture_outside_model_range": [],
+      "posture_notes": [
+       "knee_angle_r: flexion is negative in this model, sign flipped",
+       "knee_angle_l: flexion is negative in this model, sign flipped"
+      ],
+      "contact": "native",
+      "stiffness_per_sphere": 332977.93567148264,
+      "seconds": 19.7,
+      "reused_from_earlier_run": false
+     },
+     "3.75 mm": {
+      "solved": true,
+      "support_error_pct": -0.034,
+      "ankle_angle_deg": 9.273,
+      "ankle_torque_Nm": -5.43,
+      "foot_angles_deg": {},
+      "mtj_outside_paper_range": false,
+      "cop_sole_mm": [
+       83.2,
+       2.5
+      ],
+      "foot_N": 304.01,
+      "heel_pct": 53.76,
+      "arch_midfoot_pct": 29.58,
+      "metatarsal_pct": 12.82,
+      "toes_pct": 3.83,
+      "regions_pct": {
+       "heel_post": 16.55,
+       "heel_med": 19.71,
+       "heel_lat": 17.5,
+       "arch_med": 14.71,
+       "mid_lat_prox": 10.58,
+       "mid_lat_dist": 4.29,
+       "mt1": 3.26,
+       "mt2": 3.52,
+       "mt3": 2.94,
+       "mt4": 1.77,
+       "mt5": 1.33,
+       "toe1": 1.81,
+       "toe2": 0.81,
+       "toe3": 0.58,
+       "toe4": 0.41,
+       "toe5": 0.22
+      },
+      "scale": 0.9979,
+      "posture_outside_model_range": [],
+      "posture_notes": [
+       "knee_angle_r: flexion is negative in this model, sign flipped",
+       "knee_angle_l: flexion is negative in this model, sign flipped"
+      ],
+      "contact": "native",
+      "stiffness_per_sphere": 204915.58743738633,
+      "seconds": 63.1,
+      "reused_from_earlier_run": false
+     },
+     "2.5 mm": {
+      "solved": true,
+      "support_error_pct": -0.034,
+      "ankle_angle_deg": 9.214,
+      "ankle_torque_Nm": -5.43,
+      "foot_angles_deg": {},
+      "mtj_outside_paper_range": false,
+      "cop_sole_mm": [
+       83.2,
+       2.9
+      ],
+      "foot_N": 304.01,
+      "heel_pct": 54.25,
+      "arch_midfoot_pct": 28.45,
+      "metatarsal_pct": 13.36,
+      "toes_pct": 3.93,
+      "regions_pct": {
+       "heel_post": 16.96,
+       "heel_med": 18.76,
+       "heel_lat": 18.53,
+       "arch_med": 13.81,
+       "mid_lat_prox": 10.34,
+       "mid_lat_dist": 4.3,
+       "mt1": 3.21,
+       "mt2": 3.74,
+       "mt3": 3.05,
+       "mt4": 1.94,
+       "mt5": 1.42,
+       "toe1": 1.78,
+       "toe2": 0.72,
+       "toe3": 0.64,
+       "toe4": 0.49,
+       "toe5": 0.3
+      },
+      "scale": 0.9979,
+      "posture_outside_model_range": [],
+      "posture_notes": [
+       "knee_angle_r: flexion is negative in this model, sign flipped",
+       "knee_angle_l: flexion is negative in this model, sign flipped"
+      ],
+      "contact": "native",
+      "stiffness_per_sphere": 102817.9688120473,
+      "seconds": 377.1,
+      "reused_from_earlier_run": false
+     }
+    },
+    "0.75": {
+     "15 mm": {
+      "solved": true,
+      "support_error_pct": -0.034,
+      "ankle_angle_deg": 7.252,
+      "ankle_torque_Nm": -21.22,
+      "foot_angles_deg": {},
+      "mtj_outside_paper_range": false,
+      "cop_sole_mm": [
+       138.7,
+       4.9
+      ],
+      "foot_N": 304.01,
+      "heel_pct": 20.66,
+      "arch_midfoot_pct": 30.41,
+      "metatarsal_pct": 27.72,
+      "toes_pct": 21.21,
+      "regions_pct": {
+       "heel_post": 6.49,
+       "heel_med": 6.62,
+       "heel_lat": 7.55,
+       "arch_med": 16.23,
+       "mid_lat_prox": 10.79,
+       "mid_lat_dist": 3.39,
+       "mt1": 8.03,
+       "mt2": 5.48,
+       "mt3": 5.09,
+       "mt4": 4.68,
+       "mt5": 4.44,
+       "toe1": 5.56,
+       "toe2": 5.06,
+       "toe3": 4.76,
+       "toe4": 2.98,
+       "toe5": 2.85
+      },
+      "scale": 0.9979,
+      "posture_outside_model_range": [],
+      "posture_notes": [
+       "knee_angle_r: flexion is negative in this model, sign flipped",
+       "knee_angle_l: flexion is negative in this model, sign flipped"
+      ],
+      "contact": "native",
+      "stiffness_per_sphere": 1639324.6994990907,
+      "seconds": 1.6,
+      "reused_from_earlier_run": false
+     },
+     "10 mm": {
+      "solved": true,
+      "support_error_pct": -0.034,
+      "ankle_angle_deg": 6.611,
+      "ankle_torque_Nm": -20.98,
+      "foot_angles_deg": {},
+      "mtj_outside_paper_range": false,
+      "cop_sole_mm": [
+       138.7,
+       4.6
+      ],
+      "foot_N": 304.01,
+      "heel_pct": 22.53,
+      "arch_midfoot_pct": 29.79,
+      "metatarsal_pct": 29.51,
+      "toes_pct": 18.18,
+      "regions_pct": {
+       "heel_post": 4.41,
+       "heel_med": 9.93,
+       "heel_lat": 8.19,
+       "arch_med": 14.78,
+       "mid_lat_prox": 8.67,
+       "mid_lat_dist": 6.34,
+       "mt1": 6.79,
+       "mt2": 8.03,
+       "mt3": 6.55,
+       "mt4": 5.29,
+       "mt5": 2.85,
+       "toe1": 5.56,
+       "toe2": 4.99,
+       "toe3": 2.76,
+       "toe4": 2.54,
+       "toe5": 2.33
+      },
+      "scale": 0.9979,
+      "posture_outside_model_range": [],
+      "posture_notes": [
+       "knee_angle_r: flexion is negative in this model, sign flipped",
+       "knee_angle_l: flexion is negative in this model, sign flipped"
+      ],
+      "contact": "native",
+      "stiffness_per_sphere": 856019.3682491381,
+      "seconds": 3.1,
+      "reused_from_earlier_run": false
+     },
+     "7.5 mm": {
+      "solved": true,
+      "support_error_pct": -0.034,
+      "ankle_angle_deg": 6.844,
+      "ankle_torque_Nm": -21.0,
+      "foot_angles_deg": {},
+      "mtj_outside_paper_range": false,
+      "cop_sole_mm": [
+       138.7,
+       2.6
+      ],
+      "foot_N": 304.01,
+      "heel_pct": 21.98,
+      "arch_midfoot_pct": 30.87,
+      "metatarsal_pct": 28.58,
+      "toes_pct": 18.58,
+      "regions_pct": {
+       "heel_post": 4.95,
+       "heel_med": 9.06,
+       "heel_lat": 7.97,
+       "arch_med": 14.96,
+       "mid_lat_prox": 10.19,
+       "mid_lat_dist": 5.72,
+       "mt1": 7.55,
+       "mt2": 6.87,
+       "mt3": 6.82,
+       "mt4": 4.19,
+       "mt5": 3.15,
+       "toe1": 10.14,
+       "toe2": 3.07,
+       "toe3": 2.37,
+       "toe4": 1.77,
+       "toe5": 1.23
+      },
+      "scale": 0.9979,
+      "posture_outside_model_range": [],
+      "posture_notes": [
+       "knee_angle_r: flexion is negative in this model, sign flipped",
+       "knee_angle_l: flexion is negative in this model, sign flipped"
+      ],
+      "contact": "native",
+      "stiffness_per_sphere": 579588.8057912032,
+      "seconds": 6.0,
+      "reused_from_earlier_run": false
+     },
+     "5 mm": {
+      "solved": true,
+      "support_error_pct": -0.034,
+      "ankle_angle_deg": 6.608,
+      "ankle_torque_Nm": -20.91,
+      "foot_angles_deg": {},
+      "mtj_outside_paper_range": false,
+      "cop_sole_mm": [
+       138.7,
+       2.9
+      ],
+      "foot_N": 304.01,
+      "heel_pct": 21.03,
+      "arch_midfoot_pct": 31.02,
+      "metatarsal_pct": 31.51,
+      "toes_pct": 16.45,
+      "regions_pct": {
+       "heel_post": 4.64,
+       "heel_med": 8.68,
+       "heel_lat": 7.71,
+       "arch_med": 15.52,
+       "mid_lat_prox": 9.34,
+       "mid_lat_dist": 6.16,
+       "mt1": 7.77,
+       "mt2": 8.76,
+       "mt3": 6.95,
+       "mt4": 4.75,
+       "mt5": 3.28,
+       "toe1": 8.8,
+       "toe2": 2.46,
+       "toe3": 2.73,
+       "toe4": 1.4,
+       "toe5": 1.06
+      },
+      "scale": 0.9979,
+      "posture_outside_model_range": [],
+      "posture_notes": [
+       "knee_angle_r: flexion is negative in this model, sign flipped",
+       "knee_angle_l: flexion is negative in this model, sign flipped"
+      ],
+      "contact": "native",
+      "stiffness_per_sphere": 332977.93567148264,
+      "seconds": 17.6,
+      "reused_from_earlier_run": false
+     },
+     "3.75 mm": {
+      "solved": true,
+      "support_error_pct": -0.034,
+      "ankle_angle_deg": 6.818,
+      "ankle_torque_Nm": -20.99,
+      "foot_angles_deg": {},
+      "mtj_outside_paper_range": false,
+      "cop_sole_mm": [
+       138.7,
+       2.5
+      ],
+      "foot_N": 304.01,
+      "heel_pct": 22.05,
+      "arch_midfoot_pct": 30.68,
+      "metatarsal_pct": 28.94,
+      "toes_pct": 18.33,
+      "regions_pct": {
+       "heel_post": 4.8,
+       "heel_med": 9.04,
+       "heel_lat": 8.21,
+       "arch_med": 15.02,
+       "mid_lat_prox": 9.52,
+       "mid_lat_dist": 6.14,
+       "mt1": 7.6,
+       "mt2": 7.77,
+       "mt3": 6.51,
+       "mt4": 4.1,
+       "mt5": 2.96,
+       "toe1": 8.73,
+       "toe2": 4.0,
+       "toe3": 2.76,
+       "toe4": 1.9,
+       "toe5": 0.94
+      },
+      "scale": 0.9979,
+      "posture_outside_model_range": [],
+      "posture_notes": [
+       "knee_angle_r: flexion is negative in this model, sign flipped",
+       "knee_angle_l: flexion is negative in this model, sign flipped"
+      ],
+      "contact": "native",
+      "stiffness_per_sphere": 204915.58743738633,
+      "seconds": 59.0,
+      "reused_from_earlier_run": false
+     },
+     "2.5 mm": {
+      "solved": true,
+      "support_error_pct": -0.034,
+      "ankle_angle_deg": 6.804,
+      "ankle_torque_Nm": -21.01,
+      "foot_angles_deg": {},
+      "mtj_outside_paper_range": false,
+      "cop_sole_mm": [
+       138.7,
+       3.5
+      ],
+      "foot_N": 304.01,
+      "heel_pct": 22.47,
+      "arch_midfoot_pct": 29.66,
+      "metatarsal_pct": 29.66,
+      "toes_pct": 18.22,
+      "regions_pct": {
+       "heel_post": 5.01,
+       "heel_med": 8.6,
+       "heel_lat": 8.86,
+       "arch_med": 14.22,
+       "mid_lat_prox": 9.3,
+       "mid_lat_dist": 6.14,
+       "mt1": 7.32,
+       "mt2": 8.14,
+       "mt3": 6.69,
+       "mt4": 4.42,
+       "mt5": 3.09,
+       "toe1": 8.26,
+       "toe2": 3.46,
+       "toe3": 3.03,
+       "toe4": 2.22,
+       "toe5": 1.25
+      },
+      "scale": 0.9979,
+      "posture_outside_model_range": [],
+      "posture_notes": [
+       "knee_angle_r: flexion is negative in this model, sign flipped",
+       "knee_angle_l: flexion is negative in this model, sign flipped"
+      ],
+      "contact": "native",
+      "stiffness_per_sphere": 102817.9688120473,
+      "seconds": 394.9,
+      "reused_from_earlier_run": false
+     }
+    }
+   },
+   "D'Hondt 3-segment ported, MTP free": {
+    "0.45": {
+     "15 mm": {
+      "solved": true,
+      "support_error_pct": -0.034,
+      "ankle_angle_deg": 9.429,
+      "ankle_torque_Nm": -5.43,
+      "foot_angles_deg": {
+       "mtp_angle_r": 1.142
+      },
+      "mtj_outside_paper_range": false,
+      "cop_sole_mm": [
+       83.2,
+       2.6
+      ],
+      "foot_N": 304.01,
+      "heel_pct": 49.47,
+      "arch_midfoot_pct": 32.8,
+      "metatarsal_pct": 14.08,
+      "toes_pct": 3.66,
+      "regions_pct": {
+       "heel_post": 20.38,
+       "heel_med": 14.12,
+       "heel_lat": 14.97,
+       "arch_med": 17.94,
+       "mid_lat_prox": 12.35,
+       "mid_lat_dist": 2.51,
+       "mt1": 4.27,
+       "mt2": 2.77,
+       "mt3": 2.55,
+       "mt4": 2.26,
+       "mt5": 2.23,
+       "toe1": 1.06,
+       "toe2": 0.86,
+       "toe3": 0.8,
+       "toe4": 0.44,
+       "toe5": 0.5
+      },
+      "scale": 0.9979,
+      "posture_outside_model_range": [],
+      "posture_notes": [
+       "knee_angle_r: flexion is negative in this model, sign flipped",
+       "knee_angle_l: flexion is negative in this model, sign flipped"
+      ],
+      "contact": "native",
+      "stiffness_per_sphere": 1639324.6994990907,
+      "seconds": 0.9,
+      "reused_from_earlier_run": false
+     },
+     "10 mm": {
+      "solved": true,
+      "support_error_pct": -0.034,
+      "ankle_angle_deg": 9.046,
+      "ankle_torque_Nm": -5.31,
+      "foot_angles_deg": {
+       "mtp_angle_r": 0.944
+      },
+      "mtj_outside_paper_range": false,
+      "cop_sole_mm": [
+       83.2,
+       2.4
+      ],
+      "foot_N": 304.01,
+      "heel_pct": 54.21,
+      "arch_midfoot_pct": 29.2,
+      "metatarsal_pct": 13.51,
+      "toes_pct": 3.09,
+      "regions_pct": {
+       "heel_post": 15.18,
+       "heel_med": 21.71,
+       "heel_lat": 17.32,
+       "arch_med": 14.88,
+       "mid_lat_prox": 9.79,
+       "mid_lat_dist": 4.53,
+       "mt1": 3.11,
+       "mt2": 3.62,
+       "mt3": 3.17,
+       "mt4": 2.36,
+       "mt5": 1.25,
+       "toe1": 0.96,
+       "toe2": 0.8,
+       "toe3": 0.44,
+       "toe4": 0.43,
+       "toe5": 0.46
+      },
+      "scale": 0.9979,
+      "posture_outside_model_range": [],
+      "posture_notes": [
+       "knee_angle_r: flexion is negative in this model, sign flipped",
+       "knee_angle_l: flexion is negative in this model, sign flipped"
+      ],
+      "contact": "native",
+      "stiffness_per_sphere": 856019.3682491381,
+      "seconds": 2.7,
+      "reused_from_earlier_run": false
+     },
+     "7.5 mm": {
+      "solved": true,
+      "support_error_pct": -0.034,
+      "ankle_angle_deg": 9.185,
+      "ankle_torque_Nm": -5.38,
+      "foot_angles_deg": {
+       "mtp_angle_r": 0.97
+      },
+      "mtj_outside_paper_range": false,
+      "cop_sole_mm": [
+       83.2,
+       2.6
+      ],
+      "foot_N": 304.01,
+      "heel_pct": 52.75,
+      "arch_midfoot_pct": 30.72,
+      "metatarsal_pct": 13.29,
+      "toes_pct": 3.26,
+      "regions_pct": {
+       "heel_post": 16.52,
+       "heel_med": 19.56,
+       "heel_lat": 16.67,
+       "arch_med": 15.22,
+       "mid_lat_prox": 11.38,
+       "mid_lat_dist": 4.12,
+       "mt1": 3.43,
+       "mt2": 3.25,
+       "mt3": 3.24,
+       "mt4": 1.89,
+       "mt5": 1.48,
+       "toe1": 1.87,
+       "toe2": 0.47,
+       "toe3": 0.39,
+       "toe4": 0.28,
+       "toe5": 0.25
+      },
+      "scale": 0.9979,
+      "posture_outside_model_range": [],
+      "posture_notes": [
+       "knee_angle_r: flexion is negative in this model, sign flipped",
+       "knee_angle_l: flexion is negative in this model, sign flipped"
+      ],
+      "contact": "native",
+      "stiffness_per_sphere": 579588.8057912032,
+      "seconds": 6.7,
+      "reused_from_earlier_run": false
+     },
+     "5 mm": {
+      "solved": true,
+      "support_error_pct": -0.034,
+      "ankle_angle_deg": 9.095,
+      "ankle_torque_Nm": -5.35,
+      "foot_angles_deg": {
+       "mtp_angle_r": 0.836
+      },
+      "mtj_outside_paper_range": false,
+      "cop_sole_mm": [
+       83.2,
+       2.4
+      ],
+      "foot_N": 304.01,
+      "heel_pct": 52.57,
+      "arch_midfoot_pct": 30.59,
+      "metatarsal_pct": 14.07,
+      "toes_pct": 2.75,
+      "regions_pct": {
+       "heel_post": 16.39,
+       "heel_med": 19.58,
+       "heel_lat": 16.6,
+       "arch_med": 15.63,
+       "mid_lat_prox": 10.6,
+       "mid_lat_dist": 4.36,
+       "mt1": 3.37,
+       "mt2": 3.91,
+       "mt3": 3.19,
+       "mt4": 2.1,
+       "mt5": 1.5,
+       "toe1": 1.49,
+       "toe2": 0.38,
+       "toe3": 0.45,
+       "toe4": 0.22,
+       "toe5": 0.21
+      },
+      "scale": 0.9979,
+      "posture_outside_model_range": [],
+      "posture_notes": [
+       "knee_angle_r: flexion is negative in this model, sign flipped",
+       "knee_angle_l: flexion is negative in this model, sign flipped"
+      ],
+      "contact": "native",
+      "stiffness_per_sphere": 332977.93567148264,
+      "seconds": 26.9,
+      "reused_from_earlier_run": false
+     },
+     "3.75 mm": {
+      "solved": true,
+      "support_error_pct": -0.034,
+      "ankle_angle_deg": 9.193,
+      "ankle_torque_Nm": -5.41,
+      "foot_angles_deg": {
+       "mtp_angle_r": 0.952
+      },
+      "mtj_outside_paper_range": false,
+      "cop_sole_mm": [
+       83.2,
+       2.6
+      ],
+      "foot_N": 304.01,
+      "heel_pct": 53.3,
+      "arch_midfoot_pct": 30.13,
+      "metatarsal_pct": 13.43,
+      "toes_pct": 3.15,
+      "regions_pct": {
+       "heel_post": 16.25,
+       "heel_med": 19.63,
+       "heel_lat": 17.42,
+       "arch_med": 14.98,
+       "mid_lat_prox": 10.74,
+       "mid_lat_dist": 4.41,
+       "mt1": 3.41,
+       "mt2": 3.68,
+       "mt3": 3.08,
+       "mt4": 1.86,
+       "mt5": 1.4,
+       "toe1": 1.52,
+       "toe2": 0.66,
+       "toe3": 0.46,
+       "toe4": 0.33,
+       "toe5": 0.18
+      },
+      "scale": 0.9979,
+      "posture_outside_model_range": [],
+      "posture_notes": [
+       "knee_angle_r: flexion is negative in this model, sign flipped",
+       "knee_angle_l: flexion is negative in this model, sign flipped"
+      ],
+      "contact": "native",
+      "stiffness_per_sphere": 204915.58743738633,
+      "seconds": 88.5,
+      "reused_from_earlier_run": false
+     },
+     "2.5 mm": {
+      "solved": true,
+      "support_error_pct": -0.034,
+      "ankle_angle_deg": 9.132,
+      "ankle_torque_Nm": -5.4,
+      "foot_angles_deg": {
+       "mtp_angle_r": 0.978
+      },
+      "mtj_outside_paper_range": false,
+      "cop_sole_mm": [
+       83.2,
+       2.9
+      ],
+      "foot_N": 304.01,
+      "heel_pct": 53.76,
+      "arch_midfoot_pct": 29.01,
+      "metatarsal_pct": 14.01,
+      "toes_pct": 3.22,
+      "regions_pct": {
+       "heel_post": 16.64,
+       "heel_med": 18.67,
+       "heel_lat": 18.45,
+       "arch_med": 14.08,
+       "mid_lat_prox": 10.5,
+       "mid_lat_dist": 4.43,
+       "mt1": 3.37,
+       "mt2": 3.91,
+       "mt3": 3.2,
+       "mt4": 2.04,
+       "mt5": 1.49,
+       "toe1": 1.49,
+       "toe2": 0.58,
+       "toe3": 0.51,
+       "toe4": 0.39,
+       "toe5": 0.25
+      },
+      "scale": 0.9979,
+      "posture_outside_model_range": [],
+      "posture_notes": [
+       "knee_angle_r: flexion is negative in this model, sign flipped",
+       "knee_angle_l: flexion is negative in this model, sign flipped"
+      ],
+      "contact": "native",
+      "stiffness_per_sphere": 102817.9688120473,
+      "seconds": 505.5,
+      "reused_from_earlier_run": false
+     }
+    },
+    "0.75": {
+     "15 mm": {
+      "solved": true,
+      "support_error_pct": -0.034,
+      "ankle_angle_deg": 6.528,
+      "ankle_torque_Nm": -20.99,
+      "foot_angles_deg": {
+       "mtp_angle_r": 4.24
+      },
+      "mtj_outside_paper_range": false,
+      "cop_sole_mm": [
+       138.7,
+       4.9
+      ],
+      "foot_N": 304.01,
+      "heel_pct": 17.08,
+      "arch_midfoot_pct": 31.67,
+      "metatarsal_pct": 38.17,
+      "toes_pct": 13.07,
+      "regions_pct": {
+       "heel_post": 4.9,
+       "heel_med": 5.6,
+       "heel_lat": 6.58,
+       "arch_med": 16.77,
+       "mid_lat_prox": 10.91,
+       "mid_lat_dist": 3.99,
+       "mt1": 11.15,
+       "mt2": 7.66,
+       "mt3": 7.03,
+       "mt4": 6.41,
+       "mt5": 5.92,
+       "toe1": 3.81,
+       "toe2": 3.12,
+       "toe3": 2.86,
+       "toe4": 1.6,
+       "toe5": 1.68
+      },
+      "scale": 0.9979,
+      "posture_outside_model_range": [],
+      "posture_notes": [
+       "knee_angle_r: flexion is negative in this model, sign flipped",
+       "knee_angle_l: flexion is negative in this model, sign flipped"
+      ],
+      "contact": "native",
+      "stiffness_per_sphere": 1639324.6994990907,
+      "seconds": 0.6,
+      "reused_from_earlier_run": false
+     },
+     "10 mm": {
+      "solved": true,
+      "support_error_pct": -0.034,
+      "ankle_angle_deg": 6.05,
+      "ankle_torque_Nm": -20.8,
+      "foot_angles_deg": {
+       "mtp_angle_r": 3.561
+      },
+      "mtj_outside_paper_range": false,
+      "cop_sole_mm": [
+       138.7,
+       5.0
+      ],
+      "foot_N": 304.01,
+      "heel_pct": 19.72,
+      "arch_midfoot_pct": 30.94,
+      "metatarsal_pct": 37.93,
+      "toes_pct": 11.41,
+      "regions_pct": {
+       "heel_post": 3.62,
+       "heel_med": 8.81,
+       "heel_lat": 7.29,
+       "arch_med": 15.23,
+       "mid_lat_prox": 8.65,
+       "mid_lat_dist": 7.06,
+       "mt1": 8.81,
+       "mt2": 10.46,
+       "mt3": 8.3,
+       "mt4": 6.75,
+       "mt5": 3.61,
+       "toe1": 3.62,
+       "toe2": 3.02,
+       "toe3": 1.65,
+       "toe4": 1.57,
+       "toe5": 1.55
+      },
+      "scale": 0.9979,
+      "posture_outside_model_range": [],
+      "posture_notes": [
+       "knee_angle_r: flexion is negative in this model, sign flipped",
+       "knee_angle_l: flexion is negative in this model, sign flipped"
+      ],
+      "contact": "native",
+      "stiffness_per_sphere": 856019.3682491381,
+      "seconds": 2.4,
+      "reused_from_earlier_run": false
+     },
+     "7.5 mm": {
+      "solved": true,
+      "support_error_pct": -0.034,
+      "ankle_angle_deg": 6.276,
+      "ankle_torque_Nm": -20.84,
+      "foot_angles_deg": {
+       "mtp_angle_r": 3.651
+      },
+      "mtj_outside_paper_range": false,
+      "cop_sole_mm": [
+       138.7,
+       3.4
+      ],
+      "foot_N": 304.01,
+      "heel_pct": 19.15,
+      "arch_midfoot_pct": 32.04,
+      "metatarsal_pct": 36.86,
+      "toes_pct": 11.95,
+      "regions_pct": {
+       "heel_post": 4.05,
+       "heel_med": 8.0,
+       "heel_lat": 7.1,
+       "arch_med": 15.43,
+       "mid_lat_prox": 10.21,
+       "mid_lat_dist": 6.4,
+       "mt1": 9.97,
+       "mt2": 8.89,
+       "mt3": 8.73,
+       "mt4": 5.34,
+       "mt5": 3.93,
+       "toe1": 6.85,
+       "toe2": 1.8,
+       "toe3": 1.44,
+       "toe4": 1.04,
+       "toe5": 0.82
+      },
+      "scale": 0.9979,
+      "posture_outside_model_range": [],
+      "posture_notes": [
+       "knee_angle_r: flexion is negative in this model, sign flipped",
+       "knee_angle_l: flexion is negative in this model, sign flipped"
+      ],
+      "contact": "native",
+      "stiffness_per_sphere": 579588.8057912032,
+      "seconds": 5.6,
+      "reused_from_earlier_run": false
+     },
+     "5 mm": {
+      "solved": true,
+      "support_error_pct": -0.034,
+      "ankle_angle_deg": 6.125,
+      "ankle_torque_Nm": -20.77,
+      "foot_angles_deg": {
+       "mtp_angle_r": 3.231
+      },
+      "mtj_outside_paper_range": false,
+      "cop_sole_mm": [
+       138.7,
+       3.6
+      ],
+      "foot_N": 304.01,
+      "heel_pct": 18.63,
+      "arch_midfoot_pct": 31.85,
+      "metatarsal_pct": 38.88,
+      "toes_pct": 10.64,
+      "regions_pct": {
+       "heel_post": 3.9,
+       "heel_med": 7.78,
+       "heel_lat": 6.95,
+       "arch_med": 15.85,
+       "mid_lat_prox": 9.27,
+       "mid_lat_dist": 6.73,
+       "mt1": 9.75,
+       "mt2": 10.89,
+       "mt3": 8.53,
+       "mt4": 5.79,
+       "mt5": 3.92,
+       "toe1": 5.82,
+       "toe2": 1.52,
+       "toe3": 1.72,
+       "toe4": 0.86,
+       "toe5": 0.72
+      },
+      "scale": 0.9979,
+      "posture_outside_model_range": [],
+      "posture_notes": [
+       "knee_angle_r: flexion is negative in this model, sign flipped",
+       "knee_angle_l: flexion is negative in this model, sign flipped"
+      ],
+      "contact": "native",
+      "stiffness_per_sphere": 332977.93567148264,
+      "seconds": 23.4,
+      "reused_from_earlier_run": false
+     },
+     "3.75 mm": {
+      "solved": true,
+      "support_error_pct": -0.034,
+      "ankle_angle_deg": 6.253,
+      "ankle_torque_Nm": -20.82,
+      "foot_angles_deg": {
+       "mtp_angle_r": 3.627
+      },
+      "mtj_outside_paper_range": false,
+      "cop_sole_mm": [
+       138.7,
+       3.2
+      ],
+      "foot_N": 304.01,
+      "heel_pct": 19.2,
+      "arch_midfoot_pct": 31.88,
+      "metatarsal_pct": 37.16,
+      "toes_pct": 11.75,
+      "regions_pct": {
+       "heel_post": 3.93,
+       "heel_med": 7.98,
+       "heel_lat": 7.29,
+       "arch_med": 15.53,
+       "mid_lat_prox": 9.5,
+       "mid_lat_dist": 6.85,
+       "mt1": 10.0,
+       "mt2": 9.99,
+       "mt3": 8.3,
+       "mt4": 5.2,
+       "mt5": 3.67,
+       "toe1": 5.73,
+       "toe2": 2.48,
+       "toe3": 1.72,
+       "toe4": 1.2,
+       "toe5": 0.62
+      },
+      "scale": 0.9979,
+      "posture_outside_model_range": [],
+      "posture_notes": [
+       "knee_angle_r: flexion is negative in this model, sign flipped",
+       "knee_angle_l: flexion is negative in this model, sign flipped"
+      ],
+      "contact": "native",
+      "stiffness_per_sphere": 204915.58743738633,
+      "seconds": 76.5,
+      "reused_from_earlier_run": false
+     },
+     "2.5 mm": {
+      "solved": true,
+      "support_error_pct": -0.034,
+      "ankle_angle_deg": 6.25,
+      "ankle_torque_Nm": -20.84,
+      "foot_angles_deg": {
+       "mtp_angle_r": 3.601
+      },
+      "mtj_outside_paper_range": false,
+      "cop_sole_mm": [
+       138.7,
+       4.1
+      ],
+      "foot_N": 304.01,
+      "heel_pct": 19.61,
+      "arch_midfoot_pct": 30.87,
+      "metatarsal_pct": 37.94,
+      "toes_pct": 11.61,
+      "regions_pct": {
+       "heel_post": 4.11,
+       "heel_med": 7.6,
+       "heel_lat": 7.9,
+       "arch_med": 14.74,
+       "mid_lat_prox": 9.29,
+       "mid_lat_dist": 6.84,
+       "mt1": 9.57,
+       "mt2": 10.44,
+       "mt3": 8.52,
+       "mt4": 5.59,
+       "mt5": 3.82,
+       "toe1": 5.43,
+       "toe2": 2.13,
+       "toe3": 1.85,
+       "toe4": 1.38,
+       "toe5": 0.82
+      },
+      "scale": 0.9979,
+      "posture_outside_model_range": [],
+      "posture_notes": [
+       "knee_angle_r: flexion is negative in this model, sign flipped",
+       "knee_angle_l: flexion is negative in this model, sign flipped"
+      ],
+      "contact": "native",
+      "stiffness_per_sphere": 102817.9688120473,
+      "seconds": 457.2,
+      "reused_from_earlier_run": false
+     }
+    }
+   },
+   "D'Hondt 4-segment ported, midtarsal and MTP free": {
+    "0.45": {
+     "15 mm": {
+      "solved": true,
+      "support_error_pct": -0.034,
+      "ankle_angle_deg": 9.085,
+      "ankle_torque_Nm": -5.34,
+      "foot_angles_deg": {
+       "mtj_angle_r": 0.914,
+       "mtp_angle_r": -0.19
+      },
+      "mtj_outside_paper_range": false,
+      "cop_sole_mm": [
+       83.2,
+       2.4
+      ],
+      "foot_N": 304.01,
+      "heel_pct": 48.66,
+      "arch_midfoot_pct": 34.72,
+      "metatarsal_pct": 12.58,
+      "toes_pct": 4.03,
+      "regions_pct": {
+       "heel_post": 19.33,
+       "heel_med": 14.18,
+       "heel_lat": 15.15,
+       "arch_med": 19.12,
+       "mid_lat_prox": 13.16,
+       "mid_lat_dist": 2.44,
+       "mt1": 3.96,
+       "mt2": 2.49,
+       "mt3": 2.26,
+       "mt4": 1.95,
+       "mt5": 1.92,
+       "toe1": 1.13,
+       "toe2": 0.95,
+       "toe3": 0.89,
+       "toe4": 0.51,
+       "toe5": 0.55
+      },
+      "scale": 0.9979,
+      "posture_outside_model_range": [],
+      "posture_notes": [
+       "knee_angle_r: flexion is negative in this model, sign flipped",
+       "knee_angle_l: flexion is negative in this model, sign flipped"
+      ],
+      "contact": "native",
+      "stiffness_per_sphere": 1639324.6994990907,
+      "seconds": 2.2,
+      "reused_from_earlier_run": false
+     },
+     "10 mm": {
+      "solved": true,
+      "support_error_pct": -0.034,
+      "ankle_angle_deg": 8.667,
+      "ankle_torque_Nm": -5.22,
+      "foot_angles_deg": {
+       "mtj_angle_r": 0.972,
+       "mtp_angle_r": -0.492
+      },
+      "mtj_outside_paper_range": false,
+      "cop_sole_mm": [
+       83.2,
+       2.3
+      ],
+      "foot_N": 304.01,
+      "heel_pct": 53.65,
+      "arch_midfoot_pct": 30.76,
+      "metatarsal_pct": 12.12,
+      "toes_pct": 3.47,
+      "regions_pct": {
+       "heel_post": 14.26,
+       "heel_med": 21.93,
+       "heel_lat": 17.46,
+       "arch_med": 15.89,
+       "mid_lat_prox": 10.46,
+       "mid_lat_dist": 4.41,
+       "mt1": 2.87,
+       "mt2": 3.26,
+       "mt3": 2.87,
+       "mt4": 2.06,
+       "mt5": 1.06,
+       "toe1": 1.05,
+       "toe2": 0.91,
+       "toe3": 0.51,
+       "toe4": 0.49,
+       "toe5": 0.51
+      },
+      "scale": 0.9979,
+      "posture_outside_model_range": [],
+      "posture_notes": [
+       "knee_angle_r: flexion is negative in this model, sign flipped",
+       "knee_angle_l: flexion is negative in this model, sign flipped"
+      ],
+      "contact": "native",
+      "stiffness_per_sphere": 856019.3682491381,
+      "seconds": 5.7,
+      "reused_from_earlier_run": false
+     },
+     "7.5 mm": {
+      "solved": true,
+      "support_error_pct": -0.034,
+      "ankle_angle_deg": 8.81,
+      "ankle_torque_Nm": -5.29,
+      "foot_angles_deg": {
+       "mtj_angle_r": 0.97,
+       "mtp_angle_r": -0.468
+      },
+      "mtj_outside_paper_range": false,
+      "cop_sole_mm": [
+       83.2,
+       2.4
+      ],
+      "foot_N": 304.01,
+      "heel_pct": 52.09,
+      "arch_midfoot_pct": 32.45,
+      "metatarsal_pct": 11.84,
+      "toes_pct": 3.63,
+      "regions_pct": {
+       "heel_post": 15.56,
+       "heel_med": 19.73,
+       "heel_lat": 16.8,
+       "arch_med": 16.29,
+       "mid_lat_prox": 12.15,
+       "mid_lat_dist": 4.01,
+       "mt1": 3.12,
+       "mt2": 2.93,
+       "mt3": 2.89,
+       "mt4": 1.63,
+       "mt5": 1.27,
+       "toe1": 2.04,
+       "toe2": 0.54,
+       "toe3": 0.45,
+       "toe4": 0.33,
+       "toe5": 0.27
+      },
+      "scale": 0.9979,
+      "posture_outside_model_range": [],
+      "posture_notes": [
+       "knee_angle_r: flexion is negative in this model, sign flipped",
+       "knee_angle_l: flexion is negative in this model, sign flipped"
+      ],
+      "contact": "native",
+      "stiffness_per_sphere": 579588.8057912032,
+      "seconds": 8.7,
+      "reused_from_earlier_run": false
+     },
+     "5 mm": {
+      "solved": true,
+      "support_error_pct": -0.034,
+      "ankle_angle_deg": 8.701,
+      "ankle_torque_Nm": -5.26,
+      "foot_angles_deg": {
+       "mtj_angle_r": 0.996,
+       "mtp_angle_r": -0.631
+      },
+      "mtj_outside_paper_range": false,
+      "cop_sole_mm": [
+       83.2,
+       2.2
+      ],
+      "foot_N": 304.01,
+      "heel_pct": 51.88,
+      "arch_midfoot_pct": 32.4,
+      "metatarsal_pct": 12.61,
+      "toes_pct": 3.1,
+      "regions_pct": {
+       "heel_post": 15.37,
+       "heel_med": 19.76,
+       "heel_lat": 16.75,
+       "arch_med": 16.77,
+       "mid_lat_prox": 11.37,
+       "mid_lat_dist": 4.26,
+       "mt1": 3.08,
+       "mt2": 3.54,
+       "mt3": 2.86,
+       "mt4": 1.83,
+       "mt5": 1.3,
+       "toe1": 1.65,
+       "toe2": 0.44,
+       "toe3": 0.52,
+       "toe4": 0.26,
+       "toe5": 0.23
+      },
+      "scale": 0.9979,
+      "posture_outside_model_range": [],
+      "posture_notes": [
+       "knee_angle_r: flexion is negative in this model, sign flipped",
+       "knee_angle_l: flexion is negative in this model, sign flipped"
+      ],
+      "contact": "native",
+      "stiffness_per_sphere": 332977.93567148264,
+      "seconds": 43.4,
+      "reused_from_earlier_run": false
+     },
+     "3.75 mm": {
+      "solved": true,
+      "support_error_pct": -0.034,
+      "ankle_angle_deg": 8.814,
+      "ankle_torque_Nm": -5.32,
+      "foot_angles_deg": {
+       "mtj_angle_r": 0.977,
+       "mtp_angle_r": -0.496
+      },
+      "mtj_outside_paper_range": false,
+      "cop_sole_mm": [
+       83.2,
+       2.4
+      ],
+      "foot_N": 304.01,
+      "heel_pct": 52.68,
+      "arch_midfoot_pct": 31.79,
+      "metatarsal_pct": 12.0,
+      "toes_pct": 3.54,
+      "regions_pct": {
+       "heel_post": 15.31,
+       "heel_med": 19.82,
+       "heel_lat": 17.55,
+       "arch_med": 16.01,
+       "mid_lat_prox": 11.49,
+       "mid_lat_dist": 4.29,
+       "mt1": 3.1,
+       "mt2": 3.33,
+       "mt3": 2.75,
+       "mt4": 1.61,
+       "mt5": 1.21,
+       "toe1": 1.68,
+       "toe2": 0.75,
+       "toe3": 0.53,
+       "toe4": 0.38,
+       "toe5": 0.2
+      },
+      "scale": 0.9979,
+      "posture_outside_model_range": [],
+      "posture_notes": [
+       "knee_angle_r: flexion is negative in this model, sign flipped",
+       "knee_angle_l: flexion is negative in this model, sign flipped"
+      ],
+      "contact": "native",
+      "stiffness_per_sphere": 204915.58743738633,
+      "seconds": 142.6,
+      "reused_from_earlier_run": false
+     },
+     "2.5 mm": {
+      "solved": true,
+      "support_error_pct": -0.034,
+      "ankle_angle_deg": 8.739,
+      "ankle_torque_Nm": -5.31,
+      "foot_angles_deg": {
+       "mtj_angle_r": 1.01,
+       "mtp_angle_r": -0.51
+      },
+      "mtj_outside_paper_range": false,
+      "cop_sole_mm": [
+       83.2,
+       2.8
+      ],
+      "foot_N": 304.01,
+      "heel_pct": 53.17,
+      "arch_midfoot_pct": 30.68,
+      "metatarsal_pct": 12.49,
+      "toes_pct": 3.64,
+      "regions_pct": {
+       "heel_post": 15.66,
+       "heel_med": 18.86,
+       "heel_lat": 18.65,
+       "arch_med": 15.09,
+       "mid_lat_prox": 11.28,
+       "mid_lat_dist": 4.31,
+       "mt1": 3.06,
+       "mt2": 3.54,
+       "mt3": 2.85,
+       "mt4": 1.76,
+       "mt5": 1.28,
+       "toe1": 1.65,
+       "toe2": 0.67,
+       "toe3": 0.59,
+       "toe4": 0.45,
+       "toe5": 0.28
+      },
+      "scale": 0.9979,
+      "posture_outside_model_range": [],
+      "posture_notes": [
+       "knee_angle_r: flexion is negative in this model, sign flipped",
+       "knee_angle_l: flexion is negative in this model, sign flipped"
+      ],
+      "contact": "native",
+      "stiffness_per_sphere": 102817.9688120473,
+      "seconds": 727.1,
+      "reused_from_earlier_run": false
+     }
+    },
+    "0.75": {
+     "15 mm": {
+      "solved": true,
+      "support_error_pct": -0.034,
+      "ankle_angle_deg": 5.275,
+      "ankle_torque_Nm": -20.8,
+      "foot_angles_deg": {
+       "mtj_angle_r": 2.418,
+       "mtp_angle_r": 1.712
+      },
+      "mtj_outside_paper_range": false,
+      "cop_sole_mm": [
+       138.7,
+       4.3
+      ],
+      "foot_N": 304.01,
+      "heel_pct": 15.44,
+      "arch_midfoot_pct": 36.56,
+      "metatarsal_pct": 32.31,
+      "toes_pct": 15.7,
+      "regions_pct": {
+       "heel_post": 3.83,
+       "heel_med": 5.25,
+       "heel_lat": 6.36,
+       "arch_med": 19.84,
+       "mid_lat_prox": 12.74,
+       "mid_lat_dist": 3.98,
+       "mt1": 10.13,
+       "mt2": 6.51,
+       "mt3": 5.81,
+       "mt4": 5.11,
+       "mt5": 4.75,
+       "toe1": 4.45,
+       "toe2": 3.77,
+       "toe3": 3.45,
+       "toe4": 2.03,
+       "toe5": 2.0
+      },
+      "scale": 0.9979,
+      "posture_outside_model_range": [],
+      "posture_notes": [
+       "knee_angle_r: flexion is negative in this model, sign flipped",
+       "knee_angle_l: flexion is negative in this model, sign flipped"
+      ],
+      "contact": "native",
+      "stiffness_per_sphere": 1639324.6994990907,
+      "seconds": 1.5,
+      "reused_from_earlier_run": false
+     },
+     "10 mm": {
+      "solved": true,
+      "support_error_pct": -0.034,
+      "ankle_angle_deg": 4.747,
+      "ankle_torque_Nm": -20.64,
+      "foot_angles_deg": {
+       "mtj_angle_r": 2.642,
+       "mtp_angle_r": 0.272
+      },
+      "mtj_outside_paper_range": false,
+      "cop_sole_mm": [
+       138.7,
+       4.2
+      ],
+      "foot_N": 304.01,
+      "heel_pct": 18.49,
+      "arch_midfoot_pct": 35.57,
+      "metatarsal_pct": 30.78,
+      "toes_pct": 15.15,
+      "regions_pct": {
+       "heel_post": 2.86,
+       "heel_med": 8.57,
+       "heel_lat": 7.06,
+       "arch_med": 18.42,
+       "mid_lat_prox": 10.21,
+       "mid_lat_dist": 6.94,
+       "mt1": 7.58,
+       "mt2": 8.52,
+       "mt3": 6.8,
+       "mt4": 5.17,
+       "mt5": 2.71,
+       "toe1": 4.83,
+       "toe2": 4.12,
+       "toe3": 2.24,
+       "toe4": 2.05,
+       "toe5": 1.91
+      },
+      "scale": 0.9979,
+      "posture_outside_model_range": [],
+      "posture_notes": [
+       "knee_angle_r: flexion is negative in this model, sign flipped",
+       "knee_angle_l: flexion is negative in this model, sign flipped"
+      ],
+      "contact": "native",
+      "stiffness_per_sphere": 856019.3682491381,
+      "seconds": 4.0,
+      "reused_from_earlier_run": false
+     },
+     "7.5 mm": {
+      "solved": true,
+      "support_error_pct": -0.034,
+      "ankle_angle_deg": 4.993,
+      "ankle_torque_Nm": -20.67,
+      "foot_angles_deg": {
+       "mtj_angle_r": 2.614,
+       "mtp_angle_r": 0.387
+      },
+      "mtj_outside_paper_range": false,
+      "cop_sole_mm": [
+       138.7,
+       2.5
+      ],
+      "foot_N": 304.01,
+      "heel_pct": 17.85,
+      "arch_midfoot_pct": 36.79,
+      "metatarsal_pct": 29.81,
+      "toes_pct": 15.54,
+      "regions_pct": {
+       "heel_post": 3.23,
+       "heel_med": 7.76,
+       "heel_lat": 6.86,
+       "arch_med": 18.56,
+       "mid_lat_prox": 11.97,
+       "mid_lat_dist": 6.26,
+       "mt1": 8.35,
+       "mt2": 7.32,
+       "mt3": 7.0,
+       "mt4": 4.1,
+       "mt5": 3.04,
+       "toe1": 8.76,
+       "toe2": 2.47,
+       "toe3": 1.91,
+       "toe4": 1.4,
+       "toe5": 1.0
+      },
+      "scale": 0.9979,
+      "posture_outside_model_range": [],
+      "posture_notes": [
+       "knee_angle_r: flexion is negative in this model, sign flipped",
+       "knee_angle_l: flexion is negative in this model, sign flipped"
+      ],
+      "contact": "native",
+      "stiffness_per_sphere": 579588.8057912032,
+      "seconds": 8.1,
+      "reused_from_earlier_run": false
+     },
+     "5 mm": {
+      "solved": true,
+      "support_error_pct": -0.034,
+      "ankle_angle_deg": 4.817,
+      "ankle_torque_Nm": -20.61,
+      "foot_angles_deg": {
+       "mtj_angle_r": 2.688,
+       "mtp_angle_r": -0.212
+      },
+      "mtj_outside_paper_range": false,
+      "cop_sole_mm": [
+       138.7,
+       2.6
+      ],
+      "foot_N": 304.01,
+      "heel_pct": 17.36,
+      "arch_midfoot_pct": 36.79,
+      "metatarsal_pct": 31.4,
+      "toes_pct": 14.45,
+      "regions_pct": {
+       "heel_post": 3.09,
+       "heel_med": 7.53,
+       "heel_lat": 6.74,
+       "arch_med": 19.21,
+       "mid_lat_prox": 10.98,
+       "mid_lat_dist": 6.6,
+       "mt1": 8.19,
+       "mt2": 8.88,
+       "mt3": 6.83,
+       "mt4": 4.46,
+       "mt5": 3.04,
+       "toe1": 7.93,
+       "toe2": 2.12,
+       "toe3": 2.33,
+       "toe4": 1.17,
+       "toe5": 0.9
+      },
+      "scale": 0.9979,
+      "posture_outside_model_range": [],
+      "posture_notes": [
+       "knee_angle_r: flexion is negative in this model, sign flipped",
+       "knee_angle_l: flexion is negative in this model, sign flipped"
+      ],
+      "contact": "native",
+      "stiffness_per_sphere": 332977.93567148264,
+      "seconds": 26.5,
+      "reused_from_earlier_run": false
+     },
+     "3.75 mm": {
+      "solved": true,
+      "support_error_pct": -0.034,
+      "ankle_angle_deg": 4.979,
+      "ankle_torque_Nm": -20.67,
+      "foot_angles_deg": {
+       "mtj_angle_r": 2.62,
+       "mtp_angle_r": 0.314
+      },
+      "mtj_outside_paper_range": false,
+      "cop_sole_mm": [
+       138.7,
+       2.4
+      ],
+      "foot_N": 304.01,
+      "heel_pct": 17.97,
+      "arch_midfoot_pct": 36.59,
+      "metatarsal_pct": 30.08,
+      "toes_pct": 15.36,
+      "regions_pct": {
+       "heel_post": 3.15,
+       "heel_med": 7.77,
+       "heel_lat": 7.05,
+       "arch_med": 18.7,
+       "mid_lat_prox": 11.19,
+       "mid_lat_dist": 6.7,
+       "mt1": 8.34,
+       "mt2": 8.24,
+       "mt3": 6.65,
+       "mt4": 4.0,
+       "mt5": 2.85,
+       "toe1": 7.5,
+       "toe2": 3.3,
+       "toe3": 2.25,
+       "toe4": 1.54,
+       "toe5": 0.77
+      },
+      "scale": 0.9979,
+      "posture_outside_model_range": [],
+      "posture_notes": [
+       "knee_angle_r: flexion is negative in this model, sign flipped",
+       "knee_angle_l: flexion is negative in this model, sign flipped"
+      ],
+      "contact": "native",
+      "stiffness_per_sphere": 204915.58743738633,
+      "seconds": 105.5,
+      "reused_from_earlier_run": false
+     },
+     "2.5 mm": {
+      "solved": true,
+      "support_error_pct": -0.034,
+      "ankle_angle_deg": 4.965,
+      "ankle_torque_Nm": -20.69,
+      "foot_angles_deg": {
+       "mtj_angle_r": 2.65,
+       "mtp_angle_r": 0.255
+      },
+      "mtj_outside_paper_range": false,
+      "cop_sole_mm": [
+       138.7,
+       3.2
+      ],
+      "foot_N": 304.01,
+      "heel_pct": 18.39,
+      "arch_midfoot_pct": 35.59,
+      "metatarsal_pct": 30.75,
+      "toes_pct": 15.27,
+      "regions_pct": {
+       "heel_post": 3.3,
+       "heel_med": 7.39,
+       "heel_lat": 7.7,
+       "arch_med": 17.87,
+       "mid_lat_prox": 11.01,
+       "mid_lat_dist": 6.71,
+       "mt1": 8.04,
+       "mt2": 8.63,
+       "mt3": 6.81,
+       "mt4": 4.3,
+       "mt5": 2.97,
+       "toe1": 7.12,
+       "toe2": 2.86,
+       "toe3": 2.47,
+       "toe4": 1.8,
+       "toe5": 1.02
+      },
+      "scale": 0.9979,
+      "posture_outside_model_range": [],
+      "posture_notes": [
+       "knee_angle_r: flexion is negative in this model, sign flipped",
+       "knee_angle_l: flexion is negative in this model, sign flipped"
+      ],
+      "contact": "native",
+      "stiffness_per_sphere": 102817.9688120473,
+      "seconds": 564.9,
+      "reused_from_earlier_run": false
+     }
+    }
+   }
+  }
+ },
+ "spacing_soles": {
+  "15 mm": {
+   "sole_r": {
+    "path": "sim/EU42_R_636645a928.sole_sim.json",
+    "sha256": "dbf4be9cfb1d5689abec1227e01ada14bbf957f1cc67f90ddea7343bab2d0170"
+   },
+   "sole_l": {
+    "path": "sim/EU42_L_40fe8e1d0c.sole_sim.json",
+    "sha256": "99d777069ed8b83c7965128ecb615c22d77a7c1621d57afc383b54c3d69b09e9"
+   }
+  },
+  "10 mm": {
+   "sole_r": {
+    "path": "sim/spacing/10mm/EU42_R_636645a928.sole_sim.json",
+    "sha256": "51b8b66ae72b41ffa1176041dc9a6d375568fc52b83614e0e00790d0796ae722"
+   },
+   "sole_l": {
+    "path": "sim/spacing/10mm/EU42_L_40fe8e1d0c.sole_sim.json",
+    "sha256": "5511e53fa46ad695a23d17c7fcb12f7ccdffe2cc83f48bacc9e77422b62d9a1f"
+   }
+  },
+  "7.5 mm": {
+   "sole_r": {
+    "path": "sim/spacing/7.5mm/EU42_R_636645a928.sole_sim.json",
+    "sha256": "1e2e930e8910f6af054dfdaebf0cf489f805bd18fa9053a4e1cc83bffd8b25d0"
+   },
+   "sole_l": {
+    "path": "sim/spacing/7.5mm/EU42_L_40fe8e1d0c.sole_sim.json",
+    "sha256": "a5ccd9a16e45b7344853337c39975c0df70630c7ecb19060797afc196cbfea3f"
+   }
+  },
+  "5 mm": {
+   "sole_r": {
+    "path": "sim/spacing/5mm/EU42_R_636645a928.sole_sim.json",
+    "sha256": "b0f2fde533591de0011f6d05b4aed2435e799f8f46adfd89aefe2f762f764722"
+   },
+   "sole_l": {
+    "path": "sim/spacing/5mm/EU42_L_40fe8e1d0c.sole_sim.json",
+    "sha256": "fb32645eca324f823446e06700c1f6c6de501621663540aa2490015177842eac"
+   }
+  },
+  "3.75 mm": {
+   "sole_r": {
+    "path": "sim/spacing/3.75mm/EU42_R_636645a928.sole_sim.json",
+    "sha256": "0f537548a4a3207a6e8169f28c051a5bd605000ace7b2ff3b1db528ba7de13f4"
+   },
+   "sole_l": {
+    "path": "sim/spacing/3.75mm/EU42_L_40fe8e1d0c.sole_sim.json",
+    "sha256": "fc5f98ccd0c9c88154f711d12dfb64fb0314486b33a277567e6b204738654c5d"
+   }
+  },
+  "2.5 mm": {
+   "sole_r": {
+    "path": "sim/spacing/2.5mm/EU42_R_636645a928.sole_sim.json",
+    "sha256": "4c6d168a5ebb1dfea13efd7e0c939998388d2bb8445f7a06aa9a4839b445f5c2"
+   },
+   "sole_l": {
+    "path": "sim/spacing/2.5mm/EU42_L_40fe8e1d0c.sole_sim.json",
+    "sha256": "e14289720b7a6e0f7b6bab6711b94639ce5622c988635de46ce7548b9079603a"
+   }
+  }
+ },
+ "run": {
+  "cases": 96,
+  "reused_from_earlier_run": 0,
+  "computed": 96,
+  "jobs": 22,
+  "wall_seconds": 815.5,
+  "case_folders": "named by a fingerprint of inputs, parameters, code and versions (foot_models/case_store.py)",
+  "opensim_logs": "opensim_logs/20261105-203838-30220"
+ }
+}

@@ -183,26 +183,33 @@ Shares of one foot's load (right; left is the mirror): **heel / arch and midfoot
 Foot angles (ported): midtarsal up to 2.4°, MTP up to 1.8°. The `.osim`-only foot has no MTP passive torque, and
 its MTP extends to −2.3° at a centre of pressure of 0.30.
 
-**5.3 Discretisation sensitivity** (contact spacing 15, 10, 7.5 and 5 mm). This is the sensitivity to one
-modelling choice. **It is not a confidence interval and not the total uncertainty.** With the assumed contact,
-absolute shares changed:
-- by up to 7.9 points from 15 to 10 mm;
-- by up to 2.5 points from 10 to 7.5 mm;
-- by up to 3.4 points from 7.5 to 5 mm.
+**5.3 Discretisation sensitivity** (contact spacing 15, 10, 7.5, 5, 3.75 and 2.5 mm). This is a **discretisation
+sensitivity, not a confidence interval or the total uncertainty**: the sensitivity to one modelling choice. Largest
+change between successive spacings, in percentage points, from the results' two-decimal values (absolute shares
+of all four models at both centres of pressure):
 
-They are not converged. Paired differences (two models, same spacing and centre of pressure), heel / arch /
-metatarsals / toes in percentage points, at 15 / 10 / 7.5 / 5 mm:
+| Step | Absolute shares, assumed contact | Absolute shares, native contact | Paired differences (table below) |
+|---|---|---|---|
+| 15 → 10 mm | 8.06 | 5.88 | 4.31 |
+| 10 → 7.5 mm | 2.63 | 2.35 | 1.05 |
+| 7.5 → 5 mm | 3.45 | 3.12 | 2.42 |
+| 5 → 3.75 mm | 2.70 | 2.78 | 2.22 |
+| 3.75 → 2.5 mm | 1.67 | 1.39 | 0.89 |
 
-| Difference | Contact | COP | 15 mm | 10 mm | 7.5 mm | 5 mm |
-|---|---|---|---|---|---|---|
-| 4-segment, midtarsal and MTP free, minus rigid | assumed | 0.45 | −3.0/+5.8/−2.6/−0.2 | −3.1/+6.2/−2.8/−0.3 | −3.2/+6.2/−2.5/−0.5 | −3.2/+6.3/−2.9/−0.2 |
-| | assumed | 0.75 | −13.9/+20.3/+2.1/−8.5 | −14.1/+22.3/−2.0/−6.2 | −14.1/+22.1/−1.1/−6.8 | −13.4/+21.9/−3.5/−5.0 |
-| | native | 0.45 | −1.5/+2.7/−0.6/−0.6 | −1.0/+2.1/−0.8/−0.3 | −1.1/+2.3/−0.8/−0.3 | −1.1/+2.2/−1.0/−0.2 |
-| | native | 0.75 | −5.2/+6.2/+4.6/−5.5 | −4.0/+5.8/+1.3/−3.0 | −4.1/+5.9/+1.2/−3.0 | −3.7/+5.8/−0.1/−2.0 |
-| 3-segment, MTP free, minus rigid | assumed | 0.75 | −6.7/+2.5/+18.9/−14.6 | −6.1/+3.9/+14.6/−12.3 | −6.3/+3.7/+15.6/−13.0 | −5.4/+3.2/+13.2/−11.0 |
-| | native | 0.75 | −3.6/+1.3/+10.5/−8.1 | −2.8/+1.2/+8.4/−6.8 | −2.8/+1.2/+8.3/−6.6 | −2.4/+0.8/+7.4/−5.8 |
-| Two-segment minus D'Hondt, both rigid | assumed | 0.45 | −0.0/+0.1/−0.0/−0.0 | −0.2/+0.2/−0.0/−0.1 | −0.1/+0.2/−0.0/−0.1 | −0.1/+0.2/+0.0/−0.1 |
-| | native | 0.45 | −4.4/+7.8/−1.2/−2.3 | −3.0/+5.5/−1.0/−1.5 | −3.5/+6.4/−1.2/−1.8 | −3.1/+5.8/−1.3/−1.4 |
+Until 2026-11-05 this section gave 7.9, 2.5 and 3.4 points for the first three steps. Those were the two-segment
+model's changes alone; the D'Hondt rigid and 3-segment feet changed slightly more. Paired differences (two
+models, same spacing and centre of pressure), heel / arch / metatarsals / toes in percentage points:
+
+| Difference | Contact | COP | 15 mm | 10 mm | 7.5 mm | 5 mm | 3.75 mm | 2.5 mm |
+|---|---|---|---|---|---|---|---|---|
+| 4-segment, midtarsal and MTP free, minus rigid | assumed | 0.45 | −3.0/+5.8/−2.6/−0.2 | −3.1/+6.2/−2.8/−0.3 | −3.2/+6.2/−2.5/−0.5 | −3.2/+6.3/−2.9/−0.2 | −3.1/+6.2/−2.7/−0.3 | −3.3/+6.6/−2.9/−0.4 |
+| | assumed | 0.75 | −13.9/+20.3/+2.1/−8.5 | −14.1/+22.3/−2.0/−6.2 | −14.1/+22.1/−1.1/−6.8 | −13.4/+21.9/−3.5/−5.0 | −14.1/+22.3/−1.4/−6.8 | −14.5/+23.2/−1.9/−6.7 |
+| | native | 0.45 | −1.5/+2.7/−0.6/−0.6 | −1.0/+2.1/−0.8/−0.3 | −1.1/+2.3/−0.8/−0.3 | −1.1/+2.2/−1.0/−0.2 | −1.1/+2.2/−0.8/−0.3 | −1.1/+2.2/−0.9/−0.3 |
+| | native | 0.75 | −5.2/+6.2/+4.6/−5.5 | −4.0/+5.8/+1.3/−3.0 | −4.1/+5.9/+1.2/−3.0 | −3.7/+5.8/−0.1/−2.0 | −4.1/+5.9/+1.1/−3.0 | −4.1/+5.9/+1.1/−2.9 |
+| 3-segment, MTP free, minus rigid | assumed | 0.75 | −6.7/+2.5/+18.9/−14.6 | −6.1/+3.9/+14.6/−12.3 | −6.3/+3.7/+15.6/−13.0 | −5.4/+3.2/+13.2/−11.0 | −6.4/+3.8/+15.4/−12.8 | −6.4/+3.8/+15.4/−12.8 |
+| | native | 0.75 | −3.6/+1.3/+10.5/−8.1 | −2.8/+1.2/+8.4/−6.8 | −2.8/+1.2/+8.3/−6.6 | −2.4/+0.8/+7.4/−5.8 | −2.9/+1.2/+8.2/−6.6 | −2.9/+1.2/+8.3/−6.6 |
+| Two-segment minus D'Hondt, both rigid | assumed | 0.45 | −0.0/+0.1/−0.0/−0.0 | −0.2/+0.2/−0.0/−0.1 | −0.1/+0.2/−0.0/−0.1 | −0.1/+0.2/+0.0/−0.1 | −0.1/+0.3/−0.0/−0.1 | −0.2/+0.3/−0.0/−0.1 |
+| | native | 0.45 | −4.4/+7.8/−1.2/−2.3 | −3.0/+5.5/−1.0/−1.5 | −3.5/+6.4/−1.2/−1.8 | −3.1/+5.8/−1.3/−1.4 | −3.4/+6.3/−1.2/−1.7 | −3.2/+6.0/−1.1/−1.7 |
 
 **Convergence criterion for finer spacings** (written on 2026-11-05, before the 3.75 and 2.5 mm runs, and not to
 be changed after them): “Converged: the largest change between the two finest spacings is at most 1.0
@@ -218,6 +225,35 @@ tuned to make it pass. How it is evaluated, also fixed before the runs:
 - **Shrinking:** the largest change over all 96 quantities is strictly smaller at each step than at the step
   before, over the steps 7.5 → 5, 5 → 3.75 and 3.75 → 2.5 mm. Counted from 15 mm, it already fails before any new
   run: 8.06, 2.63, then 3.45 points.
+
+**Verdict: not converged** (96 runs on the lab laptop, 2026-11-05; `foot_models/results_spacing_2026-11-05.json`).
+- **At most 1.0 point at the finest step: not met.** From 3.75 to 2.5 mm, 14 of the 64 absolute shares changed by
+  more than 1.00 point, all of them arch-and-midfoot shares. The largest was 1.67 (assumed contact, rigid feet,
+  centre of pressure 0.45), and 1.39 with native contact. The paired differences stayed within it: largest 0.89.
+- **Shrinking: met.** The largest change fell from 3.45 to 2.78 to 1.67 points.
+- **No extrapolated value.** Individual shares do not settle steadily: 51 of the 96 quantities change more at some
+  step from 7.5 mm on than at the step before. The rigid feet's arch share at 0.45 (assumed contact), for one,
+  moved 0.2 points from 5 to 3.75 mm, then 1.67 from 3.75 to 2.5 mm.
+- **Checks:** all 96 runs solved, support within 0.034 % of body weight at every spacing, and no midtarsal angle
+  left the paper's range. The 64 runs at 15–5 mm reproduced `results_2026-11-04.json` in every field
+  (`foot_models/compare_results.py`).
+- This is about the contact grid only; it does not rank or select a foot model.
+
+**Run time per case** (lab laptop, Intel Core Ultra 9 290HX Plus; wall time):
+
+| Spacing | Contact points per foot | 22 cases at once: median (range) | One case alone |
+|---|---|---|---|
+| 15 mm | 55 | 1.3 s (0.6–2.2) | 1.3 s |
+| 10 mm | 129 | 2.7 s (1.7–5.7) | 3.6 s |
+| 7.5 mm | 220 | 5.7 s (3.7–12.1) | 8.6 s |
+| 5 mm | 469 | 23.6 s (14.7–43.4) | 20.5 s |
+| 3.75 mm | 880 | 78 s (56–178) | 110 s |
+| 2.5 mm | 2,148 | 438 s (377–727) | 632 s |
+
+"One case alone" is the D'Hondt 4-segment foot with midtarsal and MTP free, assumed contact, centre of pressure
+0.45, with nothing else running; its result was identical to the parallel run's at every spacing. From 5 to 2.5 mm
+the contact points grow 4.6-fold and the time about 30-fold. These are quasi-static solves; a Moco run evaluates
+the contact many more times.
 
 **5.4 Sensitivity** (largest change in any group, percentage points, against each case's assumed-contact
 baseline at 15 mm):
@@ -297,7 +333,7 @@ values.
 ## 7. What the results show, and what they do not
 
 Within these simulations only, and for a passive foot with a prescribed centre of pressure:
-- **Directions consistent across both contact models and all four spacings:**
+- **Directions consistent across both contact models and all six spacings (15 to 2.5 mm):**
   - freeing D'Hondt's midtarsal joint moves load from the heel onto the arch;
   - freeing the MTP joint moves load from the toes onto the metatarsals.
 - **Sizes depend strongly on the contact model.** At a centre of pressure of 0.75, the arch share rises by +20 to
@@ -319,7 +355,7 @@ Within these simulations only, and for a passive foot with a prescribed centre o
 - **Contact:**
   - the assumed law is a stated assumption, not a measurement;
   - Hertz spheres on a rigid floor;
-  - not converged in spacing (5.3);
+  - not converged in spacing, down to 2.5 mm (5.3);
   - no sole, footbed or shoe compliance;
   - native contact differs from it by up to 14 points (5.4).
 - **Passive below the ankle:** no muscle supports the arch or holds the toes. The ankle torque is a single
@@ -344,7 +380,8 @@ Within these simulations only, and for a passive foot with a prescribed centre o
    - foot–insole contact.
 2. **Replace the assumed contact law** with the sole's measured response once the coupon test exists. Keep the
    assumed law as the comparison's reference.
-3. **Converge the contact spacing** (5 mm or finer) before quoting absolute shares.
+3. **Converge the contact spacing** before quoting absolute shares. Not reached at 2.5 mm (5.3), where one
+   case already takes 6–12 minutes.
 4. **A muscle-driven tracking simulation** (OpenSim Moco) of the squat on the D'Hondt port, reported separately
    from this passive control.
 5. **Synergy foot:** per-toe placement in the adapter, a contact model, and a measured foot to register on.
@@ -358,7 +395,7 @@ Within these simulations only, and for a passive foot with a prescribed centre o
 - **Test record:** `TEST_RUNS.md` lists which tests ran and which skipped in each environment, and why. Several
   need the external models, or CasADi, and skip without them.
 - **Results:** `foot_models/results_2026-11-04.json` holds the summary of all 244 runs that the tables here
-  come from.
+  come from. `foot_models/results_spacing_2026-11-05.json` holds the 96 runs at six spacings behind 5.3.
 - **On another machine:** `workstation/setup.sh` fetches every external input at its pinned commit and checks it
   against `PROVENANCE.json`. It rebuilds the two-segment model from the pipeline at the recorded commit, and
   `workstation/run_comparison.sh` then runs the comparison (`workstation/README.md`). The rebuilt model's bytes
@@ -369,8 +406,10 @@ Within these simulations only, and for a passive foot with a prescribed centre o
   version (`foot_models/case_store.py`). A rerun after an interruption reuses finished cases, never across a
   change to any of these. `--jobs N` runs cases in parallel. A run killed partway and resumed, with three
   workers, reproduced the 32 controlled-loading cases of the results file in every field.
-- **Soles at other spacings** are committed in `sim/spacing/`. Regenerating the EU 42 R board and exporting it at
-  15 and 5 mm reproduced the committed files byte for byte.
+- **Soles at other spacings** are committed in `sim/spacing/` (10, 7.5, 5, 3.75 and 2.5 mm). Regenerating the EU 42
+  R board and exporting it at 15 and 5 mm reproduced the committed files byte for byte, and the 3.75 and 2.5 mm
+  soles were made the same way on the same machine. On the lab laptop the regenerated boards had other design
+  hashes, so the deployed maps refused them (`PROVENANCE.json`, `soles`).
 
 ```
 # the pipeline's Python (opensim, numpy, scipy)
