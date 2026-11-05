@@ -31,32 +31,58 @@ example folder has no force-plate data. An earlier pipeline output in the scratc
 holds **estimated** forces: its own record says "quasi-static double stance".
 
 **What can be compared, and how:**
-1. **Quasi-static (first).** For each subject, take the measured kinematics, put the pipeline's model in the
-   posture, and use the posture-based balance task (`compare_feet.py`).
+1. **Quasi-static (first).** For each subject, take the measured kinematics, put the model in the posture, and
+   solve quasi-static double support.
    - Compare the model's centre of pressure and vertical force with the force plates during quiet standing and
      the slowest part of the squat, where acceleration is small.
-   - This tests the body model's centre of mass and the quasi-static assumption.
-   - The centre of pressure is set by the centre of mass, so this does **not** test the sole's contact model.
+   - This tests the body model's centre of mass and the quasi-static assumption. The left/right split also
+     depends on the frontal-plane posture and on how the feet's contact shares the load.
+   - The total centre of pressure is set by the centre of mass, so the forward–backward check does **not** test
+     the sole's contact model.
+   - **New code is needed.** `compare_feet.py`'s posture-based task mirrors the right side onto the left and puts
+     each foot's centre of pressure under the centre of mass, so it cannot test the left/right split. A
+     double-support version that uses the full measured posture has to be written. It must be tested on the
+     dataset's kinematics alone, before any force data is opened.
 2. **Dynamic (second, separate).** A muscle-driven tracking simulation (OpenSim Moco) of the squat and
    sit-to-stand, with the sole as the foot contact. The predicted ground force and centre of pressure over time
    are compared with the force plates. This is a different experiment from the passive, prescribed-COP control
    in `FOOT_MODELS.md`, and it will be reported separately.
 
-**Metrics and thresholds,** to be agreed before any data is opened (proposed values):
+**Metrics and thresholds.** The quasi-static thresholds were **agreed on 2026-11-05, before any data was
+downloaded or opened**, as a first attempt. They may be revised only before the force data is opened; a revision
+after that is reported as one, beside the original result.
 
-| Metric | Proposed threshold |
-|---|---|
-| Vertical force, quasi-static phases, RMS error | ≤ 5 % of body weight |
-| Centre of pressure, forward–backward, RMS error | ≤ 10 % of foot length (heel-to-toe marker distance) |
-| Left/right share of vertical force, RMS error | ≤ 5 percentage points |
-| Dynamic simulation, peak vertical force, error | ≤ 10 % of body weight |
-| Dynamic simulation, centre-of-pressure path, RMS error | ≤ 15 % of foot length |
+| Metric | Threshold | Status |
+|---|---|---|
+| Vertical force, quasi-static phases, RMS error | ≤ 5 % of body weight | Agreed |
+| Centre of pressure, forward–backward, RMS error | ≤ 10 % of foot length (heel-to-toe marker distance) | Agreed |
+| Left/right share of vertical force, RMS error | ≤ 5 percentage points | Agreed |
+| Dynamic simulation, peak vertical force, error | ≤ 10 % of body weight | Proposed; to be agreed before the dynamic experiment |
+| Dynamic simulation, centre-of-pressure path, RMS error | ≤ 15 % of foot length | Proposed; to be agreed before the dynamic experiment |
+
+**How the quasi-static metrics are evaluated.** Written on 2026-11-05 with the thresholds, before any data was
+opened:
+- **Trials:** quiet-standing trials, if the dataset has them, and squats. Sit-to-stand is left out of the
+  quasi-static check, because the chair carries part of the weight.
+- **Quasi-static frames:** chosen from the kinematics alone, never from the forces. These are frames where the
+  whole-body centre of mass, from the dataset's inverse kinematics and the subject's model, accelerates at less
+  than 0.1 m/s² (positions low-pass filtered at 6 Hz), in stretches of at least 0.2 s.
+- **Model:** each subject's scaled model from the dataset, as distributed, with the virtual sole and the assumed
+  contact (v1). If the adapter refuses that model, stop and report; no workaround without the owner's decision.
+- **Foot length:** the heel-to-toe marker distance in the subject's static trial. The marker names are taken from
+  the dataset's documentation.
+- **Left/right share:** evaluated only in trials where each foot is on its own plate.
+- **Per subject:** each metric is the RMS error over all of that subject's quasi-static frames.
+- **Pass rule:** a metric passes only if every subject is within its threshold. Each subject's value, the median
+  and the range are reported, whether it passes or not.
+- **Nothing is fitted** to the measured forces, so every subject is a test subject. If any parameter is later
+  fitted, the subjects are split before that, and the fitted ones are reported apart.
 
 **Protocol:**
-- Subjects split before any tuning; nothing tuned on the test subjects.
 - Every result names the dataset version and file hashes, the pipeline commit and the contact model (assumed v1
   or native).
 - A result outside a threshold is reported as such, not re-tuned until it passes.
+- The downloaded data stays on the workstation, outside the repository. Only aggregate results are committed.
 
 **Practical:**
 - The 2.9 GB download did not fit in the working environment used on 2026-11-04 (about 1.1 GB free). The lab
