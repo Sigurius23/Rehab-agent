@@ -217,9 +217,19 @@
           - The machine is recorded (CPU, cores, memory, GPU, OS, every package version), and every suite runs
             with its outcomes recorded.
         - **The two-segment model:** it is now rebuilt from the pipeline at commit 33aeb49, which reproduces the
-          recorded file byte for byte. Today's pipeline gives the same geometry, joints and contact spheres but
-          body masses and inertias about 3 % higher, so it is a different model. This is now in
-          PROVENANCE.json.
+          recorded file byte for byte on the machine that recorded it. Today's pipeline gives the same geometry,
+          joints and contact spheres but body masses and inertias about 3 % higher, so it is a different model.
+          This is now in PROVENANCE.json.
+          - **Finding (2026-11-05):** the rebuilt file depends on the machine. On a laptop without AVX-512 its
+            sha256 differed, though it was the same on every build there. All 244 comparison results still matched
+            `results_2026-11-04.json` in every field (reported from the laptop).
+            - **One cause:** OpenBLAS's CPU-specific kernel. Forcing another kernel changed the file on both
+              machines.
+            - **What moved:** fitted marker positions, by up to 0.8 mm, and muscle lengths in the last digit.
+              Masses, inertias, geometry, joints and contact spheres were identical.
+            - **A second cause, not identified:** with the laptop's kernel forced here, this machine gives a third
+              file. Thread count and numpy's own AVX-512 routines changed nothing.
+            `setup.sh` reports such a hash without stopping, and PROVENANCE.json records both machines' tests.
         - **Resumable comparison** (`foot_models/case_store.py`, `run_comparison.py`):
           - each case's folder is named from a fingerprint of its inputs, parameters, code and tool versions;
           - a case counts as done only when its completion record, written last and atomically, matches;

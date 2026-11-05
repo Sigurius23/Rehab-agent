@@ -345,8 +345,11 @@ Within these simulations only, and for a passive foot with a prescribed centre o
 - **Results:** `foot_models/results_2026-11-04.json` holds the summary of all 244 runs that the tables here
   come from.
 - **On another machine:** `workstation/setup.sh` fetches every external input at its pinned commit and checks it
-  against `PROVENANCE.json`. It rebuilds the two-segment model from the pipeline at the recorded commit.
-  `workstation/run_comparison.sh` then runs the comparison (`workstation/README.md`).
+  against `PROVENANCE.json`. It rebuilds the two-segment model from the pipeline at the recorded commit, and
+  `workstation/run_comparison.sh` then runs the comparison (`workstation/README.md`). The rebuilt model's bytes
+  depend on the machine, so its hash can differ from the recorded one. The differences are in the fitted marker
+  positions and the last digit of muscle lengths, which the comparison does not use. On a laptop without
+  AVX-512 the hash differed, and all 244 runs still matched the results file in every field.
 - **Resumable runs:** each case's folder is named from a fingerprint of its inputs, parameters, code and OpenSim
   version (`foot_models/case_store.py`). A rerun after an interruption reuses finished cases, never across a
   change to any of these. `--jobs N` runs cases in parallel. A run killed partway and resumed, with three

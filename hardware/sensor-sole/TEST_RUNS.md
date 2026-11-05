@@ -39,7 +39,10 @@ suites run there.
 | KiCad 7.0.11's Python (pcbnew), script-style check | `test_verify_drc.py` | 1 | 0 | 0 | 0 | — |
 
 **The same suites through `workstation/setup.sh tests`.** Inputs fetched by `fetch_inputs.py`, and the self-test
-model rebuilt at commit 33aeb49. Run on this machine, they gave the same outcome for every test.
+model rebuilt at commit 33aeb49. Run on this machine, they gave the same outcome for every test. On a laptop
+without AVX-512 (Intel Core Ultra 9 290HX Plus, Ubuntu 26.04.1, 2026-11-05), where the rebuilt model's hash
+differs (`PROVENANCE.json`, `two_segment`), every suite passed. Skipped there: the cases that need the other
+environment's packages, the slow generator cases, and the KiCad checks (KiCad not installed).
 
 ## What this means for the D'Hondt port
 

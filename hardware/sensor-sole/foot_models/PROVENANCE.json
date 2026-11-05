@@ -55,7 +55,26 @@
   "model": "the pipeline's self-test output, opensim/model_scaled.osim (python -m rehabtwin selftest <dir>; synthetic squat)",
   "sha256": "b124c3cfc8940d3e93d9837621c3d69dc90221c3e509dd40be673b7730b4fc26",
   "pipeline_commit": "33aeb49d7f1f0f1bc6360e8c84ebed73cfcd09b0",
-  "reproduced": "pipeline/ and schemas/ of this repository at pipeline_commit, with Pose2Sim at the upstream commit below, give this file byte for byte (python -m rehabtwin selftest; checked 2026-11-04, OpenSim 4.6, numpy 2.5.4). The current pipeline gives the same geometry, joints and contact spheres but different body masses and inertias (about 3 % heavier), so it is not this model. workstation/setup.sh builds it from pipeline_commit.",
+  "reproduced": "pipeline/ and schemas/ of this repository at pipeline_commit, with Pose2Sim at the upstream commit below, gave this file byte for byte on the machine that recorded it (python -m rehabtwin selftest; checked 2026-11-04, OpenSim 4.6, numpy 2.5.4). The file depends on the machine. OpenBLAS's CPU-specific kernel is one cause (kernel tests on both machines below); a second, not identified, remains, since the laptop's kernel forced on the recording machine gives a third file. Only fitted marker positions and the last digit of muscle lengths differ in any case compared. On one machine it is the same on every build. The current pipeline gives the same geometry, joints and contact spheres but different body masses and inertias (about 3 % heavier), so it is not this model. workstation/setup.sh builds it from pipeline_commit and reports a sha256 other than this one without stopping; whether the comparison's results match results_2026-11-04.json is what counts.",
+  "kernel_test_on_the_recording_machine": {
+   "checked": "2026-11-05",
+   "machine": "Intel(R) Xeon(R) Processor @ 2.10GHz (AVX-512; numpy finds X86_V4), Ubuntu with glibc 2.39",
+   "environment": "Python 3.13.16, OpenSim 4.6, numpy 2.5.4 (OpenBLAS 0.3.34.106.0), scipy 1.18.1",
+   "haswell": "with OPENBLAS_CORETYPE=Haswell: 794d669f543aded3938f9a95136dd447312af23bf61495ba7ab2c929be367866, the same on two builds, with numpy's AVX-512 paths disabled (NPY_DISABLE_CPU_FEATURES) and with one thread",
+   "against_recorded": "105 marker locations differ (up to 0.77 mm) and 28 optimal fibre and tendon slack lengths by at most 2.2e-16 m; body masses, inertias, geometry, joints and contact spheres are identical",
+   "conclusion": "the OpenBLAS kernel changes the file, but the laptop's Haswell build (e0898ca7...) differs from this one, so a further machine difference (not threads, not numpy's own SIMD dispatch) also changes it; not identified"
+  },
+  "rebuilt_elsewhere": [
+   {
+    "sha256": "e0898ca7ba6a380235a981ba5f49a88a4ced64fbfc179ccd7a501f9b53d7a958",
+    "checked": "2026-11-05",
+    "machine": "Intel(R) Core(TM) Ultra 9 290HX Plus (no AVX-512; OpenBLAS kernel Haswell), Ubuntu 26.04.1",
+    "environment": "Python 3.13.16, OpenSim 4.6, numpy 2.5.4 (scipy-openblas 0.3.34.106.0), scipy 1.18.1",
+    "same_on": "three builds: workstation/setup.sh, a second build, and one with OMP_NUM_THREADS, OPENBLAS_NUM_THREADS and MKL_NUM_THREADS set to 1",
+    "kernel_test": "with OPENBLAS_CORETYPE=Sandybridge the same machine gives 1238112f550d8024b41e58d32f30c11888ca613b619bfc3f04a284fa7ab83b4f. Against the Haswell build, 105 marker locations differ (up to 0.79 mm) and 41 muscle fibre and tendon lengths by at most 2.2e-16 m; body masses, inertias, geometry, joints and contact spheres are identical",
+    "comparison": "workstation/run_comparison.sh with this model: all 244 result rows equal results_2026-11-04.json in every field except seconds"
+   }
+  ],
   "upstream": {
    "repository": "https://github.com/perfanalytics/pose2sim",
    "commit": "084d822d7b97165508cbcbaf77296a9a0f6a23a0",

@@ -37,8 +37,13 @@ workstation/setup.sh
 2. **Inputs** (`fetch_inputs.py`). D'Hondt's models and saved function, the Synergy model, OpenCap's squat and
    Pose2Sim's model files are fetched at their pinned commits. Every file is checked against
    `foot_models/PROVENANCE.json`, and **any mismatch stops the setup.** The two-segment foot is then rebuilt with
-   the pipeline as it was at commit 33aeb49. That reproduces the recorded model byte for byte; today's pipeline
-   would make the body about 3 % heavier.
+   the pipeline as it was at commit 33aeb49; today's pipeline would make the body about 3 % heavier. On one
+   machine the rebuild gives the same file every time, but not on every machine. OpenBLAS's CPU-specific kernels
+   are one cause; a second has not been identified. Only the marker positions the self-test fits (by up to
+   0.8 mm) and the last digit of muscle lengths move, and the comparison uses neither. A sha256 other than the
+   recorded one is therefore reported, not treated as an error. What counts is whether the
+   comparison's results match `foot_models/results_2026-11-04.json`. `PROVENANCE.json` (`two_segment`) lists the
+   machines checked so far.
 3. **Machine record** (`machine.json`): CPU, cores, memory, GPU, OS and every package version. Results from this
    machine are tied to it.
 4. **Tests** (`test_runs/`): every suite in its environment, with what ran and what was skipped.

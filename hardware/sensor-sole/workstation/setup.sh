@@ -98,7 +98,8 @@ step_inputs() {
     echo "two-segment model: matches the recorded sha256"
   else
     echo "two-segment model: sha256 $got differs from the recorded $want."
-    echo "  Runs record the hash they used, and their two-segment results are not the recorded comparison's."
+    echo "  Expected on another machine (foot_models/PROVENANCE.json, two_segment). Runs record the hash they used."
+    echo "  Check that the comparison's results match foot_models/results_2026-11-04.json before relying on them."
   fi
   printf 'export SELFTEST_MODEL=%q\n' "$model" >> "$DATA/inputs/inputs.env"
 }
