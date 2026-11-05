@@ -46,7 +46,8 @@ workstation/setup.sh
    machines checked so far.
 3. **Machine record** (`machine.json`): CPU, cores, memory, GPU, OS and every package version. Results from this
    machine are tied to it.
-4. **Tests** (`test_runs/`): every suite in its environment, with what ran and what was skipped.
+4. **Tests** (`test_runs/`): every suite in its environment, with what ran and what was skipped. The suites
+   run from `test_runs/`, so OpenSim's log lands there (`opensim.log`).
    `setup.sh tests --slow` adds the slow generator cases and the KiCad negative controls, which take minutes per
    case.
 
@@ -61,6 +62,14 @@ JOBS=8 workstation/run_comparison.sh
 ```
 
 - **Output:** `~/rehab-agent-data/sensor-sole/runs/comparison/summary.json`, plus one folder per case.
+  OpenSim's log goes to `opensim_logs/` there: a folder per run, a file per process (`main.log`,
+  `worker-<pid>.log`). Nothing is written where the run was started. Old log folders can be deleted.
+- **Results check:** after a full run (no `--only`, no `SPACING_SOLES`), `foot_models/compare_results.py`
+  compares every case, field by field, with `foot_models/results_2026-11-04.json`, ignoring `seconds` and
+  `reused_from_earlier_run`. It names each changed, missing or extra case. Input hashes that differ, such as the
+  rebuilt two-segment model's, are listed as information. The check is printed and does not change the run's
+  exit code. By hand (exit 1 on any difference):
+  `python3 foot_models/compare_results.py ~/rehab-agent-data/sensor-sole/runs/comparison/summary.json`.
 - **Interruptions:** if the run is cut short (laptop closed, shut down, terminal closed), run the same command
   again. Finished cases are reused; only unfinished ones run again.
 - **When results are reused:** only for exactly the same inputs, parameters, code and OpenSim version. Changing

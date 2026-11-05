@@ -146,7 +146,8 @@ step_tests() {
   run() {   # config name, python, modules...
     local name=$1 py=$2; shift 2
     echo "  $name: $*"
-    (cd "$SOLE/tests" && "$py" run_suites.py "$@" 2> "$rec/$name.log" | tail -1 > "$rec/$name.json") \
+    # run from the record folder, so OpenSim's opensim.log lands there and not in the repository
+    (cd "$rec" && "$py" "$SOLE/tests/run_suites.py" "$@" 2> "$rec/$name.log" | tail -1 > "$rec/$name.json") \
       || echo "setup: $name did not finish (see $rec/$name.log)" >&2
   }
   run sim "$SIM_PY" test_sim_osim test_dhondt_port test_foot_comparison test_case_store
@@ -156,7 +157,7 @@ step_tests() {
   else
     run generator "$GEN_PY" test_sim_print test_generator_regressions
   fi
-  run system python3 test_channel_map test_case_store
+  run system python3 test_channel_map test_case_store test_compare_results
   script() {   # config name, python, script: a script-style check, recorded by its exit code
     local name=$1 py=$2 file=$3 code=0
     echo "  $name: $file (script)"

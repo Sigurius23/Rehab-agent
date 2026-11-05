@@ -242,6 +242,16 @@
           regenerated boards the same way.
         - `tests/run_suites.py` now reports a module with no unittest cases as an error instead of an empty pass.
           The KiCad checks are script-style, so `setup.sh` runs them as scripts and records their exit codes.
+        - **Results checker** (2026-11-05; `foot_models/compare_results.py`, standard library). It compares a
+          run's `summary.json` with `results_2026-11-04.json` case by case and field by field, ignoring `seconds`
+          and `reused_from_earlier_run`. It fails on any changed value, missing case or extra case and names each;
+          input hashes that differ are information. `run_comparison.sh` runs it after a full run, without failing
+          the run. `tests/test_compare_results.py` (9 cases) holds the negative controls. On the laptop, 244 of
+          244 cases match.
+        - **OpenSim's log** (2026-11-05): the comparison left a 6 MB `opensim.log` in the folder it was started
+          from. Each process now logs to its own file under `--out/opensim_logs/<start time>-<pid>/`, and
+          `setup.sh tests` runs the suites from `test_runs/`, so their log lands there. The case fingerprints are
+          unchanged: a rerun reused all 244 cases.
     - **Printed prototype** (`PRINTED.md`, `sole_print.py`). A TPU carrier is built from the same design:
       - underside wire channels along the routing plan;
       - a floor with one hole per region;

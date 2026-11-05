@@ -36,6 +36,8 @@ suites run there.
 | Generator Python (shapely 2.2.0), fast cases | `test_generator_regressions.py` | 8 | 3 | 0 | 0 | set SOLE_SLOW_TESTS=1 (minutes per test) |
 | System Python 3 (as CI runs it) | `test_channel_map.py` | 10 | 0 | 0 | 0 | — |
 | System Python 3 (as CI runs it) | `test_case_store.py` | 11 | 0 | 0 | 0 | — |
+| System Python 3.14.6, the laptop below, 2026-11-05 | `test_compare_results.py` | 9 | 0 | 0 | 0 | — |
+| Pipeline Python (OpenSim 4.6), the laptop below, 2026-11-05 | `test_compare_results.py` | 9 | 0 | 0 | 0 | — |
 | KiCad 7.0.11's Python (pcbnew), script-style check | `test_verify_drc.py` | 1 | 0 | 0 | 0 | — |
 
 **The same suites through `workstation/setup.sh tests`.** Inputs fetched by `fetch_inputs.py`, and the self-test
@@ -43,6 +45,11 @@ model rebuilt at commit 33aeb49. Run on this machine, they gave the same outcome
 without AVX-512 (Intel Core Ultra 9 290HX Plus, Ubuntu 26.04.1, 2026-11-05), where the rebuilt model's hash
 differs (`PROVENANCE.json`, `two_segment`), every suite passed. Skipped there: the cases that need the other
 environment's packages, the slow generator cases, and the KiCad checks (KiCad not installed).
+
+**`test_compare_results.py`** (the results checker, added 2026-11-05) has so far run only on that laptop: under
+the system Python through `setup.sh tests`, and under the pipeline Python directly. Its negative controls were
+checked against two deliberately broken checkers, one blind to changed values and one blind to missing and
+extra cases; the matching tests failed. CI does not run it.
 
 ## What this means for the D'Hondt port
 

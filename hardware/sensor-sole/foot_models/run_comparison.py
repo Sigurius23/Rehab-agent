@@ -23,6 +23,9 @@ tool versions, and is marked done only when it finished (foot_models/case_store.
 after an interruption and finished cases are reused; nothing is reused once an input, the code or the OpenSim
 version changes. --no-resume recomputes everything. --jobs N runs N cases at once, in separate processes.
 
+OpenSim's log goes to --out/opensim_logs/<start time>-<pid>/, one file per process (main.log, worker-<pid>.log),
+instead of opensim.log in the working directory. OpenSim still prints to the terminal as before.
+
 Inputs are named on the command line; none of the models or kinematics are in this repository:
   --selftest   the pipeline's scaled self-test model (two-segment foot, calcn + toes)
   --dhondt     folder with DHondt_2024_3-segment_foot_fixed_knee.osim and DHondt_2024_4-segment_foot_fixed_knee.osim
@@ -38,6 +41,7 @@ workstation/fetch_inputs.py fetches the external files at their pinned commits a
 import argparse
 import hashlib
 import json
+import os
 import platform
 import sys
 import time
@@ -92,6 +96,21 @@ def execute(spec):
     return spec["id"], s
 
 
+def log_opensim_to(path):
+    """Send this process's OpenSim log to `path` instead of opensim.log in the working directory. OpenSim opens
+    that file at its first message, so call this before anything is logged. Each process needs its own file:
+    processes appending to one file at once would interleave."""
+    import opensim
+    Path(path).parent.mkdir(parents=True, exist_ok=True)
+    opensim.Logger.removeFileSink()
+    opensim.Logger.addFileSink(str(path))
+
+
+def _worker_start(log_dir):
+    """Runs once in each worker process, before its first case."""
+    log_opensim_to(Path(log_dir) / f"worker-{os.getpid()}.log")
+
+
 def put(tree, path, value):
     for k in path[:-1]:
         tree = tree.setdefault(k, {})
@@ -110,6 +129,9 @@ def main():
     a = ap.parse_args()
     want = lambda g: a.only is None or g in a.only
     out = Path(a.out); out.mkdir(parents=True, exist_ok=True)
+    # this run's OpenSim log, one file per process; the folder name keeps runs (even simultaneous ones) apart
+    log_dir = out / "opensim_logs" / f"{time.strftime('%Y%m%d-%H%M%S')}-{os.getpid()}"
+    log_opensim_to(log_dir / "main.log")
     nominal = Path(a.dhondt)
     ported = {}
     for kind in ("3", "4"):
@@ -247,9 +269,13 @@ def main():
             collect(*execute(spec))
     else:
         # spawn: each worker starts its own interpreter and OpenSim; fork after OpenSim has loaded is not safe
-        with ProcessPoolExecutor(max_workers=a.jobs, mp_context=get_context("spawn")) as pool:
+        with ProcessPoolExecutor(max_workers=a.jobs, mp_context=get_context("spawn"),
+                                 initializer=_worker_start, initargs=(str(log_dir),)) as pool:
             for fut in as_completed([pool.submit(execute, spec) for spec, _ in plan]):
                 collect(*fut.result())
+        for f in log_dir.glob("worker-*.log"):    # the workers have exited; drop the logs of those that said nothing
+            if f.stat().st_size == 0:
+                f.unlink()
     for i, (spec, slots) in enumerate(plan):
         for slot, *_ in slots:
             put(summary, slot, rows[i])
@@ -257,8 +283,10 @@ def main():
     summary["run"] = dict(cases=len(plan), reused_from_earlier_run=reused, computed=len(plan) - reused, jobs=a.jobs,
                           wall_seconds=round(time.time() - t0, 1),
                           case_folders="named by a fingerprint of inputs, parameters, code and versions "
-                                       "(foot_models/case_store.py)")
+                                       "(foot_models/case_store.py)",
+                          opensim_logs=str(log_dir.relative_to(out)))
     (out / "summary.json").write_text(json.dumps(summary, indent=1) + "\n")
+    print(f"OpenSim's log: {log_dir}", flush=True)
     print(f"done: {len(plan) - reused} computed, {reused} reused, {summary['run']['wall_seconds']} s", flush=True)
 
 
