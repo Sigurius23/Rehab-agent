@@ -1,0 +1,27 @@
+{
+ "what": "Settings log of the dynamic comparison (VALIDATION_PLAN.md, amendment 4). A change is allowed only to reach convergence, judged by convergence and kinematic tracking error alone, never by force data; it applies to both arms.",
+ "versions": [
+  {
+   "version": 1,
+   "date": "2026-11-06",
+   "settings": {
+    "filter_hz": 6.0,
+    "mesh_interval_s": 0.04,
+    "states_tracking_weight": 10.0,
+    "control_effort_weight": 1.0,
+    "reserve_optimal_force_Nm_or_N": 1.0,
+    "active_force_width_scale": 1.5,
+    "convergence_tolerance": 0.01,
+    "constraint_tolerance": 0.001,
+    "max_iterations": 3000,
+    "transcription": "hermite-simpson",
+    "untracked": [
+     "knee_angle_r_beta",
+     "knee_angle_l_beta"
+    ]
+   },
+   "reason": "initial settings, before any solve (Moco's tracking-example defaults: DeGrooteFregly muscles, rigid tendons, 6 Hz filter; mesh 0.04 s; tolerances 1e-2/1e-3)",
+   "judged_by": "none yet"
+  }
+ ]
+}
