@@ -30,9 +30,9 @@ make the roll several times stiffer than gravity's tipping moment, so that equil
 
 At rest the smooth contact model has no friction, so the horizontal position and heading do not matter and stay as
 measured. Solved, not simulated: the equilibrium is found by damped Newton, and its stability is not claimed. The
-Newton starts in stages (pelvis height for support, then the roll by a bracketed search, then all four unknowns): a
-start with one foot barely touching otherwise ended on another root or in the air (found 2026-11-06 on OpenCap
-LabValidation's kinematics alone).
+Newton starts in stages (pelvis height for support; the roll by a bracketed search; height and ankles; then all four
+unknowns): a start with one foot barely touching otherwise ended on another root or in the air, and some frames
+stalled with the pressure on the forefoot (found 2026-11-06 on OpenCap LabValidation's kinematics alone).
 
 Quasi-static frames (the plan's rule, kinematics only): frames where the whole-body centre of mass, computed from the
 inverse kinematics with the subject's model, accelerates at less than 0.1 m/s^2, in stretches of at least 0.2 s. The
@@ -361,7 +361,9 @@ class DoubleSupport:
         #   2. the roll is balanced by a bracketed one-dimensional search over the list, between its bounds, with the
         #      height re-solved for support at each list (rolling to one side loads that foot, so the roll moment
         #      changes sign across the bracket);
-        #   3. all four unknowns are solved together from there.
+        #   3. the height and both ankles, for support and each foot's forward balance, with the roll held (added
+        #      2026-11-06 on the static trials: without it, a few frames stalled with the pressure on the forefoot);
+        #   4. all four unknowns together from there.
         # Only the path to the solution changes; the equations, unknowns and bounds do not.
         from scipy.optimize import brentq
         it = nfev = 0
@@ -384,6 +386,8 @@ class DoubleSupport:
             v = brentq(roll, lo[1], hi[1], xtol=1e-9)
             roll(v)
             x = at[v]
+        x, _, k, calls = newton(x, (0, 2, 3), 50)
+        it += k; nfev += calls
         x, r, k, calls = newton(x, (0, 1, 2, 3), 100)
         it += k; nfev += calls
         r = resid(x)

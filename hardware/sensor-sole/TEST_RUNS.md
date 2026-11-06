@@ -41,6 +41,7 @@ suites run there.
 | Pipeline Python (OpenSim 4.6), the laptop below, 2026-11-06 | `test_double_support.py` | 16 | 0 | 0 | 0 | — |
 | Pipeline Python (OpenSim 4.6), the laptop below, 2026-11-06 | `test_opencap_contacts.py` | 5 | 1 | 0 | 0 | needs OPENCAP_UTILS (opencap-processing's utilsProcessing.py at 72b5416) |
 | Pipeline Python (OpenSim 4.6), the laptop below, 2026-11-06, OPENCAP_UTILS set | `test_opencap_contacts.py` | 6 | 0 | 0 | 0 | — |
+| Pipeline Python (OpenSim 4.6), the laptop below, 2026-11-06 | `test_static_ik.py` | 5 | 0 | 0 | 0 | — |
 | Generator Python (shapely 2.2.0), slow cases, the laptop below, 2026-11-06 | `test_generator_regressions.py` | 10 | 0 | 1 | 0 | — |
 | KiCad 7.0.11's Python (pcbnew), script-style check | `test_verify_drc.py` | 1 | 0 | 0 | 0 | — |
 
@@ -63,7 +64,15 @@ versions, and the matching tests failed each time:
 - a case store that never reuses (the resume test);
 - a run that skips the inverse-kinematics hash check (the refusal test);
 - the solver as committed in 5e2fa9c, before the staged start (the test with one foot off the floor).
+The solver's third stage (height and ankles, with the roll held) was added for 14 static frames of one subject that
+stalled with the pressure on the forefoot. No self-test case reproduces that stall, so no test covers that stage on
+its own. It is checked by every one of the 6,142 dataset frames solving, with the same answer as before wherever the
+earlier version had solved.
 CI does not run it.
+
+**`test_static_ik.py`** (added 2026-11-06) needs no OpenSim. Its negative controls were checked against a builder
+that carries unknown template elements over and one that ignores the reference marker list; the matching tests
+failed.
 
 **`test_opencap_contacts.py`** (OpenCap's contact-sphere rule, added 2026-11-06) has also run only on that laptop.
 - Its comparison with OpenCap's own function needs `OPENCAP_UTILS`: opencap-processing's `utilsProcessing.py` at

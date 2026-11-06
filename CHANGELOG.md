@@ -301,6 +301,27 @@
             - A new test, from a start with one foot off the floor, fails on the earlier solver.
           - Subjects 2, 4 and 11 have no quasi-static frames, so their models were checked on each trial's stillest
             0.2 s instead. All 120 of those frames solve. They are not evaluated.
+          - **Amendment 2 to the plan** (2026-11-06; the owner's decision, before any force data was opened).
+            - The forward–backward centre of pressure is evaluated combined over both feet, as a fraction of the mean
+              foot length. The model puts each foot's under the centre of mass by convention, so per-foot values are
+              not evaluated.
+            - Quiet standing is added. Each subject's `static1` gets inverse kinematics from its markers, with the
+              dataset's squat settings.
+            - Separate force channels per foot are taken to mean that each foot stood on its own plate.
+            - Subjects without frames are reported as not evaluated.
+          - `foot_models/static_ik.py` keeps only the template's settings and refuses anything it does not know.
+            The four medial knee and ankle markers are switched off, because the squat recordings lack them.
+            - Rerun on each subject's squat, it reproduces the dataset's inverse kinematics: the same RMS marker error
+              (to 0.002 mm), the centre of mass within 0.6 mm, leg and trunk joints within 3.2°.
+            - The frame rule is sensitive to these sub-millimetre differences: the squat frame counts change in 6 of
+              10 subjects. The squats keep the dataset's own inverse kinematics.
+            - `tests/test_static_ik.py` has 5 cases.
+          - **Frames:** 6,142 quasi-static frames: 5,797 from `static1` and 345 from the squats. Every subject now
+            has frames; subjects 2, 4 and 11 had none.
+          - **Solve:** a third stage (height and ankles, roll held) fixes 14 frames of subject 5's standing trial
+            that had stalled with the pressure on the forefoot. All 6,142 frames solve with support equal to body
+            weight, and frames solved before are unchanged to 0.001 N. The prediction hashes in
+            `forceplate_frames_2026-11-06.json` are updated.
     - **Printed prototype** (`PRINTED.md`, `sole_print.py`). A TPU carrier is built from the same design:
       - underside wire channels along the routing plan;
       - a floor with one hole per region;

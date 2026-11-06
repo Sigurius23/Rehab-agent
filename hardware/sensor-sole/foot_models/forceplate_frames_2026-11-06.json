@@ -1,5 +1,5 @@
 {
- "what": "Phase 1 of VALIDATION_PLAN.md stage A, kinematics only (2026-11-06): the quasi-static frames, chosen from the kinematics alone, and the checks of the model on them. No force, EMG or inverse-dynamics file was read.",
+ "what": "Phase 1 of VALIDATION_PLAN.md stage A, kinematics only (2026-11-06): the quasi-static frames, chosen from the kinematics alone, and the checks of the model on them. No force, EMG or inverse-dynamics result was read.",
  "dataset": {
   "name": "OpenCap LabValidation, without videos",
   "release": "v0.1 (SimTK, file dated 2022-12-20)",
@@ -18,19 +18,25 @@
   "acceleration": "norm of the 3-D centre-of-mass acceleration, central differences of the filtered positions",
   "min_stretch_s": 0.2
  },
- "code": "foot_models/double_support.py frames (committed in 5e2fa9c; the frame code is unchanged since)",
- "model": "OpenSimData/Mocap/Model/LaiArnoldModified2017_poly_withArms_weldHand_scaled.osim as distributed, with foot contact spheres added by OpenCap's own rule (VALIDATION_PLAN.md, amendment 1; foot_models/opencap_contacts.py). The frames were chosen with the distributed model; the spheres add no mass, so its centre of mass is unchanged.",
+ "code": "foot_models/double_support.py frames and solve; foot_models/static_ik.py; foot_models/opencap_contacts.py (this commit)",
+ "model": "OpenSimData/Mocap/Model/LaiArnoldModified2017_poly_withArms_weldHand_scaled.osim as distributed, with foot contact spheres added by OpenCap's own rule (VALIDATION_PLAN.md, amendment 1). The frames were chosen with the distributed model; the spheres add no mass, so its centre of mass is unchanged.",
  "trials": {
-  "evaluated": [
-   "squats1",
-   "squatsAsym1"
-  ],
+  "evaluated": {
+   "squats1, squatsAsym1": "the dataset's inverse kinematics",
+   "static1": "quiet standing; our inverse kinematics from its markers, with the dataset's squat settings (amendment 2)"
+  },
   "left_out": {
    "STS1, STSweakLegs1": "sit-to-stand, excluded by the plan (the chair carries part of the weight)",
-   "static1": "standing trial with force data, but the dataset has no inverse kinematics for it (only the scale tool's one-row pose); not evaluated under the plan's frame rule without the owner's decision",
    "DJ*, walking*": "not quasi-static tasks"
   }
  },
+ "static_ik": {
+  "code": "foot_models/static_ik.py",
+  "template": "each subject's OpenSimData/Mocap/IK/squats1_setup_ik.xml; the task set, weights, accuracy and constraint weight are identical in all 20 squat setups",
+  "markers": "43 marker tasks applied. r_mknee, r_mankle, L_mknee and L_mankle are switched off: the static trials have them but the squat recordings do not, so the squats' inverse kinematics never used them",
+  "reproduction_check": "the same code and settings rerun on each subject's squats1 markers reproduce the dataset's squats1 inverse kinematics: RMS marker error equal to within 0.002 mm, pelvis translations within 1.2 mm, centre of mass within 0.6 mm, leg and trunk coordinates within 3.2 degrees; forearm pronation, which the markers barely fix, differs by up to 18 degrees. The frame rule is sensitive to those sub-millimetre differences: the squats' frame counts change in 6 of 10 subjects (squat_ik_reproduction). The squats keep the dataset's own inverse kinematics."
+ },
+ "metrics": "VALIDATION_PLAN.md, amendment 2: forward-backward centre of pressure combined over both feet, along the model's forward axis, as a fraction of the mean foot length; per-foot forward values are not evaluated (the model puts each foot's under the centre of mass by convention); subjects without frames are reported as not evaluated",
  "markers": {
   "heel": [
    "r_calc",
@@ -44,7 +50,8 @@
   "foot_length": "mean distance over the whole static trial (static1.trc, 100 Hz, 265 to 800 frames by subject), per foot"
  },
  "plates": {
-  "finding": "in all 20 squat inverse-dynamics setups, the force channels R_ground_* are applied to calcn_r and L_ground_* to calcn_l (separate channels per foot)",
+  "finding": "in all 20 squat inverse-dynamics setups, the force channels R_ground_* are applied to calcn_r and L_ground_* to calcn_l",
+  "rule": "taken as each foot on its own plate (amendment 2)",
   "documentation": "Uhlrich et al. 2023: three in-ground Bertec plates at 2000 Hz; whether each foot stood on its own plate is not stated",
   "read": "the ExternalLoads setup files only (names of channels and bodies); no force values"
  },
@@ -53,16 +60,23 @@
   "amended_models": "accepted, all 10; the sole (EU 42, assumed contact v1) replaces the 6 OpenCap spheres per foot with 55",
   "opencap_function_check": "opencap-processing utilsProcessing.generate_model_with_contacts at 72b5416 (file sha256 a79b727811ae41330b0f5a58bacf0bb6550bf1cccab74fbad7f1bdbcf05b9d13), run on each subject's model in the layout it expects, patella masses unchanged: the same 12 spheres, half-space, contact parameters and body masses in all 10 (locations to 1e-9 m)"
  },
+ "solve": {
+  "code": "foot_models/double_support.py solve, staged start (this commit)",
+  "contact": "assumed sole contact v1",
+  "soles": "sim/EU42_R_636645a928.sole_sim.json, sim/EU42_L_40fe8e1d0c.sole_sim.json",
+  "note": "kinematics only; support should equal body weight. double_support_sha256 pins each subject's model predictions before any force data is opened (the file stays on the workstation)"
+ },
  "totals": {
   "subjects": 10,
-  "quasi_static_frames": 345,
-  "subjects_without_frames": [
-   "subject2",
-   "subject4",
-   "subject11"
-  ],
-  "solved": 345,
-  "solved_of": 345
+  "quasi_static_frames": {
+   "squats1": 287,
+   "squatsAsym1": 58,
+   "static1": 5797,
+   "all": 6142
+  },
+  "subjects_without_frames": [],
+  "solved": 6142,
+  "solved_of": 6142
  },
  "subjects": {
   "subject2": {
@@ -73,24 +87,72 @@
      "frames": 801,
      "frame_interval_s": 0.01,
      "quasi_static_frames": 0,
-     "stretches_s": []
+     "stretches_s": [],
+     "solved": 0,
+     "max_abs_support_error_pct": null,
+     "frames_at_bounds": 0,
+     "max_abs_adjustment": null,
+     "inverse_kinematics": "the dataset's (OpenSimData/Mocap/IK)"
     },
     "squatsAsym1.mot": {
      "ik_sha256": "e1cf6240bdb5d142ce45a99cd8e1990fe2767829f9c050b2d7e9dea7b6cf6428",
      "frames": 901,
      "frame_interval_s": 0.01,
      "quasi_static_frames": 0,
-     "stretches_s": []
+     "stretches_s": [],
+     "solved": 0,
+     "max_abs_support_error_pct": null,
+     "frames_at_bounds": 0,
+     "max_abs_adjustment": null,
+     "inverse_kinematics": "the dataset's (OpenSimData/Mocap/IK)"
+    },
+    "static1.mot": {
+     "ik_sha256": "190263dc277ccc7d18cb3284c02e23f97046b806e314f34b4cfa013ac5b3290d",
+     "frames": 800,
+     "frame_interval_s": 0.01,
+     "quasi_static_frames": 800,
+     "stretches_s": [
+      [
+       0.0,
+       7.99,
+       800
+      ]
+     ],
+     "solved": 800,
+     "max_abs_support_error_pct": 0.0,
+     "frames_at_bounds": 0,
+     "max_abs_adjustment": {
+      "pelvis_ty_mm": 11.38,
+      "pelvis_list_deg": 0.4225,
+      "ankle_angle_r_deg": 0.8047,
+      "ankle_angle_l_deg": 1.3813
+     },
+     "inverse_kinematics": {
+      "source": "ours (amendment 2): foot_models/static_ik.py",
+      "template_sha256": "455301a1e7038265167805683f778d9bf0eafb1c3497f12f388fd385a235eed2",
+      "markers_sha256": "432b721e3d1b371e28478e384e47ed4e32181769ee78a06587f1c616e4827c1d",
+      "marker_tasks_applied": 43,
+      "switched_off": [
+       "r_mknee",
+       "r_mankle",
+       "L_mknee",
+       "L_mankle"
+      ],
+      "opensim": "4.6",
+      "rms_marker_error_mean_mm": 10.12,
+      "max_marker_error_mm": 36.9
+     }
     }
    },
-   "quasi_static_frames": 0,
+   "quasi_static_frames": 800,
+   "quasi_static_frames_before_static1": 0,
    "foot_length_mm": {
     "R": 236.26,
     "L": 240.3,
+    "mean": 238.28,
     "static_trial_frames": 800,
     "static_trial_sha256": "432b721e3d1b371e28478e384e47ed4e32181769ee78a06587f1c616e4827c1d"
    },
-   "adapter": "refused: no contact spheres on calcn_r: cannot find the heel and the plantar plane",
    "model_with_contacts": {
     "sha256": "0b4f3b0480a2aba7c6db1d7247d766361f5d5c0039873971a80458b1832a9d5e",
     "foot_geometry_scale": 1.167592,
@@ -113,48 +175,24 @@
     "sole_bend_line_from_z_deg": -13.2,
     "sole_points_on_calcn_distal_of_toe_axis": 9,
     "sole_points_on_toes_proximal_of_toe_axis": 0,
-    "sole_points_within_5mm_of_toe_axis": 2,
-    "left_same_as_right": false
+    "sole_points_within_5mm_of_toe_axis": 2
    },
-   "solve": {
-    "body_weight_N": 766.88,
-    "frames": 0,
-    "solved": 0,
-    "max_abs_support_error_pct": null,
-    "frames_at_bounds": 0,
-    "max_abs_adjustment": null,
-    "double_support_sha256": "58fc93e31798d7630d5bb7e801e43474b579bcf5bd22bdf0c1824961a868fdea"
+   "squat_ik_reproduction": {
+    "rms_marker_error_mean_mm_ours_dataset": [
+     14.01,
+     14.009
+    ],
+    "max_pelvis_translation_diff_mm": 0.851,
+    "max_com_diff_mm": 0.397,
+    "max_leg_trunk_coordinate_diff_deg": 1.467,
+    "max_coordinate_diff_deg": 8.402,
+    "worst_coordinate": "pro_sup_r",
+    "squats1_quasi_static_frames_ours_dataset": [
+     0,
+     0
+    ]
    },
-   "model_check_frames": {
-    "body_weight_N": 766.88,
-    "frames": 40,
-    "solved": 40,
-    "max_abs_support_error_pct": 0.0001,
-    "frames_at_bounds": 0,
-    "max_abs_adjustment": {
-     "pelvis_ty_mm": 13.023,
-     "pelvis_list_deg": 0.9362,
-     "ankle_angle_r_deg": 5.0124,
-     "ankle_angle_l_deg": 5.3118
-    },
-    "note": "not quasi-static by the plan's rule and not evaluated: each trial's 0.2 s window with the smallest peak centre-of-mass acceleration, solved only to check the model",
-    "windows": {
-     "squats1.mot": {
-      "stretch_s": [
-       0.0,
-       0.19
-      ],
-      "peak_acceleration_m_s2": 0.2091
-     },
-     "squatsAsym1.mot": {
-      "stretch_s": [
-       5.8,
-       5.99
-      ],
-      "peak_acceleration_m_s2": 0.3827
-     }
-    }
-   }
+   "double_support_sha256": "47a5c870b10b9bf2483fca8b64608a39d1e36af88d35d791bd1d5e933cd1dad5"
   },
   "subject3": {
    "model_sha256": "7ed1d53f182e3f4992669468172a1f64ca158d200fdb090fdbfd4ee0b5819c73",
@@ -170,24 +208,77 @@
        4.87,
        20
       ]
-     ]
+     ],
+     "solved": 20,
+     "max_abs_support_error_pct": 0.0,
+     "frames_at_bounds": 0,
+     "max_abs_adjustment": {
+      "pelvis_ty_mm": 2.507,
+      "pelvis_list_deg": 0.1135,
+      "ankle_angle_r_deg": 1.5381,
+      "ankle_angle_l_deg": 2.4233
+     },
+     "inverse_kinematics": "the dataset's (OpenSimData/Mocap/IK)"
     },
     "squatsAsym1.mot": {
      "ik_sha256": "ba09085995327de85add297d3ae1175eb634b2fc8b311337b2f801dd7a024d5c",
      "frames": 1280,
      "frame_interval_s": 0.01,
      "quasi_static_frames": 0,
-     "stretches_s": []
+     "stretches_s": [],
+     "solved": 0,
+     "max_abs_support_error_pct": null,
+     "frames_at_bounds": 0,
+     "max_abs_adjustment": null,
+     "inverse_kinematics": "the dataset's (OpenSimData/Mocap/IK)"
+    },
+    "static1.mot": {
+     "ik_sha256": "bf1cadf3bd3ecf6300d2ba0ded0030749274314dea048585201aff4579339e88",
+     "frames": 679,
+     "frame_interval_s": 0.01,
+     "quasi_static_frames": 674,
+     "stretches_s": [
+      [
+       0.0,
+       6.73,
+       674
+      ]
+     ],
+     "solved": 674,
+     "max_abs_support_error_pct": 0.0001,
+     "frames_at_bounds": 0,
+     "max_abs_adjustment": {
+      "pelvis_ty_mm": 3.57,
+      "pelvis_list_deg": 0.7069,
+      "ankle_angle_r_deg": 3.2542,
+      "ankle_angle_l_deg": 2.5877
+     },
+     "inverse_kinematics": {
+      "source": "ours (amendment 2): foot_models/static_ik.py",
+      "template_sha256": "b3830207dbc09626844f5c8287846dd97be39f06caeaccff144eb625694c98d1",
+      "markers_sha256": "816a0080ebefc10dae7207faa46db7cd1d6cd37cc1d387c97babc07e6f834a36",
+      "marker_tasks_applied": 43,
+      "switched_off": [
+       "r_mknee",
+       "r_mankle",
+       "L_mknee",
+       "L_mankle"
+      ],
+      "opensim": "4.6",
+      "rms_marker_error_mean_mm": 8.16,
+      "max_marker_error_mm": 30.9
+     }
     }
    },
-   "quasi_static_frames": 20,
+   "quasi_static_frames": 694,
+   "quasi_static_frames_before_static1": 20,
    "foot_length_mm": {
     "R": 201.26,
     "L": 202.43,
+    "mean": 201.84,
     "static_trial_frames": 679,
     "static_trial_sha256": "816a0080ebefc10dae7207faa46db7cd1d6cd37cc1d387c97babc07e6f834a36"
    },
-   "adapter": "refused: no contact spheres on calcn_r: cannot find the heel and the plantar plane",
    "model_with_contacts": {
     "sha256": "9c516593d3652659006321921009cf4a170d030e42b09587bff0f8792f4a76a4",
     "foot_geometry_scale": 0.967128,
@@ -210,23 +301,24 @@
     "sole_bend_line_from_z_deg": -13.2,
     "sole_points_on_calcn_distal_of_toe_axis": 9,
     "sole_points_on_toes_proximal_of_toe_axis": 0,
-    "sole_points_within_5mm_of_toe_axis": 3,
-    "left_same_as_right": false
+    "sole_points_within_5mm_of_toe_axis": 3
    },
-   "solve": {
-    "body_weight_N": 622.722,
-    "frames": 20,
-    "solved": 20,
-    "max_abs_support_error_pct": 0.0,
-    "frames_at_bounds": 0,
-    "max_abs_adjustment": {
-     "pelvis_ty_mm": 2.507,
-     "pelvis_list_deg": 0.1135,
-     "ankle_angle_r_deg": 1.5381,
-     "ankle_angle_l_deg": 2.4233
-    },
-    "double_support_sha256": "2ca5c78a6188d95728848ea5a1a4da6239a3bd8691af81542d082cfa209a793b"
-   }
+   "squat_ik_reproduction": {
+    "rms_marker_error_mean_mm_ours_dataset": [
+     11.662,
+     11.661
+    ],
+    "max_pelvis_translation_diff_mm": 0.859,
+    "max_com_diff_mm": 0.195,
+    "max_leg_trunk_coordinate_diff_deg": 2.075,
+    "max_coordinate_diff_deg": 16.519,
+    "worst_coordinate": "pro_sup_r",
+    "squats1_quasi_static_frames_ours_dataset": [
+     41,
+     20
+    ]
+   },
+   "double_support_sha256": "fa41ef5b435869efcb1158a47ce6643838f0d2fc70e4ac6724eced09b220b7ea"
   },
   "subject4": {
    "model_sha256": "68df5986180d4399b47c693f469b5ca9d4114997fca8ee8e76ab9cffe6bf14a6",
@@ -236,24 +328,72 @@
      "frames": 1346,
      "frame_interval_s": 0.01,
      "quasi_static_frames": 0,
-     "stretches_s": []
+     "stretches_s": [],
+     "solved": 0,
+     "max_abs_support_error_pct": null,
+     "frames_at_bounds": 0,
+     "max_abs_adjustment": null,
+     "inverse_kinematics": "the dataset's (OpenSimData/Mocap/IK)"
     },
     "squatsAsym1.mot": {
      "ik_sha256": "ea85e7762a72f579f483477bc31e049486c404388b9c3494238cfe91154630e9",
      "frames": 1338,
      "frame_interval_s": 0.01,
      "quasi_static_frames": 0,
-     "stretches_s": []
+     "stretches_s": [],
+     "solved": 0,
+     "max_abs_support_error_pct": null,
+     "frames_at_bounds": 0,
+     "max_abs_adjustment": null,
+     "inverse_kinematics": "the dataset's (OpenSimData/Mocap/IK)"
+    },
+    "static1.mot": {
+     "ik_sha256": "174555816b7092efb98cff5bf2d2cd3f56a6fc5aa1bb5f6d8957b96a4a311c7b",
+     "frames": 517,
+     "frame_interval_s": 0.01,
+     "quasi_static_frames": 517,
+     "stretches_s": [
+      [
+       0.0,
+       5.16,
+       517
+      ]
+     ],
+     "solved": 517,
+     "max_abs_support_error_pct": 0.0,
+     "frames_at_bounds": 0,
+     "max_abs_adjustment": {
+      "pelvis_ty_mm": 4.116,
+      "pelvis_list_deg": 1.1555,
+      "ankle_angle_r_deg": 2.875,
+      "ankle_angle_l_deg": 2.6864
+     },
+     "inverse_kinematics": {
+      "source": "ours (amendment 2): foot_models/static_ik.py",
+      "template_sha256": "3348973942a53c6649e451fbe2f9b2f8dada55169af9944e04d2b8fdd01cc258",
+      "markers_sha256": "0d943428f71cbd22a70a80573c644a40e1b9dec0bf32f328d2df82f342e6ef92",
+      "marker_tasks_applied": 43,
+      "switched_off": [
+       "r_mknee",
+       "r_mankle",
+       "L_mknee",
+       "L_mankle"
+      ],
+      "opensim": "4.6",
+      "rms_marker_error_mean_mm": 9.34,
+      "max_marker_error_mm": 29.8
+     }
     }
    },
-   "quasi_static_frames": 0,
+   "quasi_static_frames": 517,
+   "quasi_static_frames_before_static1": 0,
    "foot_length_mm": {
     "R": 216.7,
     "L": 226.87,
+    "mean": 221.78,
     "static_trial_frames": 517,
     "static_trial_sha256": "0d943428f71cbd22a70a80573c644a40e1b9dec0bf32f328d2df82f342e6ef92"
    },
-   "adapter": "refused: no contact spheres on calcn_r: cannot find the heel and the plantar plane",
    "model_with_contacts": {
     "sha256": "5541951bda156885d04a29096b6a19354c56de03670dbebf1aebe35c47f319c1",
     "foot_geometry_scale": 1.072077,
@@ -276,48 +416,24 @@
     "sole_bend_line_from_z_deg": -13.2,
     "sole_points_on_calcn_distal_of_toe_axis": 9,
     "sole_points_on_toes_proximal_of_toe_axis": 0,
-    "sole_points_within_5mm_of_toe_axis": 3,
-    "left_same_as_right": false
+    "sole_points_within_5mm_of_toe_axis": 3
    },
-   "solve": {
-    "body_weight_N": 613.896,
-    "frames": 0,
-    "solved": 0,
-    "max_abs_support_error_pct": null,
-    "frames_at_bounds": 0,
-    "max_abs_adjustment": null,
-    "double_support_sha256": "8f0ce65aab1274deea594905b4a22f7eb81087cd1c90d19d9740128a9d9d1f24"
+   "squat_ik_reproduction": {
+    "rms_marker_error_mean_mm_ours_dataset": [
+     12.37,
+     12.371
+    ],
+    "max_pelvis_translation_diff_mm": 1.082,
+    "max_com_diff_mm": 0.346,
+    "max_leg_trunk_coordinate_diff_deg": 2.182,
+    "max_coordinate_diff_deg": 12.321,
+    "worst_coordinate": "pro_sup_l",
+    "squats1_quasi_static_frames_ours_dataset": [
+     0,
+     0
+    ]
    },
-   "model_check_frames": {
-    "body_weight_N": 613.896,
-    "frames": 40,
-    "solved": 40,
-    "max_abs_support_error_pct": 0.0001,
-    "frames_at_bounds": 0,
-    "max_abs_adjustment": {
-     "pelvis_ty_mm": 4.428,
-     "pelvis_list_deg": 1.8432,
-     "ankle_angle_r_deg": 1.0964,
-     "ankle_angle_l_deg": 8.3619
-    },
-    "note": "not quasi-static by the plan's rule and not evaluated: each trial's 0.2 s window with the smallest peak centre-of-mass acceleration, solved only to check the model",
-    "windows": {
-     "squats1.mot": {
-      "stretch_s": [
-       0.0,
-       0.19
-      ],
-      "peak_acceleration_m_s2": 0.1192
-     },
-     "squatsAsym1.mot": {
-      "stretch_s": [
-       7.98,
-       8.17
-      ],
-      "peak_acceleration_m_s2": 0.1032
-     }
-    }
-   }
+   "double_support_sha256": "66e3dd380192a6ed2d4066f75886cea623e5c542939ab5d9567b58710d12865a"
   },
   "subject5": {
    "model_sha256": "c7fa6a39b412a77037979f263712ab3c9cf0818604cb124bc56a68efd84ec4ba",
@@ -338,24 +454,82 @@
        13.61,
        21
       ]
-     ]
+     ],
+     "solved": 42,
+     "max_abs_support_error_pct": 0.0001,
+     "frames_at_bounds": 0,
+     "max_abs_adjustment": {
+      "pelvis_ty_mm": 0.897,
+      "pelvis_list_deg": 1.0879,
+      "ankle_angle_r_deg": 1.3604,
+      "ankle_angle_l_deg": 2.1151
+     },
+     "inverse_kinematics": "the dataset's (OpenSimData/Mocap/IK)"
     },
     "squatsAsym1.mot": {
      "ik_sha256": "71e2029b9a69f99c7eef5dd30995ec168002797dbcbddc9ea6f9155796c26d82",
      "frames": 1312,
      "frame_interval_s": 0.01,
      "quasi_static_frames": 0,
-     "stretches_s": []
+     "stretches_s": [],
+     "solved": 0,
+     "max_abs_support_error_pct": null,
+     "frames_at_bounds": 0,
+     "max_abs_adjustment": null,
+     "inverse_kinematics": "the dataset's (OpenSimData/Mocap/IK)"
+    },
+    "static1.mot": {
+     "ik_sha256": "594dba6da510e38df09502c275d94bf222aba7a30fdac8e108271a47750eb2b6",
+     "frames": 502,
+     "frame_interval_s": 0.01,
+     "quasi_static_frames": 176,
+     "stretches_s": [
+      [
+       0.07,
+       0.26,
+       20
+      ],
+      [
+       3.46,
+       5.01,
+       156
+      ]
+     ],
+     "solved": 176,
+     "max_abs_support_error_pct": 0.0,
+     "frames_at_bounds": 0,
+     "max_abs_adjustment": {
+      "pelvis_ty_mm": 0.736,
+      "pelvis_list_deg": 1.653,
+      "ankle_angle_r_deg": 1.8285,
+      "ankle_angle_l_deg": 2.5205
+     },
+     "inverse_kinematics": {
+      "source": "ours (amendment 2): foot_models/static_ik.py",
+      "template_sha256": "6c418d265a1adffdf40ebdd2fe192c0e643b590e454b299a6c3cecaf9a673783",
+      "markers_sha256": "90b40749cb52f7dca78f3a77cad5d5b6e8e99321acc47a554efe84a33a0636a2",
+      "marker_tasks_applied": 43,
+      "switched_off": [
+       "r_mknee",
+       "r_mankle",
+       "L_mknee",
+       "L_mankle"
+      ],
+      "opensim": "4.6",
+      "rms_marker_error_mean_mm": 8.61,
+      "max_marker_error_mm": 29.4
+     }
     }
    },
-   "quasi_static_frames": 42,
+   "quasi_static_frames": 218,
+   "quasi_static_frames_before_static1": 42,
    "foot_length_mm": {
     "R": 236.7,
     "L": 244.9,
+    "mean": 240.8,
     "static_trial_frames": 502,
     "static_trial_sha256": "90b40749cb52f7dca78f3a77cad5d5b6e8e99321acc47a554efe84a33a0636a2"
    },
-   "adapter": "refused: no contact spheres on calcn_r: cannot find the heel and the plantar plane",
    "model_with_contacts": {
     "sha256": "d1dc5b9e02f686e498514774e558e42752c3143e5070e10effc0d98387c20d7f",
     "foot_geometry_scale": 1.18616,
@@ -378,23 +552,24 @@
     "sole_bend_line_from_z_deg": -13.2,
     "sole_points_on_calcn_distal_of_toe_axis": 9,
     "sole_points_on_toes_proximal_of_toe_axis": 0,
-    "sole_points_within_5mm_of_toe_axis": 2,
-    "left_same_as_right": false
+    "sole_points_within_5mm_of_toe_axis": 2
    },
-   "solve": {
-    "body_weight_N": 778.648,
-    "frames": 42,
-    "solved": 42,
-    "max_abs_support_error_pct": 0.0,
-    "frames_at_bounds": 0,
-    "max_abs_adjustment": {
-     "pelvis_ty_mm": 0.897,
-     "pelvis_list_deg": 1.0879,
-     "ankle_angle_r_deg": 1.3604,
-     "ankle_angle_l_deg": 2.1151
-    },
-    "double_support_sha256": "283a76c85391dc447c515e87a22d06ca34641d13c6aed99eff601bdb15fdd5c2"
-   }
+   "squat_ik_reproduction": {
+    "rms_marker_error_mean_mm_ours_dataset": [
+     11.664,
+     11.662
+    ],
+    "max_pelvis_translation_diff_mm": 1.108,
+    "max_com_diff_mm": 0.245,
+    "max_leg_trunk_coordinate_diff_deg": 2.224,
+    "max_coordinate_diff_deg": 18.27,
+    "worst_coordinate": "pro_sup_r",
+    "squats1_quasi_static_frames_ours_dataset": [
+     44,
+     42
+    ]
+   },
+   "double_support_sha256": "addbb0ce913d5930e7873f31b6cd2b681d858bc8ba3ec1d6fd0f8a1bf77bcd94"
   },
   "subject6": {
    "model_sha256": "28b95be7648e981682c271e93d2860890e74d91e12451db22c634060c96ec769",
@@ -410,24 +585,77 @@
        10.39,
        20
       ]
-     ]
+     ],
+     "solved": 20,
+     "max_abs_support_error_pct": 0.0,
+     "frames_at_bounds": 0,
+     "max_abs_adjustment": {
+      "pelvis_ty_mm": 2.578,
+      "pelvis_list_deg": 0.0649,
+      "ankle_angle_r_deg": 2.2635,
+      "ankle_angle_l_deg": 2.3051
+     },
+     "inverse_kinematics": "the dataset's (OpenSimData/Mocap/IK)"
     },
     "squatsAsym1.mot": {
      "ik_sha256": "4b6b005b9fb53f9dcaa995c9e7690009855598cb4588e3c2f1cd9febda06be09",
      "frames": 1318,
      "frame_interval_s": 0.01,
      "quasi_static_frames": 0,
-     "stretches_s": []
+     "stretches_s": [],
+     "solved": 0,
+     "max_abs_support_error_pct": null,
+     "frames_at_bounds": 0,
+     "max_abs_adjustment": null,
+     "inverse_kinematics": "the dataset's (OpenSimData/Mocap/IK)"
+    },
+    "static1.mot": {
+     "ik_sha256": "39c4051a64b6be6ff4c99ade7c99516b480fb2345015fc9a1b9d3f7d415e3167",
+     "frames": 265,
+     "frame_interval_s": 0.01,
+     "quasi_static_frames": 265,
+     "stretches_s": [
+      [
+       0.0,
+       2.64,
+       265
+      ]
+     ],
+     "solved": 265,
+     "max_abs_support_error_pct": 0.0001,
+     "frames_at_bounds": 0,
+     "max_abs_adjustment": {
+      "pelvis_ty_mm": 6.172,
+      "pelvis_list_deg": 0.1065,
+      "ankle_angle_r_deg": 3.6882,
+      "ankle_angle_l_deg": 4.0382
+     },
+     "inverse_kinematics": {
+      "source": "ours (amendment 2): foot_models/static_ik.py",
+      "template_sha256": "028652f9fe53d843b3cba511f422a66b3f5a0f0c47a6f9fa78f825c32e962c49",
+      "markers_sha256": "0565c85d75bcf759bac239160b66c4f39769320f0d81b3ce5e02204c6a2d83c0",
+      "marker_tasks_applied": 43,
+      "switched_off": [
+       "r_mknee",
+       "r_mankle",
+       "L_mknee",
+       "L_mankle"
+      ],
+      "opensim": "4.6",
+      "rms_marker_error_mean_mm": 15.6,
+      "max_marker_error_mm": 47.0
+     }
     }
    },
-   "quasi_static_frames": 20,
+   "quasi_static_frames": 285,
+   "quasi_static_frames_before_static1": 20,
    "foot_length_mm": {
     "R": 218.78,
     "L": 213.0,
+    "mean": 215.89,
     "static_trial_frames": 265,
     "static_trial_sha256": "0565c85d75bcf759bac239160b66c4f39769320f0d81b3ce5e02204c6a2d83c0"
    },
-   "adapter": "refused: no contact spheres on calcn_r: cannot find the heel and the plantar plane",
    "model_with_contacts": {
     "sha256": "36e5a4c17d56454f6180c535d3f1aefb4544dc28d084f2afd66786e4b5196f27",
     "foot_geometry_scale": 1.029607,
@@ -450,23 +678,24 @@
     "sole_bend_line_from_z_deg": -13.2,
     "sole_points_on_calcn_distal_of_toe_axis": 9,
     "sole_points_on_toes_proximal_of_toe_axis": 0,
-    "sole_points_within_5mm_of_toe_axis": 3,
-    "left_same_as_right": false
+    "sole_points_within_5mm_of_toe_axis": 3
    },
-   "solve": {
-    "body_weight_N": 578.592,
-    "frames": 20,
-    "solved": 20,
-    "max_abs_support_error_pct": 0.0,
-    "frames_at_bounds": 0,
-    "max_abs_adjustment": {
-     "pelvis_ty_mm": 2.578,
-     "pelvis_list_deg": 0.0649,
-     "ankle_angle_r_deg": 2.2635,
-     "ankle_angle_l_deg": 2.3051
-    },
-    "double_support_sha256": "2efbaf4bbc997dec75c688d3bf5a991ee9e419bb7399fe263b549bd28852eb24"
-   }
+   "squat_ik_reproduction": {
+    "rms_marker_error_mean_mm_ours_dataset": [
+     19.169,
+     19.169
+    ],
+    "max_pelvis_translation_diff_mm": 1.187,
+    "max_com_diff_mm": 0.562,
+    "max_leg_trunk_coordinate_diff_deg": 2.423,
+    "max_coordinate_diff_deg": 10.721,
+    "worst_coordinate": "pro_sup_r",
+    "squats1_quasi_static_frames_ours_dataset": [
+     0,
+     20
+    ]
+   },
+   "double_support_sha256": "bf574cabc9497ddc32c96426bdcfa9f8f4cabca14ed5ec5da573931d92478230"
   },
   "subject7": {
    "model_sha256": "43931153c05d5fc089f3c5893fd7873bfc2193918de9645b77969d97518d3b31",
@@ -497,7 +726,17 @@
        10.51,
        25
       ]
-     ]
+     ],
+     "solved": 96,
+     "max_abs_support_error_pct": 0.0001,
+     "frames_at_bounds": 0,
+     "max_abs_adjustment": {
+      "pelvis_ty_mm": 5.91,
+      "pelvis_list_deg": 0.2506,
+      "ankle_angle_r_deg": 1.0701,
+      "ankle_angle_l_deg": 0.7693
+     },
+     "inverse_kinematics": "the dataset's (OpenSimData/Mocap/IK)"
     },
     "squatsAsym1.mot": {
      "ik_sha256": "c66b27f85dd3fac9fc404ba2176f742b13b187c54b1cb2ff0e80d344273986eb",
@@ -515,17 +754,70 @@
        8.47,
        22
       ]
-     ]
+     ],
+     "solved": 58,
+     "max_abs_support_error_pct": 0.0,
+     "frames_at_bounds": 0,
+     "max_abs_adjustment": {
+      "pelvis_ty_mm": 5.296,
+      "pelvis_list_deg": 0.2723,
+      "ankle_angle_r_deg": 1.8908,
+      "ankle_angle_l_deg": 2.0272
+     },
+     "inverse_kinematics": "the dataset's (OpenSimData/Mocap/IK)"
+    },
+    "static1.mot": {
+     "ik_sha256": "1bbd44d7dd215ff5e90d401cf94089416d18d33ef87b3b74aca9170ee653ca26",
+     "frames": 704,
+     "frame_interval_s": 0.01,
+     "quasi_static_frames": 703,
+     "stretches_s": [
+      [
+       0.0,
+       6.55,
+       656
+      ],
+      [
+       6.57,
+       7.03,
+       47
+      ]
+     ],
+     "solved": 703,
+     "max_abs_support_error_pct": 0.0,
+     "frames_at_bounds": 0,
+     "max_abs_adjustment": {
+      "pelvis_ty_mm": 4.153,
+      "pelvis_list_deg": 0.6525,
+      "ankle_angle_r_deg": 1.6148,
+      "ankle_angle_l_deg": 0.5943
+     },
+     "inverse_kinematics": {
+      "source": "ours (amendment 2): foot_models/static_ik.py",
+      "template_sha256": "a287bc3d6e70bcda2466d1aa34394e956ac0f37802ac26fdf7f6285f0a77acfc",
+      "markers_sha256": "18159a33923984b2b6977d682a398219ec39c2d47cd7cbd3e0f603cd462562b4",
+      "marker_tasks_applied": 43,
+      "switched_off": [
+       "r_mknee",
+       "r_mankle",
+       "L_mknee",
+       "L_mankle"
+      ],
+      "opensim": "4.6",
+      "rms_marker_error_mean_mm": 9.27,
+      "max_marker_error_mm": 38.3
+     }
     }
    },
-   "quasi_static_frames": 154,
+   "quasi_static_frames": 857,
+   "quasi_static_frames_before_static1": 154,
    "foot_length_mm": {
     "R": 226.18,
     "L": 223.63,
+    "mean": 224.91,
     "static_trial_frames": 704,
     "static_trial_sha256": "18159a33923984b2b6977d682a398219ec39c2d47cd7cbd3e0f603cd462562b4"
    },
-   "adapter": "refused: no contact spheres on calcn_r: cannot find the heel and the plantar plane",
    "model_with_contacts": {
     "sha256": "707b67c80d7caba9f5d8b23415affd7cc9782fafda3a767dc704ca4934835852",
     "foot_geometry_scale": 1.075481,
@@ -548,23 +840,24 @@
     "sole_bend_line_from_z_deg": -13.2,
     "sole_points_on_calcn_distal_of_toe_axis": 9,
     "sole_points_on_toes_proximal_of_toe_axis": 0,
-    "sole_points_within_5mm_of_toe_axis": 2,
-    "left_same_as_right": false
+    "sole_points_within_5mm_of_toe_axis": 2
    },
-   "solve": {
-    "body_weight_N": 600.167,
-    "frames": 154,
-    "solved": 154,
-    "max_abs_support_error_pct": 0.0001,
-    "frames_at_bounds": 0,
-    "max_abs_adjustment": {
-     "pelvis_ty_mm": 5.91,
-     "pelvis_list_deg": 0.2723,
-     "ankle_angle_r_deg": 1.8908,
-     "ankle_angle_l_deg": 2.0272
-    },
-    "double_support_sha256": "99d9d51e0b6f0643ca62c3568f98284d3411dc0ac757bfa42c2587a1340b9c2a"
-   }
+   "squat_ik_reproduction": {
+    "rms_marker_error_mean_mm_ours_dataset": [
+     15.247,
+     15.248
+    ],
+    "max_pelvis_translation_diff_mm": 0.856,
+    "max_com_diff_mm": 0.238,
+    "max_leg_trunk_coordinate_diff_deg": 2.332,
+    "max_coordinate_diff_deg": 16.846,
+    "worst_coordinate": "pro_sup_r",
+    "squats1_quasi_static_frames_ours_dataset": [
+     71,
+     96
+    ]
+   },
+   "double_support_sha256": "8bfd6ed33772490374b935309e2b302d105a58cb8dc021bb2c08aef7692f66be"
   },
   "subject8": {
    "model_sha256": "b3a7d5a2e7f7924a91b02800f8e61c8501f01b426a68317fa16aa1aec626be67",
@@ -580,24 +873,77 @@
        5.8,
        27
       ]
-     ]
+     ],
+     "solved": 27,
+     "max_abs_support_error_pct": 0.0,
+     "frames_at_bounds": 0,
+     "max_abs_adjustment": {
+      "pelvis_ty_mm": 2.511,
+      "pelvis_list_deg": 0.6422,
+      "ankle_angle_r_deg": 0.8302,
+      "ankle_angle_l_deg": 1.0668
+     },
+     "inverse_kinematics": "the dataset's (OpenSimData/Mocap/IK)"
     },
     "squatsAsym1.mot": {
      "ik_sha256": "4e3ed96db1dcb5285032fdcbd185e4554f5d779fc06ca3e59ee967ad921ec90b",
      "frames": 1321,
      "frame_interval_s": 0.01,
      "quasi_static_frames": 0,
-     "stretches_s": []
+     "stretches_s": [],
+     "solved": 0,
+     "max_abs_support_error_pct": null,
+     "frames_at_bounds": 0,
+     "max_abs_adjustment": null,
+     "inverse_kinematics": "the dataset's (OpenSimData/Mocap/IK)"
+    },
+    "static1.mot": {
+     "ik_sha256": "e646dd4cd70d09e4f979a6dc2462a7053e08ac574ba623b9d7ef27718e747907",
+     "frames": 501,
+     "frame_interval_s": 0.01,
+     "quasi_static_frames": 501,
+     "stretches_s": [
+      [
+       0.0,
+       5.0,
+       501
+      ]
+     ],
+     "solved": 501,
+     "max_abs_support_error_pct": 0.0,
+     "frames_at_bounds": 0,
+     "max_abs_adjustment": {
+      "pelvis_ty_mm": 10.03,
+      "pelvis_list_deg": 0.1862,
+      "ankle_angle_r_deg": 2.9903,
+      "ankle_angle_l_deg": 3.3505
+     },
+     "inverse_kinematics": {
+      "source": "ours (amendment 2): foot_models/static_ik.py",
+      "template_sha256": "ada0e577ebfe360a463d097b721be37d5f90fe2c6d63d7ce7f8243307f5c9530",
+      "markers_sha256": "6291331344fb77be4bc03e8500644e23a4401acc4c9437695b65baa450211a32",
+      "marker_tasks_applied": 43,
+      "switched_off": [
+       "r_mknee",
+       "r_mankle",
+       "L_mknee",
+       "L_mankle"
+      ],
+      "opensim": "4.6",
+      "rms_marker_error_mean_mm": 11.95,
+      "max_marker_error_mm": 44.5
+     }
     }
    },
-   "quasi_static_frames": 27,
+   "quasi_static_frames": 528,
+   "quasi_static_frames_before_static1": 27,
    "foot_length_mm": {
     "R": 200.65,
     "L": 207.91,
+    "mean": 204.28,
     "static_trial_frames": 501,
     "static_trial_sha256": "6291331344fb77be4bc03e8500644e23a4401acc4c9437695b65baa450211a32"
    },
-   "adapter": "refused: no contact spheres on calcn_r: cannot find the heel and the plantar plane",
    "model_with_contacts": {
     "sha256": "4bba75d02d09eeb22fc6a579ead06817ffc46a587951bfa8902d56d4e83c9634",
     "foot_geometry_scale": 0.966005,
@@ -620,23 +966,24 @@
     "sole_bend_line_from_z_deg": -13.2,
     "sole_points_on_calcn_distal_of_toe_axis": 9,
     "sole_points_on_toes_proximal_of_toe_axis": 0,
-    "sole_points_within_5mm_of_toe_axis": 3,
-    "left_same_as_right": false
+    "sole_points_within_5mm_of_toe_axis": 3
    },
-   "solve": {
-    "body_weight_N": 582.515,
-    "frames": 27,
-    "solved": 27,
-    "max_abs_support_error_pct": 0.0,
-    "frames_at_bounds": 0,
-    "max_abs_adjustment": {
-     "pelvis_ty_mm": 2.511,
-     "pelvis_list_deg": 0.6422,
-     "ankle_angle_r_deg": 0.8302,
-     "ankle_angle_l_deg": 1.0668
-    },
-    "double_support_sha256": "fb90d87cdd0bf5a446fc53083e897d4b55c5d2354afd11efd527a069c32dfa6e"
-   }
+   "squat_ik_reproduction": {
+    "rms_marker_error_mean_mm_ours_dataset": [
+     22.085,
+     22.084
+    ],
+    "max_pelvis_translation_diff_mm": 0.99,
+    "max_com_diff_mm": 0.245,
+    "max_leg_trunk_coordinate_diff_deg": 3.182,
+    "max_coordinate_diff_deg": 18.381,
+    "worst_coordinate": "pro_sup_r",
+    "squats1_quasi_static_frames_ours_dataset": [
+     0,
+     27
+    ]
+   },
+   "double_support_sha256": "2bd3801e9c786aff85fd751441317b610d09d0a56e0bf8fe6e7ea53700760425"
   },
   "subject9": {
    "model_sha256": "2e41951f14ad8a3004db071b5265ffe508b2e085a73f328e2e289a19c8231846",
@@ -652,24 +999,77 @@
        10.82,
        31
       ]
-     ]
+     ],
+     "solved": 31,
+     "max_abs_support_error_pct": 0.0,
+     "frames_at_bounds": 0,
+     "max_abs_adjustment": {
+      "pelvis_ty_mm": 26.65,
+      "pelvis_list_deg": 2.2341,
+      "ankle_angle_r_deg": 2.6647,
+      "ankle_angle_l_deg": 1.9502
+     },
+     "inverse_kinematics": "the dataset's (OpenSimData/Mocap/IK)"
     },
     "squatsAsym1.mot": {
      "ik_sha256": "e29f03efc10bf1150fe6bdfb7a27b7a4adc2d2aea72f6c40f883b90900b03137",
      "frames": 1351,
      "frame_interval_s": 0.01,
      "quasi_static_frames": 0,
-     "stretches_s": []
+     "stretches_s": [],
+     "solved": 0,
+     "max_abs_support_error_pct": null,
+     "frames_at_bounds": 0,
+     "max_abs_adjustment": null,
+     "inverse_kinematics": "the dataset's (OpenSimData/Mocap/IK)"
+    },
+    "static1.mot": {
+     "ik_sha256": "5ff3bcd4bb1052b97b662e0e6c39146b17e4cb6dd57dd6c70412e90003620f5c",
+     "frames": 601,
+     "frame_interval_s": 0.01,
+     "quasi_static_frames": 601,
+     "stretches_s": [
+      [
+       0.0,
+       6.0,
+       601
+      ]
+     ],
+     "solved": 601,
+     "max_abs_support_error_pct": 0.0,
+     "frames_at_bounds": 0,
+     "max_abs_adjustment": {
+      "pelvis_ty_mm": 27.485,
+      "pelvis_list_deg": 3.1585,
+      "ankle_angle_r_deg": 2.8217,
+      "ankle_angle_l_deg": 1.1212
+     },
+     "inverse_kinematics": {
+      "source": "ours (amendment 2): foot_models/static_ik.py",
+      "template_sha256": "6ce666acdd2c65f709d6383a48aacdae6debffc1ba159e0d7d57b6839ec5ae01",
+      "markers_sha256": "3c5adb1c507e2cb8e26374d999e85dea6baaaf78cb31cd768fde7b0ec68d0d7e",
+      "marker_tasks_applied": 43,
+      "switched_off": [
+       "r_mknee",
+       "r_mankle",
+       "L_mknee",
+       "L_mankle"
+      ],
+      "opensim": "4.6",
+      "rms_marker_error_mean_mm": 8.9,
+      "max_marker_error_mm": 32.0
+     }
     }
    },
-   "quasi_static_frames": 31,
+   "quasi_static_frames": 632,
+   "quasi_static_frames_before_static1": 31,
    "foot_length_mm": {
     "R": 255.6,
     "L": 252.88,
+    "mean": 254.24,
     "static_trial_frames": 601,
     "static_trial_sha256": "3c5adb1c507e2cb8e26374d999e85dea6baaaf78cb31cd768fde7b0ec68d0d7e"
    },
-   "adapter": "refused: no contact spheres on calcn_r: cannot find the heel and the plantar plane",
    "model_with_contacts": {
     "sha256": "1c50a24489e8aefdc593cb78b4227f4bdd557d57fb418745371c24dc1d7da97f",
     "foot_geometry_scale": 1.18857,
@@ -692,23 +1092,24 @@
     "sole_bend_line_from_z_deg": -13.2,
     "sole_points_on_calcn_distal_of_toe_axis": 9,
     "sole_points_on_toes_proximal_of_toe_axis": 0,
-    "sole_points_within_5mm_of_toe_axis": 2,
-    "left_same_as_right": false
+    "sole_points_within_5mm_of_toe_axis": 2
    },
-   "solve": {
-    "body_weight_N": 742.363,
-    "frames": 31,
-    "solved": 31,
-    "max_abs_support_error_pct": 0.0001,
-    "frames_at_bounds": 0,
-    "max_abs_adjustment": {
-     "pelvis_ty_mm": 26.65,
-     "pelvis_list_deg": 2.2341,
-     "ankle_angle_r_deg": 2.6647,
-     "ankle_angle_l_deg": 1.9502
-    },
-    "double_support_sha256": "0e20fdabd588376623e41cdcaf4306431544ed22b41c6e42bf9f74af8e4f7a86"
-   }
+   "squat_ik_reproduction": {
+    "rms_marker_error_mean_mm_ours_dataset": [
+     14.411,
+     14.412
+    ],
+    "max_pelvis_translation_diff_mm": 0.873,
+    "max_com_diff_mm": 0.259,
+    "max_leg_trunk_coordinate_diff_deg": 1.292,
+    "max_coordinate_diff_deg": 13.397,
+    "worst_coordinate": "pro_sup_r",
+    "squats1_quasi_static_frames_ours_dataset": [
+     31,
+     31
+    ]
+   },
+   "double_support_sha256": "0daa8fd183db3538dc23ba4312fe96bf6a2efe60326c2558aa38d65b93afd9fa"
   },
   "subject10": {
    "model_sha256": "bf697ee57bf4b503d6748ed2845a5b244a8a40e3d428c9100f461dc7b73a5084",
@@ -729,24 +1130,77 @@
        7.9,
        27
       ]
-     ]
+     ],
+     "solved": 51,
+     "max_abs_support_error_pct": 0.0,
+     "frames_at_bounds": 0,
+     "max_abs_adjustment": {
+      "pelvis_ty_mm": 6.967,
+      "pelvis_list_deg": 2.3538,
+      "ankle_angle_r_deg": 3.3688,
+      "ankle_angle_l_deg": 2.5023
+     },
+     "inverse_kinematics": "the dataset's (OpenSimData/Mocap/IK)"
     },
     "squatsAsym1.mot": {
      "ik_sha256": "fcfbf6a3f7fbd0c302275087da0b75fce9ae24f1b5308d0cf1ee2103cb78cfd8",
      "frames": 1257,
      "frame_interval_s": 0.01,
      "quasi_static_frames": 0,
-     "stretches_s": []
+     "stretches_s": [],
+     "solved": 0,
+     "max_abs_support_error_pct": null,
+     "frames_at_bounds": 0,
+     "max_abs_adjustment": null,
+     "inverse_kinematics": "the dataset's (OpenSimData/Mocap/IK)"
+    },
+    "static1.mot": {
+     "ik_sha256": "c9c7cc4a0de1e8c2979be4f1f74162e2842a23d08f20a845cb65784f66c678e0",
+     "frames": 781,
+     "frame_interval_s": 0.01,
+     "quasi_static_frames": 781,
+     "stretches_s": [
+      [
+       0.0,
+       7.8,
+       781
+      ]
+     ],
+     "solved": 781,
+     "max_abs_support_error_pct": 0.0,
+     "frames_at_bounds": 0,
+     "max_abs_adjustment": {
+      "pelvis_ty_mm": 11.995,
+      "pelvis_list_deg": 1.304,
+      "ankle_angle_r_deg": 4.7208,
+      "ankle_angle_l_deg": 3.714
+     },
+     "inverse_kinematics": {
+      "source": "ours (amendment 2): foot_models/static_ik.py",
+      "template_sha256": "45d652c62d19e0c33d08271e209634c44fddeaa69466e3e47a74fe8bbcc5e5f6",
+      "markers_sha256": "7fe50e7ebac7c849b1946ca75d733a0a5a18f7b0ed9da2c336ad58a63e110f40",
+      "marker_tasks_applied": 43,
+      "switched_off": [
+       "r_mknee",
+       "r_mankle",
+       "L_mknee",
+       "L_mankle"
+      ],
+      "opensim": "4.6",
+      "rms_marker_error_mean_mm": 13.3,
+      "max_marker_error_mm": 43.9
+     }
     }
    },
-   "quasi_static_frames": 51,
+   "quasi_static_frames": 832,
+   "quasi_static_frames_before_static1": 51,
    "foot_length_mm": {
     "R": 212.58,
     "L": 211.95,
+    "mean": 212.26,
     "static_trial_frames": 781,
     "static_trial_sha256": "7fe50e7ebac7c849b1946ca75d733a0a5a18f7b0ed9da2c336ad58a63e110f40"
    },
-   "adapter": "refused: no contact spheres on calcn_r: cannot find the heel and the plantar plane",
    "model_with_contacts": {
     "sha256": "7a51024f3611f948f8d0626441196ed2ac99765b7ace03a11a5b796b91fe1ff2",
     "foot_geometry_scale": 0.997698,
@@ -769,23 +1223,24 @@
     "sole_bend_line_from_z_deg": -13.2,
     "sole_points_on_calcn_distal_of_toe_axis": 9,
     "sole_points_on_toes_proximal_of_toe_axis": 0,
-    "sole_points_within_5mm_of_toe_axis": 3,
-    "left_same_as_right": false
+    "sole_points_within_5mm_of_toe_axis": 3
    },
-   "solve": {
-    "body_weight_N": 588.399,
-    "frames": 51,
-    "solved": 51,
-    "max_abs_support_error_pct": 0.0001,
-    "frames_at_bounds": 0,
-    "max_abs_adjustment": {
-     "pelvis_ty_mm": 6.967,
-     "pelvis_list_deg": 2.3538,
-     "ankle_angle_r_deg": 3.3688,
-     "ankle_angle_l_deg": 2.5023
-    },
-    "double_support_sha256": "9a767660be884e41ce6284a156ca1a33efa6b142d7a8a008981316c6e18ee355"
-   }
+   "squat_ik_reproduction": {
+    "rms_marker_error_mean_mm_ours_dataset": [
+     15.031,
+     15.031
+    ],
+    "max_pelvis_translation_diff_mm": 0.932,
+    "max_com_diff_mm": 0.221,
+    "max_leg_trunk_coordinate_diff_deg": 1.952,
+    "max_coordinate_diff_deg": 10.305,
+    "worst_coordinate": "pro_sup_r",
+    "squats1_quasi_static_frames_ours_dataset": [
+     28,
+     51
+    ]
+   },
+   "double_support_sha256": "cdefc49adc0db04e6cba995f51359466018954a4c1c13711c37321a35e163e73"
   },
   "subject11": {
    "model_sha256": "1b79c79298dbf11935f3702c0ac20760707b6938bbf898daffab8eb07a1c335b",
@@ -795,24 +1250,77 @@
      "frames": 1349,
      "frame_interval_s": 0.01,
      "quasi_static_frames": 0,
-     "stretches_s": []
+     "stretches_s": [],
+     "solved": 0,
+     "max_abs_support_error_pct": null,
+     "frames_at_bounds": 0,
+     "max_abs_adjustment": null,
+     "inverse_kinematics": "the dataset's (OpenSimData/Mocap/IK)"
     },
     "squatsAsym1.mot": {
      "ik_sha256": "6d17aefe7307286c29bb49823181cc65f8f3dbc141d0771b9e1eba63e89dbcb0",
      "frames": 1414,
      "frame_interval_s": 0.01,
      "quasi_static_frames": 0,
-     "stretches_s": []
+     "stretches_s": [],
+     "solved": 0,
+     "max_abs_support_error_pct": null,
+     "frames_at_bounds": 0,
+     "max_abs_adjustment": null,
+     "inverse_kinematics": "the dataset's (OpenSimData/Mocap/IK)"
+    },
+    "static1.mot": {
+     "ik_sha256": "2fe0d3aa611acb94d67f1f114204615f1855ca2fa7d587f34c076df3b2d6bbd4",
+     "frames": 781,
+     "frame_interval_s": 0.01,
+     "quasi_static_frames": 779,
+     "stretches_s": [
+      [
+       0.0,
+       6.29,
+       630
+      ],
+      [
+       6.32,
+       7.8,
+       149
+      ]
+     ],
+     "solved": 779,
+     "max_abs_support_error_pct": 0.0001,
+     "frames_at_bounds": 0,
+     "max_abs_adjustment": {
+      "pelvis_ty_mm": 7.703,
+      "pelvis_list_deg": 1.0106,
+      "ankle_angle_r_deg": 1.581,
+      "ankle_angle_l_deg": 0.4109
+     },
+     "inverse_kinematics": {
+      "source": "ours (amendment 2): foot_models/static_ik.py",
+      "template_sha256": "cb3f6ce7dbc07fee2a7eb7adc7b25eb4764afb166f661a0782866f208a9fd1a7",
+      "markers_sha256": "ce4609302ab046896e49e369a0980c7f11672d93300fbf390d4ae414dc502567",
+      "marker_tasks_applied": 43,
+      "switched_off": [
+       "r_mknee",
+       "r_mankle",
+       "L_mknee",
+       "L_mankle"
+      ],
+      "opensim": "4.6",
+      "rms_marker_error_mean_mm": 15.11,
+      "max_marker_error_mm": 56.2
+     }
     }
    },
-   "quasi_static_frames": 0,
+   "quasi_static_frames": 779,
+   "quasi_static_frames_before_static1": 0,
    "foot_length_mm": {
     "R": 237.3,
     "L": 236.5,
+    "mean": 236.9,
     "static_trial_frames": 781,
     "static_trial_sha256": "ce4609302ab046896e49e369a0980c7f11672d93300fbf390d4ae414dc502567"
    },
-   "adapter": "refused: no contact spheres on calcn_r: cannot find the heel and the plantar plane",
    "model_with_contacts": {
     "sha256": "8f94868ce830d560d03e85daaed9c39b9d0c9dcd27e0b506e55a485bf6d2e54a",
     "foot_geometry_scale": 1.166637,
@@ -835,54 +1343,24 @@
     "sole_bend_line_from_z_deg": -13.2,
     "sole_points_on_calcn_distal_of_toe_axis": 9,
     "sole_points_on_toes_proximal_of_toe_axis": 0,
-    "sole_points_within_5mm_of_toe_axis": 2,
-    "left_same_as_right": false
+    "sole_points_within_5mm_of_toe_axis": 2
    },
-   "solve": {
-    "body_weight_N": 911.038,
-    "frames": 0,
-    "solved": 0,
-    "max_abs_support_error_pct": null,
-    "frames_at_bounds": 0,
-    "max_abs_adjustment": null,
-    "double_support_sha256": "8320ba01b7aa555c4bca1b1570ec9dcdc22f26f133d5603b14372c15c5e19d99"
+   "squat_ik_reproduction": {
+    "rms_marker_error_mean_mm_ours_dataset": [
+     17.607,
+     17.605
+    ],
+    "max_pelvis_translation_diff_mm": 1.084,
+    "max_com_diff_mm": 0.294,
+    "max_leg_trunk_coordinate_diff_deg": 1.486,
+    "max_coordinate_diff_deg": 10.341,
+    "worst_coordinate": "pro_sup_l",
+    "squats1_quasi_static_frames_ours_dataset": [
+     0,
+     0
+    ]
    },
-   "model_check_frames": {
-    "body_weight_N": 911.038,
-    "frames": 40,
-    "solved": 40,
-    "max_abs_support_error_pct": 0.0,
-    "frames_at_bounds": 0,
-    "max_abs_adjustment": {
-     "pelvis_ty_mm": 5.242,
-     "pelvis_list_deg": 1.5163,
-     "ankle_angle_r_deg": 0.6378,
-     "ankle_angle_l_deg": 3.3931
-    },
-    "note": "not quasi-static by the plan's rule and not evaluated: each trial's 0.2 s window with the smallest peak centre-of-mass acceleration, solved only to check the model",
-    "windows": {
-     "squats1.mot": {
-      "stretch_s": [
-       13.24,
-       13.43
-      ],
-      "peak_acceleration_m_s2": 0.1107
-     },
-     "squatsAsym1.mot": {
-      "stretch_s": [
-       3.1,
-       3.29
-      ],
-      "peak_acceleration_m_s2": 0.125
-     }
-    }
-   }
+   "double_support_sha256": "a7e88b7ffa1780ad605ff6b0e5c155bcb5fa874e735db3a2458211ade999bd0a"
   }
- },
- "solve": {
-  "code": "foot_models/double_support.py solve, with the staged start (this commit)",
-  "contact": "assumed sole contact v1",
-  "soles": "sim/EU42_R_636645a928.sole_sim.json, sim/EU42_L_40fe8e1d0c.sole_sim.json",
-  "note": "kinematics only; support should equal body weight. double_support_sha256 pins each subject's model predictions before any force data is opened (the file stays on the workstation)"
  }
 }

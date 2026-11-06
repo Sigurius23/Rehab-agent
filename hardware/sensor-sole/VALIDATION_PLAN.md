@@ -104,6 +104,20 @@ rule above stays as first written.
   They only locate the sole, so OpenCap's contact parameters do not enter the results. Nothing is fitted to the
   measurements.
 
+**Amendment 2, to the metrics, trials and pass rule (2026-11-06).** Decided by the owner before any force data was
+opened. The rules above stay as written; this settles what they left open.
+1. **Forward–backward centre of pressure:** the combined centre of pressure of both feet. The measured one (both
+   plates together) is compared with the model's, along the model's forward axis, as a fraction of the subject's
+   mean foot length (the mean of the left and right heel-to-toe distances). The model places each foot's forward
+   centre of pressure under the centre of mass by convention, so per-foot values are not evaluated.
+2. **Quiet standing:** inverse kinematics is run on each subject's `static1` trial from its markers, because the
+   dataset has none for it. It uses the subject's distributed model and the same settings, marker set and
+   weights as the dataset's own squat inverse kinematics, with no force data. The plan's frame rule is then
+   applied to it as to the squats. The frames each subject gains are reported.
+3. **Left/right share:** separate force channels per foot in the dataset's inverse-dynamics setup are taken to
+   mean that each foot stood on its own plate.
+4. **Subjects without quasi-static frames,** if any remain, are reported as not evaluated, not as passing.
+
 **Protocol:**
 - Every result names the dataset version and file hashes, the pipeline commit and the contact model (assumed v1
   or native).
