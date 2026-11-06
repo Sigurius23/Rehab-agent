@@ -1,0 +1,411 @@
+{
+ "what": "Quasi-static frames for VALIDATION_PLAN.md stage A, chosen from the kinematics alone before any force data was opened (2026-11-06). Phase 1: no force, EMG or inverse-dynamics file was read.",
+ "dataset": {
+  "name": "OpenCap LabValidation, without videos",
+  "release": "v0.1 (SimTK, file dated 2022-12-20)",
+  "archive": {
+   "name": "LabValidation_withoutVideos.zip",
+   "size": 3029832907,
+   "sha256": "3290d485124fd12c85dd3bc9ee851f3a0530ad0ff58bc396973e665dd6d28187"
+  },
+  "source": "Copy provided by the owner on 2026-11-06 from their Google Drive; originally from simtk.org/projects/opencap (SimTK Downloads, LabValidation_withoutVideos.zip)",
+  "licence": "Apache 2.0 Use Agreement, as shown on the SimTK release (no licence file inside the archive)"
+ },
+ "rule": {
+  "cutoff_hz": 6.0,
+  "filter": "Butterworth, 4th order zero-lag (2nd order forwards and backwards)",
+  "max_acceleration_m_s2": 0.1,
+  "acceleration": "norm of the 3-D centre-of-mass acceleration, central differences of the filtered positions",
+  "min_stretch_s": 0.2
+ },
+ "code": "foot_models/double_support.py frames (this commit)",
+ "model": "OpenSimData/Mocap/Model/LaiArnoldModified2017_poly_withArms_weldHand_scaled.osim, as distributed",
+ "trials": {
+  "evaluated": [
+   "squats1",
+   "squatsAsym1"
+  ],
+  "left_out": {
+   "STS1, STSweakLegs1": "sit-to-stand, excluded by the plan (the chair carries part of the weight)",
+   "static1": "standing trial with force data, but the dataset has no inverse kinematics for it (only the scale tool's one-row pose); not evaluated under the plan's frame rule without the owner's decision",
+   "DJ*, walking*": "not quasi-static tasks"
+  }
+ },
+ "markers": {
+  "heel": [
+   "r_calc",
+   "L_calc"
+  ],
+  "toe": [
+   "r_toe",
+   "L_toe"
+  ],
+  "source": "the dataset's scale setup measures the foot with the marker pairs r_calc–r_toe and L_calc–L_toe; Uhlrich et al. 2023 (Methods) list markers on the calcanei and the 2nd and 5th metatarsal heads and name no toe marker, so where r_toe sits is not documented",
+  "foot_length": "mean distance over the whole static trial (static1.trc, 100 Hz, 265 to 800 frames by subject), per foot"
+ },
+ "plates": {
+  "finding": "in all 20 squat inverse-dynamics setups, the force channels R_ground_* are applied to calcn_r and L_ground_* to calcn_l (separate channels per foot)",
+  "documentation": "Uhlrich et al. 2023: three in-ground Bertec plates at 2000 Hz; whether each foot stood on its own plate is not stated",
+  "read": "the ExternalLoads setup files only (names of channels and bodies); no force values"
+ },
+ "adapter": "sole_sim.add_to_osim refused every subject's distributed model: it has no foot contact spheres, from which the adapter finds the heel and the plantar plane. Per the plan, stopped: no solve, no workaround.",
+ "totals": {
+  "subjects": 10,
+  "quasi_static_frames": 345,
+  "subjects_without_frames": [
+   "subject2",
+   "subject4",
+   "subject11"
+  ]
+ },
+ "subjects": {
+  "subject2": {
+   "model_sha256": "22a64dc3427c9bc665dea397ca67e7cb4cf7043876b2a3ca3e217075deb214c3",
+   "trials": {
+    "squats1.mot": {
+     "ik_sha256": "8d80b8b4825b8ac48f1291e24cd3af9b8d442c5227205467b046a382d632b218",
+     "frames": 801,
+     "frame_interval_s": 0.01,
+     "quasi_static_frames": 0,
+     "stretches_s": []
+    },
+    "squatsAsym1.mot": {
+     "ik_sha256": "e1cf6240bdb5d142ce45a99cd8e1990fe2767829f9c050b2d7e9dea7b6cf6428",
+     "frames": 901,
+     "frame_interval_s": 0.01,
+     "quasi_static_frames": 0,
+     "stretches_s": []
+    }
+   },
+   "quasi_static_frames": 0,
+   "foot_length_mm": {
+    "R": 236.26,
+    "L": 240.3,
+    "static_trial_frames": 800,
+    "static_trial_sha256": "432b721e3d1b371e28478e384e47ed4e32181769ee78a06587f1c616e4827c1d"
+   },
+   "adapter": "refused: no contact spheres on calcn_r: cannot find the heel and the plantar plane"
+  },
+  "subject3": {
+   "model_sha256": "7ed1d53f182e3f4992669468172a1f64ca158d200fdb090fdbfd4ee0b5819c73",
+   "trials": {
+    "squats1.mot": {
+     "ik_sha256": "88e02eb3f51806d3063c5cec158623965edf065c99e8743b8743f357e4bb17d9",
+     "frames": 1184,
+     "frame_interval_s": 0.01,
+     "quasi_static_frames": 20,
+     "stretches_s": [
+      [
+       4.68,
+       4.87,
+       20
+      ]
+     ]
+    },
+    "squatsAsym1.mot": {
+     "ik_sha256": "ba09085995327de85add297d3ae1175eb634b2fc8b311337b2f801dd7a024d5c",
+     "frames": 1280,
+     "frame_interval_s": 0.01,
+     "quasi_static_frames": 0,
+     "stretches_s": []
+    }
+   },
+   "quasi_static_frames": 20,
+   "foot_length_mm": {
+    "R": 201.26,
+    "L": 202.43,
+    "static_trial_frames": 679,
+    "static_trial_sha256": "816a0080ebefc10dae7207faa46db7cd1d6cd37cc1d387c97babc07e6f834a36"
+   },
+   "adapter": "refused: no contact spheres on calcn_r: cannot find the heel and the plantar plane"
+  },
+  "subject4": {
+   "model_sha256": "68df5986180d4399b47c693f469b5ca9d4114997fca8ee8e76ab9cffe6bf14a6",
+   "trials": {
+    "squats1.mot": {
+     "ik_sha256": "49946867eff51b1685dc13c607282ccd5194a19d3783193e133470da32a999e7",
+     "frames": 1346,
+     "frame_interval_s": 0.01,
+     "quasi_static_frames": 0,
+     "stretches_s": []
+    },
+    "squatsAsym1.mot": {
+     "ik_sha256": "ea85e7762a72f579f483477bc31e049486c404388b9c3494238cfe91154630e9",
+     "frames": 1338,
+     "frame_interval_s": 0.01,
+     "quasi_static_frames": 0,
+     "stretches_s": []
+    }
+   },
+   "quasi_static_frames": 0,
+   "foot_length_mm": {
+    "R": 216.7,
+    "L": 226.87,
+    "static_trial_frames": 517,
+    "static_trial_sha256": "0d943428f71cbd22a70a80573c644a40e1b9dec0bf32f328d2df82f342e6ef92"
+   },
+   "adapter": "refused: no contact spheres on calcn_r: cannot find the heel and the plantar plane"
+  },
+  "subject5": {
+   "model_sha256": "c7fa6a39b412a77037979f263712ab3c9cf0818604cb124bc56a68efd84ec4ba",
+   "trials": {
+    "squats1.mot": {
+     "ik_sha256": "c454126ac4c8235c5b696d7bdf27a79244a4061b24d1bfbf0d52aabe009af28c",
+     "frames": 1623,
+     "frame_interval_s": 0.01,
+     "quasi_static_frames": 42,
+     "stretches_s": [
+      [
+       0.0,
+       0.2,
+       21
+      ],
+      [
+       13.41,
+       13.61,
+       21
+      ]
+     ]
+    },
+    "squatsAsym1.mot": {
+     "ik_sha256": "71e2029b9a69f99c7eef5dd30995ec168002797dbcbddc9ea6f9155796c26d82",
+     "frames": 1312,
+     "frame_interval_s": 0.01,
+     "quasi_static_frames": 0,
+     "stretches_s": []
+    }
+   },
+   "quasi_static_frames": 42,
+   "foot_length_mm": {
+    "R": 236.7,
+    "L": 244.9,
+    "static_trial_frames": 502,
+    "static_trial_sha256": "90b40749cb52f7dca78f3a77cad5d5b6e8e99321acc47a554efe84a33a0636a2"
+   },
+   "adapter": "refused: no contact spheres on calcn_r: cannot find the heel and the plantar plane"
+  },
+  "subject6": {
+   "model_sha256": "28b95be7648e981682c271e93d2860890e74d91e12451db22c634060c96ec769",
+   "trials": {
+    "squats1.mot": {
+     "ik_sha256": "d2ff1e3b8f6468a1e7c56d39d100773b319d0c4cc4d001d92be7391b45eff6d1",
+     "frames": 1302,
+     "frame_interval_s": 0.01,
+     "quasi_static_frames": 20,
+     "stretches_s": [
+      [
+       10.2,
+       10.39,
+       20
+      ]
+     ]
+    },
+    "squatsAsym1.mot": {
+     "ik_sha256": "4b6b005b9fb53f9dcaa995c9e7690009855598cb4588e3c2f1cd9febda06be09",
+     "frames": 1318,
+     "frame_interval_s": 0.01,
+     "quasi_static_frames": 0,
+     "stretches_s": []
+    }
+   },
+   "quasi_static_frames": 20,
+   "foot_length_mm": {
+    "R": 218.78,
+    "L": 213.0,
+    "static_trial_frames": 265,
+    "static_trial_sha256": "0565c85d75bcf759bac239160b66c4f39769320f0d81b3ce5e02204c6a2d83c0"
+   },
+   "adapter": "refused: no contact spheres on calcn_r: cannot find the heel and the plantar plane"
+  },
+  "subject7": {
+   "model_sha256": "43931153c05d5fc089f3c5893fd7873bfc2193918de9645b77969d97518d3b31",
+   "trials": {
+    "squats1.mot": {
+     "ik_sha256": "d2b89315d0c51833298a1be375bbec6197550897267bc1abad70c008945ca934",
+     "frames": 1281,
+     "frame_interval_s": 0.01,
+     "quasi_static_frames": 96,
+     "stretches_s": [
+      [
+       2.51,
+       2.71,
+       21
+      ],
+      [
+       5.22,
+       5.48,
+       27
+      ],
+      [
+       7.71,
+       7.93,
+       23
+      ],
+      [
+       10.27,
+       10.51,
+       25
+      ]
+     ]
+    },
+    "squatsAsym1.mot": {
+     "ik_sha256": "c66b27f85dd3fac9fc404ba2176f742b13b187c54b1cb2ff0e80d344273986eb",
+     "frames": 1341,
+     "frame_interval_s": 0.01,
+     "quasi_static_frames": 58,
+     "stretches_s": [
+      [
+       2.69,
+       3.04,
+       36
+      ],
+      [
+       8.26,
+       8.47,
+       22
+      ]
+     ]
+    }
+   },
+   "quasi_static_frames": 154,
+   "foot_length_mm": {
+    "R": 226.18,
+    "L": 223.63,
+    "static_trial_frames": 704,
+    "static_trial_sha256": "18159a33923984b2b6977d682a398219ec39c2d47cd7cbd3e0f603cd462562b4"
+   },
+   "adapter": "refused: no contact spheres on calcn_r: cannot find the heel and the plantar plane"
+  },
+  "subject8": {
+   "model_sha256": "b3a7d5a2e7f7924a91b02800f8e61c8501f01b426a68317fa16aa1aec626be67",
+   "trials": {
+    "squats1.mot": {
+     "ik_sha256": "e26d8984949e38b69a26d630d0b0ab5474ccf12aaf718ce5a1467ed4b2885abd",
+     "frames": 1321,
+     "frame_interval_s": 0.01,
+     "quasi_static_frames": 27,
+     "stretches_s": [
+      [
+       5.54,
+       5.8,
+       27
+      ]
+     ]
+    },
+    "squatsAsym1.mot": {
+     "ik_sha256": "4e3ed96db1dcb5285032fdcbd185e4554f5d779fc06ca3e59ee967ad921ec90b",
+     "frames": 1321,
+     "frame_interval_s": 0.01,
+     "quasi_static_frames": 0,
+     "stretches_s": []
+    }
+   },
+   "quasi_static_frames": 27,
+   "foot_length_mm": {
+    "R": 200.65,
+    "L": 207.91,
+    "static_trial_frames": 501,
+    "static_trial_sha256": "6291331344fb77be4bc03e8500644e23a4401acc4c9437695b65baa450211a32"
+   },
+   "adapter": "refused: no contact spheres on calcn_r: cannot find the heel and the plantar plane"
+  },
+  "subject9": {
+   "model_sha256": "2e41951f14ad8a3004db071b5265ffe508b2e085a73f328e2e289a19c8231846",
+   "trials": {
+    "squats1.mot": {
+     "ik_sha256": "7957bfb9a68257b2d35bbd4e94519b7831de6ff190ca9d08f8959e4aaf9b5741",
+     "frames": 1301,
+     "frame_interval_s": 0.01,
+     "quasi_static_frames": 31,
+     "stretches_s": [
+      [
+       10.52,
+       10.82,
+       31
+      ]
+     ]
+    },
+    "squatsAsym1.mot": {
+     "ik_sha256": "e29f03efc10bf1150fe6bdfb7a27b7a4adc2d2aea72f6c40f883b90900b03137",
+     "frames": 1351,
+     "frame_interval_s": 0.01,
+     "quasi_static_frames": 0,
+     "stretches_s": []
+    }
+   },
+   "quasi_static_frames": 31,
+   "foot_length_mm": {
+    "R": 255.6,
+    "L": 252.88,
+    "static_trial_frames": 601,
+    "static_trial_sha256": "3c5adb1c507e2cb8e26374d999e85dea6baaaf78cb31cd768fde7b0ec68d0d7e"
+   },
+   "adapter": "refused: no contact spheres on calcn_r: cannot find the heel and the plantar plane"
+  },
+  "subject10": {
+   "model_sha256": "bf697ee57bf4b503d6748ed2845a5b244a8a40e3d428c9100f461dc7b73a5084",
+   "trials": {
+    "squats1.mot": {
+     "ik_sha256": "f594fd4bac30ae489ee47fe6a42181624b010a64b089c5a28fc89857df650c22",
+     "frames": 1288,
+     "frame_interval_s": 0.01,
+     "quasi_static_frames": 51,
+     "stretches_s": [
+      [
+       5.24,
+       5.47,
+       24
+      ],
+      [
+       7.64,
+       7.9,
+       27
+      ]
+     ]
+    },
+    "squatsAsym1.mot": {
+     "ik_sha256": "fcfbf6a3f7fbd0c302275087da0b75fce9ae24f1b5308d0cf1ee2103cb78cfd8",
+     "frames": 1257,
+     "frame_interval_s": 0.01,
+     "quasi_static_frames": 0,
+     "stretches_s": []
+    }
+   },
+   "quasi_static_frames": 51,
+   "foot_length_mm": {
+    "R": 212.58,
+    "L": 211.95,
+    "static_trial_frames": 781,
+    "static_trial_sha256": "7fe50e7ebac7c849b1946ca75d733a0a5a18f7b0ed9da2c336ad58a63e110f40"
+   },
+   "adapter": "refused: no contact spheres on calcn_r: cannot find the heel and the plantar plane"
+  },
+  "subject11": {
+   "model_sha256": "1b79c79298dbf11935f3702c0ac20760707b6938bbf898daffab8eb07a1c335b",
+   "trials": {
+    "squats1.mot": {
+     "ik_sha256": "8045841df0e0413fede7d843d37bba2df9bee7f02b8c1426547d9a7e6ba3e634",
+     "frames": 1349,
+     "frame_interval_s": 0.01,
+     "quasi_static_frames": 0,
+     "stretches_s": []
+    },
+    "squatsAsym1.mot": {
+     "ik_sha256": "6d17aefe7307286c29bb49823181cc65f8f3dbc141d0771b9e1eba63e89dbcb0",
+     "frames": 1414,
+     "frame_interval_s": 0.01,
+     "quasi_static_frames": 0,
+     "stretches_s": []
+    }
+   },
+   "quasi_static_frames": 0,
+   "foot_length_mm": {
+    "R": 237.3,
+    "L": 236.5,
+    "static_trial_frames": 781,
+    "static_trial_sha256": "ce4609302ab046896e49e369a0980c7f11672d93300fbf390d4ae414dc502567"
+   },
+   "adapter": "refused: no contact spheres on calcn_r: cannot find the heel and the plantar plane"
+  }
+ }
+}

@@ -150,7 +150,7 @@ step_tests() {
     (cd "$rec" && "$py" "$SOLE/tests/run_suites.py" "$@" 2> "$rec/$name.log" | tail -1 > "$rec/$name.json") \
       || echo "setup: $name did not finish (see $rec/$name.log)" >&2
   }
-  run sim "$SIM_PY" test_sim_osim test_dhondt_port test_foot_comparison test_case_store
+  run sim "$SIM_PY" test_sim_osim test_dhondt_port test_foot_comparison test_case_store test_double_support
   run casadi "$CASADI_PY" test_dhondt_port
   if [ "$slow" = --slow ]; then
     SOLE_SLOW_TESTS=1 run generator "$GEN_PY" test_sim_print test_generator_regressions

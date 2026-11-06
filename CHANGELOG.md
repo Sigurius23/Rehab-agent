@@ -266,6 +266,21 @@
           - One 2.5 mm case takes about 10 minutes alone, against 20 s at 5 mm.
           - `run_comparison.sh`: with `--out` given, its hand-check hint named the default summary. It now uses the
             `--out` folder, and a full run into another folder is checked too.
+        - **Force-plate check, phase 1** (2026-11-06; VALIDATION_PLAN.md, stage A). Kinematics only: no force,
+          EMG or inverse-dynamics result was opened.
+          - `foot_models/double_support.py`: quasi-static double support in the full measured posture (pelvis
+            height and list and both ankle angles solved), and the plan's quasi-static frame rule. Each frame is a
+            resumable case (`case_store.py`), and frames run in parallel. `tests/test_double_support.py` (15 cases)
+            checks it on the self-test model, with negative controls.
+          - OpenCap LabValidation: the owner's copy, from SimTK, checked against the SimTK listing (source and
+            sha256 in VALIDATION_PLAN.md). Only the models, inverse kinematics, static marker trials and load setups
+            were extracted, outside the repository.
+          - `foot_models/forceplate_frames_2026-11-06.json`: 345 quasi-static frames in squats1 and squatsAsym1,
+            in 7 of 10 subjects. Subjects 2, 4 and 11 have none under the rule. Foot lengths are from
+            r_calc–r_toe in the static trial.
+          - **Stopped:** the adapter refuses every subject's distributed model, which has no foot contact spheres
+            to find the heel and the plantar plane from. Nothing was solved and no workaround was made; the
+            decision is the owner's.
     - **Printed prototype** (`PRINTED.md`, `sole_print.py`). A TPU carrier is built from the same design:
       - underside wire channels along the routing plan;
       - a floor with one hole per region;

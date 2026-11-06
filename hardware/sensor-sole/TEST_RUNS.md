@@ -38,6 +38,8 @@ suites run there.
 | System Python 3 (as CI runs it) | `test_case_store.py` | 11 | 0 | 0 | 0 | — |
 | System Python 3.14.6, the laptop below, 2026-11-05 | `test_compare_results.py` | 9 | 0 | 0 | 0 | — |
 | Pipeline Python (OpenSim 4.6), the laptop below, 2026-11-05 | `test_compare_results.py` | 9 | 0 | 0 | 0 | — |
+| Pipeline Python (OpenSim 4.6), the laptop below, 2026-11-06 | `test_double_support.py` | 15 | 0 | 0 | 0 | — |
+| Generator Python (shapely 2.2.0), slow cases, the laptop below, 2026-11-06 | `test_generator_regressions.py` | 10 | 0 | 1 | 0 | — |
 | KiCad 7.0.11's Python (pcbnew), script-style check | `test_verify_drc.py` | 1 | 0 | 0 | 0 | — |
 
 **The same suites through `workstation/setup.sh tests`.** Inputs fetched by `fetch_inputs.py`, and the self-test
@@ -50,6 +52,14 @@ environment's packages, the slow generator cases, and the KiCad checks (KiCad no
 the system Python through `setup.sh tests`, and under the pipeline Python directly. Its negative controls were
 checked against two deliberately broken checkers, one blind to changed values and one blind to missing and
 extra cases; the matching tests failed. CI does not run it.
+
+**`test_double_support.py`** (the force-plate check's double support and frame rule, added 2026-11-06) has so far
+run only on that laptop, through `setup.sh tests --slow`, where every other suite passed too. Its negative
+controls were checked against three deliberately broken versions, and the matching tests failed each time:
+- a solver that mirrors the posture (the lean and swap tests);
+- a case store that never reuses (the resume test);
+- a run that skips the inverse-kinematics hash check (the refusal test).
+CI does not run it.
 
 ## What this means for the D'Hondt port
 
@@ -67,13 +77,14 @@ orders.
 
 ## Not run in this round
 
-- **Slow generator cases** (`SOLE_SLOW_TESTS=1 python tests/test_generator_regressions.py`). The last run
-  was 2026-11-04 on generator commit 0257862: 10 passed and 1 expected failure
+- **Slow generator cases** (`SOLE_SLOW_TESTS=1 python tests/test_generator_regressions.py`). Run here on
+  2026-11-04, on generator commit 0257862: 10 passed and 1 expected failure
   (`test_t1_eu37_right_fine_pass_is_clean`; the T1 EU 37 fine pass has not passed). The generator files
-  have not changed since.
+  have not changed since. On the laptop, through `setup.sh tests --slow` on 2026-11-06, they gave the same
+  outcome.
 - **KiCad negative controls** (`test_verify_negative.py`, 2–3 minutes per case; `workstation/setup.sh tests
   --slow` runs them). `verify_board.py` has not changed since their last recorded run (VERIFICATION.md,
-  section 4).
+  section 4). Not run on the laptop on 2026-11-06 either: KiCad is not installed there.
 
 ## Each test
 

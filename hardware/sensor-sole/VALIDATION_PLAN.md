@@ -26,6 +26,16 @@ There are three separate questions, in this order. A pass at one stage says noth
 | AddBiomechanics dataset ([addbiomechanics.org](https://addbiomechanics.org/download_data.html)) | 273 subjects, over 70 h of motion with measured ground forces, from many uploaded studies | CC BY 4.0; each dataset lists its uploaders to credit | Later: walking and other movements, many subjects |
 | Grouvel et al. (2023), *Sci Data* [10.1038/s41597-023-02077-3](https://doi.org/10.1038/s41597-023-02077-3), data [Yareta](https://doi.org/10.26037/yareta:xkxgaw6ewjdhfntdhtj7upepxy) | 10 adults; walking, squats, knee flexion; markers, IMUs, three AMTI force plates (1,000 Hz) and two 16-sensor insoles (Moticon, 100 Hz) | Article CC BY 4.0; **data terms not yet confirmed** | Force plate here, and stage C later |
 
+**Copy of OpenCap LabValidation used for stage A (noted 2026-11-06).** `LabValidation_withoutVideos.zip`,
+3,029,832,907 bytes, sha256 `3290d485124fd12c85dd3bc9ee851f3a0530ad0ff58bc396973e665dd6d28187`.
+- **Source:** the owner provided it from their Google Drive. It was originally downloaded from SimTK
+  ([simtk.org/projects/opencap](https://simtk.org/projects/opencap), Downloads: release v0.1, file dated 2022-12-20).
+- **Matches the SimTK listing** in name, size (2889 MB), date and licence (Apache 2.0 Use Agreement).
+- **Complete:** 10 subjects with the same number of entries each (1,196), and no entry newer than 2022-12-20.
+- **Not proven byte-identical to the release:** SimTK publishes no checksum.
+- **Manifest** (every entry's name, size and CRC32, and the sha256 of each file read): kept with the data on the
+  workstation, outside the repository.
+
 **Not usable for this:** the squat already used in the comparison (OpenCap's `squats1_videoAndMocap.mot`). Its
 example folder has no force-plate data. An earlier pipeline output in the scratch area named `measured_grf`
 holds **estimated** forces: its own record says "quasi-static double stance".
