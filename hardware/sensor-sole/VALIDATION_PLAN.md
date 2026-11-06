@@ -128,6 +128,41 @@ data was opened. The rules above stay as written.
    the `static1` frames and the squat frames separately. Pass/fail stays on the pooled per-subject values, as fixed
    above.
 
+**Result of the quasi-static check (2026-11-06; `foot_models/results_forceplate_2026-11-06.json`).**
+- **How it was computed:** as pre-registered in the rules and amendments 1–3 above, by
+  `foot_models/forceplate_metrics.py`. Each subject's predictions were first checked against the sha256 pushed in
+  9b4c934, before any force data was opened. Nothing was fitted or tuned.
+- **Data:** 10 subjects, 6,142 quasi-static frames, all solved. The model uses the assumed contact (v1) and the EU 42
+  sole scaled to each foot.
+
+| Metric (pooled, per-subject RMS error) | Threshold | Median | Range | Subjects outside | Result |
+|---|---|---|---|---|---|
+| Vertical force, both feet combined | ≤ 5 % of body weight | 4.32 % | 0.39–47.24 % | 6, 9, 10 | **Fail** |
+| Forward–backward centre of pressure, combined | ≤ 10 % of foot length | 2.85 % | 0.97–6.67 % | none | **Pass** |
+| Left/right share of vertical force | ≤ 5 points | 7.67 | 0.91–56.42 | 2, 4, 5, 7, 9, 10 | **Fail** |
+
+- **Plate assignment in `static1` (found after the data was opened).** Three subjects did not stand with one foot on
+  each plate:
+  - subjects 2 and 10: the right plate carries nothing, and the left carries 101 % and 94 % of body weight;
+  - subject 9: the left plate carries nothing, and the plates together carry 52 %, so one foot stood off the plates.
+  These trials give the largest errors: `static1` share errors of 56, 44 and 34 points (subjects 2, 10, 9), and
+  subject 9's `static1` vertical error of 48 %.
+  In every squat trial, both plates carry load. Amendment 2 inferred one plate per foot from the dataset's
+  inverse-dynamics setups, and those exist only for the squats.
+- **The result stands as computed,** with `static1` included. Any revision is the owner's to decide, and it would be
+  reported beside this result.
+- **Squats alone (descriptive; 7 subjects, as 2, 4 and 11 have no squat frames):**
+  - vertical force 0.30–6.43 %, with 3 subjects outside (3, 6, 10);
+  - centre of pressure 2.34–6.35 %;
+  - share 1.85–5.84 points, with 2 subjects outside (7, 10).
+  So without `static1`, the vertical force and the share would still fail.
+- **What the passing metric tests.** The centre-of-pressure metric tests the body model's centre of mass, not the
+  sole's contact law, as stage A says. In every subject the measured centre of pressure lies ahead of the model's,
+  by 0.7–6.7 % of foot length on average (descriptive).
+- **What the vertical force reflects.** Where both feet are on the plates, they weigh 4–6 % more than the model's
+  body weight in subjects 3, 5, 6 and 8, and 6 % less in subject 10, in standing and squats alike. So this metric
+  reflects the body model's mass, not the foot model.
+
 **Protocol:**
 - Every result names the dataset version and file hashes, the pipeline commit and the contact model (assumed v1
   or native).

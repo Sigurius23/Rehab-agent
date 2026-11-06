@@ -42,6 +42,7 @@ suites run there.
 | Pipeline Python (OpenSim 4.6), the laptop below, 2026-11-06 | `test_opencap_contacts.py` | 5 | 1 | 0 | 0 | needs OPENCAP_UTILS (opencap-processing's utilsProcessing.py at 72b5416) |
 | Pipeline Python (OpenSim 4.6), the laptop below, 2026-11-06, OPENCAP_UTILS set | `test_opencap_contacts.py` | 6 | 0 | 0 | 0 | — |
 | Pipeline Python (OpenSim 4.6), the laptop below, 2026-11-06 | `test_static_ik.py` | 5 | 0 | 0 | 0 | — |
+| Pipeline Python (OpenSim 4.6), the laptop below, 2026-11-06 | `test_forceplate_metrics.py` | 7 | 0 | 0 | 0 | — |
 | Generator Python (shapely 2.2.0), slow cases, the laptop below, 2026-11-06 | `test_generator_regressions.py` | 10 | 0 | 1 | 0 | — |
 | KiCad 7.0.11's Python (pcbnew), script-style check | `test_verify_drc.py` | 1 | 0 | 0 | 0 | — |
 
@@ -69,6 +70,10 @@ stalled with the pressure on the forefoot. No self-test case reproduces that sta
 its own. It is checked by every one of the 6,142 dataset frames solving, with the same answer as before wherever the
 earlier version had solved.
 CI does not run it.
+
+**`test_forceplate_metrics.py`** (added 2026-11-06, phase 2) checks the metrics on synthetic frames: the signs, the
+force weighting of the combined centre of pressure, its projection on the forward axis, and the stop on changed
+predictions. It was written and passed before any measured value was computed.
 
 **`test_static_ik.py`** (added 2026-11-06) needs no OpenSim. Its negative controls were checked against a builder
 that carries unknown template elements over and one that ignores the reference marker list; the matching tests

@@ -1,0 +1,404 @@
+{
+ "what": "VALIDATION_PLAN.md stage A, quasi-static force-plate check, phase 2 (2026-11-06): the three metrics, as the plan and amendments 1-3 define them. Aggregate values only.",
+ "dataset": {
+  "name": "OpenCap LabValidation, without videos",
+  "release": "v0.1 (SimTK, file dated 2022-12-20)",
+  "archive": {
+   "name": "LabValidation_withoutVideos.zip",
+   "size": 3029832907,
+   "sha256": "3290d485124fd12c85dd3bc9ee851f3a0530ad0ff58bc396973e665dd6d28187"
+  },
+  "source": "Copy provided by the owner on 2026-11-06 from their Google Drive; originally from simtk.org/projects/opencap (SimTK Downloads, LabValidation_withoutVideos.zip)",
+  "licence": "Apache 2.0 Use Agreement, as shown on the SimTK release (no licence file inside the archive)"
+ },
+ "phase1_record": "foot_models/forceplate_frames_2026-11-06.json at 9b4c934 (frames, models and the predictions' sha256, pushed before any force data was opened)",
+ "predictions_checked": "every subject's double_support.json matched the sha256 committed in 9b4c934 before anything was computed",
+ "code": "foot_models/forceplate_metrics.py (this commit); model predictions by foot_models/double_support.py at 9b4c934",
+ "contact_model": "assumed sole contact v1 (sole_sim.ASSUMED_CONTACT_V1), EU 42 sole scaled to each foot",
+ "model": "OpenSimData/Mocap/Model/LaiArnoldModified2017_poly_withArms_weldHand_scaled.osim as distributed, with foot contact spheres added by OpenCap's own rule (VALIDATION_PLAN.md, amendment 1). The frames were chosen with the distributed model; the spheres add no mass, so its centre of mass is unchanged.",
+ "measured": "the right and left plates' channels (R_ground_*, L_ground_*) of ForceData/<trial>_forces.mot as distributed, 2000 Hz, at the 100 Hz frame times (every frame time falls on a force sample); the third plate's channels carry 0 N in every evaluated frame",
+ "body_weight": "the model's mass times g; the model's combined vertical force equals it by construction",
+ "frames": {
+  "squats1": 287,
+  "squatsAsym1": 58,
+  "static1": 5797,
+  "all": 6142,
+  "note": "all solved; static1 is 94.4 % of the frames"
+ },
+ "rule": "a metric passes only if every subject's pooled RMS error is within its threshold; nothing was fitted or tuned",
+ "metrics": {
+  "vertical_force_pct_bw": {
+   "metric": "vertical force, combined, RMS error, % of body weight",
+   "threshold": 5.0,
+   "result": "FAIL",
+   "median": 4.32,
+   "range": [
+    0.39,
+    47.24
+   ],
+   "per_subject_pooled": {
+    "subject2": 1.37,
+    "subject3": 4.45,
+    "subject4": 4.08,
+    "subject5": 4.2,
+    "subject6": 5.98,
+    "subject7": 0.39,
+    "subject8": 4.88,
+    "subject9": 47.24,
+    "subject10": 5.64,
+    "subject11": 2.17
+   },
+   "outside_threshold": [
+    "subject6",
+    "subject9",
+    "subject10"
+   ],
+   "descriptive_static1": {
+    "subject2": 1.37,
+    "subject3": 4.43,
+    "subject4": 4.08,
+    "subject5": 4.11,
+    "subject6": 5.94,
+    "subject7": 0.41,
+    "subject8": 4.89,
+    "subject9": 48.45,
+    "subject10": 5.62,
+    "subject11": 2.17
+   },
+   "descriptive_squats": {
+    "subject2": null,
+    "subject3": 5.05,
+    "subject4": null,
+    "subject5": 4.57,
+    "subject6": 6.43,
+    "subject7": 0.3,
+    "subject8": 4.79,
+    "subject9": 0.98,
+    "subject10": 5.93,
+    "subject11": null
+   },
+   "descriptive_mean_signed_error_pooled": {
+    "subject2": 1.36,
+    "subject3": 4.45,
+    "subject4": -4.08,
+    "subject5": 4.19,
+    "subject6": 5.98,
+    "subject7": -0.29,
+    "subject8": 4.88,
+    "subject9": -46.02,
+    "subject10": -5.64,
+    "subject11": 2.17
+   }
+  },
+  "cop_forward_pct_foot_length": {
+   "metric": "forward-backward centre of pressure, combined, RMS error, % of mean foot length",
+   "threshold": 10.0,
+   "result": "PASS",
+   "median": 2.85,
+   "range": [
+    0.97,
+    6.67
+   ],
+   "per_subject_pooled": {
+    "subject2": 2.59,
+    "subject3": 3.11,
+    "subject4": 1.45,
+    "subject5": 4.65,
+    "subject6": 6.67,
+    "subject7": 4.63,
+    "subject8": 1.34,
+    "subject9": 0.97,
+    "subject10": 1.21,
+    "subject11": 3.26
+   },
+   "outside_threshold": [],
+   "descriptive_static1": {
+    "subject2": 2.59,
+    "subject3": 3.13,
+    "subject4": 1.45,
+    "subject5": 4.61,
+    "subject6": 6.69,
+    "subject7": 4.79,
+    "subject8": 1.26,
+    "subject9": 0.68,
+    "subject10": 1.06,
+    "subject11": 3.26
+   },
+   "descriptive_squats": {
+    "subject2": null,
+    "subject3": 2.53,
+    "subject4": null,
+    "subject5": 4.83,
+    "subject6": 6.35,
+    "subject7": 3.81,
+    "subject8": 2.34,
+    "subject9": 3.2,
+    "subject10": 2.57,
+    "subject11": null
+   },
+   "descriptive_mean_signed_error_pooled": {
+    "subject2": 2.54,
+    "subject3": 3.09,
+    "subject4": 1.39,
+    "subject5": 4.61,
+    "subject6": 6.65,
+    "subject7": 4.56,
+    "subject8": 0.98,
+    "subject9": 0.73,
+    "subject10": 1.0,
+    "subject11": 3.25
+   }
+  },
+  "left_right_share_points": {
+   "metric": "left/right share of vertical force, RMS error, percentage points",
+   "threshold": 5.0,
+   "result": "FAIL",
+   "median": 7.67,
+   "range": [
+    0.91,
+    56.42
+   ],
+   "per_subject_pooled": {
+    "subject2": 56.42,
+    "subject3": 3.01,
+    "subject4": 8.46,
+    "subject5": 6.89,
+    "subject6": 1.23,
+    "subject7": 9.91,
+    "subject8": 0.91,
+    "subject9": 33.22,
+    "subject10": 42.76,
+    "subject11": 4.98
+   },
+   "outside_threshold": [
+    "subject2",
+    "subject4",
+    "subject5",
+    "subject7",
+    "subject9",
+    "subject10"
+   ],
+   "descriptive_static1": {
+    "subject2": 56.42,
+    "subject3": 3.04,
+    "subject4": 8.46,
+    "subject5": 7.47,
+    "subject6": 1.0,
+    "subject7": 10.67,
+    "subject8": 0.39,
+    "subject9": 34.06,
+    "subject10": 44.1,
+    "subject11": 4.98
+   },
+   "descriptive_squats": {
+    "subject2": null,
+    "subject3": 1.85,
+    "subject4": null,
+    "subject5": 3.58,
+    "subject6": 2.88,
+    "subject7": 5.2,
+    "subject8": 3.65,
+    "subject9": 2.26,
+    "subject10": 5.84,
+    "subject11": null
+   },
+   "descriptive_mean_signed_error_pooled": {
+    "subject2": -56.42,
+    "subject3": -2.86,
+    "subject4": -8.45,
+    "subject5": -6.66,
+    "subject6": 0.71,
+    "subject7": -9.42,
+    "subject8": -0.28,
+    "subject9": 32.27,
+    "subject10": -41.05,
+    "subject11": -4.94
+   }
+  }
+ },
+ "plate_assignment": {
+  "finding": "in static1 three subjects did not stand with one foot on each of the right and left plates: subject2 and subject10 had the right plate unloaded (0 N) and the left carrying 101 % and 94 % of body weight; subject9 had the left plate unloaded and the plates together carrying 52 % (a foot off the plates, the third plate unloaded). In every squat trial both plates carry load.",
+  "note": "amendment 2 took one plate per foot from the per-foot channels of the dataset's inverse-dynamics setups, which exist for the squats but not for static1. The results above are as pre-registered and computed, static1 included; any revision is the owner's to decide and would be reported beside them.",
+  "per_subject_trial": {
+   "subject2": {
+    "static1": {
+     "frames": 800,
+     "measured_mean_right_N": 0.0,
+     "measured_mean_left_N": 777.3,
+     "measured_mean_combined_pct_bw": 101.4,
+     "model_mean_right_share_pct": 56.4
+    }
+   },
+   "subject3": {
+    "squats1": {
+     "frames": 20,
+     "measured_mean_right_N": 343.2,
+     "measured_mean_left_N": 310.9,
+     "measured_mean_combined_pct_bw": 105.0,
+     "model_mean_right_share_pct": 51.3
+    },
+    "static1": {
+     "frames": 674,
+     "measured_mean_right_N": 327.1,
+     "measured_mean_left_N": 323.2,
+     "measured_mean_combined_pct_bw": 104.4,
+     "model_mean_right_share_pct": 53.3
+    }
+   },
+   "subject4": {
+    "static1": {
+     "frames": 517,
+     "measured_mean_right_N": 277.7,
+     "measured_mean_left_N": 311.1,
+     "measured_mean_combined_pct_bw": 95.9,
+     "model_mean_right_share_pct": 55.6
+    }
+   },
+   "subject5": {
+    "squats1": {
+     "frames": 42,
+     "measured_mean_right_N": 396.4,
+     "measured_mean_left_N": 417.7,
+     "measured_mean_combined_pct_bw": 104.6,
+     "model_mean_right_share_pct": 52.1
+    },
+    "static1": {
+     "frames": 176,
+     "measured_mean_right_N": 375.8,
+     "measured_mean_left_N": 434.8,
+     "measured_mean_combined_pct_bw": 104.1,
+     "model_mean_right_share_pct": 53.8
+    }
+   },
+   "subject6": {
+    "squats1": {
+     "frames": 20,
+     "measured_mean_right_N": 286.0,
+     "measured_mean_left_N": 329.7,
+     "measured_mean_combined_pct_bw": 106.4,
+     "model_mean_right_share_pct": 49.3
+    },
+    "static1": {
+     "frames": 265,
+     "measured_mean_right_N": 284.3,
+     "measured_mean_left_N": 328.7,
+     "measured_mean_combined_pct_bw": 105.9,
+     "model_mean_right_share_pct": 45.4
+    }
+   },
+   "subject7": {
+    "squats1": {
+     "frames": 96,
+     "measured_mean_right_N": 298.5,
+     "measured_mean_left_N": 302.7,
+     "measured_mean_combined_pct_bw": 100.2,
+     "model_mean_right_share_pct": 56.0
+    },
+    "squatsAsym1": {
+     "frames": 58,
+     "measured_mean_right_N": 391.2,
+     "measured_mean_left_N": 210.0,
+     "measured_mean_combined_pct_bw": 100.2,
+     "model_mean_right_share_pct": 64.7
+    },
+    "static1": {
+     "frames": 703,
+     "measured_mean_right_N": 276.2,
+     "measured_mean_left_N": 321.6,
+     "measured_mean_combined_pct_bw": 99.6,
+     "model_mean_right_share_pct": 56.8
+    }
+   },
+   "subject8": {
+    "squats1": {
+     "frames": 27,
+     "measured_mean_right_N": 330.2,
+     "measured_mean_left_N": 280.2,
+     "measured_mean_combined_pct_bw": 104.8,
+     "model_mean_right_share_pct": 57.6
+    },
+    "static1": {
+     "frames": 501,
+     "measured_mean_right_N": 317.1,
+     "measured_mean_left_N": 293.9,
+     "measured_mean_combined_pct_bw": 104.9,
+     "model_mean_right_share_pct": 52.0
+    }
+   },
+   "subject9": {
+    "squats1": {
+     "frames": 31,
+     "measured_mean_right_N": 401.8,
+     "measured_mean_left_N": 347.4,
+     "measured_mean_combined_pct_bw": 100.9,
+     "model_mean_right_share_pct": 55.8
+    },
+    "static1": {
+     "frames": 601,
+     "measured_mean_right_N": 382.7,
+     "measured_mean_left_N": 0.0,
+     "measured_mean_combined_pct_bw": 51.6,
+     "model_mean_right_share_pct": 65.9
+    }
+   },
+   "subject10": {
+    "squats1": {
+     "frames": 51,
+     "measured_mean_right_N": 262.4,
+     "measured_mean_left_N": 291.2,
+     "measured_mean_combined_pct_bw": 94.1,
+     "model_mean_right_share_pct": 41.7
+    },
+    "static1": {
+     "frames": 781,
+     "measured_mean_right_N": 0.0,
+     "measured_mean_left_N": 555.3,
+     "measured_mean_combined_pct_bw": 94.4,
+     "model_mean_right_share_pct": 44.1
+    }
+   },
+   "subject11": {
+    "static1": {
+     "frames": 779,
+     "measured_mean_right_N": 444.6,
+     "measured_mean_left_N": 486.2,
+     "measured_mean_combined_pct_bw": 102.2,
+     "model_mean_right_share_pct": 52.7
+    }
+   }
+  }
+ },
+ "force_files_sha256": {
+  "subject10/ForceData/squats1_forces.mot": "5a640d994d2ac6f8f5c492b10d565f185ce1f8a07a507828e794d7185af8b609",
+  "subject10/ForceData/squatsAsym1_forces.mot": "e34ac25e9d89a84188f8f4485d3cf3e88b654c546cae2e9b66e274dc147bf969",
+  "subject10/ForceData/static1_forces.mot": "6a35644e4365603c60a248508f4176c58f8a66d317bc1bd8c2b5776f36f4170b",
+  "subject11/ForceData/squats1_forces.mot": "2a48e5082b54bd49ec1c16e5d1feb335c462f5dfa1dd7f4b6e7304e4ef4286fd",
+  "subject11/ForceData/squatsAsym1_forces.mot": "e25c545b98b13b68daa84c85e77d942dfa2d532724b0455d88828126419c7977",
+  "subject11/ForceData/static1_forces.mot": "eb78161c1ae27b477941bbcca48b48ae1cb7a9b1072542b92365a2180c28d44e",
+  "subject2/ForceData/squats1_forces.mot": "75139364123aa75a570372657dbca1168eed3ea6b0239d4cb0a47eeeae8b3c6b",
+  "subject2/ForceData/squatsAsym1_forces.mot": "f6f2d91cc507aac0128ae76127652ed33903fa5d64c4c2cb223e73ae36f7ba71",
+  "subject2/ForceData/static1_forces.mot": "d2448552b651c319fb02276c76600f03d39d4bbc8f23bd2a0971c61bde5a8600",
+  "subject3/ForceData/squats1_forces.mot": "58d62e38529b396a63b52dc5df926e328a7dcbeb68f885e833ab3691dfe7b262",
+  "subject3/ForceData/squatsAsym1_forces.mot": "6945264075832ded248e93f883c15a5278a2b4a4255d248b23a070d6406fa497",
+  "subject3/ForceData/static1_forces.mot": "daf88a3602c3c78ed5d0dcb0a2c1b16c8929ce564130c171f2bbc005b7a3b90f",
+  "subject4/ForceData/squats1_forces.mot": "38e3f451c125e6ea3d974a692a60354cc726fa15a67677ac1521a21aedc8790f",
+  "subject4/ForceData/squatsAsym1_forces.mot": "974757ca5410a001f5b087acc433cf3a48c3df02b927c89133dea6686c2aed1f",
+  "subject4/ForceData/static1_forces.mot": "9f5120773d597ccb5e87d425efc8195f39084e0747affe0c18401abecf056df3",
+  "subject5/ForceData/squats1_forces.mot": "30c1bfa3d40391aa4a20860af82b8086c6313d479ef578395f0c1ad3e063af49",
+  "subject5/ForceData/squatsAsym1_forces.mot": "b4156a6ca2d99e0f12d875911d0d0a91fc6723d845c18cc0b7e9824e0d01184c",
+  "subject5/ForceData/static1_forces.mot": "a9b0be105e543a599459670d31cfbd2edb3034358b1f94a55352b13d305a0d43",
+  "subject6/ForceData/squats1_forces.mot": "546be393d6c7b18102856e3ed13029901302f513c16eb86f65f7decce3d5fb73",
+  "subject6/ForceData/squatsAsym1_forces.mot": "bb965edd424c513b1215ea752048a1334ec868c1246bbbcb5f8dcdbc63ec0970",
+  "subject6/ForceData/static1_forces.mot": "6e46b538a0e12dd2798a0a953ca3b193bb6d53a957710cff570090cb161ba6e4",
+  "subject7/ForceData/squats1_forces.mot": "3493b7de840ae014f85b9d88789ed3d8f3a449efe500ea34760e15fc87a2c103",
+  "subject7/ForceData/squatsAsym1_forces.mot": "8982b092a7dc07563a2a5fe6e799d4634246aa2da30bfafcf68323f69a992ddb",
+  "subject7/ForceData/static1_forces.mot": "30a75eac13f1f2aa566fa2edf89ce042f4fa6459e25c7399791de52b4e96f48f",
+  "subject8/ForceData/squats1_forces.mot": "d0dd5fd2f4156774e591289f75977213a40bcc13e95e9c9730e7c5c2fb03a1c7",
+  "subject8/ForceData/squatsAsym1_forces.mot": "3ada09008f74ede86dad306858f697afdd641ef6241692d5055834dbf809ef8c",
+  "subject8/ForceData/static1_forces.mot": "25e6ba8c90ecd22b57aca1ab7fa80901416937a78765d2f482dc4e1ae08d839c",
+  "subject9/ForceData/squats1_forces.mot": "81cb5ce90582e624e0ceb09345c73ef63f80d50763a6cd7448297f75b3bf3baa",
+  "subject9/ForceData/squatsAsym1_forces.mot": "a78454cb7436bfcff740265a01c50ebebf33731b47503161bc2666517bccc17a",
+  "subject9/ForceData/static1_forces.mot": "3771c740b82e64514e6bf145c42a25c0fea6099b61786a9f4b7eabd21b220b89"
+ },
+ "results_from_metrics_file_sha256": "9c6cc8b6a6149ffe01a7040bef1bedd2886ea854432343683fce02d3eeab9daf"
+}

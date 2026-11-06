@@ -327,6 +327,17 @@
               the metric tests only the body model's mass and the quasi-static assumption.
             - Each metric is also reported for the standing and the squat frames separately, descriptively. Pass/fail
               stays on the pooled values; standing is about 94 % of the frames.
+        - **Force-plate check, phase 2: result** (2026-11-06; VALIDATION_PLAN.md, stage A;
+          `foot_models/results_forceplate_2026-11-06.json`, computed by `foot_models/forceplate_metrics.py`). The
+          predictions matched the sha256 pushed in 9b4c934 before any force data was opened. Nothing was tuned.
+          - Vertical force, combined: **fail.** Median 4.32 % of body weight, range 0.39–47.24 %; subjects 6, 9 and 10
+            are outside 5 %.
+          - Forward–backward centre of pressure, combined: **pass.** Median 2.85 % of foot length, range 0.97–6.67 %.
+            It tests the body model's centre of mass, not the contact law.
+          - Left/right share: **fail.** Median 7.67 points, range 0.91–56.42; 6 of 10 subjects are outside 5.
+          - Found after opening: in `static1`, subjects 2, 9 and 10 did not stand with one foot on each plate. Those
+            trials give the largest errors. The result stands as computed. On the squats alone (descriptive), the
+            vertical force and the share would still fail.
     - **Printed prototype** (`PRINTED.md`, `sole_print.py`). A TPU carrier is built from the same design:
       - underside wire channels along the routing plan;
       - a floor with one hole per region;
