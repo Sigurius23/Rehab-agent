@@ -338,6 +338,14 @@
           - Found after opening: in `static1`, subjects 2, 9 and 10 did not stand with one foot on each plate. Those
             trials give the largest errors. The result stands as computed. On the squats alone (descriptive), the
             vertical force and the share would still fail.
+        - **Force-plate check, post-hoc analysis** (2026-11-06; defined by the owner after the data was seen,
+          reported beside the pre-registered result, which is unchanged). It uses `foot_models/forceplate_posthoc.py`
+          and writes `foot_models/results_forceplate_posthoc_2026-11-06.json`.
+          - A plate-coverage rule, on measured loads only, removes the `static1` trials of subjects 2, 9 and 10.
+            Subject 2 is then not evaluated. The vertical force still fails (subjects 6, 10), the centre of pressure
+            passes among the 9 evaluated, and the share still fails (subjects 4, 5, 7, 10).
+          - The model's mass equals the recorded mass in every subject. The vertical-force error equals the gap
+            between the plates' weight and the recorded mass to within 0.1 points, so its failures follow that gap.
     - **Printed prototype** (`PRINTED.md`, `sole_print.py`). A TPU carrier is built from the same design:
       - underside wire channels along the routing plan;
       - a floor with one hole per region;

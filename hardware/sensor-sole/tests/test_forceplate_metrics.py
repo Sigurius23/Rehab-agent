@@ -92,5 +92,29 @@ class Files(unittest.TestCase):
                 FM.evaluate(rec, d / "solve", d / "forces")
 
 
+try:
+    import forceplate_posthoc as PH
+except ImportError:
+    PH = None
+
+
+@unittest.skipUnless(HAVE and PH, "needs numpy")
+class PostHocCoverageRule(unittest.TestCase):
+    """The post-hoc plate-coverage rule (measured loads only): a trial is left out if either plate carries less
+    than 1 % of body weight on average."""
+
+    def test_both_plates_loaded_is_kept(self):
+        self.assertEqual(PH.coverage([350.0, 360.0], [340.0, 330.0], W)[0], True)
+
+    def test_an_unloaded_plate_is_left_out(self):
+        kept, r, l = PH.coverage([0.0, 2.0], [700.0, 698.0], W)
+        self.assertFalse(kept)
+        self.assertAlmostEqual(r, 100.0 * 1.0 / W)
+
+    def test_the_threshold_is_one_percent_of_body_weight(self):
+        self.assertTrue(PH.coverage([7.0], [693.0], W)[0])          # exactly 1 %: kept
+        self.assertFalse(PH.coverage([6.9], [693.1], W)[0])
+
+
 if __name__ == "__main__":
     unittest.main()

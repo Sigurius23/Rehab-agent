@@ -163,6 +163,37 @@ data was opened. The rules above stay as written.
   body weight in subjects 3, 5, 6 and 8, and 6 % less in subject 10, in standing and squats alike. So this metric
   reflects the body model's mass, not the foot model.
 
+**Post-hoc analysis (2026-11-06; `foot_models/results_forceplate_posthoc_2026-11-06.json`).**
+- **Not pre-registered.** The owner defined it after the force data had been seen. It stands beside the result
+  above, which stays as computed and remains the result of the pre-registered check.
+- **Code:** `foot_models/forceplate_posthoc.py`, which reuses the per-frame functions of `forceplate_metrics.py`
+  unchanged.
+
+1. **Plate coverage.** A trial is left out if the right or the left plate carries less than 1 % of body weight on
+   average over its quasi-static frames. The rule uses only the measured plate loads, never the model's
+   predictions.
+   - It removes three trials: the `static1` trials of subjects 2, 9 and 10, each with one plate at 0 %.
+   - Every other trial has at least 34.9 % on each plate (the lowest is subject 7's asymmetric squat).
+   - Subject 2 is then left without frames and is not evaluated (amendment 2). A metric can therefore pass only
+     among the 9 subjects evaluated.
+
+   | Metric (pooled, per-subject RMS error) | Threshold | Median | Range | Subjects outside | Post-hoc result | Pre-registered |
+   |---|---|---|---|---|---|---|
+   | Vertical force, combined | ≤ 5 % of body weight | 4.20 % | 0.39–5.98 % | 6, 10 | Fail | Fail |
+   | Forward–backward centre of pressure, combined | ≤ 10 % of foot length | 3.20 % | 1.34–6.67 % | none | Pass among the 9 evaluated | Pass |
+   | Left/right share | ≤ 5 points | 4.98 | 0.91–9.91 | 4, 5, 7, 10 | Fail | Fail |
+
+2. **Body mass.** For every subject, the model's total mass equals the mass recorded in the dataset. The recorded
+   mass is the same in `sessionMetadata.yaml` and in the scale setup.
+   - Over the kept frames, the plates weigh subjects 3, 5, 6 and 8 4.2–6.0 % above that mass, subject 11 2.2 %
+     above, and subject 7 within 0.4 %.
+   - They weigh subjects 4 and 10 4.1 % and 5.9 % below it. Subject 10's figure is from its squats, because its
+     `static1` is left out.
+   - Subject 9 is weighed from its squats only, 0.9 % above.
+   - **The vertical-force failures follow that gap.** In every evaluated subject, the vertical-force RMS error equals
+     the gap between plate weight and recorded mass to within 0.1 points. The two subjects outside 5 % are the two
+     whose plates weigh them more than 5 % off their recorded mass: subject 6 (+6.0 %) and subject 10 (−5.9 %).
+
 **Protocol:**
 - Every result names the dataset version and file hashes, the pipeline commit and the contact model (assumed v1
   or native).

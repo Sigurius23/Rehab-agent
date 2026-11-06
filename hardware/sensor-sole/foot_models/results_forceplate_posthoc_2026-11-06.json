@@ -1,0 +1,477 @@
+{
+ "post_hoc": "post hoc: defined on 2026-11-06 after the force data was seen; the pre-registered result stays as computed",
+ "analysis": "VALIDATION_PLAN.md stage A, post-hoc analysis beside the pre-registered result (foot_models/results_forceplate_2026-11-06.json, unchanged)",
+ "code": "foot_models/forceplate_posthoc.py (this commit), using foot_models/forceplate_metrics.py's per-frame functions unchanged",
+ "predictions_checked": "every subject's double_support.json matched the sha256 committed in 9b4c934",
+ "coverage_rule": "leave out a trial if either plate carries < 1.0 % of body weight on average over its quasi-static frames; the body weight is the model's mass times g, as in the pre-registered metrics; the model's predictions are not used",
+ "removed_trials": [
+  "subject2 static1",
+  "subject9 static1",
+  "subject10 static1"
+ ],
+ "plate_coverage_per_trial_pct_bw": {
+  "subject2": {
+   "static1": {
+    "frames": 800,
+    "right_plate_pct_bw": 0.0,
+    "left_plate_pct_bw": 101.36,
+    "kept": false
+   }
+  },
+  "subject3": {
+   "squats1": {
+    "frames": 20,
+    "right_plate_pct_bw": 55.11,
+    "left_plate_pct_bw": 49.92,
+    "kept": true
+   },
+   "static1": {
+    "frames": 674,
+    "right_plate_pct_bw": 52.53,
+    "left_plate_pct_bw": 51.9,
+    "kept": true
+   }
+  },
+  "subject4": {
+   "static1": {
+    "frames": 517,
+    "right_plate_pct_bw": 45.24,
+    "left_plate_pct_bw": 50.68,
+    "kept": true
+   }
+  },
+  "subject5": {
+   "squats1": {
+    "frames": 42,
+    "right_plate_pct_bw": 50.91,
+    "left_plate_pct_bw": 53.64,
+    "kept": true
+   },
+   "static1": {
+    "frames": 176,
+    "right_plate_pct_bw": 48.26,
+    "left_plate_pct_bw": 55.84,
+    "kept": true
+   }
+  },
+  "subject6": {
+   "squats1": {
+    "frames": 20,
+    "right_plate_pct_bw": 49.43,
+    "left_plate_pct_bw": 56.98,
+    "kept": true
+   },
+   "static1": {
+    "frames": 265,
+    "right_plate_pct_bw": 49.13,
+    "left_plate_pct_bw": 56.81,
+    "kept": true
+   }
+  },
+  "subject7": {
+   "squats1": {
+    "frames": 96,
+    "right_plate_pct_bw": 49.74,
+    "left_plate_pct_bw": 50.44,
+    "kept": true
+   },
+   "squatsAsym1": {
+    "frames": 58,
+    "right_plate_pct_bw": 65.18,
+    "left_plate_pct_bw": 34.99,
+    "kept": true
+   },
+   "static1": {
+    "frames": 703,
+    "right_plate_pct_bw": 46.01,
+    "left_plate_pct_bw": 53.59,
+    "kept": true
+   }
+  },
+  "subject8": {
+   "squats1": {
+    "frames": 27,
+    "right_plate_pct_bw": 56.68,
+    "left_plate_pct_bw": 48.11,
+    "kept": true
+   },
+   "static1": {
+    "frames": 501,
+    "right_plate_pct_bw": 54.43,
+    "left_plate_pct_bw": 50.45,
+    "kept": true
+   }
+  },
+  "subject9": {
+   "squats1": {
+    "frames": 31,
+    "right_plate_pct_bw": 54.12,
+    "left_plate_pct_bw": 46.8,
+    "kept": true
+   },
+   "static1": {
+    "frames": 601,
+    "right_plate_pct_bw": 51.56,
+    "left_plate_pct_bw": 0.0,
+    "kept": false
+   }
+  },
+  "subject10": {
+   "squats1": {
+    "frames": 51,
+    "right_plate_pct_bw": 44.59,
+    "left_plate_pct_bw": 49.49,
+    "kept": true
+   },
+   "static1": {
+    "frames": 781,
+    "right_plate_pct_bw": 0.0,
+    "left_plate_pct_bw": 94.38,
+    "kept": false
+   }
+  },
+  "subject11": {
+   "static1": {
+    "frames": 779,
+    "right_plate_pct_bw": 48.81,
+    "left_plate_pct_bw": 53.36,
+    "kept": true
+   }
+  }
+ },
+ "pass_rule": "the same thresholds and rule; a subject left without frames is not evaluated (amendment 2), so a metric can pass only among the subjects evaluated",
+ "metrics": {
+  "vertical_force_pct_bw": {
+   "metric": "vertical force, combined, RMS error, % of body weight",
+   "threshold": 5.0,
+   "subjects_evaluated": 9,
+   "not_evaluated": [
+    "subject2"
+   ],
+   "result": "FAIL",
+   "median": 4.2,
+   "range": [
+    0.39,
+    5.98
+   ],
+   "outside_threshold": [
+    "subject6",
+    "subject10"
+   ],
+   "per_subject_pooled": {
+    "subject3": 4.45,
+    "subject4": 4.08,
+    "subject5": 4.2,
+    "subject6": 5.98,
+    "subject7": 0.39,
+    "subject8": 4.88,
+    "subject9": 0.98,
+    "subject10": 5.93,
+    "subject11": 2.17
+   },
+   "descriptive_static1": {
+    "subject3": 4.43,
+    "subject4": 4.08,
+    "subject5": 4.11,
+    "subject6": 5.94,
+    "subject7": 0.41,
+    "subject8": 4.89,
+    "subject9": null,
+    "subject10": null,
+    "subject11": 2.17
+   },
+   "descriptive_squats": {
+    "subject3": 5.05,
+    "subject4": null,
+    "subject5": 4.57,
+    "subject6": 6.43,
+    "subject7": 0.3,
+    "subject8": 4.79,
+    "subject9": 0.98,
+    "subject10": 5.93,
+    "subject11": null
+   },
+   "pre_registered": {
+    "result": "FAIL",
+    "median": 4.32,
+    "range": [
+     0.39,
+     47.24
+    ],
+    "outside_threshold": [
+     "subject6",
+     "subject9",
+     "subject10"
+    ]
+   }
+  },
+  "cop_forward_pct_foot_length": {
+   "metric": "forward-backward centre of pressure, combined, RMS error, % of mean foot length",
+   "threshold": 10.0,
+   "subjects_evaluated": 9,
+   "not_evaluated": [
+    "subject2"
+   ],
+   "result": "PASS among the 9 evaluated subjects (not all 10: subject2 not evaluated)",
+   "median": 3.2,
+   "range": [
+    1.34,
+    6.67
+   ],
+   "outside_threshold": [],
+   "per_subject_pooled": {
+    "subject3": 3.11,
+    "subject4": 1.45,
+    "subject5": 4.65,
+    "subject6": 6.67,
+    "subject7": 4.63,
+    "subject8": 1.34,
+    "subject9": 3.2,
+    "subject10": 2.57,
+    "subject11": 3.26
+   },
+   "descriptive_static1": {
+    "subject3": 3.13,
+    "subject4": 1.45,
+    "subject5": 4.61,
+    "subject6": 6.69,
+    "subject7": 4.79,
+    "subject8": 1.26,
+    "subject9": null,
+    "subject10": null,
+    "subject11": 3.26
+   },
+   "descriptive_squats": {
+    "subject3": 2.53,
+    "subject4": null,
+    "subject5": 4.83,
+    "subject6": 6.35,
+    "subject7": 3.81,
+    "subject8": 2.34,
+    "subject9": 3.2,
+    "subject10": 2.57,
+    "subject11": null
+   },
+   "pre_registered": {
+    "result": "PASS",
+    "median": 2.85,
+    "range": [
+     0.97,
+     6.67
+    ],
+    "outside_threshold": []
+   }
+  },
+  "left_right_share_points": {
+   "metric": "left/right share of vertical force, RMS error, percentage points",
+   "threshold": 5.0,
+   "subjects_evaluated": 9,
+   "not_evaluated": [
+    "subject2"
+   ],
+   "result": "FAIL",
+   "median": 4.98,
+   "range": [
+    0.91,
+    9.91
+   ],
+   "outside_threshold": [
+    "subject4",
+    "subject5",
+    "subject7",
+    "subject10"
+   ],
+   "per_subject_pooled": {
+    "subject3": 3.01,
+    "subject4": 8.46,
+    "subject5": 6.89,
+    "subject6": 1.23,
+    "subject7": 9.91,
+    "subject8": 0.91,
+    "subject9": 2.26,
+    "subject10": 5.84,
+    "subject11": 4.98
+   },
+   "descriptive_static1": {
+    "subject3": 3.04,
+    "subject4": 8.46,
+    "subject5": 7.47,
+    "subject6": 1.0,
+    "subject7": 10.67,
+    "subject8": 0.39,
+    "subject9": null,
+    "subject10": null,
+    "subject11": 4.98
+   },
+   "descriptive_squats": {
+    "subject3": 1.85,
+    "subject4": null,
+    "subject5": 3.58,
+    "subject6": 2.88,
+    "subject7": 5.2,
+    "subject8": 3.65,
+    "subject9": 2.26,
+    "subject10": 5.84,
+    "subject11": null
+   },
+   "pre_registered": {
+    "result": "FAIL",
+    "median": 7.67,
+    "range": [
+     0.91,
+     56.42
+    ],
+    "outside_threshold": [
+     "subject2",
+     "subject4",
+     "subject5",
+     "subject7",
+     "subject9",
+     "subject10"
+    ]
+   }
+  }
+ },
+ "body_mass": {
+  "g_m_s2": 9.80665,
+  "per_subject": {
+   "subject2": {
+    "model_kg": 78.2,
+    "recorded_kg": {
+     "session_metadata_kg": 78.2,
+     "scale_setup_kg": 78.2
+    },
+    "plates_static1_kg": null,
+    "plates_squats_kg": null,
+    "plates_kept_frames_kg": null,
+    "plates_minus_recorded_pct": null,
+    "vertical_force_rms_pct_bw": null,
+    "vertical_rms_minus_abs_gap_points": null
+   },
+   "subject3": {
+    "model_kg": 63.5,
+    "recorded_kg": {
+     "session_metadata_kg": 63.5,
+     "scale_setup_kg": 63.5
+    },
+    "plates_static1_kg": 66.31,
+    "plates_squats_kg": 66.7,
+    "plates_kept_frames_kg": 66.32,
+    "plates_minus_recorded_pct": 4.44,
+    "vertical_force_rms_pct_bw": 4.45,
+    "vertical_rms_minus_abs_gap_points": 0.005
+   },
+   "subject4": {
+    "model_kg": 62.6,
+    "recorded_kg": {
+     "session_metadata_kg": 62.6,
+     "scale_setup_kg": 62.6
+    },
+    "plates_static1_kg": 60.05,
+    "plates_squats_kg": null,
+    "plates_kept_frames_kg": 60.05,
+    "plates_minus_recorded_pct": -4.07,
+    "vertical_force_rms_pct_bw": 4.08,
+    "vertical_rms_minus_abs_gap_points": 0.004
+   },
+   "subject5": {
+    "model_kg": 79.4,
+    "recorded_kg": {
+     "session_metadata_kg": 79.4,
+     "scale_setup_kg": 79.4
+    },
+    "plates_static1_kg": 82.66,
+    "plates_squats_kg": 83.02,
+    "plates_kept_frames_kg": 82.73,
+    "plates_minus_recorded_pct": 4.19,
+    "vertical_force_rms_pct_bw": 4.2,
+    "vertical_rms_minus_abs_gap_points": 0.008
+   },
+   "subject6": {
+    "model_kg": 59.0,
+    "recorded_kg": {
+     "session_metadata_kg": 59.0,
+     "scale_setup_kg": 59.0
+    },
+    "plates_static1_kg": 62.51,
+    "plates_squats_kg": 62.78,
+    "plates_kept_frames_kg": 62.53,
+    "plates_minus_recorded_pct": 5.98,
+    "vertical_force_rms_pct_bw": 5.98,
+    "vertical_rms_minus_abs_gap_points": -0.003
+   },
+   "subject7": {
+    "model_kg": 61.2,
+    "recorded_kg": {
+     "session_metadata_kg": 61.2,
+     "scale_setup_kg": 61.2
+    },
+    "plates_static1_kg": 60.96,
+    "plates_squats_kg": 61.31,
+    "plates_kept_frames_kg": 61.02,
+    "plates_minus_recorded_pct": -0.29,
+    "vertical_force_rms_pct_bw": 0.39,
+    "vertical_rms_minus_abs_gap_points": 0.1
+   },
+   "subject8": {
+    "model_kg": 59.4,
+    "recorded_kg": {
+     "session_metadata_kg": 59.4,
+     "scale_setup_kg": 59.4
+    },
+    "plates_static1_kg": 62.3,
+    "plates_squats_kg": 62.24,
+    "plates_kept_frames_kg": 62.3,
+    "plates_minus_recorded_pct": 4.88,
+    "vertical_force_rms_pct_bw": 4.88,
+    "vertical_rms_minus_abs_gap_points": 0.006
+   },
+   "subject9": {
+    "model_kg": 75.7,
+    "recorded_kg": {
+     "session_metadata_kg": 75.7,
+     "scale_setup_kg": 75.7
+    },
+    "plates_static1_kg": null,
+    "plates_squats_kg": 76.4,
+    "plates_kept_frames_kg": 76.4,
+    "plates_minus_recorded_pct": 0.92,
+    "vertical_force_rms_pct_bw": 0.98,
+    "vertical_rms_minus_abs_gap_points": 0.053
+   },
+   "subject10": {
+    "model_kg": 60.0,
+    "recorded_kg": {
+     "session_metadata_kg": 60.0,
+     "scale_setup_kg": 60.0
+    },
+    "plates_static1_kg": null,
+    "plates_squats_kg": 56.45,
+    "plates_kept_frames_kg": 56.45,
+    "plates_minus_recorded_pct": -5.92,
+    "vertical_force_rms_pct_bw": 5.93,
+    "vertical_rms_minus_abs_gap_points": 0.008
+   },
+   "subject11": {
+    "model_kg": 92.9,
+    "recorded_kg": {
+     "session_metadata_kg": 92.9,
+     "scale_setup_kg": 92.9
+    },
+    "plates_static1_kg": 94.91,
+    "plates_squats_kg": null,
+    "plates_kept_frames_kg": 94.91,
+    "plates_minus_recorded_pct": 2.16,
+    "vertical_force_rms_pct_bw": 2.17,
+    "vertical_rms_minus_abs_gap_points": 0.007
+   }
+  },
+  "recorded_source": "sessionMetadata.yaml (mass_kg) and the scale setup (<mass>) agree in all 10 subjects",
+  "plates": "mean combined vertical load of the right and left plates over the kept frames, divided by g (static1: valid static1 frames only; squats given too)",
+  "finding": "the model's mass equals the recorded mass in all 10 subjects, so the model's weight is the recorded weight. In every evaluated subject the vertical-force RMS error equals the gap between the plates' weight and the recorded mass to within 0.10 points: the vertical-force failures follow that gap. The two subjects outside 5 % after the coverage rule, 6 and 10, are the two whose plates weigh them more than 5 % off their recorded mass (+6.0 % and -5.9 %)."
+ },
+ "inputs_sha256": {
+  "posthoc_output": "07838b1356dcb1c162f399cbcac7d510040b3e5126fc91566fc876924ef1cdd4",
+  "pre_registered_results": "b2c91d38a3cfc2d6271cf6dfb156961fcde5951ef1f0b6e0c401c2e589d41ec1"
+ }
+}
