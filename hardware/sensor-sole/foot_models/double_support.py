@@ -29,7 +29,10 @@ self-test model: condition number from 40 to 6e5, the solve stalls). Sideways th
 make the roll several times stiffer than gravity's tipping moment, so that equilibrium is well conditioned.
 
 At rest the smooth contact model has no friction, so the horizontal position and heading do not matter and stay as
-measured. Solved, not simulated: the equilibrium is found by damped Newton, and its stability is not claimed.
+measured. Solved, not simulated: the equilibrium is found by damped Newton, and its stability is not claimed. The
+Newton starts in stages (pelvis height for support, then the roll by a bracketed search, then all four unknowns): a
+start with one foot barely touching otherwise ended on another root or in the air (found 2026-11-06 on OpenCap
+LabValidation's kinematics alone).
 
 Quasi-static frames (the plan's rule, kinematics only): frames where the whole-body centre of mass, computed from the
 inverse kinematics with the subject's model, accelerates at less than 0.1 m/s^2, in stretches of at least 0.2 s. The
@@ -325,28 +328,64 @@ class DoubleSupport:
                              (F[ks["R"], 1] @ ahead[ks["R"]]) / (0.1 * self.weight),   # each foot's centre of pressure
                              (F[ks["L"], 1] @ ahead[ks["L"]]) / (0.1 * self.weight)])  # under the centre of mass
 
-        n = len(UNKNOWNS)
-        x, it, nfev = x0.copy(), 0, 0
-        r = resid(x); nfev += 1
         h = np.array([1e-7, 1e-6, 1e-6, 1e-6])
-        for it in range(100):
-            if np.abs(r).max() < tol:
-                break
-            J = np.empty((n, n))
-            for j in range(n):
-                J[:, j] = (resid(x + np.eye(n)[j] * h[j]) - r) / h[j]
-            nfev += n
-            dx = -np.linalg.lstsq(J, r, rcond=None)[0]
-            step = 1.0
-            while step > 1e-6:
-                xn = np.clip(x + step * dx, lo, hi)
-                rn = resid(xn); nfev += 1
-                if np.linalg.norm(rn) < np.linalg.norm(r):
-                    break
-                step /= 2
-            if step <= 1e-6:
-                break
-            x, r = xn, rn
+
+        def newton(x, active, max_iter):
+            """Damped Newton on the equations and unknowns listed in `active` (the others held)."""
+            a = np.array(active)
+            r = resid(x); calls = 1
+            for k in range(max_iter):
+                if np.abs(r[a]).max() < tol:
+                    return x, r, k, calls
+                J = np.empty((len(a), len(a)))
+                for j, u in enumerate(a):
+                    J[:, j] = (resid(x + np.eye(len(x))[u] * h[u])[a] - r[a]) / h[u]
+                calls += len(a)
+                dx = np.zeros(len(x)); dx[a] = -np.linalg.lstsq(J, r[a], rcond=None)[0]
+                step = 1.0
+                while step > 1e-6:
+                    xn = np.clip(x + step * dx, lo, hi)
+                    rn = resid(xn); calls += 1
+                    if np.linalg.norm(rn[a]) < np.linalg.norm(r[a]):
+                        break
+                    step /= 2
+                if step <= 1e-6:
+                    return x, r, k, calls
+                x, r = xn, rn
+            return x, r, max_iter, calls
+
+        # Staged start (2026-11-06, found on OpenCap LabValidation's kinematics alone): from the levelled start only
+        # a few spheres may touch, and the full Newton could then end on another root (one foot on its toe tip, the
+        # roll at its bound) or lift the body off the floor (which also zeroes the roll moment). So:
+        #   1. the body is lowered until the soles carry the weight (pelvis height alone);
+        #   2. the roll is balanced by a bracketed one-dimensional search over the list, between its bounds, with the
+        #      height re-solved for support at each list (rolling to one side loads that foot, so the roll moment
+        #      changes sign across the bracket);
+        #   3. all four unknowns are solved together from there.
+        # Only the path to the solution changes; the equations, unknowns and bounds do not.
+        from scipy.optimize import brentq
+        it = nfev = 0
+
+        def supported(xi):
+            nonlocal it, nfev
+            xi, _, k, calls = newton(xi, (0,), 50)
+            it += k; nfev += calls
+            return xi
+
+        x = supported(x0.copy())
+        at = {}
+
+        def roll(v):
+            nonlocal nfev
+            xi = x.copy(); xi[1] = v
+            at[v] = supported(xi); nfev += 1
+            return resid(at[v])[1]
+        if roll(lo[1]) * roll(hi[1]) < 0:
+            v = brentq(roll, lo[1], hi[1], xtol=1e-9)
+            roll(v)
+            x = at[v]
+        x, r, k, calls = newton(x, (0, 1, 2, 3), 100)
+        it += k; nfev += calls
         r = resid(x)
         F, P, side = self._contact()
         com = m.calcMassCenterPosition(st)

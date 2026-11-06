@@ -10,7 +10,9 @@ contact v1:
   - in a mirrored posture left and right are mirror images: a symmetric posture loads both feet equally, and
     mirroring an asymmetric posture swaps the feet's forces and centres of pressure. The left foot gets a mirrored
     copy of the right sole, so the check is of the solver, not of the two boards' small differences;
-  - a synthetic sideways lean of the trunk shifts load to the side it leans to, and the opposite lean to the other.
+  - a synthetic sideways lean of the trunk shifts load to the side it leans to, and the opposite lean to the other;
+  - from a start rolled so that one foot is off the floor, the solve reaches the same solution (the 2026-11-05
+    solver did not, from 2 degrees on; found on OpenCap LabValidation's kinematics).
 Runs: frames solved in parallel give the same results as one at a time; a second run reuses every finished frame;
 a frame whose completion record is missing (an interrupted run) is solved again, and only that one; only the
 selected frames are solved; a frame selection made from other inverse kinematics is refused.
@@ -246,6 +248,22 @@ class DoubleSupportOnTheSelfTestModel(unittest.TestCase):
                 self.assertGreater(shift if towards_right else -shift, 2.0, (lean, dz, shift))
         a, b = self.solve(**self.STAND, L5_S1_Lat_Bending=8.0), self.solve(**self.STAND, L5_S1_Lat_Bending=-8.0)
         self.assertAlmostEqual(a["right_share_pct"] - 50.0, 50.0 - b["right_share_pct"], delta=0.05)
+
+    def test_a_start_with_one_foot_off_the_floor_reaches_the_same_solution(self):
+        # On OpenCap LabValidation's kinematics, starts where one foot barely touched ended on another root (one foot
+        # on its toe tip, the roll at its bound) or in the air. The staged start fixes that; the solver committed on
+        # 2026-11-05 fails this test from 2 degrees on, which is its negative control.
+        ref = self.solve(**self.ASYM)
+        start = self.ds._start
+        try:
+            for tilt in (2.0, -2.0, 4.0, -4.0):
+                self.ds._start = lambda *a, tilt=tilt, **k: start(*a, **k) + np.array([0.0, math.radians(tilt), 0.0, 0.0])
+                with self.subTest(tilt=tilt):
+                    r = self.solve(**self.ASYM)
+                    for s in "RL":
+                        self.assertAlmostEqual(r[s]["vertical_N"], ref[s]["vertical_N"], delta=0.01)
+        finally:
+            del self.ds._start
 
 
 @need_model

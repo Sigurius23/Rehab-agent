@@ -38,7 +38,9 @@ suites run there.
 | System Python 3 (as CI runs it) | `test_case_store.py` | 11 | 0 | 0 | 0 | — |
 | System Python 3.14.6, the laptop below, 2026-11-05 | `test_compare_results.py` | 9 | 0 | 0 | 0 | — |
 | Pipeline Python (OpenSim 4.6), the laptop below, 2026-11-05 | `test_compare_results.py` | 9 | 0 | 0 | 0 | — |
-| Pipeline Python (OpenSim 4.6), the laptop below, 2026-11-06 | `test_double_support.py` | 15 | 0 | 0 | 0 | — |
+| Pipeline Python (OpenSim 4.6), the laptop below, 2026-11-06 | `test_double_support.py` | 16 | 0 | 0 | 0 | — |
+| Pipeline Python (OpenSim 4.6), the laptop below, 2026-11-06 | `test_opencap_contacts.py` | 5 | 1 | 0 | 0 | needs OPENCAP_UTILS (opencap-processing's utilsProcessing.py at 72b5416) |
+| Pipeline Python (OpenSim 4.6), the laptop below, 2026-11-06, OPENCAP_UTILS set | `test_opencap_contacts.py` | 6 | 0 | 0 | 0 | — |
 | Generator Python (shapely 2.2.0), slow cases, the laptop below, 2026-11-06 | `test_generator_regressions.py` | 10 | 0 | 1 | 0 | — |
 | KiCad 7.0.11's Python (pcbnew), script-style check | `test_verify_drc.py` | 1 | 0 | 0 | 0 | — |
 
@@ -54,12 +56,22 @@ checked against two deliberately broken checkers, one blind to changed values an
 extra cases; the matching tests failed. CI does not run it.
 
 **`test_double_support.py`** (the force-plate check's double support and frame rule, added 2026-11-06) has so far
-run only on that laptop, through `setup.sh tests --slow`, where every other suite passed too. Its negative
-controls were checked against three deliberately broken versions, and the matching tests failed each time:
+run only on that laptop. Its 15 cases passed through `setup.sh tests --slow`, where every other suite passed too;
+all 16 passed through `setup.sh tests`. Its negative controls were checked against four deliberately broken
+versions, and the matching tests failed each time:
 - a solver that mirrors the posture (the lean and swap tests);
 - a case store that never reuses (the resume test);
-- a run that skips the inverse-kinematics hash check (the refusal test).
+- a run that skips the inverse-kinematics hash check (the refusal test);
+- the solver as committed in 5e2fa9c, before the staged start (the test with one foot off the floor).
 CI does not run it.
+
+**`test_opencap_contacts.py`** (OpenCap's contact-sphere rule, added 2026-11-06) has also run only on that laptop.
+- Its comparison with OpenCap's own function needs `OPENCAP_UTILS`: opencap-processing's `utilsProcessing.py` at
+  72b5416, sha256 `a79b727811ae41330b0f5a58bacf0bb6550bf1cccab74fbad7f1bdbcf05b9d13`. `fetch_inputs.py` does not
+  fetch that file, so `setup.sh tests` skips that test.
+- The file was fetched once by hand, and with it all 6 cases passed.
+- The comparison's negative controls are in the suite: a sphere moved by 1e-8 m, a changed stiffness and a changed
+  body mass are each found.
 
 ## What this means for the D'Hondt port
 

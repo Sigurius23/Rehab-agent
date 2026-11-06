@@ -281,6 +281,26 @@
           - **Stopped:** the adapter refuses every subject's distributed model, which has no foot contact spheres
             to find the heel and the plantar plane from. Nothing was solved and no workaround was made; the
             decision is the owner's.
+          - **Amendment 1 to the plan's "Model" rule** (2026-11-06; the owner's decision, made before any force data
+            was opened; recorded in VALIDATION_PLAN.md):
+            - Foot contact spheres are added to each distributed model by OpenCap's own rule
+              (`generate_model_with_contacts` at opencap-processing 72b5416), through `foot_models/opencap_contacts.py`.
+              The sole replaces them, so OpenCap's contact parameters do not enter the results.
+            - On all 10 subjects, OpenCap's own function, run on the same model, gives the same spheres, half-space,
+              contact parameters and body masses (locations to 1e-9 m). `tests/test_opencap_contacts.py` has 6 cases,
+              including negative controls for that comparison.
+            - The adapter accepts all 10 models. The EU 42 sole is scaled by 1.10–1.31 onto the subjects' feet, so
+              every subject gets the adapter's warning for a scale more than 5 % from 1.
+          - **Solver start fixed, found on the dataset's kinematics alone.** The first solve left 133 of 345 frames
+            unsolved: one foot ended on its toe tip, or the body ended in the air. The levelled start had only a few
+            spheres touching.
+            - The solve now starts in stages: the pelvis height for support, then the roll by a bracketed search,
+              then all four unknowns. The equations, unknowns and bounds are unchanged.
+            - All 345 frames now solve, with support equal to body weight. Wherever the first version had solved, the
+              results agree to 0.001 N.
+            - A new test, from a start with one foot off the floor, fails on the earlier solver.
+          - Subjects 2, 4 and 11 have no quasi-static frames, so their models were checked on each trial's stillest
+            0.2 s instead. All 120 of those frames solve. They are not evaluated.
     - **Printed prototype** (`PRINTED.md`, `sole_print.py`). A TPU carrier is built from the same design:
       - underside wire channels along the routing plan;
       - a floor with one hole per region;

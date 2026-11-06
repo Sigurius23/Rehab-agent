@@ -88,6 +88,22 @@ opened:
 - **Nothing is fitted** to the measured forces, so every subject is a test subject. If any parameter is later
   fitted, the subjects are split before that, and the fitted ones are reported apart.
 
+**Amendment 1, to the "Model" rule (2026-11-06).** Decided by the owner before any force data was opened. The
+rule above stays as first written.
+- **Reason:** `sole_sim.py` refused every subject's distributed model
+  (`OpenSimData/Mocap/Model/LaiArnoldModified2017_poly_withArms_weldHand_scaled.osim`). The models have no foot
+  contact spheres, and the adapter finds the heel point and the plantar plane from them.
+- **Change:** the distributed model is used unchanged, except that foot contact spheres are added by OpenCap's
+  own rule, as `generate_model_with_contacts` in opencap-processing's `utilsProcessing.py` adds them (commit
+  72b5416):
+  - six spheres per foot, radius 0.032 m, on calcn and toes, at its reference locations;
+  - the locations scaled by each foot body's geometry scale factors, with the height left unscaled;
+  - one ground half-space, with that function's contact parameters.
+  There is no patella-mass change and no other adjustment.
+- **Effect:** the sole is then added as planned, with the assumed contact (v1), and it replaces these spheres.
+  They only locate the sole, so OpenCap's contact parameters do not enter the results. Nothing is fitted to the
+  measurements.
+
 **Protocol:**
 - Every result names the dataset version and file hashes, the pipeline commit and the contact model (assumed v1
   or native).

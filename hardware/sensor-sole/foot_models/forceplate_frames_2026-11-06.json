@@ -1,5 +1,5 @@
 {
- "what": "Quasi-static frames for VALIDATION_PLAN.md stage A, chosen from the kinematics alone before any force data was opened (2026-11-06). Phase 1: no force, EMG or inverse-dynamics file was read.",
+ "what": "Phase 1 of VALIDATION_PLAN.md stage A, kinematics only (2026-11-06): the quasi-static frames, chosen from the kinematics alone, and the checks of the model on them. No force, EMG or inverse-dynamics file was read.",
  "dataset": {
   "name": "OpenCap LabValidation, without videos",
   "release": "v0.1 (SimTK, file dated 2022-12-20)",
@@ -18,8 +18,8 @@
   "acceleration": "norm of the 3-D centre-of-mass acceleration, central differences of the filtered positions",
   "min_stretch_s": 0.2
  },
- "code": "foot_models/double_support.py frames (this commit)",
- "model": "OpenSimData/Mocap/Model/LaiArnoldModified2017_poly_withArms_weldHand_scaled.osim, as distributed",
+ "code": "foot_models/double_support.py frames (committed in 5e2fa9c; the frame code is unchanged since)",
+ "model": "OpenSimData/Mocap/Model/LaiArnoldModified2017_poly_withArms_weldHand_scaled.osim as distributed, with foot contact spheres added by OpenCap's own rule (VALIDATION_PLAN.md, amendment 1; foot_models/opencap_contacts.py). The frames were chosen with the distributed model; the spheres add no mass, so its centre of mass is unchanged.",
  "trials": {
   "evaluated": [
    "squats1",
@@ -48,7 +48,11 @@
   "documentation": "Uhlrich et al. 2023: three in-ground Bertec plates at 2000 Hz; whether each foot stood on its own plate is not stated",
   "read": "the ExternalLoads setup files only (names of channels and bodies); no force values"
  },
- "adapter": "sole_sim.add_to_osim refused every subject's distributed model: it has no foot contact spheres, from which the adapter finds the heel and the plantar plane. Per the plan, stopped: no solve, no workaround.",
+ "adapter": {
+  "distributed_models": "refused by sole_sim.add_to_osim (no foot contact spheres, from which it finds the heel and the plantar plane)",
+  "amended_models": "accepted, all 10; the sole (EU 42, assumed contact v1) replaces the 6 OpenCap spheres per foot with 55",
+  "opencap_function_check": "opencap-processing utilsProcessing.generate_model_with_contacts at 72b5416 (file sha256 a79b727811ae41330b0f5a58bacf0bb6550bf1cccab74fbad7f1bdbcf05b9d13), run on each subject's model in the layout it expects, patella masses unchanged: the same 12 spheres, half-space, contact parameters and body masses in all 10 (locations to 1e-9 m)"
+ },
  "totals": {
   "subjects": 10,
   "quasi_static_frames": 345,
@@ -56,7 +60,9 @@
    "subject2",
    "subject4",
    "subject11"
-  ]
+  ],
+  "solved": 345,
+  "solved_of": 345
  },
  "subjects": {
   "subject2": {
@@ -84,7 +90,71 @@
     "static_trial_frames": 800,
     "static_trial_sha256": "432b721e3d1b371e28478e384e47ed4e32181769ee78a06587f1c616e4827c1d"
    },
-   "adapter": "refused: no contact spheres on calcn_r: cannot find the heel and the plantar plane"
+   "adapter": "refused: no contact spheres on calcn_r: cannot find the heel and the plantar plane",
+   "model_with_contacts": {
+    "sha256": "0b4f3b0480a2aba7c6db1d7247d766361f5d5c0039873971a80458b1832a9d5e",
+    "foot_geometry_scale": 1.167592,
+    "opencap_function_agrees": true
+   },
+   "sole_registration": {
+    "sole_scale": 1.294,
+    "sole_scale_L": 1.294,
+    "spheres_per_foot": 55,
+    "on_toes": 13,
+    "opencap_sphere_bottoms_vs_plantar_plane_mm": {
+     "calcn_r": [
+      0.0
+     ],
+     "toes_r": [
+      -2.34
+     ]
+    },
+    "toe_axis_from_z_deg": -35.5,
+    "sole_bend_line_from_z_deg": -13.2,
+    "sole_points_on_calcn_distal_of_toe_axis": 9,
+    "sole_points_on_toes_proximal_of_toe_axis": 0,
+    "sole_points_within_5mm_of_toe_axis": 2,
+    "left_same_as_right": false
+   },
+   "solve": {
+    "body_weight_N": 766.88,
+    "frames": 0,
+    "solved": 0,
+    "max_abs_support_error_pct": null,
+    "frames_at_bounds": 0,
+    "max_abs_adjustment": null,
+    "double_support_sha256": "58fc93e31798d7630d5bb7e801e43474b579bcf5bd22bdf0c1824961a868fdea"
+   },
+   "model_check_frames": {
+    "body_weight_N": 766.88,
+    "frames": 40,
+    "solved": 40,
+    "max_abs_support_error_pct": 0.0001,
+    "frames_at_bounds": 0,
+    "max_abs_adjustment": {
+     "pelvis_ty_mm": 13.023,
+     "pelvis_list_deg": 0.9362,
+     "ankle_angle_r_deg": 5.0124,
+     "ankle_angle_l_deg": 5.3118
+    },
+    "note": "not quasi-static by the plan's rule and not evaluated: each trial's 0.2 s window with the smallest peak centre-of-mass acceleration, solved only to check the model",
+    "windows": {
+     "squats1.mot": {
+      "stretch_s": [
+       0.0,
+       0.19
+      ],
+      "peak_acceleration_m_s2": 0.2091
+     },
+     "squatsAsym1.mot": {
+      "stretch_s": [
+       5.8,
+       5.99
+      ],
+      "peak_acceleration_m_s2": 0.3827
+     }
+    }
+   }
   },
   "subject3": {
    "model_sha256": "7ed1d53f182e3f4992669468172a1f64ca158d200fdb090fdbfd4ee0b5819c73",
@@ -117,7 +187,46 @@
     "static_trial_frames": 679,
     "static_trial_sha256": "816a0080ebefc10dae7207faa46db7cd1d6cd37cc1d387c97babc07e6f834a36"
    },
-   "adapter": "refused: no contact spheres on calcn_r: cannot find the heel and the plantar plane"
+   "adapter": "refused: no contact spheres on calcn_r: cannot find the heel and the plantar plane",
+   "model_with_contacts": {
+    "sha256": "9c516593d3652659006321921009cf4a170d030e42b09587bff0f8792f4a76a4",
+    "foot_geometry_scale": 0.967128,
+    "opencap_function_agrees": true
+   },
+   "sole_registration": {
+    "sole_scale": 1.1015,
+    "sole_scale_L": 1.1015,
+    "spheres_per_foot": 55,
+    "on_toes": 13,
+    "opencap_sphere_bottoms_vs_plantar_plane_mm": {
+     "calcn_r": [
+      0.0
+     ],
+     "toes_r": [
+      -1.93
+     ]
+    },
+    "toe_axis_from_z_deg": -35.5,
+    "sole_bend_line_from_z_deg": -13.2,
+    "sole_points_on_calcn_distal_of_toe_axis": 9,
+    "sole_points_on_toes_proximal_of_toe_axis": 0,
+    "sole_points_within_5mm_of_toe_axis": 3,
+    "left_same_as_right": false
+   },
+   "solve": {
+    "body_weight_N": 622.722,
+    "frames": 20,
+    "solved": 20,
+    "max_abs_support_error_pct": 0.0,
+    "frames_at_bounds": 0,
+    "max_abs_adjustment": {
+     "pelvis_ty_mm": 2.507,
+     "pelvis_list_deg": 0.1135,
+     "ankle_angle_r_deg": 1.5381,
+     "ankle_angle_l_deg": 2.4233
+    },
+    "double_support_sha256": "2ca5c78a6188d95728848ea5a1a4da6239a3bd8691af81542d082cfa209a793b"
+   }
   },
   "subject4": {
    "model_sha256": "68df5986180d4399b47c693f469b5ca9d4114997fca8ee8e76ab9cffe6bf14a6",
@@ -144,7 +253,71 @@
     "static_trial_frames": 517,
     "static_trial_sha256": "0d943428f71cbd22a70a80573c644a40e1b9dec0bf32f328d2df82f342e6ef92"
    },
-   "adapter": "refused: no contact spheres on calcn_r: cannot find the heel and the plantar plane"
+   "adapter": "refused: no contact spheres on calcn_r: cannot find the heel and the plantar plane",
+   "model_with_contacts": {
+    "sha256": "5541951bda156885d04a29096b6a19354c56de03670dbebf1aebe35c47f319c1",
+    "foot_geometry_scale": 1.072077,
+    "opencap_function_agrees": true
+   },
+   "sole_registration": {
+    "sole_scale": 1.2023,
+    "sole_scale_L": 1.2023,
+    "spheres_per_foot": 55,
+    "on_toes": 13,
+    "opencap_sphere_bottoms_vs_plantar_plane_mm": {
+     "calcn_r": [
+      0.0
+     ],
+     "toes_r": [
+      -2.14
+     ]
+    },
+    "toe_axis_from_z_deg": -35.5,
+    "sole_bend_line_from_z_deg": -13.2,
+    "sole_points_on_calcn_distal_of_toe_axis": 9,
+    "sole_points_on_toes_proximal_of_toe_axis": 0,
+    "sole_points_within_5mm_of_toe_axis": 3,
+    "left_same_as_right": false
+   },
+   "solve": {
+    "body_weight_N": 613.896,
+    "frames": 0,
+    "solved": 0,
+    "max_abs_support_error_pct": null,
+    "frames_at_bounds": 0,
+    "max_abs_adjustment": null,
+    "double_support_sha256": "8f0ce65aab1274deea594905b4a22f7eb81087cd1c90d19d9740128a9d9d1f24"
+   },
+   "model_check_frames": {
+    "body_weight_N": 613.896,
+    "frames": 40,
+    "solved": 40,
+    "max_abs_support_error_pct": 0.0001,
+    "frames_at_bounds": 0,
+    "max_abs_adjustment": {
+     "pelvis_ty_mm": 4.428,
+     "pelvis_list_deg": 1.8432,
+     "ankle_angle_r_deg": 1.0964,
+     "ankle_angle_l_deg": 8.3619
+    },
+    "note": "not quasi-static by the plan's rule and not evaluated: each trial's 0.2 s window with the smallest peak centre-of-mass acceleration, solved only to check the model",
+    "windows": {
+     "squats1.mot": {
+      "stretch_s": [
+       0.0,
+       0.19
+      ],
+      "peak_acceleration_m_s2": 0.1192
+     },
+     "squatsAsym1.mot": {
+      "stretch_s": [
+       7.98,
+       8.17
+      ],
+      "peak_acceleration_m_s2": 0.1032
+     }
+    }
+   }
   },
   "subject5": {
    "model_sha256": "c7fa6a39b412a77037979f263712ab3c9cf0818604cb124bc56a68efd84ec4ba",
@@ -182,7 +355,46 @@
     "static_trial_frames": 502,
     "static_trial_sha256": "90b40749cb52f7dca78f3a77cad5d5b6e8e99321acc47a554efe84a33a0636a2"
    },
-   "adapter": "refused: no contact spheres on calcn_r: cannot find the heel and the plantar plane"
+   "adapter": "refused: no contact spheres on calcn_r: cannot find the heel and the plantar plane",
+   "model_with_contacts": {
+    "sha256": "d1dc5b9e02f686e498514774e558e42752c3143e5070e10effc0d98387c20d7f",
+    "foot_geometry_scale": 1.18616,
+    "opencap_function_agrees": true
+   },
+   "sole_registration": {
+    "sole_scale": 1.3118,
+    "sole_scale_L": 1.3118,
+    "spheres_per_foot": 55,
+    "on_toes": 13,
+    "opencap_sphere_bottoms_vs_plantar_plane_mm": {
+     "calcn_r": [
+      0.0
+     ],
+     "toes_r": [
+      -2.37
+     ]
+    },
+    "toe_axis_from_z_deg": -35.5,
+    "sole_bend_line_from_z_deg": -13.2,
+    "sole_points_on_calcn_distal_of_toe_axis": 9,
+    "sole_points_on_toes_proximal_of_toe_axis": 0,
+    "sole_points_within_5mm_of_toe_axis": 2,
+    "left_same_as_right": false
+   },
+   "solve": {
+    "body_weight_N": 778.648,
+    "frames": 42,
+    "solved": 42,
+    "max_abs_support_error_pct": 0.0,
+    "frames_at_bounds": 0,
+    "max_abs_adjustment": {
+     "pelvis_ty_mm": 0.897,
+     "pelvis_list_deg": 1.0879,
+     "ankle_angle_r_deg": 1.3604,
+     "ankle_angle_l_deg": 2.1151
+    },
+    "double_support_sha256": "283a76c85391dc447c515e87a22d06ca34641d13c6aed99eff601bdb15fdd5c2"
+   }
   },
   "subject6": {
    "model_sha256": "28b95be7648e981682c271e93d2860890e74d91e12451db22c634060c96ec769",
@@ -215,7 +427,46 @@
     "static_trial_frames": 265,
     "static_trial_sha256": "0565c85d75bcf759bac239160b66c4f39769320f0d81b3ce5e02204c6a2d83c0"
    },
-   "adapter": "refused: no contact spheres on calcn_r: cannot find the heel and the plantar plane"
+   "adapter": "refused: no contact spheres on calcn_r: cannot find the heel and the plantar plane",
+   "model_with_contacts": {
+    "sha256": "36e5a4c17d56454f6180c535d3f1aefb4544dc28d084f2afd66786e4b5196f27",
+    "foot_geometry_scale": 1.029607,
+    "opencap_function_agrees": true
+   },
+   "sole_registration": {
+    "sole_scale": 1.1615,
+    "sole_scale_L": 1.1615,
+    "spheres_per_foot": 55,
+    "on_toes": 13,
+    "opencap_sphere_bottoms_vs_plantar_plane_mm": {
+     "calcn_r": [
+      0.0
+     ],
+     "toes_r": [
+      -2.06
+     ]
+    },
+    "toe_axis_from_z_deg": -35.5,
+    "sole_bend_line_from_z_deg": -13.2,
+    "sole_points_on_calcn_distal_of_toe_axis": 9,
+    "sole_points_on_toes_proximal_of_toe_axis": 0,
+    "sole_points_within_5mm_of_toe_axis": 3,
+    "left_same_as_right": false
+   },
+   "solve": {
+    "body_weight_N": 578.592,
+    "frames": 20,
+    "solved": 20,
+    "max_abs_support_error_pct": 0.0,
+    "frames_at_bounds": 0,
+    "max_abs_adjustment": {
+     "pelvis_ty_mm": 2.578,
+     "pelvis_list_deg": 0.0649,
+     "ankle_angle_r_deg": 2.2635,
+     "ankle_angle_l_deg": 2.3051
+    },
+    "double_support_sha256": "2efbaf4bbc997dec75c688d3bf5a991ee9e419bb7399fe263b549bd28852eb24"
+   }
   },
   "subject7": {
    "model_sha256": "43931153c05d5fc089f3c5893fd7873bfc2193918de9645b77969d97518d3b31",
@@ -274,7 +525,46 @@
     "static_trial_frames": 704,
     "static_trial_sha256": "18159a33923984b2b6977d682a398219ec39c2d47cd7cbd3e0f603cd462562b4"
    },
-   "adapter": "refused: no contact spheres on calcn_r: cannot find the heel and the plantar plane"
+   "adapter": "refused: no contact spheres on calcn_r: cannot find the heel and the plantar plane",
+   "model_with_contacts": {
+    "sha256": "707b67c80d7caba9f5d8b23415affd7cc9782fafda3a767dc704ca4934835852",
+    "foot_geometry_scale": 1.075481,
+    "opencap_function_agrees": true
+   },
+   "sole_registration": {
+    "sole_scale": 1.2055,
+    "sole_scale_L": 1.2055,
+    "spheres_per_foot": 55,
+    "on_toes": 13,
+    "opencap_sphere_bottoms_vs_plantar_plane_mm": {
+     "calcn_r": [
+      0.0
+     ],
+     "toes_r": [
+      -2.15
+     ]
+    },
+    "toe_axis_from_z_deg": -35.5,
+    "sole_bend_line_from_z_deg": -13.2,
+    "sole_points_on_calcn_distal_of_toe_axis": 9,
+    "sole_points_on_toes_proximal_of_toe_axis": 0,
+    "sole_points_within_5mm_of_toe_axis": 2,
+    "left_same_as_right": false
+   },
+   "solve": {
+    "body_weight_N": 600.167,
+    "frames": 154,
+    "solved": 154,
+    "max_abs_support_error_pct": 0.0001,
+    "frames_at_bounds": 0,
+    "max_abs_adjustment": {
+     "pelvis_ty_mm": 5.91,
+     "pelvis_list_deg": 0.2723,
+     "ankle_angle_r_deg": 1.8908,
+     "ankle_angle_l_deg": 2.0272
+    },
+    "double_support_sha256": "99d9d51e0b6f0643ca62c3568f98284d3411dc0ac757bfa42c2587a1340b9c2a"
+   }
   },
   "subject8": {
    "model_sha256": "b3a7d5a2e7f7924a91b02800f8e61c8501f01b426a68317fa16aa1aec626be67",
@@ -307,7 +597,46 @@
     "static_trial_frames": 501,
     "static_trial_sha256": "6291331344fb77be4bc03e8500644e23a4401acc4c9437695b65baa450211a32"
    },
-   "adapter": "refused: no contact spheres on calcn_r: cannot find the heel and the plantar plane"
+   "adapter": "refused: no contact spheres on calcn_r: cannot find the heel and the plantar plane",
+   "model_with_contacts": {
+    "sha256": "4bba75d02d09eeb22fc6a579ead06817ffc46a587951bfa8902d56d4e83c9634",
+    "foot_geometry_scale": 0.966005,
+    "opencap_function_agrees": true
+   },
+   "sole_registration": {
+    "sole_scale": 1.1004,
+    "sole_scale_L": 1.1004,
+    "spheres_per_foot": 55,
+    "on_toes": 13,
+    "opencap_sphere_bottoms_vs_plantar_plane_mm": {
+     "calcn_r": [
+      0.0
+     ],
+     "toes_r": [
+      -1.93
+     ]
+    },
+    "toe_axis_from_z_deg": -35.5,
+    "sole_bend_line_from_z_deg": -13.2,
+    "sole_points_on_calcn_distal_of_toe_axis": 9,
+    "sole_points_on_toes_proximal_of_toe_axis": 0,
+    "sole_points_within_5mm_of_toe_axis": 3,
+    "left_same_as_right": false
+   },
+   "solve": {
+    "body_weight_N": 582.515,
+    "frames": 27,
+    "solved": 27,
+    "max_abs_support_error_pct": 0.0,
+    "frames_at_bounds": 0,
+    "max_abs_adjustment": {
+     "pelvis_ty_mm": 2.511,
+     "pelvis_list_deg": 0.6422,
+     "ankle_angle_r_deg": 0.8302,
+     "ankle_angle_l_deg": 1.0668
+    },
+    "double_support_sha256": "fb90d87cdd0bf5a446fc53083e897d4b55c5d2354afd11efd527a069c32dfa6e"
+   }
   },
   "subject9": {
    "model_sha256": "2e41951f14ad8a3004db071b5265ffe508b2e085a73f328e2e289a19c8231846",
@@ -340,7 +669,46 @@
     "static_trial_frames": 601,
     "static_trial_sha256": "3c5adb1c507e2cb8e26374d999e85dea6baaaf78cb31cd768fde7b0ec68d0d7e"
    },
-   "adapter": "refused: no contact spheres on calcn_r: cannot find the heel and the plantar plane"
+   "adapter": "refused: no contact spheres on calcn_r: cannot find the heel and the plantar plane",
+   "model_with_contacts": {
+    "sha256": "1c50a24489e8aefdc593cb78b4227f4bdd557d57fb418745371c24dc1d7da97f",
+    "foot_geometry_scale": 1.18857,
+    "opencap_function_agrees": true
+   },
+   "sole_registration": {
+    "sole_scale": 1.3141,
+    "sole_scale_L": 1.3141,
+    "spheres_per_foot": 55,
+    "on_toes": 13,
+    "opencap_sphere_bottoms_vs_plantar_plane_mm": {
+     "calcn_r": [
+      0.0
+     ],
+     "toes_r": [
+      -2.38
+     ]
+    },
+    "toe_axis_from_z_deg": -35.5,
+    "sole_bend_line_from_z_deg": -13.2,
+    "sole_points_on_calcn_distal_of_toe_axis": 9,
+    "sole_points_on_toes_proximal_of_toe_axis": 0,
+    "sole_points_within_5mm_of_toe_axis": 2,
+    "left_same_as_right": false
+   },
+   "solve": {
+    "body_weight_N": 742.363,
+    "frames": 31,
+    "solved": 31,
+    "max_abs_support_error_pct": 0.0001,
+    "frames_at_bounds": 0,
+    "max_abs_adjustment": {
+     "pelvis_ty_mm": 26.65,
+     "pelvis_list_deg": 2.2341,
+     "ankle_angle_r_deg": 2.6647,
+     "ankle_angle_l_deg": 1.9502
+    },
+    "double_support_sha256": "0e20fdabd588376623e41cdcaf4306431544ed22b41c6e42bf9f74af8e4f7a86"
+   }
   },
   "subject10": {
    "model_sha256": "bf697ee57bf4b503d6748ed2845a5b244a8a40e3d428c9100f461dc7b73a5084",
@@ -378,7 +746,46 @@
     "static_trial_frames": 781,
     "static_trial_sha256": "7fe50e7ebac7c849b1946ca75d733a0a5a18f7b0ed9da2c336ad58a63e110f40"
    },
-   "adapter": "refused: no contact spheres on calcn_r: cannot find the heel and the plantar plane"
+   "adapter": "refused: no contact spheres on calcn_r: cannot find the heel and the plantar plane",
+   "model_with_contacts": {
+    "sha256": "7a51024f3611f948f8d0626441196ed2ac99765b7ace03a11a5b796b91fe1ff2",
+    "foot_geometry_scale": 0.997698,
+    "opencap_function_agrees": true
+   },
+   "sole_registration": {
+    "sole_scale": 1.1309,
+    "sole_scale_L": 1.1309,
+    "spheres_per_foot": 55,
+    "on_toes": 13,
+    "opencap_sphere_bottoms_vs_plantar_plane_mm": {
+     "calcn_r": [
+      0.0
+     ],
+     "toes_r": [
+      -2.0
+     ]
+    },
+    "toe_axis_from_z_deg": -35.5,
+    "sole_bend_line_from_z_deg": -13.2,
+    "sole_points_on_calcn_distal_of_toe_axis": 9,
+    "sole_points_on_toes_proximal_of_toe_axis": 0,
+    "sole_points_within_5mm_of_toe_axis": 3,
+    "left_same_as_right": false
+   },
+   "solve": {
+    "body_weight_N": 588.399,
+    "frames": 51,
+    "solved": 51,
+    "max_abs_support_error_pct": 0.0001,
+    "frames_at_bounds": 0,
+    "max_abs_adjustment": {
+     "pelvis_ty_mm": 6.967,
+     "pelvis_list_deg": 2.3538,
+     "ankle_angle_r_deg": 3.3688,
+     "ankle_angle_l_deg": 2.5023
+    },
+    "double_support_sha256": "9a767660be884e41ce6284a156ca1a33efa6b142d7a8a008981316c6e18ee355"
+   }
   },
   "subject11": {
    "model_sha256": "1b79c79298dbf11935f3702c0ac20760707b6938bbf898daffab8eb07a1c335b",
@@ -405,7 +812,77 @@
     "static_trial_frames": 781,
     "static_trial_sha256": "ce4609302ab046896e49e369a0980c7f11672d93300fbf390d4ae414dc502567"
    },
-   "adapter": "refused: no contact spheres on calcn_r: cannot find the heel and the plantar plane"
+   "adapter": "refused: no contact spheres on calcn_r: cannot find the heel and the plantar plane",
+   "model_with_contacts": {
+    "sha256": "8f94868ce830d560d03e85daaed9c39b9d0c9dcd27e0b506e55a485bf6d2e54a",
+    "foot_geometry_scale": 1.166637,
+    "opencap_function_agrees": true
+   },
+   "sole_registration": {
+    "sole_scale": 1.293,
+    "sole_scale_L": 1.293,
+    "spheres_per_foot": 55,
+    "on_toes": 13,
+    "opencap_sphere_bottoms_vs_plantar_plane_mm": {
+     "calcn_r": [
+      0.0
+     ],
+     "toes_r": [
+      -2.33
+     ]
+    },
+    "toe_axis_from_z_deg": -35.5,
+    "sole_bend_line_from_z_deg": -13.2,
+    "sole_points_on_calcn_distal_of_toe_axis": 9,
+    "sole_points_on_toes_proximal_of_toe_axis": 0,
+    "sole_points_within_5mm_of_toe_axis": 2,
+    "left_same_as_right": false
+   },
+   "solve": {
+    "body_weight_N": 911.038,
+    "frames": 0,
+    "solved": 0,
+    "max_abs_support_error_pct": null,
+    "frames_at_bounds": 0,
+    "max_abs_adjustment": null,
+    "double_support_sha256": "8320ba01b7aa555c4bca1b1570ec9dcdc22f26f133d5603b14372c15c5e19d99"
+   },
+   "model_check_frames": {
+    "body_weight_N": 911.038,
+    "frames": 40,
+    "solved": 40,
+    "max_abs_support_error_pct": 0.0,
+    "frames_at_bounds": 0,
+    "max_abs_adjustment": {
+     "pelvis_ty_mm": 5.242,
+     "pelvis_list_deg": 1.5163,
+     "ankle_angle_r_deg": 0.6378,
+     "ankle_angle_l_deg": 3.3931
+    },
+    "note": "not quasi-static by the plan's rule and not evaluated: each trial's 0.2 s window with the smallest peak centre-of-mass acceleration, solved only to check the model",
+    "windows": {
+     "squats1.mot": {
+      "stretch_s": [
+       13.24,
+       13.43
+      ],
+      "peak_acceleration_m_s2": 0.1107
+     },
+     "squatsAsym1.mot": {
+      "stretch_s": [
+       3.1,
+       3.29
+      ],
+      "peak_acceleration_m_s2": 0.125
+     }
+    }
+   }
   }
+ },
+ "solve": {
+  "code": "foot_models/double_support.py solve, with the staged start (this commit)",
+  "contact": "assumed sole contact v1",
+  "soles": "sim/EU42_R_636645a928.sole_sim.json, sim/EU42_L_40fe8e1d0c.sole_sim.json",
+  "note": "kinematics only; support should equal body weight. double_support_sha256 pins each subject's model predictions before any force data is opened (the file stays on the workstation)"
  }
 }
