@@ -58,6 +58,46 @@ holds **estimated** forces: its own record says "quasi-static double stance".
    are compared with the force plates. This is a different experiment from the passive, prescribed-COP control
    in `FOOT_MODELS.md`, and it will be reported separately.
 
+**Amendment 4, to item 2, the dynamic comparison (2026-11-06).** Decided by the owner before any dynamic simulation
+was built or run. The text of item 2 above stays as written.
+- **Design: two arms,** identical except for the foot contact:
+  - **A:** our sole (15 mm spacing) with the assumed contact (v1);
+  - **B:** OpenCap's six spheres per foot with OpenCap's contact parameters (the amendment 1 rule).
+
+  Both arms use the same subject models (distributed, with muscles), the same tracking problem, the same settings
+  and the same solver.
+- **Task:** `squats1` and `squatsAsym1` for all 10 subjects. One window is simulated per trial: the first complete
+  squat repetition, found from the pelvis height in the dataset's inverse kinematics (kinematics only).
+  Sit-to-stand is left for later, because the chair carries part of the weight.
+- **Tracking:** MocoTrack of the dataset's inverse-kinematics coordinates, muscle-driven, with reserve actuators.
+  - The problem never sees force data: ground forces come only from the contact model.
+  - Settings (weights, mesh, reserves, tolerances) may be changed only to reach convergence. That is judged by
+    convergence and kinematic tracking error alone, never by force data. Every change applies to both arms and is
+    logged.
+- **A valid solution** has converged, and its pelvis residuals are within Hicks et al. (2015):
+  - residual forces at most 5 % of the peak external force;
+  - residual moments at most 1 % of the centre-of-mass height times that force.
+
+  Invalid or non-converged solutions are reported as not evaluated, not as passing.
+- **Plate coverage:** the post-hoc rule applies to this experiment from the start. A trial is left out if either
+  plate carries less than 1 % of body weight on average.
+- **Hypotheses for arm A** (pass/fail, with the quasi-static pass rule: every evaluated subject within):
+  - **H1:** the error of the peak combined vertical force in the window, as a mean over the subject's trials, is at
+    most 10 % of body weight.
+  - **H2:** the RMS error of the combined forward–backward centre of pressure over the window, as a mean over the
+    subject's trials, is at most 15 % of foot length.
+- **Body weight:** from the recorded mass (primary); also reported against the plates' measured weight (secondary).
+- **Arm B:** arm B against the plates, and A minus B, are reported with the same metrics, as description only.
+- **Recorded with it:**
+  - the squat force files were already opened for the quasi-static check, so this design is fixed before any
+    dynamic result, but not before the force data was seen;
+  - arm B is OpenCap's contact in this project's Moco setup, not a reproduction of OpenCap's own published
+    simulations.
+- **Phases:**
+  1. Without force data: build both arms, pilot the tracking on one subject until it converges, and run all
+     solves (resumable). Each solution's sha256, validity and tracking error are recorded and committed.
+  2. Only after the owner's "go": compare with the plates as defined here.
+
 **Metrics and thresholds.** The quasi-static thresholds were **agreed on 2026-11-05, before any data was
 downloaded or opened**, as a first attempt. They may be revised only before the force data is opened; a revision
 after that is reported as one, beside the original result.
