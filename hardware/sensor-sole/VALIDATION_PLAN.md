@@ -118,6 +118,16 @@ opened. The rules above stay as written; this settles what they left open.
    mean that each foot stood on its own plate.
 4. **Subjects without quasi-static frames,** if any remain, are reported as not evaluated, not as passing.
 
+**Amendment 3, to the vertical-force metric and the reporting (2026-11-06).** Decided by the owner before any force
+data was opened. The rules above stay as written.
+1. **Vertical force:** the metric uses the combined vertical force of both feet. The measured value is both plates
+   together; the model's equals body weight by construction. This metric therefore tests only the body model's
+   mass and the quasi-static assumption, not the foot model. Per-foot loading is covered by the left/right share
+   metric, so per-foot vertical force is not evaluated.
+2. **Secondary reporting** (descriptive, not pass/fail): each of the three metrics is also reported per subject for
+   the `static1` frames and the squat frames separately. Pass/fail stays on the pooled per-subject values, as fixed
+   above.
+
 **Protocol:**
 - Every result names the dataset version and file hashes, the pipeline commit and the contact model (assumed v1
   or native).

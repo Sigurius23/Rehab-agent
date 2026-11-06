@@ -36,7 +36,52 @@
   "markers": "43 marker tasks applied. r_mknee, r_mankle, L_mknee and L_mankle are switched off: the static trials have them but the squat recordings do not, so the squats' inverse kinematics never used them",
   "reproduction_check": "the same code and settings rerun on each subject's squats1 markers reproduce the dataset's squats1 inverse kinematics: RMS marker error equal to within 0.002 mm, pelvis translations within 1.2 mm, centre of mass within 0.6 mm, leg and trunk coordinates within 3.2 degrees; forearm pronation, which the markers barely fix, differs by up to 18 degrees. The frame rule is sensitive to those sub-millimetre differences: the squats' frame counts change in 6 of 10 subjects (squat_ik_reproduction). The squats keep the dataset's own inverse kinematics."
  },
- "metrics": "VALIDATION_PLAN.md, amendment 2: forward-backward centre of pressure combined over both feet, along the model's forward axis, as a fraction of the mean foot length; per-foot forward values are not evaluated (the model puts each foot's under the centre of mass by convention); subjects without frames are reported as not evaluated",
+ "metrics": {
+  "amendment_2": "VALIDATION_PLAN.md, amendment 2: forward-backward centre of pressure combined over both feet, along the model's forward axis, as a fraction of the mean foot length; per-foot forward values are not evaluated (the model puts each foot's under the centre of mass by convention); subjects without frames are reported as not evaluated",
+  "amendment_3": "vertical force: the combined vertical force of both feet (the model's equals body weight by construction, so this tests only the body model's mass and the quasi-static assumption); per-foot vertical force is not evaluated. Each metric is also reported per subject for the static1 and the squat frames separately, descriptively; pass/fail stays on the pooled per-subject values",
+  "frames_per_subject_static1_squats": {
+   "subject2": [
+    800,
+    0
+   ],
+   "subject3": [
+    674,
+    20
+   ],
+   "subject4": [
+    517,
+    0
+   ],
+   "subject5": [
+    176,
+    42
+   ],
+   "subject6": [
+    265,
+    20
+   ],
+   "subject7": [
+    703,
+    154
+   ],
+   "subject8": [
+    501,
+    27
+   ],
+   "subject9": [
+    601,
+    31
+   ],
+   "subject10": [
+    781,
+    51
+   ],
+   "subject11": [
+    779,
+    0
+   ]
+  }
+ },
  "markers": {
   "heel": [
    "r_calc",

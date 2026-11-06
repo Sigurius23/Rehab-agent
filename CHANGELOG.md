@@ -322,6 +322,11 @@
             that had stalled with the pressure on the forefoot. All 6,142 frames solve with support equal to body
             weight, and frames solved before are unchanged to 0.001 N. The prediction hashes in
             `forceplate_frames_2026-11-06.json` are updated.
+          - **Amendment 3 to the plan** (2026-11-06; the owner's decision, before any force data was opened).
+            - Vertical force is evaluated combined over both feet. The model's equals body weight by construction, so
+              the metric tests only the body model's mass and the quasi-static assumption.
+            - Each metric is also reported for the standing and the squat frames separately, descriptively. Pass/fail
+              stays on the pooled values; standing is about 94 % of the frames.
     - **Printed prototype** (`PRINTED.md`, `sole_print.py`). A TPU carrier is built from the same design:
       - underside wire channels along the routing plan;
       - a floor with one hole per region;
