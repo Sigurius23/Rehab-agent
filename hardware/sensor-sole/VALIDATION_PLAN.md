@@ -194,6 +194,35 @@ data was opened. The rules above stay as written.
      the gap between plate weight and recorded mass to within 0.1 points. The two subjects outside 5 % are the two
      whose plates weigh them more than 5 % off their recorded mass: subject 6 (+6.0 %) and subject 10 (−5.9 %).
 
+3. **Why the left/right share fails** (a further post-hoc diagnostic, defined by the owner after the data was seen;
+   `foot_models/results_forceplate_lateral_posthoc_2026-11-06.json`, from `foot_models/forceplate_lateral.py`).
+   - **Frames:** those of the kept trials.
+   - **Axis:** sideways, perpendicular to the model's forward axis in the floor plane.
+   - **Method:** by the lever rule, a share error splits into two parts. One comes from the offset between the
+     measured combined centre of pressure, which lies under the true centre of mass, and the model's centre of
+     mass. That offset is the body model's or the inverse kinematics' error. The other part is a remainder, from
+     where each foot's centre of pressure sits sideways in the model compared with the plates.
+   - **The centre-of-mass offset is small:** 1.2–5.9 mm RMS across the 9 subjects. By the lever rule that is worth
+     0.4–2.2 points of share.
+
+   | Subject | Centre-of-mass offset (mm RMS) | Share error (points RMS) | From the offset | Remainder | Foot centre of pressure, model − measured (right / left, mm) |
+   |---|---|---|---|---|---|
+   | 4 | 1.15 | 8.46 | 0.43 | 8.81 | −35 / −10 |
+   | 5 | 5.90 | 6.89 | 2.20 | 9.05 | −13 / −36 |
+   | 7 | 3.92 | 9.91 | 1.09 | 10.52 | −10 / −43 |
+   | 10 | 1.68 | 5.84 | 0.51 | 5.99 | +19 / +19 |
+
+   (Sideways positions are positive towards the subject's right.)
+   - **So the share failures in subjects 4, 5, 7 and 10 are not explained by the centre of mass.** The body model and
+     the inverse kinematics put it within a few millimetres of where the plates do.
+   - **The failures come from the foot side,** from where each foot's centre of pressure ends up sideways. This
+     diagnostic cannot separate the possible causes:
+     - the sole's placement on each foot (registration and scaling);
+     - the inverse kinematics' foot positions;
+     - the contact's sideways load split within each sole.
+   - **A pattern, descriptive only:** in 6 of the 9 subjects, both feet's model centres of pressure lie to the left
+     of the measured ones. That shifts the share while the centre of mass stays put.
+
 **Protocol:**
 - Every result names the dataset version and file hashes, the pipeline commit and the contact model (assumed v1
   or native).
@@ -201,8 +230,9 @@ data was opened. The rules above stay as written.
 - The downloaded data stays on the workstation, outside the repository. Only aggregate results are committed.
 
 **Practical:**
-- The 2.9 GB download did not fit in the working environment used on 2026-11-04 (about 1.1 GB free). The lab
-  workstation is the proposed place to run it (`workstation/README.md`); nothing has been downloaded yet.
+- The 2.9 GB download did not fit in the working environment used on 2026-11-04 (about 1.1 GB free).
+- Stage A ran on the lab laptop (`workstation/README.md`) on 2026-11-06, with the owner's copy of the dataset (see
+  "Copy of OpenCap LabValidation used for stage A" above). The data stays on that machine, outside the repository.
 
 **Reference equipment, if the project later measures its own data** (listed only; nothing to buy or contact):
 - **Laboratory force plates** (AMTI, Bertec, Kistler), as found in university gait laboratories.

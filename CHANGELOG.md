@@ -346,6 +346,12 @@
             passes among the 9 evaluated, and the share still fails (subjects 4, 5, 7, 10).
           - The model's mass equals the recorded mass in every subject. The vertical-force error equals the gap
             between the plates' weight and the recorded mass to within 0.1 points, so its failures follow that gap.
+          - **Post-hoc diagnostic of the share failure** (`foot_models/forceplate_lateral.py`,
+            `results_forceplate_lateral_posthoc_2026-11-06.json`). The sideways centre-of-mass offset is 1.2–5.9 mm,
+            worth at most 2.2 points by the lever rule. So the share failures (subjects 4, 5, 7, 10) are not the centre
+            of mass; they come from where each foot's centre of pressure sits sideways (up to 43 mm off). This
+            diagnostic does not separate sole placement, the inverse kinematics' foot positions and the contact's
+            load split.
     - **Printed prototype** (`PRINTED.md`, `sole_print.py`). A TPU carrier is built from the same design:
       - underside wire channels along the routing plan;
       - a floor with one hole per region;

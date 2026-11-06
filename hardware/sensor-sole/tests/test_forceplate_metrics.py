@@ -116,5 +116,34 @@ class PostHocCoverageRule(unittest.TestCase):
         self.assertFalse(PH.coverage([6.9], [693.1], W)[0])
 
 
+try:
+    import forceplate_lateral as LT
+except ImportError:
+    LT = None
+
+
+@unittest.skipUnless(HAVE and LT, "needs numpy")
+class PostHocLateralDiagnostic(unittest.TestCase):
+    """The post-hoc sideways diagnostic: with the model's feet where the plates put them, the share error is all
+    centre-of-mass offset (the lever rule); with the model's feet narrower, the remainder carries the difference."""
+
+    def frame(self, cop_r, cop_l, share):
+        com_z = cop_l + share / 100.0 * (cop_r - cop_l)                    # the model's centre of mass by the lever rule
+        return dict(forward_axis=[1.0, 0.0], com_ground_m=[0.10, 0.9, com_z], right_share_pct=share,
+                    R=dict(cop_ground_m=[0.10, cop_r]), L=dict(cop_ground_m=[0.10, cop_l]))
+
+    def test_the_offset_explains_the_share_error_when_the_feet_agree(self):
+        r = LT.sideways(self.frame(0.10, -0.10, 55.0), meas(420.0, 280.0, cop_r=(0.10, 0.10), cop_l=(0.10, -0.10)))
+        self.assertAlmostEqual(r["share_error"], 5.0, places=9)
+        self.assertAlmostEqual(r["offset"], 0.01, places=12)                 # 20 mm combined against 10 mm
+        self.assertAlmostEqual(r["share_error_from_offset"], 5.0, places=9)
+
+    def test_a_narrower_model_stance_leaves_a_remainder(self):
+        r = LT.sideways(self.frame(0.09, -0.09, 55.0), meas(420.0, 280.0, cop_r=(0.10, 0.10), cop_l=(0.10, -0.10)))
+        self.assertAlmostEqual(r["share_error"], 5.0, places=9)
+        self.assertAlmostEqual(r["share_error_from_offset"], 5.5, places=9)
+        self.assertAlmostEqual(r["model_R"] - r["meas_R"], -0.01, places=12)
+
+
 if __name__ == "__main__":
     unittest.main()

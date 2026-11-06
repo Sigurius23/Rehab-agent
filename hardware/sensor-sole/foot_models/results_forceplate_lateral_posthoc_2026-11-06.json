@@ -1,0 +1,279 @@
+{
+ "post_hoc": "post hoc: defined on 2026-11-06 after the force data was seen; the earlier results stay as computed",
+ "analysis": "VALIDATION_PLAN.md stage A: post-hoc diagnostic of the left/right share failure, beside the pre-registered result and the earlier post-hoc analysis (both unchanged)",
+ "code": "foot_models/forceplate_lateral.py (this commit)",
+ "predictions_checked": "every subject's double_support.json matched the sha256 committed in 9b4c934",
+ "frames": "the trials kept by the post-hoc plate-coverage rule (static1 of subjects 2, 9 and 10 left out; subject 2 not evaluated)",
+ "axes": "the model's forward axis per frame; sideways = perpendicular to it in the floor plane, positive towards the right foot (the subject's right)",
+ "method": "lever rule: share = (combined COP - left COP) / (right COP - left COP), sideways. The share error (measured - model) splits into the part from the offset between the measured combined centre of pressure and the model's centre of mass, 100 * offset / measured foot separation (body model or inverse kinematics), and a remainder from where each foot's centre of pressure sits sideways in the model compared with the plates",
+ "per_subject": {
+  "subject2": {
+   "evaluated": false,
+   "note": "no kept trials (post-hoc plate-coverage rule)"
+  },
+  "subject3": {
+   "evaluated": true,
+   "frames": 694,
+   "sideways_offset_mm": {
+    "rms": 2.21,
+    "mean": 2.0
+   },
+   "foot_separation_mm": 243.9,
+   "share_error_points": {
+    "rms": 3.01,
+    "mean": -2.86
+   },
+   "share_error_from_offset_points": {
+    "rms": 0.86,
+    "mean": 0.82
+   },
+   "remainder_points": {
+    "rms": 3.79,
+    "mean": -3.69
+   },
+   "foot_cop_sideways_model_minus_measured_mm": {
+    "right": -4.76,
+    "left": -13.37,
+    "separation": 8.61
+   }
+  },
+  "subject4": {
+   "evaluated": true,
+   "frames": 517,
+   "sideways_offset_mm": {
+    "rms": 1.15,
+    "mean": 0.95
+   },
+   "foot_separation_mm": 269.9,
+   "share_error_points": {
+    "rms": 8.46,
+    "mean": -8.45
+   },
+   "share_error_from_offset_points": {
+    "rms": 0.43,
+    "mean": 0.35
+   },
+   "remainder_points": {
+    "rms": 8.81,
+    "mean": -8.81
+   },
+   "foot_cop_sideways_model_minus_measured_mm": {
+    "right": -35.09,
+    "left": -9.58,
+    "separation": -25.51
+   }
+  },
+  "subject5": {
+   "evaluated": true,
+   "frames": 218,
+   "sideways_offset_mm": {
+    "rms": 5.9,
+    "mean": 5.79
+   },
+   "foot_separation_mm": 289.3,
+   "share_error_points": {
+    "rms": 6.89,
+    "mean": -6.66
+   },
+   "share_error_from_offset_points": {
+    "rms": 2.2,
+    "mean": 2.13
+   },
+   "remainder_points": {
+    "rms": 9.05,
+    "mean": -8.8
+   },
+   "foot_cop_sideways_model_minus_measured_mm": {
+    "right": -13.14,
+    "left": -35.91,
+    "separation": 22.77
+   }
+  },
+  "subject6": {
+   "evaluated": true,
+   "frames": 285,
+   "sideways_offset_mm": {
+    "rms": 2.42,
+    "mean": 2.1
+   },
+   "foot_separation_mm": 335.3,
+   "share_error_points": {
+    "rms": 1.23,
+    "mean": 0.71
+   },
+   "share_error_from_offset_points": {
+    "rms": 0.74,
+    "mean": 0.67
+   },
+   "remainder_points": {
+    "rms": 0.72,
+    "mean": 0.04
+   },
+   "foot_cop_sideways_model_minus_measured_mm": {
+    "right": -18.42,
+    "left": 15.01,
+    "separation": -33.43
+   }
+  },
+  "subject7": {
+   "evaluated": true,
+   "frames": 857,
+   "sideways_offset_mm": {
+    "rms": 3.92,
+    "mean": 2.33
+   },
+   "foot_separation_mm": 250.3,
+   "share_error_points": {
+    "rms": 9.91,
+    "mean": -9.42
+   },
+   "share_error_from_offset_points": {
+    "rms": 1.09,
+    "mean": 0.79
+   },
+   "remainder_points": {
+    "rms": 10.52,
+    "mean": -10.22
+   },
+   "foot_cop_sideways_model_minus_measured_mm": {
+    "right": -9.74,
+    "left": -43.05,
+    "separation": 33.31
+   }
+  },
+  "subject8": {
+   "evaluated": true,
+   "frames": 528,
+   "sideways_offset_mm": {
+    "rms": 3.7,
+    "mean": 3.21
+   },
+   "foot_separation_mm": 375.5,
+   "share_error_points": {
+    "rms": 0.91,
+    "mean": -0.28
+   },
+   "share_error_from_offset_points": {
+    "rms": 0.98,
+    "mean": 0.85
+   },
+   "remainder_points": {
+    "rms": 1.25,
+    "mean": -1.13
+   },
+   "foot_cop_sideways_model_minus_measured_mm": {
+    "right": -23.83,
+    "left": 17.31,
+    "separation": -41.14
+   }
+  },
+  "subject9": {
+   "evaluated": true,
+   "frames": 31,
+   "sideways_offset_mm": {
+    "rms": 3.31,
+    "mean": 2.9
+   },
+   "foot_separation_mm": 379.3,
+   "share_error_points": {
+    "rms": 2.26,
+    "mean": -2.22
+   },
+   "share_error_from_offset_points": {
+    "rms": 0.87,
+    "mean": 0.77
+   },
+   "remainder_points": {
+    "rms": 2.98,
+    "mean": -2.98
+   },
+   "foot_cop_sideways_model_minus_measured_mm": {
+    "right": -16.79,
+    "left": -4.39,
+    "separation": -12.4
+   }
+  },
+  "subject10": {
+   "evaluated": true,
+   "frames": 51,
+   "sideways_offset_mm": {
+    "rms": 1.68,
+    "mean": -0.54
+   },
+   "foot_separation_mm": 328.8,
+   "share_error_points": {
+    "rms": 5.84,
+    "mean": 5.68
+   },
+   "share_error_from_offset_points": {
+    "rms": 0.51,
+    "mean": -0.16
+   },
+   "remainder_points": {
+    "rms": 5.99,
+    "mean": 5.84
+   },
+   "foot_cop_sideways_model_minus_measured_mm": {
+    "right": 18.85,
+    "left": 19.42,
+    "separation": -0.57
+   }
+  },
+  "subject11": {
+   "evaluated": true,
+   "frames": 779,
+   "sideways_offset_mm": {
+    "rms": 1.6,
+    "mean": 1.49
+   },
+   "foot_separation_mm": 291.2,
+   "share_error_points": {
+    "rms": 4.98,
+    "mean": -4.94
+   },
+   "share_error_from_offset_points": {
+    "rms": 0.55,
+    "mean": 0.51
+   },
+   "remainder_points": {
+    "rms": 5.48,
+    "mean": -5.45
+   },
+   "foot_cop_sideways_model_minus_measured_mm": {
+    "right": -16.21,
+    "left": -15.51,
+    "separation": -0.71
+   }
+  }
+ },
+ "answer": {
+  "failing_subjects": [
+   "subject4",
+   "subject5",
+   "subject7",
+   "subject10"
+  ],
+  "explained_by_centre_of_mass_offset": false,
+  "summary": "Not explained by the centre-of-mass offset. In subjects 4, 5, 7 and 10 the sideways offset between the measured combined centre of pressure and the model's centre of mass is 1.15/5.9/3.92/1.68 mm RMS, worth 0.43/2.2/1.09/0.51 points of share by the lever rule, against share errors of 8.46/6.89/9.91/5.84 points. The remainder, 8.81/9.05/10.52/5.99 points RMS, comes from where the model puts each foot's centre of pressure sideways compared with the plates (model minus measured, mean: subject4 right -35, left -10; subject5 right -13, left -36; subject7 right -10, left -43; subject10 right +19, left +19 mm). This diagnostic cannot separate the parts of that remainder: the sole's placement on each foot (registration and scaling), the inverse kinematics' foot positions, and the contact's sideways load split within each sole."
+ },
+ "across_subjects": {
+  "sideways_offset_rms_mm_range": [
+   1.15,
+   5.9
+  ],
+  "share_error_from_offset_rms_points_range": [
+   0.43,
+   2.2
+  ],
+  "both_feet_model_cop_left_of_measured": [
+   "subject3",
+   "subject4",
+   "subject5",
+   "subject7",
+   "subject9",
+   "subject11"
+  ],
+  "note": "descriptive: in most subjects both feet's model centres of pressure lie to the same side of the measured ones, which shifts the share at an unchanged centre of mass"
+ },
+ "output_sha256": "0ce3661103c69d503227ab986f849f302996502737a534a921d8b0f6aa971364"
+}
