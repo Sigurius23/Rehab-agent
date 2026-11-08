@@ -44,6 +44,7 @@ suites run there.
 | Pipeline Python (OpenSim 4.6), the laptop below, 2026-11-06 | `test_static_ik.py` | 5 | 0 | 0 | 0 | — |
 | Pipeline Python (OpenSim 4.6), the laptop below, 2026-11-06 | `test_forceplate_metrics.py` | 12 | 0 | 0 | 0 | — |
 | Pipeline Python (OpenSim 4.6), the laptop below, 2026-11-08 | `test_dynamic.py` | 11 | 0 | 0 | 0 | — |
+| Pipeline Python (OpenSim 4.6), the laptop below, 2026-11-08, amendment 5 | `test_dynamic.py` | 19 | 0 | 0 | 0 | — |
 | Generator Python (shapely 2.2.0), slow cases, the laptop below, 2026-11-06 | `test_generator_regressions.py` | 10 | 0 | 1 | 0 | — |
 | KiCad 7.0.11's Python (pcbnew), script-style check | `test_verify_drc.py` | 1 | 0 | 0 | 0 | — |
 
@@ -81,6 +82,9 @@ with those analyses.
 **`test_dynamic.py`** (added 2026-11-06, amendment 4) runs on synthetic data and reads no force data. Its 5 cases of the squat
 window and the phase-2 metric functions were written before any dynamic solution existed. The 6 cases of the
 pilot gate and the settings log were added on 2026-11-08 with settings v2, after the v1 pilot had failed.
+The 8 cases of amendment 5 (validity with tracking, the penetration figure, evaluated counts, A minus B on
+trials evaluated in both) were added the same day, before any dynamic result was compared with the plates. Two
+of them read the recorded v1 arm-B pilot solution and skip without it.
 
 **`test_static_ik.py`** (added 2026-11-06) needs no OpenSim. Its negative controls were checked against a builder
 that carries unknown template elements over and one that ignores the reference marker list; the matching tests

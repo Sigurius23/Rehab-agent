@@ -15,13 +15,16 @@ Definitions, fixed with this file:
   - H2 (per trial): RMS over the window of the combined centre of pressure, measured - model, along the forward
     axis, as % of the subject's mean foot length (forceplate_frames_2026-11-06.json).
   - Per subject: the mean over the subject's evaluated trials. A trial is evaluated when its solution is valid
-    (converged, pelvis residuals within Hicks et al. 2015) and both plates carry at least 1 % of body weight on
-    average over the window (the plate-coverage rule).
+    and both plates carry at least 1 % of body weight on average over the window (the plate-coverage rule).
+    Valid, since amendment 5 (2026-11-08): converged, pelvis residuals within Hicks et al. 2015, and tracking
+    within the pilot gate's limits (dynamic_summary.validity, applied to every solve).
   - Pass (arm A only): every evaluated subject within its threshold (H1 10 % of body weight, H2 15 % of foot
-    length). Subjects without an evaluated trial are reported as not evaluated.
+    length). Subjects without an evaluated trial are reported as not evaluated; invalid solves are never passing.
+  - The results state how many subjects and trials were evaluated per arm (amendment 5, item 4; counts()).
   - Body weight: the recorded mass times g (primary); secondary, the plates' weight from the post-hoc body-mass
     analysis (results_forceplate_posthoc_2026-11-06.json, plates over the kept frames).
-  - Arm B, and A minus B, with the same metrics: description only.
+  - Arm B, and A minus B, with the same metrics: description only. A minus B only on trials evaluated in both
+    arms (amendment 5, item 5; paired()).
 """
 import json
 import math
@@ -29,7 +32,50 @@ from pathlib import Path
 
 import numpy as np
 
+import dynamic_summary as SM
+
 THRESHOLDS = dict(h1_peak_vertical_pct_bw=10.0, h2_cop_forward_rms_pct_foot_length=15.0)
+
+
+def evaluated(solutions, covered):
+    """The evaluated trials of each arm: {arm: sorted [(subject, trial)]}. solutions: dynamic_summary rows with the
+    current settings; covered: {(subject, trial): bool}, the plate-coverage rule over the window (phase 2). A
+    trial is evaluated when its solution is valid (amendment 5, recomputed here) and covered; a trial missing from
+    `covered` is not evaluated."""
+    seen, out = set(), {"A": [], "B": []}
+    for r in solutions:
+        k = (r["subject"], r["trial"], r["arm"])
+        if k in seen:
+            raise ValueError(f"more than one solve of {k}")
+        seen.add(k)
+        if SM.validity(r)[0] and covered.get(k[:2], False):
+            out[r["arm"]].append(k[:2])
+    return {arm: sorted(v, key=lambda st: (int(st[0][7:]), st[1])) for arm, v in out.items()}
+
+
+def counts(ev):
+    """Amendment 5, item 4: how many subjects and trials were evaluated per arm."""
+    return {arm: dict(trials=len(v), subjects=len({s for s, _ in v})) for arm, v in ev.items()}
+
+
+def paired(ev):
+    """Amendment 5, item 5: the trials A minus B is computed on, those evaluated in both arms."""
+    return sorted(set(ev["A"]) & set(ev["B"]), key=lambda st: (int(st[0][7:]), st[1]))
+
+
+def processed_model(model_path, settings=None):
+    """The model as the solve used it (dynamic_track.track's ModelProcessor), from the solve's settings."""
+    import opensim as osim
+    if settings is None:
+        import dynamic_track as DT
+        settings = DT.SETTINGS
+    mp = osim.ModelProcessor(str(model_path))
+    mp.append(osim.ModOpIgnoreTendonCompliance()); mp.append(osim.ModOpReplaceMusclesWithDeGrooteFregly2016())
+    mp.append(osim.ModOpIgnorePassiveFiberForcesDGF())
+    mp.append(osim.ModOpScaleActiveFiberForceCurveWidthDGF(settings["active_force_width_scale"]))
+    mp.append(osim.ModOpAddReserves(settings["reserve_optimal_force_Nm_or_N"]))
+    model = mp.process(); model.initSystem()
+    return model
 
 
 def combined_cop(F_r, p_r, F_l, p_l):
@@ -56,12 +102,7 @@ def model_forces(model_path, solution_path):
     """(times, combined force n x 3, combined centre of pressure n x 2, forward axis n x 2) of a solution."""
     import opensim as osim
     import dynamic_track as DT
-    mp = osim.ModelProcessor(str(model_path))
-    mp.append(osim.ModOpIgnoreTendonCompliance()); mp.append(osim.ModOpReplaceMusclesWithDeGrooteFregly2016())
-    mp.append(osim.ModOpIgnorePassiveFiberForcesDGF())
-    mp.append(osim.ModOpScaleActiveFiberForceCurveWidthDGF(DT.SETTINGS["active_force_width_scale"]))
-    mp.append(osim.ModOpAddReserves(DT.SETTINGS["reserve_optimal_force_Nm_or_N"]))
-    model = mp.process(); model.initSystem()
+    model = processed_model(model_path)
     sol = osim.MocoTrajectory(str(solution_path))
     right, left = DT.contact_force_names(model_path)
     grf = osim.createExternalLoadsTableForGait(model, sol, right, left)

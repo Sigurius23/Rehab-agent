@@ -98,6 +98,31 @@ was built or run. The text of item 2 above stays as written.
      solves (resumable). Each solution's sha256, validity and tracking error are recorded and committed.
   2. Only after the owner's "go": compare with the plates as defined here.
 
+**Amendment 5, to item 2, the dynamic comparison (2026-11-08).** Decided by the owner before any dynamic result was
+compared with the force plates. Amendment 4 above stays as written; this changes its validity rule and its reporting.
+- **Why:** with settings v1, arm B's pilot solution converged and had pelvis residuals within Hicks et al. (2015),
+  yet it left the floor and flew (pelvis translation RMS 672 mm). Amendment 4 would have counted it as valid.
+- **1. Validity** of a dynamic solution now also requires tracking, with the pilot gate's limits, over the window:
+  - every tracked joint angle within 5° RMS;
+  - every pelvis translation within 20 mm RMS.
+
+  "Joint angle" is read as the pilot gate computes it: every tracked rotational coordinate, the pelvis's three
+  rotations included. The untracked patellar couplers are left out. The earlier conditions stay: convergence, and
+  pelvis residuals within Hicks et al. (2015).
+- **2. Contact penetration:** each solve's maximum contact penetration is reported as a figure. That is the deepest
+  any contact sphere reaches below the floor, over the solution's time points. It is not part of validity.
+- **3. Every solve:** the validity check runs on every solve in the batch, not only the pilot.
+- **4. Reporting:** invalid solves are reported as not evaluated, never as passing. The results state how many
+  subjects and trials were evaluated per arm.
+- **5. A minus B** is computed only on trials valid in both arms.
+- **Unchanged:** the settings, the pilot gate (a check of the settings before the batch), the plate-coverage rule,
+  H1, H2 and their thresholds.
+- **In the code:**
+  - `foot_models/dynamic_summary.py` applies items 1–3 to every solve, with the same tracking check as the pilot gate;
+  - `foot_models/dynamic_metrics.py` applies items 4–5.
+
+  The solver code (`dynamic_track.py`) is unchanged, so solves already running or finished are not redone.
+
 **Metrics and thresholds.** The quasi-static thresholds were **agreed on 2026-11-05, before any data was
 downloaded or opened**, as a first attempt. They may be revised only before the force data is opened; a revision
 after that is reported as one, beside the original result.

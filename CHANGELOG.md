@@ -364,6 +364,16 @@
             also needs tracking within 5° per rotation and 20 mm per pelvis translation (`dynamic_summary.py`).
           - The run script now blocks sleep only while it runs. Before, a tmux prefix match kept the old sleep
             lock on after the run had stopped.
+          - **Amendment 5** (2026-11-08; the owner's decision before any dynamic result was compared with the
+            plates). A valid solution now also tracks, within the pilot gate's limits (5° RMS per rotation, 20 mm
+            RMS per pelvis translation). Convergence and the Hicks residuals stay. The check runs on every solve
+            (`dynamic_summary.py`).
+            - Each solve's maximum contact penetration is reported, outside validity.
+            - Invalid solves are not evaluated; the results give the evaluated subjects and trials per arm.
+            - A minus B uses only trials evaluated in both arms (`dynamic_metrics.py`).
+            - Under it the v1 arm-B pilot solution is invalid (it was valid under amendment 4). It penetrates
+              491 mm, and v1 arm A 806 mm.
+            - The solver code is unchanged, so the running v2 pilot and its batch are unaffected.
     - **Printed prototype** (`PRINTED.md`, `sole_print.py`). A TPU carrier is built from the same design:
       - underside wire channels along the routing plan;
       - a floor with one hole per region;
