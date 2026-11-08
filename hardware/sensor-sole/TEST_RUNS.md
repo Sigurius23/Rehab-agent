@@ -45,6 +45,7 @@ suites run there.
 | Pipeline Python (OpenSim 4.6), the laptop below, 2026-11-06 | `test_forceplate_metrics.py` | 12 | 0 | 0 | 0 | — |
 | Pipeline Python (OpenSim 4.6), the laptop below, 2026-11-08 | `test_dynamic.py` | 11 | 0 | 0 | 0 | — |
 | Pipeline Python (OpenSim 4.6), the laptop below, 2026-11-08, amendment 5 | `test_dynamic.py` | 19 | 0 | 0 | 0 | — |
+| Pipeline Python (OpenSim 4.6), the laptop below, 2026-11-08, amendment 6 | `test_dynamic.py` | 25 | 0 | 0 | 0 | — |
 | Generator Python (shapely 2.2.0), slow cases, the laptop below, 2026-11-06 | `test_generator_regressions.py` | 10 | 0 | 1 | 0 | — |
 | KiCad 7.0.11's Python (pcbnew), script-style check | `test_verify_drc.py` | 1 | 0 | 0 | 0 | — |
 
@@ -84,7 +85,10 @@ window and the phase-2 metric functions were written before any dynamic solution
 pilot gate and the settings log were added on 2026-11-08 with settings v2, after the v1 pilot had failed.
 The 8 cases of amendment 5 (validity with tracking, the penetration figure, evaluated counts, A minus B on
 trials evaluated in both) were added the same day, before any dynamic result was compared with the plates. Two
-of them read the recorded v1 arm-B pilot solution and skip without it.
+of them read the recorded v1 arm-B pilot solution and skip without it. The 6 cases of amendment 6 (residual limits
+on the recorded body weight, the recorded mass read and checked, both limits in the summary, a pilot gate that
+needs no body weight) were added the same day; one reads the recorded v1 arm-A pilot solution and the dataset's
+kinematics, and skips without them.
 
 **`test_static_ik.py`** (added 2026-11-06) needs no OpenSim. Its negative controls were checked against a builder
 that carries unknown template elements over and one that ignores the reference marker list; the matching tests

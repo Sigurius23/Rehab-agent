@@ -16,13 +16,15 @@ Definitions, fixed with this file:
     axis, as % of the subject's mean foot length (forceplate_frames_2026-11-06.json).
   - Per subject: the mean over the subject's evaluated trials. A trial is evaluated when its solution is valid
     and both plates carry at least 1 % of body weight on average over the window (the plate-coverage rule).
-    Valid, since amendment 5 (2026-11-08): converged, pelvis residuals within Hicks et al. 2015, and tracking
-    within the pilot gate's limits (dynamic_summary.validity, applied to every solve).
+    Valid, since amendments 5 and 6 (2026-11-08): converged, pelvis residuals within Hicks et al. 2015's limits
+    taken on the recorded body weight (amendment 6; amendment 4 took them on the solution's own peak external force),
+    and tracking within the pilot gate's limits (dynamic_summary.validity, applied to every solve).
   - Pass (arm A only): every evaluated subject within its threshold (H1 10 % of body weight, H2 15 % of foot
     length). Subjects without an evaluated trial are reported as not evaluated; invalid solves are never passing.
   - The results state how many subjects and trials were evaluated per arm (amendment 5, item 4; counts()).
-  - Body weight: the recorded mass times g (primary); secondary, the plates' weight from the post-hoc body-mass
-    analysis (results_forceplate_posthoc_2026-11-06.json, plates over the kept frames).
+  - Body weight: the recorded mass times g (primary), as the residual limits take it (dynamic_summary.subject_mass_kg
+    times dynamic_summary.G); secondary, the plates' weight from the post-hoc body-mass analysis
+    (results_forceplate_posthoc_2026-11-06.json, plates over the kept frames).
   - Arm B, and A minus B, with the same metrics: description only. A minus B only on trials evaluated in both
     arms (amendment 5, item 5; paired()).
 """

@@ -374,6 +374,15 @@
             - Under it the v1 arm-B pilot solution is invalid (it was valid under amendment 4). It penetrates
               491 mm, and v1 arm A 806 mm.
             - The solver code is unchanged, so the running v2 pilot and its batch are unaffected.
+          - **Amendment 6** (2026-11-08; the owner's decision before any dynamic result was compared with the
+            plates). The pelvis residual limits are now taken on the subject's body weight (recorded mass × g):
+            forces at most 5 % of it, moments at most 1 % of the centre-of-mass height times it. Before, they
+            were taken on the solution's own peak external force, so the further a solution's ground forces were
+            from reality, the looser its limit.
+            - v1 arm A's limits had come out at 3.5 MN and 352 kNm. On body weight they are 38.3 N and 3.8 Nm,
+              and its residual moment (34.7 Nm) fails.
+            - The summary reports each solve's residuals with the old and the new limits (`dynamic_summary.py`).
+            - The pilot gate needs no body weight and is unchanged. The solver code is unchanged too.
     - **Printed prototype** (`PRINTED.md`, `sole_print.py`). A TPU carrier is built from the same design:
       - underside wire channels along the routing plan;
       - a floor with one hole per region;

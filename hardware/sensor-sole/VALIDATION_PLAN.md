@@ -123,6 +123,28 @@ compared with the force plates. Amendment 4 above stays as written; this changes
 
   The solver code (`dynamic_track.py`) is unchanged, so solves already running or finished are not redone.
 
+**Amendment 6, to item 2, the dynamic comparison (2026-11-08).** Decided by the owner before any dynamic result was
+compared with the force plates. Amendments 4 and 5 above stay as written; this changes the residual limits of the
+validity rule.
+- **1. Residual limits:** the pelvis residual limits use the subject's body weight, from the recorded mass, in place
+  of the solution's own peak external force:
+  - residual forces at most 5 % of body weight;
+  - residual moments at most 1 % of the centre-of-mass height times body weight.
+- **2. Reason:** the solution's own peak made the limit depend on the solution. With settings v1, arm A's pilot
+  solution had its feet about half a metre into the floor, and its force limit came out at 3.5 MN. Body weight is
+  known before the run and uses no force data. The new limits are slightly stricter than Hicks et al. (2015), because
+  a squat's peak force exceeds body weight.
+- **3. Reporting:** the summary reports each solve's residuals, the old limit and the new one.
+
+  Read as: the recorded mass is `sessionMetadata.yaml`'s `mass_kg` (it agrees with the scale setup's in all 10
+  subjects), times the models' gravity, 9.80665 m/s². The centre-of-mass height is unchanged from amendment 4: the
+  solution's own, at the window's first time point.
+- **Unchanged:** convergence and tracking (amendment 5), the penetration figure, amendment 5's reporting, the
+  settings, the pilot gate, the plate-coverage rule, H1, H2 and their thresholds.
+- **In the code:** `foot_models/dynamic_summary.py` applies the limits to every solve, and
+  `foot_models/dynamic_metrics.py` selects with that validity. The solver code is unchanged, so solves already
+  running or finished are not redone.
+
 **Metrics and thresholds.** The quasi-static thresholds were **agreed on 2026-11-05, before any data was
 downloaded or opened**, as a first attempt. They may be revised only before the force data is opened; a revision
 after that is reported as one, beside the original result.
