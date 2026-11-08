@@ -1,5 +1,7 @@
 # Gaps register & open decisions
 
+> **Open work is tracked in [`plan/`](../plan/README.md) since 2026-11-08** (see `plan/MAP.md`). This file is kept for its history and reasoning; it is no longer updated item by item.
+
 ## Filled (2026-10-21 gap pass)
 - ✅ All 4 `needs-review` repos resolved from upstream READMEs (MyoBack,
   MASS, mass-dart-exo — exo specifics still undocumented upstream, RC-SMPL)

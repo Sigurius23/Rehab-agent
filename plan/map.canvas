@@ -1,0 +1,1324 @@
+{
+ "nodes": [
+  {
+   "id": "D-01",
+   "type": "file",
+   "file": "nodes/D-01.md",
+   "x": 0,
+   "y": 1540,
+   "width": 280,
+   "height": 120,
+   "color": "2"
+  },
+  {
+   "id": "D-02",
+   "type": "file",
+   "file": "nodes/D-02.md",
+   "x": 320,
+   "y": 1540,
+   "width": 280,
+   "height": 120,
+   "color": "2"
+  },
+  {
+   "id": "D-03",
+   "type": "file",
+   "file": "nodes/D-03.md",
+   "x": 640,
+   "y": 1540,
+   "width": 280,
+   "height": 120,
+   "color": "2"
+  },
+  {
+   "id": "D-04",
+   "type": "file",
+   "file": "nodes/D-04.md",
+   "x": 960,
+   "y": 1540,
+   "width": 280,
+   "height": 120,
+   "color": "2"
+  },
+  {
+   "id": "D-05",
+   "type": "file",
+   "file": "nodes/D-05.md",
+   "x": 1280,
+   "y": 1540,
+   "width": 280,
+   "height": 120,
+   "color": "2"
+  },
+  {
+   "id": "D-06",
+   "type": "file",
+   "file": "nodes/D-06.md",
+   "x": 1600,
+   "y": 1540,
+   "width": 280,
+   "height": 120,
+   "color": "2"
+  },
+  {
+   "id": "D-07",
+   "type": "file",
+   "file": "nodes/D-07.md",
+   "x": 1920,
+   "y": 1540,
+   "width": 280,
+   "height": 120,
+   "color": "2"
+  },
+  {
+   "id": "D-09",
+   "type": "file",
+   "file": "nodes/D-09.md",
+   "x": 2240,
+   "y": 1540,
+   "width": 280,
+   "height": 120,
+   "color": "2"
+  },
+  {
+   "id": "D-10",
+   "type": "file",
+   "file": "nodes/D-10.md",
+   "x": 2560,
+   "y": 1540,
+   "width": 280,
+   "height": 120,
+   "color": "2"
+  },
+  {
+   "id": "D-11",
+   "type": "file",
+   "file": "nodes/D-11.md",
+   "x": 2880,
+   "y": 1540,
+   "width": 280,
+   "height": 120,
+   "color": "2"
+  },
+  {
+   "id": "cues-clinician-review",
+   "type": "file",
+   "file": "nodes/cues-clinician-review.md",
+   "x": 0,
+   "y": 440,
+   "width": 280,
+   "height": 120,
+   "color": "2"
+  },
+  {
+   "id": "d-fabricator-enquiry",
+   "type": "file",
+   "file": "nodes/d-fabricator-enquiry.md",
+   "x": 3200,
+   "y": 1540,
+   "width": 280,
+   "height": 120,
+   "color": "2"
+  },
+  {
+   "id": "d-prototype-materials",
+   "type": "file",
+   "file": "nodes/d-prototype-materials.md",
+   "x": 3520,
+   "y": 1540,
+   "width": 280,
+   "height": 120,
+   "color": "2"
+  },
+  {
+   "id": "d-repo-visibility",
+   "type": "file",
+   "file": "nodes/d-repo-visibility.md",
+   "x": 3840,
+   "y": 1540,
+   "width": 280,
+   "height": 120,
+   "color": "2"
+  },
+  {
+   "id": "d-sikidar-account",
+   "type": "file",
+   "file": "nodes/d-sikidar-account.md",
+   "x": 4160,
+   "y": 1540,
+   "width": 280,
+   "height": 120,
+   "color": "2"
+  },
+  {
+   "id": "d-suit-bench-hardware",
+   "type": "file",
+   "file": "nodes/d-suit-bench-hardware.md",
+   "x": 4480,
+   "y": 1540,
+   "width": 280,
+   "height": 120,
+   "color": "2"
+  },
+  {
+   "id": "forces-session-measurement",
+   "type": "file",
+   "file": "nodes/forces-session-measurement.md",
+   "x": 960,
+   "y": 440,
+   "width": 280,
+   "height": 120
+  },
+  {
+   "id": "goal-clinician-feedback",
+   "type": "file",
+   "file": "nodes/goal-clinician-feedback.md",
+   "x": 0,
+   "y": 220,
+   "width": 280,
+   "height": 120,
+   "color": "6"
+  },
+  {
+   "id": "goal-haptic-suit",
+   "type": "file",
+   "file": "nodes/goal-haptic-suit.md",
+   "x": 480,
+   "y": 220,
+   "width": 280,
+   "height": 120,
+   "color": "6"
+  },
+  {
+   "id": "goal-measured-forces",
+   "type": "file",
+   "file": "nodes/goal-measured-forces.md",
+   "x": 960,
+   "y": 220,
+   "width": 280,
+   "height": 120,
+   "color": "6"
+  },
+  {
+   "id": "goal-measured-kinematics",
+   "type": "file",
+   "file": "nodes/goal-measured-kinematics.md",
+   "x": 1440,
+   "y": 220,
+   "width": 280,
+   "height": 120,
+   "color": "6"
+  },
+  {
+   "id": "goal-personal-twin",
+   "type": "file",
+   "file": "nodes/goal-personal-twin.md",
+   "x": 1920,
+   "y": 220,
+   "width": 280,
+   "height": 120,
+   "color": "6"
+  },
+  {
+   "id": "goal-sensor-sole",
+   "type": "file",
+   "file": "nodes/goal-sensor-sole.md",
+   "x": 5440,
+   "y": 220,
+   "width": 280,
+   "height": 120,
+   "color": "6"
+  },
+  {
+   "id": "goal-sole-simulation",
+   "type": "file",
+   "file": "nodes/goal-sole-simulation.md",
+   "x": 3840,
+   "y": 440,
+   "width": 280,
+   "height": 120,
+   "color": "6"
+  },
+  {
+   "id": "idea-assistance-track",
+   "type": "file",
+   "file": "nodes/idea-assistance-track.md",
+   "x": 0,
+   "y": 1320,
+   "width": 280,
+   "height": 120,
+   "color": "5"
+  },
+  {
+   "id": "idea-assurance-case",
+   "type": "file",
+   "file": "nodes/idea-assurance-case.md",
+   "x": 320,
+   "y": 1320,
+   "width": 280,
+   "height": 120,
+   "color": "5"
+  },
+  {
+   "id": "idea-balance-board",
+   "type": "file",
+   "file": "nodes/idea-balance-board.md",
+   "x": 640,
+   "y": 1320,
+   "width": 280,
+   "height": 120,
+   "color": "5"
+  },
+  {
+   "id": "idea-mujoco",
+   "type": "file",
+   "file": "nodes/idea-mujoco.md",
+   "x": 960,
+   "y": 1320,
+   "width": 280,
+   "height": 120,
+   "color": "5"
+  },
+  {
+   "id": "idea-sikidar",
+   "type": "file",
+   "file": "nodes/idea-sikidar.md",
+   "x": 1280,
+   "y": 1320,
+   "width": 280,
+   "height": 120,
+   "color": "5"
+  },
+  {
+   "id": "idea-synergy-toes",
+   "type": "file",
+   "file": "nodes/idea-synergy-toes.md",
+   "x": 1600,
+   "y": 1320,
+   "width": 280,
+   "height": 120,
+   "color": "5"
+  },
+  {
+   "id": "idea-t1-candidate",
+   "type": "file",
+   "file": "nodes/idea-t1-candidate.md",
+   "x": 1920,
+   "y": 1320,
+   "width": 280,
+   "height": 120,
+   "color": "5"
+  },
+  {
+   "id": "idea-uncertainty-runs",
+   "type": "file",
+   "file": "nodes/idea-uncertainty-runs.md",
+   "x": 2240,
+   "y": 1320,
+   "width": 280,
+   "height": 120,
+   "color": "5"
+  },
+  {
+   "id": "kin-labvalidation",
+   "type": "file",
+   "file": "nodes/kin-labvalidation.md",
+   "x": 1280,
+   "y": 440,
+   "width": 280,
+   "height": 120
+  },
+  {
+   "id": "kin-volunteer-recording",
+   "type": "file",
+   "file": "nodes/kin-volunteer-recording.md",
+   "x": 1600,
+   "y": 440,
+   "width": 280,
+   "height": 120
+  },
+  {
+   "id": "project-ci-suites",
+   "type": "file",
+   "file": "nodes/project-ci-suites.md",
+   "x": 7360,
+   "y": 220,
+   "width": 280,
+   "height": 120
+  },
+  {
+   "id": "project-claude-md",
+   "type": "file",
+   "file": "nodes/project-claude-md.md",
+   "x": 7680,
+   "y": 220,
+   "width": 280,
+   "height": 120
+  },
+  {
+   "id": "rehab-agent",
+   "type": "file",
+   "file": "nodes/rehab-agent.md",
+   "x": 3840,
+   "y": 0,
+   "width": 280,
+   "height": 120,
+   "color": "6"
+  },
+  {
+   "id": "sole-boards-verified",
+   "type": "file",
+   "file": "nodes/sole-boards-verified.md",
+   "x": 5760,
+   "y": 440,
+   "width": 280,
+   "height": 120,
+   "color": "4"
+  },
+  {
+   "id": "sole-coupon-test",
+   "type": "file",
+   "file": "nodes/sole-coupon-test.md",
+   "x": 6080,
+   "y": 440,
+   "width": 280,
+   "height": 120
+  },
+  {
+   "id": "sole-fabrication",
+   "type": "file",
+   "file": "nodes/sole-fabrication.md",
+   "x": 6400,
+   "y": 440,
+   "width": 280,
+   "height": 120,
+   "color": "2"
+  },
+  {
+   "id": "sole-foot-model-comparison",
+   "type": "file",
+   "file": "nodes/sole-foot-model-comparison.md",
+   "x": 2240,
+   "y": 660,
+   "width": 280,
+   "height": 120,
+   "color": "4"
+  },
+  {
+   "id": "sole-footbed-layers",
+   "type": "file",
+   "file": "nodes/sole-footbed-layers.md",
+   "x": 2560,
+   "y": 660,
+   "width": 280,
+   "height": 120
+  },
+  {
+   "id": "sole-forceplate-dynamic",
+   "type": "file",
+   "file": "nodes/sole-forceplate-dynamic.md",
+   "x": 3040,
+   "y": 660,
+   "width": 280,
+   "height": 120,
+   "color": "3"
+  },
+  {
+   "id": "sole-forceplate-quasistatic",
+   "type": "file",
+   "file": "nodes/sole-forceplate-quasistatic.md",
+   "x": 3840,
+   "y": 660,
+   "width": 280,
+   "height": 120,
+   "color": "4"
+  },
+  {
+   "id": "sole-insole-contact",
+   "type": "file",
+   "file": "nodes/sole-insole-contact.md",
+   "x": 4480,
+   "y": 660,
+   "width": 280,
+   "height": 120
+  },
+  {
+   "id": "sole-physical-prototype",
+   "type": "file",
+   "file": "nodes/sole-physical-prototype.md",
+   "x": 6720,
+   "y": 440,
+   "width": 280,
+   "height": 120
+  },
+  {
+   "id": "sole-rebuild-reproducibility",
+   "type": "file",
+   "file": "nodes/sole-rebuild-reproducibility.md",
+   "x": 7040,
+   "y": 440,
+   "width": 280,
+   "height": 120
+  },
+  {
+   "id": "sole-regional-pressure",
+   "type": "file",
+   "file": "nodes/sole-regional-pressure.md",
+   "x": 4800,
+   "y": 660,
+   "width": 280,
+   "height": 120
+  },
+  {
+   "id": "sole-share-diagnostic",
+   "type": "file",
+   "file": "nodes/sole-share-diagnostic.md",
+   "x": 5120,
+   "y": 660,
+   "width": 280,
+   "height": 120
+  },
+  {
+   "id": "sole-spacing-converge",
+   "type": "file",
+   "file": "nodes/sole-spacing-converge.md",
+   "x": 5440,
+   "y": 660,
+   "width": 280,
+   "height": 120
+  },
+  {
+   "id": "suit-ble-bench",
+   "type": "file",
+   "file": "nodes/suit-ble-bench.md",
+   "x": 320,
+   "y": 440,
+   "width": 280,
+   "height": 120
+  },
+  {
+   "id": "suit-slimevr-validation",
+   "type": "file",
+   "file": "nodes/suit-slimevr-validation.md",
+   "x": 640,
+   "y": 440,
+   "width": 280,
+   "height": 120
+  },
+  {
+   "id": "t-boards-checker",
+   "type": "file",
+   "file": "nodes/t-boards-checker.md",
+   "x": 5760,
+   "y": 660,
+   "width": 280,
+   "height": 120,
+   "color": "4"
+  },
+  {
+   "id": "t-ci-suites",
+   "type": "file",
+   "file": "nodes/t-ci-suites.md",
+   "x": 7360,
+   "y": 440,
+   "width": 280,
+   "height": 120
+  },
+  {
+   "id": "t-claude-md-fresh-session",
+   "type": "file",
+   "file": "nodes/t-claude-md-fresh-session.md",
+   "x": 7680,
+   "y": 440,
+   "width": 280,
+   "height": 120
+  },
+  {
+   "id": "t-coupon",
+   "type": "file",
+   "file": "nodes/t-coupon.md",
+   "x": 6080,
+   "y": 660,
+   "width": 280,
+   "height": 120
+  },
+  {
+   "id": "t-dyn-h1",
+   "type": "file",
+   "file": "nodes/t-dyn-h1.md",
+   "x": 2880,
+   "y": 880,
+   "width": 280,
+   "height": 120
+  },
+  {
+   "id": "t-dyn-h2",
+   "type": "file",
+   "file": "nodes/t-dyn-h2.md",
+   "x": 3200,
+   "y": 880,
+   "width": 280,
+   "height": 120
+  },
+  {
+   "id": "t-footbed",
+   "type": "file",
+   "file": "nodes/t-footbed.md",
+   "x": 2560,
+   "y": 880,
+   "width": 280,
+   "height": 120
+  },
+  {
+   "id": "t-forces-session",
+   "type": "file",
+   "file": "nodes/t-forces-session.md",
+   "x": 960,
+   "y": 660,
+   "width": 280,
+   "height": 120
+  },
+  {
+   "id": "t-fp-cop",
+   "type": "file",
+   "file": "nodes/t-fp-cop.md",
+   "x": 3520,
+   "y": 880,
+   "width": 280,
+   "height": 120,
+   "color": "4"
+  },
+  {
+   "id": "t-fp-share",
+   "type": "file",
+   "file": "nodes/t-fp-share.md",
+   "x": 3840,
+   "y": 880,
+   "width": 280,
+   "height": 120,
+   "color": "1"
+  },
+  {
+   "id": "t-fp-vertical",
+   "type": "file",
+   "file": "nodes/t-fp-vertical.md",
+   "x": 4160,
+   "y": 880,
+   "width": 280,
+   "height": 120,
+   "color": "1"
+  },
+  {
+   "id": "t-insole",
+   "type": "file",
+   "file": "nodes/t-insole.md",
+   "x": 4480,
+   "y": 880,
+   "width": 280,
+   "height": 120
+  },
+  {
+   "id": "t-kin-labvalidation",
+   "type": "file",
+   "file": "nodes/t-kin-labvalidation.md",
+   "x": 1280,
+   "y": 660,
+   "width": 280,
+   "height": 120
+  },
+  {
+   "id": "t-kin-volunteer",
+   "type": "file",
+   "file": "nodes/t-kin-volunteer.md",
+   "x": 1600,
+   "y": 660,
+   "width": 280,
+   "height": 120
+  },
+  {
+   "id": "t-prototype-press",
+   "type": "file",
+   "file": "nodes/t-prototype-press.md",
+   "x": 6720,
+   "y": 660,
+   "width": 280,
+   "height": 120
+  },
+  {
+   "id": "t-rebuild-laptop",
+   "type": "file",
+   "file": "nodes/t-rebuild-laptop.md",
+   "x": 7040,
+   "y": 660,
+   "width": 280,
+   "height": 120
+  },
+  {
+   "id": "t-regional",
+   "type": "file",
+   "file": "nodes/t-regional.md",
+   "x": 4800,
+   "y": 880,
+   "width": 280,
+   "height": 120
+  },
+  {
+   "id": "t-share-lever-rule",
+   "type": "file",
+   "file": "nodes/t-share-lever-rule.md",
+   "x": 5120,
+   "y": 880,
+   "width": 280,
+   "height": 120
+  },
+  {
+   "id": "t-slimevr",
+   "type": "file",
+   "file": "nodes/t-slimevr.md",
+   "x": 640,
+   "y": 660,
+   "width": 280,
+   "height": 120
+  },
+  {
+   "id": "t-spacing-convergence",
+   "type": "file",
+   "file": "nodes/t-spacing-convergence.md",
+   "x": 2240,
+   "y": 880,
+   "width": 280,
+   "height": 120,
+   "color": "1"
+  },
+  {
+   "id": "t-spacing-finer",
+   "type": "file",
+   "file": "nodes/t-spacing-finer.md",
+   "x": 5440,
+   "y": 880,
+   "width": 280,
+   "height": 120
+  },
+  {
+   "id": "t-suit-ble",
+   "type": "file",
+   "file": "nodes/t-suit-ble.md",
+   "x": 320,
+   "y": 660,
+   "width": 280,
+   "height": 120
+  },
+  {
+   "id": "twin-tier-a-subject",
+   "type": "file",
+   "file": "nodes/twin-tier-a-subject.md",
+   "x": 1920,
+   "y": 440,
+   "width": 280,
+   "height": 120,
+   "color": "2"
+  }
+ ],
+ "edges": [
+  {
+   "id": "D-02--blocks--twin-tier-a-subject",
+   "fromNode": "D-02",
+   "toNode": "twin-tier-a-subject",
+   "fromSide": "bottom",
+   "toSide": "top",
+   "color": "2",
+   "label": "blocks"
+  },
+  {
+   "id": "D-03--blocks--cues-clinician-review",
+   "fromNode": "D-03",
+   "toNode": "cues-clinician-review",
+   "fromSide": "bottom",
+   "toSide": "top",
+   "color": "2",
+   "label": "blocks"
+  },
+  {
+   "id": "D-05--blocks--idea-assistance-track",
+   "fromNode": "D-05",
+   "toNode": "idea-assistance-track",
+   "fromSide": "bottom",
+   "toSide": "top",
+   "color": "2",
+   "label": "blocks"
+  },
+  {
+   "id": "D-06--blocks--cues-clinician-review",
+   "fromNode": "D-06",
+   "toNode": "cues-clinician-review",
+   "fromSide": "bottom",
+   "toSide": "top",
+   "color": "2",
+   "label": "blocks"
+  },
+  {
+   "id": "D-07--blocks--kin-volunteer-recording",
+   "fromNode": "D-07",
+   "toNode": "kin-volunteer-recording",
+   "fromSide": "bottom",
+   "toSide": "top",
+   "color": "2",
+   "label": "blocks"
+  },
+  {
+   "id": "goal-clinician-feedback--parent--cues-clinician-review",
+   "fromNode": "goal-clinician-feedback",
+   "toNode": "cues-clinician-review",
+   "fromSide": "bottom",
+   "toSide": "top"
+  },
+  {
+   "id": "kin-labvalidation--needed by--cues-clinician-review",
+   "fromNode": "kin-labvalidation",
+   "toNode": "cues-clinician-review",
+   "fromSide": "bottom",
+   "toSide": "top",
+   "color": "3",
+   "label": "needed by"
+  },
+  {
+   "id": "d-fabricator-enquiry--blocks--sole-fabrication",
+   "fromNode": "d-fabricator-enquiry",
+   "toNode": "sole-fabrication",
+   "fromSide": "bottom",
+   "toSide": "top",
+   "color": "2",
+   "label": "blocks"
+  },
+  {
+   "id": "d-prototype-materials--blocks--sole-physical-prototype",
+   "fromNode": "d-prototype-materials",
+   "toNode": "sole-physical-prototype",
+   "fromSide": "bottom",
+   "toSide": "top",
+   "color": "2",
+   "label": "blocks"
+  },
+  {
+   "id": "d-prototype-materials--blocks--sole-coupon-test",
+   "fromNode": "d-prototype-materials",
+   "toNode": "sole-coupon-test",
+   "fromSide": "bottom",
+   "toSide": "top",
+   "color": "2",
+   "label": "blocks"
+  },
+  {
+   "id": "d-sikidar-account--blocks--idea-sikidar",
+   "fromNode": "d-sikidar-account",
+   "toNode": "idea-sikidar",
+   "fromSide": "bottom",
+   "toSide": "top",
+   "color": "2",
+   "label": "blocks"
+  },
+  {
+   "id": "d-suit-bench-hardware--blocks--suit-ble-bench",
+   "fromNode": "d-suit-bench-hardware",
+   "toNode": "suit-ble-bench",
+   "fromSide": "bottom",
+   "toSide": "top",
+   "color": "2",
+   "label": "blocks"
+  },
+  {
+   "id": "goal-measured-forces--parent--forces-session-measurement",
+   "fromNode": "goal-measured-forces",
+   "toNode": "forces-session-measurement",
+   "fromSide": "bottom",
+   "toSide": "top"
+  },
+  {
+   "id": "kin-volunteer-recording--needed by--forces-session-measurement",
+   "fromNode": "kin-volunteer-recording",
+   "toNode": "forces-session-measurement",
+   "fromSide": "bottom",
+   "toSide": "top",
+   "color": "3",
+   "label": "needed by"
+  },
+  {
+   "id": "rehab-agent--parent--goal-clinician-feedback",
+   "fromNode": "rehab-agent",
+   "toNode": "goal-clinician-feedback",
+   "fromSide": "bottom",
+   "toSide": "top"
+  },
+  {
+   "id": "rehab-agent--parent--goal-haptic-suit",
+   "fromNode": "rehab-agent",
+   "toNode": "goal-haptic-suit",
+   "fromSide": "bottom",
+   "toSide": "top"
+  },
+  {
+   "id": "rehab-agent--parent--goal-measured-forces",
+   "fromNode": "rehab-agent",
+   "toNode": "goal-measured-forces",
+   "fromSide": "bottom",
+   "toSide": "top"
+  },
+  {
+   "id": "rehab-agent--parent--goal-measured-kinematics",
+   "fromNode": "rehab-agent",
+   "toNode": "goal-measured-kinematics",
+   "fromSide": "bottom",
+   "toSide": "top"
+  },
+  {
+   "id": "rehab-agent--parent--goal-personal-twin",
+   "fromNode": "rehab-agent",
+   "toNode": "goal-personal-twin",
+   "fromSide": "bottom",
+   "toSide": "top"
+  },
+  {
+   "id": "rehab-agent--parent--goal-sensor-sole",
+   "fromNode": "rehab-agent",
+   "toNode": "goal-sensor-sole",
+   "fromSide": "bottom",
+   "toSide": "top"
+  },
+  {
+   "id": "goal-sensor-sole--parent--goal-sole-simulation",
+   "fromNode": "goal-sensor-sole",
+   "toNode": "goal-sole-simulation",
+   "fromSide": "bottom",
+   "toSide": "top"
+  },
+  {
+   "id": "idea-assistance-track--serves--goal-measured-forces",
+   "fromNode": "idea-assistance-track",
+   "toNode": "goal-measured-forces",
+   "fromSide": "bottom",
+   "toSide": "top",
+   "color": "5",
+   "label": "serves"
+  },
+  {
+   "id": "idea-assurance-case--serves--goal-clinician-feedback",
+   "fromNode": "idea-assurance-case",
+   "toNode": "goal-clinician-feedback",
+   "fromSide": "bottom",
+   "toSide": "top",
+   "color": "5",
+   "label": "serves"
+  },
+  {
+   "id": "idea-balance-board--serves--goal-measured-forces",
+   "fromNode": "idea-balance-board",
+   "toNode": "goal-measured-forces",
+   "fromSide": "bottom",
+   "toSide": "top",
+   "color": "5",
+   "label": "serves"
+  },
+  {
+   "id": "idea-mujoco--serves--goal-sole-simulation",
+   "fromNode": "idea-mujoco",
+   "toNode": "goal-sole-simulation",
+   "fromSide": "bottom",
+   "toSide": "top",
+   "color": "5",
+   "label": "serves"
+  },
+  {
+   "id": "idea-sikidar--serves--sole-foot-model-comparison",
+   "fromNode": "idea-sikidar",
+   "toNode": "sole-foot-model-comparison",
+   "fromSide": "bottom",
+   "toSide": "top",
+   "color": "5",
+   "label": "serves"
+  },
+  {
+   "id": "idea-synergy-toes--serves--sole-foot-model-comparison",
+   "fromNode": "idea-synergy-toes",
+   "toNode": "sole-foot-model-comparison",
+   "fromSide": "bottom",
+   "toSide": "top",
+   "color": "5",
+   "label": "serves"
+  },
+  {
+   "id": "idea-t1-candidate--serves--goal-sensor-sole",
+   "fromNode": "idea-t1-candidate",
+   "toNode": "goal-sensor-sole",
+   "fromSide": "bottom",
+   "toSide": "top",
+   "color": "5",
+   "label": "serves"
+  },
+  {
+   "id": "idea-uncertainty-runs--serves--goal-sole-simulation",
+   "fromNode": "idea-uncertainty-runs",
+   "toNode": "goal-sole-simulation",
+   "fromSide": "bottom",
+   "toSide": "top",
+   "color": "5",
+   "label": "serves"
+  },
+  {
+   "id": "goal-measured-kinematics--parent--kin-labvalidation",
+   "fromNode": "goal-measured-kinematics",
+   "toNode": "kin-labvalidation",
+   "fromSide": "bottom",
+   "toSide": "top"
+  },
+  {
+   "id": "goal-measured-kinematics--parent--kin-volunteer-recording",
+   "fromNode": "goal-measured-kinematics",
+   "toNode": "kin-volunteer-recording",
+   "fromSide": "bottom",
+   "toSide": "top"
+  },
+  {
+   "id": "rehab-agent--parent--project-ci-suites",
+   "fromNode": "rehab-agent",
+   "toNode": "project-ci-suites",
+   "fromSide": "bottom",
+   "toSide": "top"
+  },
+  {
+   "id": "rehab-agent--parent--project-claude-md",
+   "fromNode": "rehab-agent",
+   "toNode": "project-claude-md",
+   "fromSide": "bottom",
+   "toSide": "top"
+  },
+  {
+   "id": "goal-sensor-sole--parent--sole-boards-verified",
+   "fromNode": "goal-sensor-sole",
+   "toNode": "sole-boards-verified",
+   "fromSide": "bottom",
+   "toSide": "top"
+  },
+  {
+   "id": "goal-sensor-sole--parent--sole-coupon-test",
+   "fromNode": "goal-sensor-sole",
+   "toNode": "sole-coupon-test",
+   "fromSide": "bottom",
+   "toSide": "top"
+  },
+  {
+   "id": "goal-sensor-sole--parent--sole-fabrication",
+   "fromNode": "goal-sensor-sole",
+   "toNode": "sole-fabrication",
+   "fromSide": "bottom",
+   "toSide": "top"
+  },
+  {
+   "id": "sole-physical-prototype--needed by--sole-fabrication",
+   "fromNode": "sole-physical-prototype",
+   "toNode": "sole-fabrication",
+   "fromSide": "bottom",
+   "toSide": "top",
+   "color": "3",
+   "label": "needed by"
+  },
+  {
+   "id": "goal-sole-simulation--parent--sole-foot-model-comparison",
+   "fromNode": "goal-sole-simulation",
+   "toNode": "sole-foot-model-comparison",
+   "fromSide": "bottom",
+   "toSide": "top"
+  },
+  {
+   "id": "goal-sole-simulation--parent--sole-footbed-layers",
+   "fromNode": "goal-sole-simulation",
+   "toNode": "sole-footbed-layers",
+   "fromSide": "bottom",
+   "toSide": "top"
+  },
+  {
+   "id": "goal-sole-simulation--parent--sole-forceplate-dynamic",
+   "fromNode": "goal-sole-simulation",
+   "toNode": "sole-forceplate-dynamic",
+   "fromSide": "bottom",
+   "toSide": "top"
+  },
+  {
+   "id": "sole-forceplate-quasistatic--needed by--sole-forceplate-dynamic",
+   "fromNode": "sole-forceplate-quasistatic",
+   "toNode": "sole-forceplate-dynamic",
+   "fromSide": "bottom",
+   "toSide": "top",
+   "color": "3",
+   "label": "needed by"
+  },
+  {
+   "id": "goal-sole-simulation--parent--sole-forceplate-quasistatic",
+   "fromNode": "goal-sole-simulation",
+   "toNode": "sole-forceplate-quasistatic",
+   "fromSide": "bottom",
+   "toSide": "top"
+  },
+  {
+   "id": "goal-sole-simulation--parent--sole-insole-contact",
+   "fromNode": "goal-sole-simulation",
+   "toNode": "sole-insole-contact",
+   "fromSide": "bottom",
+   "toSide": "top"
+  },
+  {
+   "id": "sole-footbed-layers--needed by--sole-insole-contact",
+   "fromNode": "sole-footbed-layers",
+   "toNode": "sole-insole-contact",
+   "fromSide": "bottom",
+   "toSide": "top",
+   "color": "3",
+   "label": "needed by"
+  },
+  {
+   "id": "sole-coupon-test--needed by--sole-insole-contact",
+   "fromNode": "sole-coupon-test",
+   "toNode": "sole-insole-contact",
+   "fromSide": "bottom",
+   "toSide": "top",
+   "color": "3",
+   "label": "needed by"
+  },
+  {
+   "id": "goal-sensor-sole--parent--sole-physical-prototype",
+   "fromNode": "goal-sensor-sole",
+   "toNode": "sole-physical-prototype",
+   "fromSide": "bottom",
+   "toSide": "top"
+  },
+  {
+   "id": "goal-sensor-sole--parent--sole-rebuild-reproducibility",
+   "fromNode": "goal-sensor-sole",
+   "toNode": "sole-rebuild-reproducibility",
+   "fromSide": "bottom",
+   "toSide": "top"
+  },
+  {
+   "id": "goal-sole-simulation--parent--sole-regional-pressure",
+   "fromNode": "goal-sole-simulation",
+   "toNode": "sole-regional-pressure",
+   "fromSide": "bottom",
+   "toSide": "top"
+  },
+  {
+   "id": "sole-spacing-converge--needed by--sole-regional-pressure",
+   "fromNode": "sole-spacing-converge",
+   "toNode": "sole-regional-pressure",
+   "fromSide": "bottom",
+   "toSide": "top",
+   "color": "3",
+   "label": "needed by"
+  },
+  {
+   "id": "goal-sole-simulation--parent--sole-share-diagnostic",
+   "fromNode": "goal-sole-simulation",
+   "toNode": "sole-share-diagnostic",
+   "fromSide": "bottom",
+   "toSide": "top"
+  },
+  {
+   "id": "sole-forceplate-quasistatic--needed by--sole-share-diagnostic",
+   "fromNode": "sole-forceplate-quasistatic",
+   "toNode": "sole-share-diagnostic",
+   "fromSide": "bottom",
+   "toSide": "top",
+   "color": "3",
+   "label": "needed by"
+  },
+  {
+   "id": "goal-sole-simulation--parent--sole-spacing-converge",
+   "fromNode": "goal-sole-simulation",
+   "toNode": "sole-spacing-converge",
+   "fromSide": "bottom",
+   "toSide": "top"
+  },
+  {
+   "id": "sole-foot-model-comparison--needed by--sole-spacing-converge",
+   "fromNode": "sole-foot-model-comparison",
+   "toNode": "sole-spacing-converge",
+   "fromSide": "bottom",
+   "toSide": "top",
+   "color": "3",
+   "label": "needed by"
+  },
+  {
+   "id": "goal-haptic-suit--parent--suit-ble-bench",
+   "fromNode": "goal-haptic-suit",
+   "toNode": "suit-ble-bench",
+   "fromSide": "bottom",
+   "toSide": "top"
+  },
+  {
+   "id": "goal-haptic-suit--parent--suit-slimevr-validation",
+   "fromNode": "goal-haptic-suit",
+   "toNode": "suit-slimevr-validation",
+   "fromSide": "bottom",
+   "toSide": "top"
+  },
+  {
+   "id": "sole-boards-verified--parent--t-boards-checker",
+   "fromNode": "sole-boards-verified",
+   "toNode": "t-boards-checker",
+   "fromSide": "bottom",
+   "toSide": "top"
+  },
+  {
+   "id": "project-ci-suites--parent--t-ci-suites",
+   "fromNode": "project-ci-suites",
+   "toNode": "t-ci-suites",
+   "fromSide": "bottom",
+   "toSide": "top"
+  },
+  {
+   "id": "project-claude-md--parent--t-claude-md-fresh-session",
+   "fromNode": "project-claude-md",
+   "toNode": "t-claude-md-fresh-session",
+   "fromSide": "bottom",
+   "toSide": "top"
+  },
+  {
+   "id": "sole-coupon-test--parent--t-coupon",
+   "fromNode": "sole-coupon-test",
+   "toNode": "t-coupon",
+   "fromSide": "bottom",
+   "toSide": "top"
+  },
+  {
+   "id": "sole-forceplate-dynamic--parent--t-dyn-h1",
+   "fromNode": "sole-forceplate-dynamic",
+   "toNode": "t-dyn-h1",
+   "fromSide": "bottom",
+   "toSide": "top"
+  },
+  {
+   "id": "sole-forceplate-dynamic--parent--t-dyn-h2",
+   "fromNode": "sole-forceplate-dynamic",
+   "toNode": "t-dyn-h2",
+   "fromSide": "bottom",
+   "toSide": "top"
+  },
+  {
+   "id": "sole-footbed-layers--parent--t-footbed",
+   "fromNode": "sole-footbed-layers",
+   "toNode": "t-footbed",
+   "fromSide": "bottom",
+   "toSide": "top"
+  },
+  {
+   "id": "forces-session-measurement--parent--t-forces-session",
+   "fromNode": "forces-session-measurement",
+   "toNode": "t-forces-session",
+   "fromSide": "bottom",
+   "toSide": "top"
+  },
+  {
+   "id": "sole-forceplate-quasistatic--parent--t-fp-cop",
+   "fromNode": "sole-forceplate-quasistatic",
+   "toNode": "t-fp-cop",
+   "fromSide": "bottom",
+   "toSide": "top"
+  },
+  {
+   "id": "sole-forceplate-quasistatic--parent--t-fp-share",
+   "fromNode": "sole-forceplate-quasistatic",
+   "toNode": "t-fp-share",
+   "fromSide": "bottom",
+   "toSide": "top"
+  },
+  {
+   "id": "sole-forceplate-quasistatic--parent--t-fp-vertical",
+   "fromNode": "sole-forceplate-quasistatic",
+   "toNode": "t-fp-vertical",
+   "fromSide": "bottom",
+   "toSide": "top"
+  },
+  {
+   "id": "sole-insole-contact--parent--t-insole",
+   "fromNode": "sole-insole-contact",
+   "toNode": "t-insole",
+   "fromSide": "bottom",
+   "toSide": "top"
+  },
+  {
+   "id": "kin-labvalidation--parent--t-kin-labvalidation",
+   "fromNode": "kin-labvalidation",
+   "toNode": "t-kin-labvalidation",
+   "fromSide": "bottom",
+   "toSide": "top"
+  },
+  {
+   "id": "kin-volunteer-recording--parent--t-kin-volunteer",
+   "fromNode": "kin-volunteer-recording",
+   "toNode": "t-kin-volunteer",
+   "fromSide": "bottom",
+   "toSide": "top"
+  },
+  {
+   "id": "sole-physical-prototype--parent--t-prototype-press",
+   "fromNode": "sole-physical-prototype",
+   "toNode": "t-prototype-press",
+   "fromSide": "bottom",
+   "toSide": "top"
+  },
+  {
+   "id": "sole-rebuild-reproducibility--parent--t-rebuild-laptop",
+   "fromNode": "sole-rebuild-reproducibility",
+   "toNode": "t-rebuild-laptop",
+   "fromSide": "bottom",
+   "toSide": "top"
+  },
+  {
+   "id": "sole-regional-pressure--parent--t-regional",
+   "fromNode": "sole-regional-pressure",
+   "toNode": "t-regional",
+   "fromSide": "bottom",
+   "toSide": "top"
+  },
+  {
+   "id": "sole-share-diagnostic--parent--t-share-lever-rule",
+   "fromNode": "sole-share-diagnostic",
+   "toNode": "t-share-lever-rule",
+   "fromSide": "bottom",
+   "toSide": "top"
+  },
+  {
+   "id": "suit-slimevr-validation--parent--t-slimevr",
+   "fromNode": "suit-slimevr-validation",
+   "toNode": "t-slimevr",
+   "fromSide": "bottom",
+   "toSide": "top"
+  },
+  {
+   "id": "sole-foot-model-comparison--parent--t-spacing-convergence",
+   "fromNode": "sole-foot-model-comparison",
+   "toNode": "t-spacing-convergence",
+   "fromSide": "bottom",
+   "toSide": "top"
+  },
+  {
+   "id": "sole-spacing-converge--parent--t-spacing-finer",
+   "fromNode": "sole-spacing-converge",
+   "toNode": "t-spacing-finer",
+   "fromSide": "bottom",
+   "toSide": "top"
+  },
+  {
+   "id": "suit-ble-bench--parent--t-suit-ble",
+   "fromNode": "suit-ble-bench",
+   "toNode": "t-suit-ble",
+   "fromSide": "bottom",
+   "toSide": "top"
+  },
+  {
+   "id": "goal-personal-twin--parent--twin-tier-a-subject",
+   "fromNode": "goal-personal-twin",
+   "toNode": "twin-tier-a-subject",
+   "fromSide": "bottom",
+   "toSide": "top"
+  }
+ ]
+}

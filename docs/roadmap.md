@@ -1,5 +1,7 @@
 # Roadmap
 
+> **Open work is tracked in [`plan/`](../plan/README.md) since 2026-11-08** (see `plan/MAP.md`). This file is kept for its history and reasoning; it is no longer updated item by item.
+
 ## Phase 0 — Meta-repo (this repo) ✅
 Catalog the upstream repos (110 today), tier them, provide clone/list/validate tooling.
 

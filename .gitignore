@@ -29,3 +29,5 @@ venv/
 .pytest_cache/
 *.egg-info/
 opensim.log
+# Obsidian's personal settings when plan/ is opened as a vault
+plan/.obsidian/
