@@ -43,6 +43,7 @@ suites run there.
 | Pipeline Python (OpenSim 4.6), the laptop below, 2026-11-06, OPENCAP_UTILS set | `test_opencap_contacts.py` | 6 | 0 | 0 | 0 | — |
 | Pipeline Python (OpenSim 4.6), the laptop below, 2026-11-06 | `test_static_ik.py` | 5 | 0 | 0 | 0 | — |
 | Pipeline Python (OpenSim 4.6), the laptop below, 2026-11-06 | `test_forceplate_metrics.py` | 12 | 0 | 0 | 0 | — |
+| Pipeline Python (OpenSim 4.6), the laptop below, 2026-11-08 | `test_dynamic.py` | 11 | 0 | 0 | 0 | — |
 | Generator Python (shapely 2.2.0), slow cases, the laptop below, 2026-11-06 | `test_generator_regressions.py` | 10 | 0 | 1 | 0 | — |
 | KiCad 7.0.11's Python (pcbnew), script-style check | `test_verify_drc.py` | 1 | 0 | 0 | 0 | — |
 
@@ -76,6 +77,10 @@ force weighting of the combined centre of pressure, its projection on the forwar
 predictions. Those 7 cases were written and passed before any measured value was computed. The 3 cases of the
 post-hoc plate-coverage rule, and the 2 of the post-hoc sideways diagnostic, were added after the data was seen,
 with those analyses.
+
+**`test_dynamic.py`** (added 2026-11-06, amendment 4) runs on synthetic data and reads no force data. Its 5 cases of the squat
+window and the phase-2 metric functions were written before any dynamic solution existed. The 6 cases of the
+pilot gate and the settings log were added on 2026-11-08 with settings v2, after the v1 pilot had failed.
 
 **`test_static_ik.py`** (added 2026-11-06) needs no OpenSim. Its negative controls were checked against a builder
 that carries unknown template elements over and one that ignores the reference marker list; the matching tests

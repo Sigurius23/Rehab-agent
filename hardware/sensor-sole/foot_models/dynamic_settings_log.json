@@ -21,7 +21,43 @@
     ]
    },
    "reason": "initial settings, before any solve (Moco's tracking-example defaults: DeGrooteFregly muscles, rigid tendons, 6 Hz filter; mesh 0.04 s; tolerances 1e-2/1e-3)",
-   "judged_by": "none yet"
+   "judged_by": "pilot, subject2 squats1, 2026-11-06/07: arm A did not converge (3000 iterations, Maximum_Iterations_Exceeded; infeasibility never below ~2.6e2); arm B converged (1168 iterations) but did not track: pelvis translation RMS 672.5 mm, worst rotation RMS 50.5 deg (pelvis_tilt). Run stopped by the gate before the batch."
+  },
+  {
+   "version": 2,
+   "date": "2026-11-08",
+   "settings": {
+    "filter_hz": 6.0,
+    "mesh_interval_s": 0.02,
+    "states_tracking_weight": 10.0,
+    "control_effort_weight": 1.0,
+    "reserve_optimal_force_Nm_or_N": 1.0,
+    "active_force_width_scale": 1.5,
+    "convergence_tolerance": 0.01,
+    "constraint_tolerance": 0.001,
+    "max_iterations": 3000,
+    "transcription": "hermite-simpson",
+    "untracked": [
+     "knee_angle_r_beta",
+     "knee_angle_l_beta"
+    ],
+    "coordinate_weights": {
+     "pelvis_tx": 100.0,
+     "pelvis_ty": 100.0,
+     "pelvis_tz": 100.0
+    }
+   },
+   "changes": [
+    "mesh_interval_s 0.04 -> 0.02",
+    "new coordinate_weights: pelvis_tx, pelvis_ty, pelvis_tz x100 (value and speed); every other tracked coordinate stays at 1"
+   ],
+   "reason": "v1 failed the pilot on convergence (arm A) and on tracking (arm B). Diagnosis from the solutions and the models alone, no force-plate data: arm B's 'converged' solution leaves the floor. It starts with the feet ~0.49 m below it, moving up fast enough that the smooth contact gives no force, and flies (lowest sphere up to 1.6 m above the floor) while the joint angles track. Its cost is mostly pelvis_ty speed tracking (110 of 138); muscles are almost idle (3.6). With unit weights in metres, leaving the floor is cheaper than squatting. Arm A ends with the feet ~0.5 m below the floor and contact forces up to ~7e7 N, held by mtp/ankle reserves up to 773 Nm. (1) Pelvis translations x100: a 0.67 m pelvis error then costs far more than any muscle effort, while the ~10 mm offset the contact needs to carry body weight costs ~0.1. (2) Mesh 0.04 -> 0.02 s: the contact's vertical natural period at standing, from each model in the reference posture, is ~170 ms (arm B) and ~95 ms (arm A, stiffer beyond ~10 mm); 0.04 s gave about 2.4 intervals per period for arm A, too few to resolve it.",
+   "pilot_gate": {
+    "rule": "the batch starts only if, with the current settings, both arms of the pilot converged and each solution's tracking RMS is within: every rotational coordinate <= 5 deg, each pelvis translation <= 20 mm (foot_models/dynamic_summary.py PILOT_GATE). Added with v2, because v1's gate (convergence only) would have accepted arm B's flying solution. A check of the settings, not part of validity.",
+    "max_rotation_rms_deg": 5.0,
+    "max_translation_rms_mm": 20.0
+   },
+   "judged_by": "pending: the v2 pilot"
   }
  ]
 }

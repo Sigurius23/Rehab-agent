@@ -18,7 +18,8 @@ first standing frame after it.
 Tracking: MocoTrack of the dataset's inverse-kinematics coordinates (low-pass filtered at 6 Hz), muscles as
 DeGrooteFregly2016 (tendons rigid, passive fibre forces ignored, active force-length curve widened 1.5x, as in
 Moco's examples), reserve actuators on every coordinate. The coupled patellar coordinates (knee_angle_*_beta) are
-not tracked; they follow their constraints. Settings are in SETTINGS, versioned; a change is allowed only for
+not tracked; they follow their constraints. Per-coordinate weights (SETTINGS["coordinate_weights"]) multiply the
+global tracking weight for a coordinate's value and speed. Settings are in SETTINGS, versioned; a change is allowed only for
 convergence and tracking error (amendment 4), applies to both arms, and is logged in
 foot_models/dynamic_settings_log.json.
 
@@ -56,12 +57,13 @@ import case_store as CS  # noqa: E402
 import double_support as DS  # noqa: E402
 import sole_sim as SS  # noqa: E402
 
-SETTINGS_VERSION = 1
+SETTINGS_VERSION = 2            # history and reasons: foot_models/dynamic_settings_log.json
 SETTINGS = dict(
-    filter_hz=6.0, mesh_interval_s=0.04, states_tracking_weight=10.0, control_effort_weight=1.0,
+    filter_hz=6.0, mesh_interval_s=0.02, states_tracking_weight=10.0, control_effort_weight=1.0,
     reserve_optimal_force_Nm_or_N=1.0, active_force_width_scale=1.5,
     convergence_tolerance=1e-2, constraint_tolerance=1e-3, max_iterations=3000,
-    transcription="hermite-simpson", untracked=("knee_angle_r_beta", "knee_angle_l_beta"))
+    transcription="hermite-simpson", untracked=("knee_angle_r_beta", "knee_angle_l_beta"),
+    coordinate_weights={"pelvis_tx": 100.0, "pelvis_ty": 100.0, "pelvis_tz": 100.0})   # value and speed; others 1
 TRIALS = ("squats1", "squatsAsym1")
 SOLE_R = HERE.parent / "sim" / "EU42_R_636645a928.sole_sim.json"
 SOLE_L = HERE.parent / "sim" / "EU42_L_40fe8e1d0c.sole_sim.json"
@@ -152,11 +154,14 @@ def track(model_path, ik_path, window, settings, out_dir, threads=1, max_iterati
     tr.set_control_effort_weight(settings["control_effort_weight"])
     weights = osim.MocoWeightSet()
     model = mp.process(); model.initSystem()
-    for name in settings["untracked"]:
-        if model.getCoordinateSet().contains(name):
-            path = model.getCoordinateSet().get(name).getAbsolutePathString()
-            weights.cloneAndAppend(osim.MocoWeight(path + "/value", 0.0))
-            weights.cloneAndAppend(osim.MocoWeight(path + "/speed", 0.0))
+    per_coord = {name: 0.0 for name in settings["untracked"]}
+    per_coord.update(settings.get("coordinate_weights", {}))
+    for name, w in per_coord.items():
+        if not model.getCoordinateSet().contains(name):
+            raise ValueError(f"{model_path}: no coordinate {name} for a tracking weight")
+        path = model.getCoordinateSet().get(name).getAbsolutePathString()
+        weights.cloneAndAppend(osim.MocoWeight(path + "/value", float(w)))
+        weights.cloneAndAppend(osim.MocoWeight(path + "/speed", float(w)))
     tr.set_states_weight_set(weights)
     study = tr.initialize()
     solver = osim.MocoCasADiSolver.safeDownCast(study.updSolver())

@@ -6,8 +6,11 @@ metric functions (foot_models/dynamic_metrics.py) on synthetic data, written bef
   - the window is the first squat repetition with standing on both sides; a trial that starts mid-descent skips to
     the next repetition; a trial with no complete repetition is refused;
   - the combined centre of pressure is force-weighted; H1 is the peak error as % of body weight; H2 is the forward
-    RMS of the centre-of-pressure error as % of foot length, blind to sideways offsets.
+    RMS of the centre-of-pressure error as % of foot length, blind to sideways offsets;
+  - the pilot gate (added with settings v2, 2026-11-08) needs both arms converged and tracking within the gate, with
+    the current settings only; the settings log's last entry matches the code.
 """
+import json
 import math
 import sys
 import tempfile
@@ -87,6 +90,72 @@ class Metrics(unittest.TestCase):
         self.assertAlmostEqual(e["h1_peak_vertical_pct_bw"], 10.0, places=6)
         self.assertAlmostEqual(e["h2_cop_forward_rms_pct_foot_length"], 10.0, places=6)
         self.assertEqual(e["plate_coverage_pct_bw"], (50.0, 50.0))
+
+
+def case(root, subject, trial, arm, version, converged=True, rot=2.0, trans=8.0, max_iterations=None, tag="x"):
+    """A synthetic finished case folder, as foot_models/case_store.py writes it."""
+    d = Path(root) / "cases" / f"{subject}_{trial}_{arm}" / f"{tag}{version}{arm}"
+    d.mkdir(parents=True)
+    key = dict(subject=subject, trial=trial, arm=arm, settings=dict(version=version), max_iterations=max_iterations,
+               model_sha256="m", ik_sha256="i", code_sha256={})
+    (d / "case.json").write_text(json.dumps(dict(fingerprint=f"{tag}{version}{arm}", key=key, finished="now")))
+    (d / "result.json").write_text(json.dumps(dict(converged=converged, valid=converged, status="s", iterations=1,
+                                                   tracking_rms=dict(max_rotation_deg=rot, max_translation_mm=trans, worst="c"))))
+
+
+class PilotGate(unittest.TestCase):
+    """The pilot gate of run_dynamic.sh (foot_models/dynamic_summary.py): convergence and tracking, current settings only."""
+
+    @classmethod
+    def setUpClass(cls):
+        import dynamic_summary as SM
+        cls.SM = SM
+
+    def gate(self, build, version=2):
+        with tempfile.TemporaryDirectory() as d:
+            build(d)
+            rows = [r for r in self.SM.collect(d) if r["max_iterations"] is None]
+            return self.SM.gate(rows, "subject2_squats1", version)
+
+    def test_both_arms_converged_and_tracking_pass(self):
+        ok, lines = self.gate(lambda d: [case(d, "subject2", "squats1", a, 2) for a in "AB"])
+        self.assertTrue(ok, lines)
+
+    def test_a_converged_solution_that_does_not_track_fails(self):
+        # v1's arm B: converged, but the pelvis 672 mm off and the pelvis tilt 50 deg off
+        ok, lines = self.gate(lambda d: (case(d, "subject2", "squats1", "A", 2),
+                                         case(d, "subject2", "squats1", "B", 2, rot=50.5, trans=672.5)))
+        self.assertFalse(ok)
+        self.assertIn("pelvis translation", lines[1])
+
+    def test_not_converged_or_missing_fails(self):
+        self.assertFalse(self.gate(lambda d: [case(d, "subject2", "squats1", a, 2, converged=(a == "B")) for a in "AB"])[0])
+        self.assertFalse(self.gate(lambda d: case(d, "subject2", "squats1", "B", 2))[0])
+
+    def test_earlier_settings_and_capped_smoke_tests_do_not_count(self):
+        def build(d):
+            for a in "AB":
+                case(d, "subject2", "squats1", a, 1)                                  # an earlier version that passed
+                case(d, "subject2", "squats1", a, 2, max_iterations=50, tag="smoke")   # a capped smoke test that passed
+                case(d, "subject2", "squats1", a, 2, converged=False)                 # the current version, failing
+        self.assertFalse(self.gate(build)[0])
+
+    def test_summary_counts_the_current_version_and_lists_the_rest(self):
+        with tempfile.TemporaryDirectory() as d:
+            for a in "AB":
+                case(d, "subject2", "squats1", a, 1, rot=50.0)
+                case(d, "subject2", "squats1", a, 2)
+            s = self.SM.summarize(self.SM.collect(d), 2)
+        self.assertEqual((s["solves"], s["within_pilot_gate"], len(s["superseded"])), (2, 2, 2))
+
+    def test_settings_log_matches_the_code(self):
+        log = json.loads((HERE / "foot_models" / "dynamic_settings_log.json").read_text())
+        last = log["versions"][-1]
+        self.assertEqual(last["version"], self.SM.settings_version())
+        if HAVE:
+            self.assertEqual(json.loads(json.dumps(last["settings"])), json.loads(json.dumps(DT.SETTINGS)))
+            self.assertEqual(last["version"], DT.SETTINGS_VERSION)
+        self.assertEqual({k: last["pilot_gate"][k] for k in self.SM.PILOT_GATE}, self.SM.PILOT_GATE)
 
 
 if __name__ == "__main__":

@@ -352,6 +352,18 @@
             of mass; they come from where each foot's centre of pressure sits sideways (up to 43 mm off). This
             diagnostic does not separate sole placement, the inverse kinematics' foot positions and the contact's
             load split.
+        - **Dynamic comparison, amendment 4** (2026-11-06; the owner's decision before any dynamic simulation). A
+          two-arm, muscle-driven MocoTrack of the squats (arm A, our sole with the assumed contact v1; arm B,
+          OpenCap's spheres), in `foot_models/dynamic_track.py`, run by `workstation/run_dynamic.sh`. Phase 1 (no
+          force data) is in progress.
+          - **Pilot with settings v1** (subject 2, `squats1`): it failed. Arm A did not converge in 3000
+            iterations. Arm B converged, but to a solution that leaves the floor and flies: pelvis translation
+            RMS 672 mm. Convergence alone would have passed it.
+          - **Settings v2** (2026-11-08, both arms, logged in `foot_models/dynamic_settings_log.json` with the
+            diagnosis): mesh 0.04 → 0.02 s; pelvis translations tracked ×100. The pilot gate before the batch now
+            also needs tracking within 5° per rotation and 20 mm per pelvis translation (`dynamic_summary.py`).
+          - The run script now blocks sleep only while it runs. Before, a tmux prefix match kept the old sleep
+            lock on after the run had stopped.
     - **Printed prototype** (`PRINTED.md`, `sole_print.py`). A TPU carrier is built from the same design:
       - underside wire channels along the routing plan;
       - a floor with one hole per region;
