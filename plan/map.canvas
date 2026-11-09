@@ -379,10 +379,50 @@
    "color": "5"
   },
   {
+   "id": "idea-fascia-it-band",
+   "type": "file",
+   "file": "nodes/idea-fascia-it-band.md",
+   "x": 1600,
+   "y": 1540,
+   "width": 280,
+   "height": 120,
+   "color": "5"
+  },
+  {
+   "id": "idea-gait120-emg",
+   "type": "file",
+   "file": "nodes/idea-gait120-emg.md",
+   "x": 1920,
+   "y": 1540,
+   "width": 280,
+   "height": 120,
+   "color": "5"
+  },
+  {
+   "id": "idea-motor-control-comparators",
+   "type": "file",
+   "file": "nodes/idea-motor-control-comparators.md",
+   "x": 2240,
+   "y": 1540,
+   "width": 280,
+   "height": 120,
+   "color": "5"
+  },
+  {
    "id": "idea-mujoco",
    "type": "file",
    "file": "nodes/idea-mujoco.md",
-   "x": 1600,
+   "x": 2560,
+   "y": 1540,
+   "width": 280,
+   "height": 120,
+   "color": "5"
+  },
+  {
+   "id": "idea-neural-motor-chain",
+   "type": "file",
+   "file": "nodes/idea-neural-motor-chain.md",
+   "x": 2880,
    "y": 1540,
    "width": 280,
    "height": 120,
@@ -392,7 +432,17 @@
    "id": "idea-nutrition-body-composition",
    "type": "file",
    "file": "nodes/idea-nutrition-body-composition.md",
-   "x": 1920,
+   "x": 3200,
+   "y": 1540,
+   "width": 280,
+   "height": 120,
+   "color": "5"
+  },
+  {
+   "id": "idea-peripheral-nerves",
+   "type": "file",
+   "file": "nodes/idea-peripheral-nerves.md",
+   "x": 3520,
    "y": 1540,
    "width": 280,
    "height": 120,
@@ -402,7 +452,7 @@
    "id": "idea-sikidar",
    "type": "file",
    "file": "nodes/idea-sikidar.md",
-   "x": 2240,
+   "x": 3840,
    "y": 1540,
    "width": 280,
    "height": 120,
@@ -412,7 +462,7 @@
    "id": "idea-synergy-toes",
    "type": "file",
    "file": "nodes/idea-synergy-toes.md",
-   "x": 2560,
+   "x": 4160,
    "y": 1540,
    "width": 280,
    "height": 120,
@@ -422,7 +472,7 @@
    "id": "idea-t1-candidate",
    "type": "file",
    "file": "nodes/idea-t1-candidate.md",
-   "x": 2880,
+   "x": 4480,
    "y": 1540,
    "width": 280,
    "height": 120,
@@ -432,7 +482,7 @@
    "id": "idea-thoracolumbar-model",
    "type": "file",
    "file": "nodes/idea-thoracolumbar-model.md",
-   "x": 3200,
+   "x": 4800,
    "y": 1540,
    "width": 280,
    "height": 120,
@@ -442,7 +492,7 @@
    "id": "idea-uncertainty-runs",
    "type": "file",
    "file": "nodes/idea-uncertainty-runs.md",
-   "x": 3520,
+   "x": 5120,
    "y": 1540,
    "width": 280,
    "height": 120,
@@ -1294,6 +1344,33 @@
    "label": "serves"
   },
   {
+   "id": "idea-fascia-it-band--serves--goal-twin-layers",
+   "fromNode": "idea-fascia-it-band",
+   "toNode": "goal-twin-layers",
+   "fromSide": "bottom",
+   "toSide": "top",
+   "color": "5",
+   "label": "serves"
+  },
+  {
+   "id": "idea-gait120-emg--serves--goal-muscle-loads",
+   "fromNode": "idea-gait120-emg",
+   "toNode": "goal-muscle-loads",
+   "fromSide": "bottom",
+   "toSide": "top",
+   "color": "5",
+   "label": "serves"
+  },
+  {
+   "id": "idea-motor-control-comparators--serves--goal-muscle-loads",
+   "fromNode": "idea-motor-control-comparators",
+   "toNode": "goal-muscle-loads",
+   "fromSide": "bottom",
+   "toSide": "top",
+   "color": "5",
+   "label": "serves"
+  },
+  {
    "id": "idea-mujoco--serves--goal-sole-simulation",
    "fromNode": "idea-mujoco",
    "toNode": "goal-sole-simulation",
@@ -1303,9 +1380,27 @@
    "label": "serves"
   },
   {
+   "id": "idea-neural-motor-chain--serves--pillar-simulate",
+   "fromNode": "idea-neural-motor-chain",
+   "toNode": "pillar-simulate",
+   "fromSide": "bottom",
+   "toSide": "top",
+   "color": "5",
+   "label": "serves"
+  },
+  {
    "id": "idea-nutrition-body-composition--serves--pillar-adapt",
    "fromNode": "idea-nutrition-body-composition",
    "toNode": "pillar-adapt",
+   "fromSide": "bottom",
+   "toSide": "top",
+   "color": "5",
+   "label": "serves"
+  },
+  {
+   "id": "idea-peripheral-nerves--serves--pillar-simulate",
+   "fromNode": "idea-peripheral-nerves",
+   "toNode": "pillar-simulate",
    "fromSide": "bottom",
    "toSide": "top",
    "color": "5",
