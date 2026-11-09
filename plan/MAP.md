@@ -19,7 +19,7 @@ flowchart TB
   r --> p3
   p4(["Act: feedback and assistance<br/>from the twin<br/><i>1 done · 2 open · 2 blocked · 3 ideas · 4 decisions</i>"]):::goal_open
   r --> p4
-  p5(["How we work: tests, CI and<br/>standing rules<br/><i>1 done · 1 doing · 1 idea</i>"]):::goal_open
+  p5(["How we work: tests, CI and<br/>standing rules<br/><i>2 done · 1 idea</i>"]):::goal_open
   r --> p5
   classDef goal_open fill:#e1d5f5,stroke:#555,color:#111
   classDef goal_done fill:#c8e6c9,stroke:#555,color:#111
@@ -419,7 +419,7 @@ flowchart LR
 flowchart LR
   n0(["How we work: tests, CI and<br/>standing rules"]):::goal_open
   n1>"EU compliance before any device<br/>leaves the lab"]:::idea_new
-  n2["CI runs every test suite that<br/>needs no external files<br/>tests ○1"]:::step_doing
+  n2["CI runs every test suite that<br/>needs no external files<br/>tests ✓1"]:::step_done
   n3["Standing rules for agent sessions<br/>in CLAUDE.md<br/>tests ○1"]:::step_done
   n1 -.-o n0
   n0 --> n2
@@ -517,7 +517,7 @@ Open steps whose dependencies are done and that no open decision blocks.
 | [[t-anatomy-geometry]] | planned |  |  |  |
 | [[t-boards-checker]] | passed | n/a | All eight boards pass DRC, the region map traced through the copper, numbering, coverlay and provenance | All eight pass. Passing is not a release for fabrication |
 | [[t-bone-geometry]] | planned |  |  |  |
-| [[t-ci-suites]] | planned |  | On every push, CI runs test_channel_map, test_case_store, test_compare_results, plan/test_build and plan/build.py --check, and all pass |  |
+| [[t-ci-suites]] | passed | n/a | On every push, CI runs test_channel_map, test_case_store, test_compare_results, plan/test_build and plan/build.py --check, and all pass | GitHub Actions run 42722409612 on fa5c7b2, job plan-and-sole: plan check 0 errors, 14 plan tests OK, map up to date, the five sole suites 47 cases OK with none skipped |
 | [[t-claude-md-fresh-session]] | planned |  | A fresh session given only a one-line task keeps every standing rule without them in the prompt |  |
 | [[t-coupon]] | planned | n/a | Proposal: a material qualifies if, on 3 coupons, repeatability is within 5 % over 100 cycles, hysteresis and 10-minute creep are each at most 10 % of full scale, and the 10 mm bend shifts the baseline by at most 5 % of full scale |  |
 | [[t-dyn-h1]] | planned | no | Peak error at most 10 % of body weight (recorded mass) in every evaluated subject |  |

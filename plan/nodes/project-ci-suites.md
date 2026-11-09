@@ -1,7 +1,8 @@
 ---
 type: "step"
 title: "CI runs every test suite that needs no external files"
-status: "doing"
+status: "done"
+record: ".github/workflows/validate.yml"
 area: "project"
 parent: "[[goal-working-method]]"
 priority: "2"

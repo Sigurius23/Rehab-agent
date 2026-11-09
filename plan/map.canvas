@@ -1067,7 +1067,7 @@
    "y": 440,
    "width": 280,
    "height": 120,
-   "color": "3"
+   "color": "4"
   },
   {
    "id": "project-claude-md",
@@ -1302,7 +1302,8 @@
    "x": 0,
    "y": 660,
    "width": 280,
-   "height": 120
+   "height": 120,
+   "color": "4"
   },
   {
    "id": "t-claude-md-fresh-session",
