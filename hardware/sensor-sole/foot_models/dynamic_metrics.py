@@ -65,19 +65,11 @@ def paired(ev):
     return sorted(set(ev["A"]) & set(ev["B"]), key=lambda st: (int(st[0][7:]), st[1]))
 
 
-def processed_model(model_path, settings=None):
-    """The model as the solve used it (dynamic_track.track's ModelProcessor), from the solve's settings."""
-    import opensim as osim
-    if settings is None:
-        import dynamic_track as DT
-        settings = DT.SETTINGS
-    mp = osim.ModelProcessor(str(model_path))
-    mp.append(osim.ModOpIgnoreTendonCompliance()); mp.append(osim.ModOpReplaceMusclesWithDeGrooteFregly2016())
-    mp.append(osim.ModOpIgnorePassiveFiberForcesDGF())
-    mp.append(osim.ModOpScaleActiveFiberForceCurveWidthDGF(settings["active_force_width_scale"]))
-    mp.append(osim.ModOpAddReserves(settings["reserve_optimal_force_Nm_or_N"]))
-    model = mp.process(); model.initSystem()
-    return model
+def processed_model(model_path, settings=None, strengths=None):
+    """The model as the solve used it (dynamic_track.process_model), from the solve's settings and, from settings v3
+    on, its torque actuators' strengths (the case key's torque_actuator_strengths_Nm)."""
+    import dynamic_track as DT
+    return DT.process_model(model_path, DT.SETTINGS if settings is None else settings, strengths)
 
 
 def combined_cop(F_r, p_r, F_l, p_l):
@@ -100,11 +92,12 @@ def trial_errors(t_model, F_model, cop_model, fwd, t_force, meas_cols, weight_N,
                 peak_model_N=float(F_model[:, 1].max()), peak_measured_N=float(fm.max()))
 
 
-def model_forces(model_path, solution_path):
-    """(times, combined force n x 3, combined centre of pressure n x 2, forward axis n x 2) of a solution."""
+def model_forces(model_path, solution_path, settings=None, strengths=None):
+    """(times, combined force n x 3, combined centre of pressure n x 2, forward axis n x 2) of a solution. settings
+    and strengths: the solve's (its case key), by default the current settings."""
     import opensim as osim
     import dynamic_track as DT
-    model = processed_model(model_path)
+    model = processed_model(model_path, settings, strengths)
     sol = osim.MocoTrajectory(str(solution_path))
     right, left = DT.contact_force_names(model_path)
     grf = osim.createExternalLoadsTableForGait(model, sol, right, left)

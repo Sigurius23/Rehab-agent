@@ -17,11 +17,22 @@ first standing frame after it.
 
 Tracking: MocoTrack of the dataset's inverse-kinematics coordinates (low-pass filtered at 6 Hz), muscles as
 DeGrooteFregly2016 (tendons rigid, passive fibre forces ignored, active force-length curve widened 1.5x, as in
-Moco's examples), reserve actuators on every coordinate. The coupled patellar coordinates (knee_angle_*_beta) are
-not tracked; they follow their constraints. Per-coordinate weights (SETTINGS["coordinate_weights"]) multiply the
-global tracking weight for a coordinate's value and speed. Settings are in SETTINGS, versioned; a change is allowed only for
-convergence and tracking error (amendment 4), applies to both arms, and is logged in
-foot_models/dynamic_settings_log.json.
+Moco's examples), reserve actuators on every coordinate without an actuator of its own. The coupled patellar
+coordinates (knee_angle_*_beta) are not tracked; they follow their constraints. Per-coordinate weights
+(SETTINGS["coordinate_weights"]) multiply the global tracking weight for a coordinate's value and speed. Settings are
+in SETTINGS, versioned; a change is allowed only for convergence and tracking error (amendment 4), applies to both
+arms, and is logged in foot_models/dynamic_settings_log.json.
+
+Settings v3 (2026-11-09) adds two solver settings, the same rule in both arms:
+  - Torque actuators: the trunk and arm coordinates are driven by the distributed model's own coordinate actuators
+    (no muscles cross them). Each one's strength (optimal force) is, per subject, its peak inverse-dynamics torque
+    over the subject's squat windows, from the recorded kinematics (filtered as tracked) with no external loads,
+    rounded up to the next 10 Nm (torque_actuator_strengths). That needs the torques not to depend on the ground
+    forces. It is checked for every model: by its structure (no contact, muscle or constraint links the bodies a
+    coordinate moves to the rest; joint_subtree, check_no_ground_load), and numerically (the torques do not change
+    when large contact forces act on the feet, while the ankle's do).
+  - Initial guess: the tracked states, with the pelvis height shifted at each time point to the arm's own contact
+    balance, where its feet carry the model's weight at rest (contact_balance_offsets).
 
 Validity (amendment 4): the solver converged, and the pelvis residuals are within Hicks et al. (2015): the largest
 residual force at most 5 % of the peak external force, the largest residual moment at most 1 % of the centre-of-mass
@@ -57,13 +68,18 @@ import case_store as CS  # noqa: E402
 import double_support as DS  # noqa: E402
 import sole_sim as SS  # noqa: E402
 
-SETTINGS_VERSION = 2            # history and reasons: foot_models/dynamic_settings_log.json
+SETTINGS_VERSION = 3            # history and reasons: foot_models/dynamic_settings_log.json
 SETTINGS = dict(
     filter_hz=6.0, mesh_interval_s=0.02, states_tracking_weight=10.0, control_effort_weight=1.0,
     reserve_optimal_force_Nm_or_N=1.0, active_force_width_scale=1.5,
     convergence_tolerance=1e-2, constraint_tolerance=1e-3, max_iterations=3000,
     transcription="hermite-simpson", untracked=("knee_angle_r_beta", "knee_angle_l_beta"),
-    coordinate_weights={"pelvis_tx": 100.0, "pelvis_ty": 100.0, "pelvis_tz": 100.0})   # value and speed; others 1
+    coordinate_weights={"pelvis_tx": 100.0, "pelvis_ty": 100.0, "pelvis_tz": 100.0},   # value and speed; others 1
+    torque_actuator_strength="peak_inverse_dynamics", torque_actuator_round_up_Nm=10.0,  # v3, see the docstring
+    initial_guess="contact_balance")                                                   # v3
+# The coordinates the distributed models drive with their own coordinate actuators (checked in torque_driven)
+TORQUE_DRIVEN = ("lumbar_extension", "lumbar_bending", "lumbar_rotation") + tuple(
+    f"{c}_{side}" for side in "rl" for c in ("arm_flex", "arm_add", "arm_rot", "elbow_flex", "pro_sup"))
 TRIALS = ("squats1", "squatsAsym1")
 SOLE_R = HERE.parent / "sim" / "EU42_R_636645a928.sole_sim.json"
 SOLE_L = HERE.parent / "sim" / "EU42_L_40fe8e1d0c.sole_sim.json"
@@ -125,21 +141,293 @@ def contact_force_names(model_path):
     return right, left
 
 
-# ------------------------------------------------------------------------------------------------ solve
-def track(model_path, ik_path, window, settings, out_dir, threads=1, max_iterations=None):
-    """One MocoTrack solve. Writes solution.sto and result.json in out_dir; returns the result."""
+# ------------------------------------------------------------------------------------------------ settings v3
+def process_model(model_path, settings, strengths=None):
+    """The model as the solve uses it: muscles as DeGrooteFregly2016 with rigid tendons, reserves, and, when the
+    settings use them (v3), the torque actuators' strengths. Returns an initialised Model."""
     import opensim as osim
-    out_dir = Path(out_dir)
-    osim.Logger.removeFileSink(); osim.Logger.addFileSink(str(out_dir / "opensim.log"))
     mp = osim.ModelProcessor(str(model_path))
     mp.append(osim.ModOpIgnoreTendonCompliance())
     mp.append(osim.ModOpReplaceMusclesWithDeGrooteFregly2016())
     mp.append(osim.ModOpIgnorePassiveFiberForcesDGF())
     mp.append(osim.ModOpScaleActiveFiberForceCurveWidthDGF(settings["active_force_width_scale"]))
     mp.append(osim.ModOpAddReserves(settings["reserve_optimal_force_Nm_or_N"]))
+    model = mp.process()
+    if settings.get("torque_actuator_strength"):
+        if strengths is None:
+            raise ValueError(f"settings v{settings.get('version')} need the torque actuators' strengths")
+        acts = torque_driven(model)
+        if set(strengths) != set(acts):
+            raise ValueError(f"{model_path}: strengths for {sorted(strengths)}, torque actuators on {sorted(acts)}")
+        for coord, name in acts.items():
+            osim.CoordinateActuator.safeDownCast(model.updForceSet().get(name)).set_optimal_force(float(strengths[coord]))
+    model.initSystem()
+    return model
+
+
+def torque_driven(model):
+    """{coordinate: actuator name} of the model's own coordinate actuators (not the added reserves). They must be
+    exactly TORQUE_DRIVEN, one actuator per coordinate."""
+    import opensim as osim
+    out = {}
+    fs = model.getForceSet()
+    for i in range(fs.getSize()):
+        a = osim.CoordinateActuator.safeDownCast(fs.get(i))
+        if a is None or a.getName().startswith("reserve_"):
+            continue
+        c = a.get_coordinate()
+        if c in out:
+            raise ValueError(f"two coordinate actuators on {c}: {out[c]}, {a.getName()}")
+        out[c] = a.getName()
+    if set(out) != set(TORQUE_DRIVEN):
+        raise ValueError(f"torque-driven coordinates {sorted(out)}, expected {sorted(TORQUE_DRIVEN)}")
+    return out
+
+
+def round_up_strength(peak_Nm, step_Nm):
+    """A strength from a peak torque: rounded up to the next multiple of step_Nm, at least step_Nm."""
+    return float(max(step_Nm, step_Nm * math.ceil(abs(peak_Nm) / step_Nm - 1e-12)))
+
+
+def joint_subtree(model, coord):
+    """The bodies a coordinate moves: its joint's child body and every body joined further from the ground through it."""
+    joints = model.getJointSet()
+    children = {}
+    for i in range(joints.getSize()):
+        j = joints.get(i)
+        children.setdefault(j.getParentFrame().findBaseFrame().getName(), []).append(j.getChildFrame().findBaseFrame().getName())
+    top = model.getCoordinateSet().get(coord).getJoint().getChildFrame().findBaseFrame().getName()
+    out, todo = set(), [top]
+    while todo:
+        b = todo.pop()
+        if b not in out:
+            out.add(b)
+            todo += children.get(b, [])
+    return out
+
+
+def _path_bodies(force):
+    """The bodies a muscle's path is attached to."""
+    import opensim as osim
+    pts = osim.GeometryPath.safeDownCast(osim.PathActuator.safeDownCast(force).getPath()).getPathPointSet()
+    return {pts.get(i).getParentFrame().findBaseFrame().getName() for i in range(pts.getSize())}
+
+
+def check_no_ground_load(model, coords=TORQUE_DRIVEN):
+    """Raise unless the torque each coordinate needs comes from the bodies it moves alone: no contact sphere on them,
+    no muscle between them and the rest, no constraint on them, and no force of another kind in the model.
+    Returns {coordinate: sorted bodies it moves}."""
+    import opensim as osim
+    trees = {c: joint_subtree(model, c) for c in coords}
+    fs = model.getForceSet()
+    for i in range(fs.getSize()):
+        f = fs.get(i)
+        kind = f.getConcreteClassName()
+        if kind == "SmoothSphereHalfSpaceForce":
+            path = f.getSocket("sphere").getConnecteePath()
+            sphere = osim.ContactGeometry.safeDownCast(f.getComponent(path) if not path.startswith("/") else model.getComponent(path))
+            body = sphere.getFrame().findBaseFrame().getName()
+            for c, tree in trees.items():
+                if body in tree:
+                    raise ValueError(f"contact {f.getName()} is on {body}, which {c} moves")
+        elif kind == "CoordinateActuator":
+            continue
+        elif osim.PathActuator.safeDownCast(f) is not None:
+            bodies = _path_bodies(f)
+            for c, tree in trees.items():
+                if bodies & tree and bodies - tree:
+                    raise ValueError(f"muscle {f.getName()} crosses into the bodies {c} moves")
+        else:
+            raise ValueError(f"force {f.getName()} ({kind}) is not handled by the check")
+    cons = model.getConstraintSet()
+    for i in range(cons.getSize()):
+        k = osim.CoordinateCouplerConstraint.safeDownCast(cons.get(i))
+        if k is None:
+            raise ValueError(f"constraint {cons.get(i).getName()} ({cons.get(i).getConcreteClassName()}) is not handled")
+        ind = k.getIndependentCoordinateNames()
+        for n in [ind.get(j) for j in range(ind.getSize())] + [k.getDependentCoordinateName()]:
+            body = model.getCoordinateSet().get(n).getJoint().getChildFrame().findBaseFrame().getName()
+            for c, tree in trees.items():
+                if body in tree:
+                    raise ValueError(f"constraint {k.getName()} acts on {n}, inside what {c} moves")
+    return {c: sorted(t) for c, t in trees.items()}
+
+
+def _u_index(model, state, coord):
+    """The coordinate's place in the state's speed vector."""
+    import opensim as osim
+    keep = state.getU().to_numpy().copy()
+    model.getCoordinateSet().get(coord).setSpeedValue(state, 1.0 + float(np.abs(keep).max(initial=0.0)))
+    j = int(np.argmax(np.abs(state.getU().to_numpy() - keep)))
+    state.setU(osim.Vector.createFromMat(keep))
+    return j
+
+
+def _reference(model, ik_path, settings):
+    """The tracked reference (radians, filtered as tracked): (times, {coordinate: values})."""
+    import opensim as osim
+    tp = osim.TableProcessor(str(ik_path)); tp.append(osim.TabOpConvertDegreesToRadians())
+    tp.append(osim.TabOpLowPassFilter(settings["filter_hz"])); tp.append(osim.TabOpUseAbsoluteStateNames())
+    ref = tp.process(model)
+    labs = set(ref.getColumnLabels())
+    cs = model.getCoordinateSet()
+    q = {}
+    for i in range(cs.getSize()):
+        lab = cs.get(i).getAbsolutePathString() + "/value"
+        if lab in labs:
+            q[cs.get(i).getName()] = ref.getDependentColumn(lab).to_numpy()
+    return np.array(ref.getIndependentColumn()), q
+
+
+def _spheres(model):
+    import opensim as osim
+    fs = model.getForceSet()
+    return [osim.SmoothSphereHalfSpaceForce.safeDownCast(fs.get(i)) for i in range(fs.getSize())
+            if fs.get(i).getConcreteClassName() == "SmoothSphereHalfSpaceForce"]
+
+
+def _sphere_force_y(force, state):
+    """The vertical force of the floor on a contact sphere's body (N)."""
+    labels = force.getRecordLabels()
+    want = force.getName() + ".Sphere.force.Y"
+    for i in range(labels.getSize()):
+        if labels.get(i) == want:
+            return force.getRecordValues(state).get(i)
+    raise ValueError(f"{force.getName()}: no record {want}")
+
+
+def inverse_dynamics_torques(model, ik_path, window, settings, coords=TORQUE_DRIVEN, lower_m=0.03):
+    """Inverse dynamics of the recorded kinematics at each frame of the window, with no force of the model applied
+    (gravity and the motion only): ({coordinate: torques (Nm)}, check). Speeds and accelerations are central
+    differences of the filtered coordinates on their own time points. The numerical check, at three frames: with the
+    pelvis lowered by lower_m and only the contact forces applied, the torques at coords must not change, while the
+    ankle's must."""
+    import opensim as osim
+    t, q = _reference(model, ik_path, settings)
+    keep = (t >= window[0] - 1e-9) & (t <= window[1] + 1e-9)
+    t = t[keep]
+    q = {c: v[keep] for c, v in q.items()}
+    u = {c: np.gradient(v, t) for c, v in q.items()}
+    ud = {c: np.gradient(v, t) for c, v in u.items()}
+    models = dict(bare=model.clone(), contact=model.clone())
+    for name, m in models.items():
+        fs = m.updForceSet()
+        for i in range(fs.getSize()):
+            fs.get(i).set_appliesForce(name == "contact" and fs.get(i).getConcreteClassName() == "SmoothSphereHalfSpaceForce")
+    states = {n: m.initSystem() for n, m in models.items()}
+    index = {n: {c: _u_index(m, states[n], c) for c in q} for n, m in models.items()}
+    solvers = {n: osim.InverseDynamicsSolver(m) for n, m in models.items()}
+    weight = model.getTotalMass(states["bare"]) * abs(model.getGravity().get(1))
+
+    def tau(n, k, dy=0.0):
+        m, st, ix = models[n], states[n], index[n]
+        U, UD = np.zeros(st.getNU()), np.zeros(st.getNU())
+        for c in q:
+            m.getCoordinateSet().get(c).setValue(st, float(q[c][k] + (dy if c == "pelvis_ty" else 0.0)), False)
+            U[ix[c]], UD[ix[c]] = u[c][k], ud[c][k]
+        st.setU(osim.Vector.createFromMat(U))
+        m.realizeVelocity(st)
+        v = solvers[n].solve(st, osim.Vector.createFromMat(UD))
+        return {c: v.get(ix[c]) for c in list(coords) + ["ankle_angle_r"]}
+
+    out = {c: [] for c in coords}
+    check = dict(max_change_Nm=0.0, ankle_change_Nm=[], contact_force_bw=[])
+    probe = set(int(k) for k in np.linspace(0, len(t) - 1, 3))
+    for k in range(len(t)):
+        a = tau("bare", k)
+        for c in coords:
+            out[c].append(a[c])
+        if k in probe:
+            b0, b = tau("bare", k, -lower_m), tau("contact", k, -lower_m)
+            models["contact"].realizeDynamics(states["contact"])
+            check["contact_force_bw"].append(round(sum(_sphere_force_y(f, states["contact"]) for f in _spheres(models["contact"])) / weight, 2))
+            check["max_change_Nm"] = max(check["max_change_Nm"], max(abs(b[c] - b0[c]) for c in coords))
+            check["ankle_change_Nm"].append(round(abs(b["ankle_angle_r"] - b0["ankle_angle_r"]), 2))
+    return {c: np.array(v) for c, v in out.items()}, check
+
+
+def torque_actuator_strengths(model_paths, trials, settings):
+    """Settings v3: per subject, each torque actuator's strength (Nm), the same for all the given models (the arms).
+    trials: [(ik_path, window)] of the subject. Each model is checked (check_no_ground_load and the numerical check
+    of inverse_dynamics_torques), and the peaks must agree between the models. Returns dict(strengths_Nm, peak_Nm,
+    check)."""
+    peaks, checks = [], []
+    for mp in model_paths:
+        model = process_model(mp, dict(settings, torque_actuator_strength=None))
+        torque_driven(model)
+        check_no_ground_load(model)
+        pk = {c: 0.0 for c in TORQUE_DRIVEN}
+        for ik, w in trials:
+            taus, chk = inverse_dynamics_torques(model, ik, w, settings)
+            if chk["max_change_Nm"] > 1e-6:
+                raise ValueError(f"{mp}: the torque-driven coordinates' torques change with the ground force "
+                                 f"({chk['max_change_Nm']:.3g} Nm)")
+            if min(chk["ankle_change_Nm"]) < 1.0:
+                raise ValueError(f"{mp}: the numerical check has no effect at the ankle ({chk['ankle_change_Nm']})")
+            checks.append(dict(model=Path(mp).name, ik=Path(ik).name, **chk))
+            for c in TORQUE_DRIVEN:
+                pk[c] = max(pk[c], float(np.abs(taus[c]).max()))
+        peaks.append(pk)
+    for other in peaks[1:]:
+        for c in TORQUE_DRIVEN:
+            if abs(other[c] - peaks[0][c]) > 1e-6 * max(1.0, peaks[0][c]):
+                raise ValueError(f"{c}: the peak torque differs between the models ({peaks[0][c]} vs {other[c]} Nm)")
+    step = settings["torque_actuator_round_up_Nm"]
+    return dict(strengths_Nm={c: round_up_strength(peaks[0][c], step) for c in TORQUE_DRIVEN},
+                peak_Nm={c: round(peaks[0][c], 3) for c in TORQUE_DRIVEN}, check=checks)
+
+
+def contact_balance_offsets(model, traj, bracket_m=0.1, iterations=48):
+    """Settings v3's initial guess: for each time point of a MocoTrajectory, the pelvis-height offset (m) at which the
+    model's contact forces, at rest in that posture, carry the model's weight. From the model alone."""
+    cs = model.getCoordinateSet()
+    st = model.initSystem()
+    names = set(traj.getStateNames())
+    vals = {}
+    for i in range(cs.getSize()):
+        lab = cs.get(i).getAbsolutePathString() + "/value"
+        if lab in names:
+            vals[cs.get(i).getName()] = traj.getStateMat(lab)
+        cs.get(i).setSpeedValue(st, 0.0)
+    spheres = _spheres(model)
+    weight = model.getTotalMass(st) * abs(model.getGravity().get(1))
+
+    def force(k, dy):
+        for c, v in vals.items():
+            cs.get(c).setValue(st, float(v[k] + (dy if c == "pelvis_ty" else 0.0)), False)
+        model.realizeDynamics(st)
+        return sum(_sphere_force_y(f, st) for f in spheres)
+
+    out = np.zeros(traj.getNumTimes())
+    for k in range(traj.getNumTimes()):
+        lo, hi = -bracket_m, bracket_m                      # the force falls as the pelvis rises
+        if not force(k, lo) > weight > force(k, hi):
+            raise ValueError(f"time point {k}: no pelvis offset within +-{bracket_m} m carries the model's weight")
+        for _ in range(iterations):
+            mid = 0.5 * (lo + hi)
+            lo, hi = (mid, hi) if force(k, mid) > weight else (lo, mid)
+        out[k] = 0.5 * (lo + hi)
+    return out
+
+
+def shift_guess(traj, offsets):
+    """The trajectory, in place, with pelvis_ty moved by offsets (m) and its speed by their time derivative."""
+    import opensim as osim
+    t = np.array(traj.getTimeMat())
+    value = next(n for n in traj.getStateNames() if n.endswith("/pelvis_ty/value"))
+    speed = value[:-len("value")] + "speed"
+    traj.setState(value, osim.Vector.createFromMat(traj.getStateMat(value) + offsets))
+    traj.setState(speed, osim.Vector.createFromMat(traj.getStateMat(speed) + np.gradient(offsets, t)))
+    return traj
+
+
+# ------------------------------------------------------------------------------------------------ solve
+def tracking_study(model, model_path, ik_path, window, settings, threads=1, max_iterations=None):
+    """The MocoTrack study of one solve and its solver, set up from the settings: (study, solver)."""
+    import opensim as osim
     tr = osim.MocoTrack()
     tr.setName("track")
-    tr.setModel(mp)
+    tr.setModel(osim.ModelProcessor(model))
     tp = osim.TableProcessor(str(ik_path))
     tp.append(osim.TabOpConvertDegreesToRadians())          # the .mot is in degrees; MocoTrack does not convert it
     tp.append(osim.TabOpLowPassFilter(settings["filter_hz"]))
@@ -153,7 +441,6 @@ def track(model_path, ik_path, window, settings, out_dir, threads=1, max_iterati
     tr.set_mesh_interval(settings["mesh_interval_s"])
     tr.set_control_effort_weight(settings["control_effort_weight"])
     weights = osim.MocoWeightSet()
-    model = mp.process(); model.initSystem()
     per_coord = {name: 0.0 for name in settings["untracked"]}
     per_coord.update(settings.get("coordinate_weights", {}))
     for name, w in per_coord.items():
@@ -170,6 +457,45 @@ def track(model_path, ik_path, window, settings, out_dir, threads=1, max_iterati
     solver.set_optim_max_iterations(int(max_iterations or settings["max_iterations"]))
     solver.set_transcription_scheme(settings["transcription"])
     solver.set_parallel(int(threads))
+    return study, solver
+
+
+def guess_at_contact_balance(model, study, solver, out_dir):
+    """Settings v3: replace the solver's guess (the tracked states, as MocoTrack set them) by the same states with the
+    pelvis at the model's own contact balance. Writes guess_tracked_states.sto and guess.sto; returns the offsets (m)."""
+    import opensim as osim
+    out_dir = Path(out_dir)
+    g = solver.getGuess()
+    times = np.array(g.getTimeMat())
+    g.write(str(out_dir / "guess_tracked_states.sto"))
+    guess = osim.MocoTrajectory(str(out_dir / "guess_tracked_states.sto"))
+    guess.setTime(osim.Vector.createFromMat(times))          # the file rounds the times; the solver needs them exact
+    off = contact_balance_offsets(model, guess)
+    shift_guess(guess, off)
+    solver.resetProblem(study.getProblem())                  # the study initialize() returns is a copy
+    solver.setGuess(guess)
+    guess.write(str(out_dir / "guess.sto"))
+    return off
+
+
+def track(model_path, ik_path, window, settings, out_dir, threads=1, max_iterations=None, strengths=None):
+    """One MocoTrack solve. Writes solution.sto and result.json in out_dir; returns the result. strengths: the
+    torque actuators' strengths (settings v3, torque_actuator_strengths)."""
+    import opensim as osim
+    out_dir = Path(out_dir)
+    osim.Logger.removeFileSink(); osim.Logger.addFileSink(str(out_dir / "opensim.log"))
+    model = process_model(model_path, settings, strengths)
+    study, solver = tracking_study(model, model_path, ik_path, window, settings, threads, max_iterations)
+    extra = {}
+    if settings.get("torque_actuator_strength"):
+        extra["torque_actuator_strengths_Nm"] = dict(strengths)
+    if settings.get("initial_guess") == "contact_balance":
+        off = guess_at_contact_balance(model, study, solver, out_dir)
+        extra["initial_guess_pelvis_offset_mm"] = dict(min=round(1000 * float(off.min()), 3),
+                                                      median=round(1000 * float(np.median(off)), 3),
+                                                      max=round(1000 * float(off.max()), 3), time_points=len(off))
+    elif settings.get("initial_guess") not in (None, "tracked_states"):
+        raise ValueError(f"initial_guess {settings.get('initial_guess')!r}")
     t0 = time.time()
     sol = study.solve()
     seconds = time.time() - t0
@@ -180,6 +506,7 @@ def track(model_path, ik_path, window, settings, out_dir, threads=1, max_iterati
     res = dict(converged=converged, status=sol.getStatus(), iterations=int(sol.getNumIterations()), solve_seconds=round(seconds, 1),
                objective=float(sol.getObjective()), solution_sha256=sha256(path), window_s=list(window))
     res.update(check(model, sol, ik_path, settings, model_path))
+    res.update(extra)
     (out_dir / "result.json").write_text(json.dumps(res, indent=1) + "\n")
     return res
 
@@ -241,7 +568,8 @@ def _case(spec):
     """One solve as one case, in this process or a worker."""
     store = CS.CaseStore(spec["root"], resume=spec["resume"])
     fn = lambda d: track(spec["model"], spec["ik"], spec["key"]["window_s"], spec["key"]["settings"], d,
-                         threads=spec["threads"], max_iterations=spec["max_iterations"])
+                         threads=spec["threads"], max_iterations=spec["max_iterations"],
+                         strengths=spec["key"].get("torque_actuator_strengths_Nm"))
     result, rec, reused = store.run(spec["group"], spec["key"], fn)
     return spec["label"], result, rec, reused
 
@@ -255,18 +583,30 @@ def plan(subjects_dir, kin_root, out, arms=("A", "B"), only=None, max_iterations
         s = sdir.name
         contacts = sdir / "LaiArnoldModified2017_poly_withArms_weldHand_scaled_contacts.osim"
         arm_a = Path(out) / "models" / s / "armA_sole.osim"
-        for trial in TRIALS:
-            if only and f"{s}:{trial}" not in only and s not in only:
-                continue
-            ik = Path(kin_root) / s / "OpenSimData/Mocap/IK" / f"{trial}.mot"
-            w = squat_window(ik)
+        chosen = [trial for trial in TRIALS if not only or f"{s}:{trial}" in only or s in only]
+        if not chosen:
+            continue
+        iks = {trial: Path(kin_root) / s / "OpenSimData/Mocap/IK" / f"{trial}.mot" for trial in TRIALS}
+        windows = {trial: squat_window(ik) for trial, ik in iks.items()}
+        if "A" in arms and not arm_a.exists():
+            build_arm_a(contacts, arm_a.parent)
+        strengths = None
+        if SETTINGS.get("torque_actuator_strength"):        # per subject, from all its trials, whatever is solved
+            ts = torque_actuator_strengths([contacts] + ([arm_a] if arm_a.exists() else []),
+                                           [(iks[t], windows[t][:2]) for t in TRIALS], SETTINGS)
+            strengths = ts["strengths_Nm"]
+            worst = max(c["max_change_Nm"] for c in ts["check"])
+            print(f"{s}: torque actuators (Nm) {strengths}; peak inverse-dynamics torques (Nm) {ts['peak_Nm']}; "
+                  f"largest change with contact forces on the feet {worst:.2g} Nm", flush=True)
+        for trial in chosen:
+            ik, w = iks[trial], windows[trial]
             for arm in arms:
                 model = contacts if arm == "B" else arm_a
-                if arm == "A" and not model.exists():
-                    build_arm_a(contacts, model.parent)
                 key = dict(arm=arm, subject=s, trial=trial, model_sha256=sha256(model), ik_sha256=sha256(ik),
                            window_s=[round(w[0], 4), round(w[1], 4)], settings=dict(SETTINGS, version=SETTINGS_VERSION),
                            max_iterations=max_iterations, code_sha256=code, versions=versions)
+                if strengths is not None:
+                    key["torque_actuator_strengths_Nm"] = strengths
                 specs.append(dict(root=str(Path(out) / "cases"), resume=resume, group=f"{s}_{trial}_{arm}", key=key,
                                   model=str(model), ik=str(ik), threads=threads, max_iterations=max_iterations,
                                   label=f"{s} {trial} arm {arm}"))

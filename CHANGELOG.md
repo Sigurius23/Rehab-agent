@@ -383,6 +383,21 @@
               and its residual moment (34.7 Nm) fails.
             - The summary reports each solve's residuals with the old and the new limits (`dynamic_summary.py`).
             - The pilot gate needs no body weight and is unchanged. The solver code is unchanged too.
+          - **The v2 pilot stopped** (2026-11-09): neither arm converged in 3000 iterations. The diagnosis,
+            from the models, the kinematics and the solutions alone, found two causes:
+            - arm B dropped its trunk, because tracking it with 10 Nm actuators cost more than the tracking error;
+            - arm A's contact is 3–4× as stiff as arm B's and less damped.
+          - **Amendment 7** (2026-11-09, the owner's): a stop rule. If arm A fails the pilot gate under settings
+            v3, the dynamic comparison stops and is reported, by 2026-11-11 (`plan/nodes/sole-forceplate-dynamic.md`).
+          - **Settings v3** (2026-11-09), solver settings only, the same in both arms (`dynamic_settings_log.json`):
+            - each trunk and arm torque actuator's strength is, per subject, its peak inverse-dynamics torque from
+              the recorded kinematics with no external loads, rounded up to 10 Nm (lumbar extension 120–260 Nm);
+            - before that, a check that those torques don't depend on ground forces, by the model's structure and
+              numerically: contact forces of up to about 100 body weights on the feet change them by 0 Nm;
+            - each arm's initial guess starts at its own contact balance: the pelvis is lowered until the feet
+              carry the model's weight at rest (subject 2: about 20 mm in arm B, 9 mm in arm A).
+
+            The tracking weights, the mesh and both contact models are unchanged.
     - **Printed prototype** (`PRINTED.md`, `sole_print.py`). A TPU carrier is built from the same design:
       - underside wire channels along the routing plan;
       - a floor with one hole per region;

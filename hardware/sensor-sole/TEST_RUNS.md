@@ -46,6 +46,7 @@ suites run there.
 | Pipeline Python (OpenSim 4.6), the laptop below, 2026-11-08 | `test_dynamic.py` | 11 | 0 | 0 | 0 | — |
 | Pipeline Python (OpenSim 4.6), the laptop below, 2026-11-08, amendment 5 | `test_dynamic.py` | 19 | 0 | 0 | 0 | — |
 | Pipeline Python (OpenSim 4.6), the laptop below, 2026-11-08, amendment 6 | `test_dynamic.py` | 25 | 0 | 0 | 0 | — |
+| Pipeline Python (OpenSim 4.6), the laptop below, 2026-11-09, settings v3 | `test_dynamic.py` | 33 | 0 | 0 | 0 | — |
 | Generator Python (shapely 2.2.0), slow cases, the laptop below, 2026-11-06 | `test_generator_regressions.py` | 10 | 0 | 1 | 0 | — |
 | KiCad 7.0.11's Python (pcbnew), script-style check | `test_verify_drc.py` | 1 | 0 | 0 | 0 | — |
 
@@ -89,6 +90,15 @@ of them read the recorded v1 arm-B pilot solution and skip without it. The 6 cas
 on the recorded body weight, the recorded mass read and checked, both limits in the summary, a pilot gate that
 needs no body weight) were added the same day; one reads the recorded v1 arm-A pilot solution and the dataset's
 kinematics, and skips without them.
+The 8 cases of settings v3 were added on 2026-11-09, after the v2 pilot had stopped. They cover:
+- the strength rounding;
+- the trunk and arm actuators;
+- the check that no ground force reaches them, including a contact sphere on the trunk being refused;
+- each strength being the peak inverse-dynamics torque rounded up, the same in both arms;
+- the solve's model refusing to be built without the strengths;
+- the initial guess at each arm's own contact balance.
+
+Two of them need no data. Six use subject 2's models and kinematics, and skip without them.
 
 **`test_static_ik.py`** (added 2026-11-06) needs no OpenSim. Its negative controls were checked against a builder
 that carries unknown template elements over and one that ignores the reference marker list; the matching tests

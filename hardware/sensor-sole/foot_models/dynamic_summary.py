@@ -45,7 +45,8 @@ G = 9.80665
 KINEMATICS = Path(os.environ.get("KIN") or Path.home() / "rehab-agent-data/datasets/opencap-labvalidation/kinematics/LabValidation_withoutVideos")
 KEEP = ("converged", "status", "iterations", "solve_seconds", "solution_sha256", "window_s",
         "peak_external_force_N", "com_height_m", "pelvis_residual_force_max_N", "residual_force_limit_N",
-        "pelvis_residual_moment_max_Nm", "residual_moment_limit_Nm", "tracking_rms")
+        "pelvis_residual_moment_max_Nm", "residual_moment_limit_Nm", "tracking_rms",
+        "initial_guess_pelvis_offset_mm")                                                   # settings v3
 # Settings log, version 2 (2026-11-08): a pilot solution must track the reference, not merely converge.
 # Amendment 5 (2026-11-08): the same limits are part of every solution's validity.
 PILOT_GATE = dict(max_rotation_rms_deg=5.0, max_translation_rms_mm=20.0)
@@ -150,6 +151,7 @@ def collect(out_dir, kinematics=KINEMATICS, masses=None, strict=True):
                    max_iterations=k.get("max_iterations"), model_sha256=k["model_sha256"], ik_sha256=k["ik_sha256"],
                    code_sha256=k["code_sha256"], fingerprint=rec["fingerprint"], finished=rec["finished"],
                    case=rec_path.parent.relative_to(out_dir).as_posix(), settings=k["settings"],
+                   torque_actuator_strengths_Nm=k.get("torque_actuator_strengths_Nm"),          # settings v3
                    valid_amendment4=bool(res.get("valid")), **{f: res.get(f) for f in KEEP})
         try:
             mass = (masses[k["subject"]] if masses is not None
@@ -211,7 +213,7 @@ def add_penetration(rows, out_dir, models_dir):
             r["penetration_note"] = "model or solution missing, or the model changed since the solve"
             print(f"warning: {r['subject']} {r['trial']} arm {r['arm']}: {r['penetration_note']}", file=sys.stderr)
             continue
-        model = DM.processed_model(m, r["settings"])
+        model = DM.processed_model(m, r["settings"], r.get("torque_actuator_strengths_Nm"))
         traj = osim.MocoTrajectory(str(sol)).exportToStatesTrajectory(model)
         r["max_penetration_mm"], r["max_penetration_time_s"] = max_penetration(model, [traj.get(i) for i in range(traj.getSize())])
     return rows

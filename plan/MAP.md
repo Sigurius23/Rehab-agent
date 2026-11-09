@@ -2,7 +2,7 @@
 
 # Plan map
 
-75 notes: 8 goals, 22 steps, 22 tests, 8 ideas, 15 decisions.
+76 notes: 8 goals, 22 steps, 22 tests, 9 ideas, 15 decisions.
 
 ```mermaid
 flowchart LR
@@ -127,7 +127,6 @@ flowchart LR
 - d-sikidar-account: open decision: Create a SimTK account to download the Sikidar model?
 - d-suit-bench-hardware: open decision: Buy one ESP32 and vibration motors for the BLE bench test?
 - kin-labvalidation: priority-1 step needs a stop rule (a number, a date, an owner)
-- sole-forceplate-dynamic: priority-1 step needs a stop rule (a number, a date, an owner)
 - sole-physical-prototype: priority-1 step needs a stop rule (a number, a date, an owner)
 - t-coupon: no expected result: write it before the test runs
 - t-footbed: no expected result: write it before the test runs
@@ -211,6 +210,7 @@ Open steps whose dependencies are done and that no open decision blocks.
 | [[idea-sikidar]] | new | Sikidar-Kalyanasundaram foot model in the comparison |
 | [[idea-synergy-toes]] | new | Per-toe placement for the five-toe Synergy foot |
 | [[idea-t1-candidate]] | new | Higher-resolution T1 sole candidate |
+| [[idea-thoracolumbar-model]] | new | Thoracolumbar full-body model, for a later spine-load study |
 | [[idea-uncertainty-runs]] | new | Many-run uncertainty analysis on the GPU |
 
 ## Check

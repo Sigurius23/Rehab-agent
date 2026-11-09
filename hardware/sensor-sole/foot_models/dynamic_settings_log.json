@@ -57,7 +57,200 @@
     "max_rotation_rms_deg": 5.0,
     "max_translation_rms_mm": 20.0
    },
-   "judged_by": "pending: the v2 pilot"
+   "judged_by": "pilot, subject2 squats1, 2026-11-08/09: neither arm converged (3000 iterations each, Maximum_Iterations_Exceeded). Arm B: pelvis translation RMS 7.2 mm (the x100 weights worked), but lumbar_extension RMS 53.1 deg (worst; mean rotation 10.6 deg); residuals 0.07 N and 0.09 Nm; at the end, scaled dual infeasibility 0.10 and constraint violation 9.0e-3 (tolerances 1e-2 and 1e-3). Arm A: never feasible (barrier parameter at lg(mu) 3 from about iteration 250 on; constraint violation 1.5e6 at the end); pelvis translation RMS 893.6 mm, worst rotation 95.5 deg (arm_flex_l); maximum penetration 501 mm. Run stopped by the gate before the batch."
+  },
+  {
+   "version": 3,
+   "date": "2026-11-09",
+   "settings": {
+    "filter_hz": 6.0,
+    "mesh_interval_s": 0.02,
+    "states_tracking_weight": 10.0,
+    "control_effort_weight": 1.0,
+    "reserve_optimal_force_Nm_or_N": 1.0,
+    "active_force_width_scale": 1.5,
+    "convergence_tolerance": 0.01,
+    "constraint_tolerance": 0.001,
+    "max_iterations": 3000,
+    "transcription": "hermite-simpson",
+    "untracked": [
+     "knee_angle_r_beta",
+     "knee_angle_l_beta"
+    ],
+    "coordinate_weights": {
+     "pelvis_tx": 100.0,
+     "pelvis_ty": 100.0,
+     "pelvis_tz": 100.0
+    },
+    "torque_actuator_strength": "peak_inverse_dynamics",
+    "torque_actuator_round_up_Nm": 10.0,
+    "initial_guess": "contact_balance"
+   },
+   "changes": [
+    "new torque_actuator_strength 'peak_inverse_dynamics' with torque_actuator_round_up_Nm 10: per subject, each of the 13 trunk and arm coordinate actuators (the distributed model's own, optimal force 10 Nm in v1 and v2) gets as its strength its peak inverse-dynamics torque over the subject's two squat windows (squats1, squatsAsym1), from the recorded kinematics filtered at 6 Hz as tracked, with no external loads, rounded up to the next 10 Nm (at least 10 Nm). The same strengths in both arms; each case key records them (torque_actuator_strengths_Nm).",
+    "new initial_guess 'contact_balance': the tracked states, with pelvis_ty shifted at each guess time point to the arm's own contact balance (its feet carry the model's weight at rest in that posture), and the pelvis_ty speed by the shift's time derivative. From the model alone; each result records the shift (initial_guess_pelvis_offset_mm)."
+   ],
+   "unchanged": "the tracking weights, the mesh, the reserves, the tolerances, the iteration limit and both contact models",
+   "reason": "v2 failed the pilot on convergence (both arms) and on tracking (arm B's trunk; arm A throughout). Diagnosis from the models, the kinematics and the solutions alone, no force-plate data (2026-11-09). (1) Arm B leaned its trunk back about 55 deg from the recording, and its knees and hips followed. The trunk and arms have no muscles; their coordinate actuators had an optimal force of 10 Nm, so the effort cost is (torque/10 Nm)^2. Inverse dynamics of the recorded motion needs up to about 240-260 Nm at lumbar_extension (subject2): an effort term of about 270 against about 10 for the tracking error of dropping the trunk, so the optimum drops it. Arm B's last iterate satisfied its own trunk and arm dynamics within 0.4 Nm RMS, so this was the optimum, not leftover infeasibility. With each strength at least its peak torque, holding the recorded motion costs each actuator an effort of at most 1 per second. (2) Arm A never became feasible. Its contact, at the recorded posture, is 3-4x as stiff vertically as arm B's (316-454 vs 110-114 kN/m; bounce period 82-99 vs 165 ms; damping ratio 0.19-0.23 vs 0.39). At the recorded height both arms' feet carry about no weight (arm B must sink 15-22 mm, arm A 3-12 mm), so each solve started out of contact balance; v3 starts each arm at its own. The contact itself is not changed: that would need an amendment (owner, 2026-11-08).",
+   "checked_before": "the torques the strengths come from do not depend on ground forces, for every subject's arm-B model and subject2's arm-A model (the batch checks every arm-A model as it is built): (1) by structure, the bodies each torque-driven coordinate moves (lumbar: the torso and both arms; an arm coordinate: the arm below it) carry no contact sphere, no muscle crosses into them and no constraint acts on them (dynamic_track.check_no_ground_load); (2) numerically, with the pelvis lowered 30 mm and only the contact forces applied (4-107 body weights), the 13 torques changed by 0 Nm, while the right ankle's changed by 20-2088 Nm. Strengths: lumbar_extension 120-260 Nm by subject; the rest 10-50 Nm.",
+   "torque_actuator_strengths_Nm_by_subject": {
+    "subject2": {
+     "lumbar_extension": 260.0,
+     "lumbar_bending": 50.0,
+     "lumbar_rotation": 10.0,
+     "arm_flex_r": 20.0,
+     "arm_add_r": 10.0,
+     "arm_rot_r": 10.0,
+     "elbow_flex_r": 10.0,
+     "pro_sup_r": 10.0,
+     "arm_flex_l": 20.0,
+     "arm_add_l": 10.0,
+     "arm_rot_l": 10.0,
+     "elbow_flex_l": 10.0,
+     "pro_sup_l": 10.0
+    },
+    "subject3": {
+     "lumbar_extension": 140.0,
+     "lumbar_bending": 20.0,
+     "lumbar_rotation": 10.0,
+     "arm_flex_r": 10.0,
+     "arm_add_r": 10.0,
+     "arm_rot_r": 10.0,
+     "elbow_flex_r": 10.0,
+     "pro_sup_r": 10.0,
+     "arm_flex_l": 10.0,
+     "arm_add_l": 10.0,
+     "arm_rot_l": 10.0,
+     "elbow_flex_l": 10.0,
+     "pro_sup_l": 10.0
+    },
+    "subject4": {
+     "lumbar_extension": 130.0,
+     "lumbar_bending": 10.0,
+     "lumbar_rotation": 10.0,
+     "arm_flex_r": 10.0,
+     "arm_add_r": 10.0,
+     "arm_rot_r": 10.0,
+     "elbow_flex_r": 10.0,
+     "pro_sup_r": 10.0,
+     "arm_flex_l": 20.0,
+     "arm_add_l": 10.0,
+     "arm_rot_l": 10.0,
+     "elbow_flex_l": 10.0,
+     "pro_sup_l": 10.0
+    },
+    "subject5": {
+     "lumbar_extension": 120.0,
+     "lumbar_bending": 20.0,
+     "lumbar_rotation": 10.0,
+     "arm_flex_r": 10.0,
+     "arm_add_r": 10.0,
+     "arm_rot_r": 10.0,
+     "elbow_flex_r": 10.0,
+     "pro_sup_r": 10.0,
+     "arm_flex_l": 10.0,
+     "arm_add_l": 10.0,
+     "arm_rot_l": 10.0,
+     "elbow_flex_l": 10.0,
+     "pro_sup_l": 10.0
+    },
+    "subject6": {
+     "lumbar_extension": 140.0,
+     "lumbar_bending": 20.0,
+     "lumbar_rotation": 10.0,
+     "arm_flex_r": 20.0,
+     "arm_add_r": 10.0,
+     "arm_rot_r": 10.0,
+     "elbow_flex_r": 10.0,
+     "pro_sup_r": 10.0,
+     "arm_flex_l": 20.0,
+     "arm_add_l": 10.0,
+     "arm_rot_l": 10.0,
+     "elbow_flex_l": 10.0,
+     "pro_sup_l": 10.0
+    },
+    "subject7": {
+     "lumbar_extension": 120.0,
+     "lumbar_bending": 10.0,
+     "lumbar_rotation": 10.0,
+     "arm_flex_r": 10.0,
+     "arm_add_r": 10.0,
+     "arm_rot_r": 10.0,
+     "elbow_flex_r": 10.0,
+     "pro_sup_r": 10.0,
+     "arm_flex_l": 10.0,
+     "arm_add_l": 10.0,
+     "arm_rot_l": 10.0,
+     "elbow_flex_l": 10.0,
+     "pro_sup_l": 10.0
+    },
+    "subject8": {
+     "lumbar_extension": 130.0,
+     "lumbar_bending": 20.0,
+     "lumbar_rotation": 10.0,
+     "arm_flex_r": 10.0,
+     "arm_add_r": 10.0,
+     "arm_rot_r": 10.0,
+     "elbow_flex_r": 10.0,
+     "pro_sup_r": 10.0,
+     "arm_flex_l": 10.0,
+     "arm_add_l": 10.0,
+     "arm_rot_l": 10.0,
+     "elbow_flex_l": 10.0,
+     "pro_sup_l": 10.0
+    },
+    "subject9": {
+     "lumbar_extension": 170.0,
+     "lumbar_bending": 20.0,
+     "lumbar_rotation": 10.0,
+     "arm_flex_r": 10.0,
+     "arm_add_r": 10.0,
+     "arm_rot_r": 10.0,
+     "elbow_flex_r": 10.0,
+     "pro_sup_r": 10.0,
+     "arm_flex_l": 10.0,
+     "arm_add_l": 10.0,
+     "arm_rot_l": 10.0,
+     "elbow_flex_l": 10.0,
+     "pro_sup_l": 10.0
+    },
+    "subject10": {
+     "lumbar_extension": 140.0,
+     "lumbar_bending": 30.0,
+     "lumbar_rotation": 10.0,
+     "arm_flex_r": 10.0,
+     "arm_add_r": 10.0,
+     "arm_rot_r": 10.0,
+     "elbow_flex_r": 10.0,
+     "pro_sup_r": 10.0,
+     "arm_flex_l": 10.0,
+     "arm_add_l": 10.0,
+     "arm_rot_l": 10.0,
+     "elbow_flex_l": 10.0,
+     "pro_sup_l": 10.0
+    },
+    "subject11": {
+     "lumbar_extension": 240.0,
+     "lumbar_bending": 30.0,
+     "lumbar_rotation": 10.0,
+     "arm_flex_r": 20.0,
+     "arm_add_r": 10.0,
+     "arm_rot_r": 10.0,
+     "elbow_flex_r": 10.0,
+     "pro_sup_r": 10.0,
+     "arm_flex_l": 20.0,
+     "arm_add_l": 10.0,
+     "arm_rot_l": 10.0,
+     "elbow_flex_l": 10.0,
+     "pro_sup_l": 10.0
+    }
+   },
+   "pilot_gate": {
+    "rule": "the batch starts only if, with the current settings, both arms of the pilot converged and each solution's tracking RMS is within: every rotational coordinate <= 5 deg, each pelvis translation <= 20 mm (foot_models/dynamic_summary.py PILOT_GATE). Added with v2, unchanged in v3, because v1's gate (convergence only) would have accepted arm B's flying solution. A check of the settings, not part of validity.",
+    "max_rotation_rms_deg": 5.0,
+    "max_translation_rms_mm": 20.0
+   },
+   "judged_by": "pending: the v3 pilot. Stop rule (VALIDATION_PLAN.md amendment 7, owner, 2026-11-09): if arm A fails the pilot gate under settings v3, the dynamic comparison stops there and is reported to the owner."
   }
  ]
 }

@@ -310,10 +310,20 @@
    "color": "5"
   },
   {
+   "id": "idea-thoracolumbar-model",
+   "type": "file",
+   "file": "nodes/idea-thoracolumbar-model.md",
+   "x": 2240,
+   "y": 1320,
+   "width": 280,
+   "height": 120,
+   "color": "5"
+  },
+  {
    "id": "idea-uncertainty-runs",
    "type": "file",
    "file": "nodes/idea-uncertainty-runs.md",
-   "x": 2240,
+   "x": 2560,
    "y": 1320,
    "width": 280,
    "height": 120,
@@ -949,6 +959,15 @@
    "id": "idea-t1-candidate--serves--goal-sensor-sole",
    "fromNode": "idea-t1-candidate",
    "toNode": "goal-sensor-sole",
+   "fromSide": "bottom",
+   "toSide": "top",
+   "color": "5",
+   "label": "serves"
+  },
+  {
+   "id": "idea-thoracolumbar-model--serves--rehab-agent",
+   "fromNode": "idea-thoracolumbar-model",
+   "toNode": "rehab-agent",
    "fromSide": "bottom",
    "toSide": "top",
    "color": "5",

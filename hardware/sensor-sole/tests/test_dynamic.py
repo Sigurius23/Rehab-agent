@@ -14,7 +14,12 @@ metric functions (foot_models/dynamic_metrics.py) on synthetic data, written bef
     arm and A minus B only on trials evaluated in both;
   - amendment 6 (2026-11-08): the residual limits are taken on the recorded body weight, not on the solution's own
     peak external force, so the v1 arm-A pilot solution (limit 3.5 MN) fails them; the recorded mass is read and
-    checked; the summary reports both limits; the pilot gate does not need the body weight.
+    checked; the summary reports both limits; the pilot gate does not need the body weight;
+  - settings v3 (2026-11-09), on the subject models when they are present: the trunk and arm actuators' strengths are
+    their peak inverse-dynamics torques rounded up to 10 Nm, the same for both arms, and only from torques that do not
+    depend on ground forces (a contact sphere on the trunk is refused; contact forces on the feet change no such
+    torque); the solve's model refuses to be built without them; the initial guess's pelvis offset puts each arm at
+    its own contact balance.
 """
 import hashlib
 import json
@@ -36,6 +41,12 @@ try:
     HAVE = True
 except ImportError:
     HAVE = False
+try:
+    import opensim as osim
+    osim.Logger.setLevelString("error")
+    HAVE_OSIM = HAVE
+except ImportError:
+    HAVE_OSIM = False
 
 
 def ik_file(d, ty, dt=0.01):
@@ -403,6 +414,117 @@ class PilotGate(unittest.TestCase):
             self.assertEqual(last["version"], DT.SETTINGS_VERSION)
         self.assertEqual({k: last["pilot_gate"][k] for k in self.SM.PILOT_GATE}, self.SM.PILOT_GATE)
 
+
+FORCEPLATE_MODELS = Path(os.environ.get("FORCEPLATE_MODELS", Path.home() / "rehab-agent-data/sensor-sole/forceplate/models"))
+KIN_ROOT = Path(os.environ.get("KIN", Path.home() / "rehab-agent-data/datasets/opencap-labvalidation/kinematics/LabValidation_withoutVideos"))
+ARM_B_S2 = FORCEPLATE_MODELS / "subject2" / "LaiArnoldModified2017_poly_withArms_weldHand_scaled_contacts.osim"
+ARM_A_S2 = DYNAMIC_OUT / "models" / "subject2" / "armA_sole.osim"
+IK_S2 = {t: KIN_ROOT / "subject2" / "OpenSimData/Mocap/IK" / f"{t}.mot" for t in ("squats1", "squatsAsym1")}
+HAVE_S2 = HAVE_OSIM and ARM_B_S2.exists() and ARM_A_S2.exists() and all(p.exists() for p in IK_S2.values())
+
+
+@unittest.skipUnless(HAVE, "needs the pipeline's Python")
+class SettingsV3Rules(unittest.TestCase):
+    """Settings v3 (2026-11-09) without the subject models."""
+
+    def test_strengths_round_up_to_the_next_10_nm(self):
+        r = lambda x: DT.round_up_strength(x, 10.0)
+        self.assertEqual([r(258.337), r(250.0), r(16.1), r(0.2), r(0.0), r(-40.6)], [260.0, 250.0, 20.0, 10.0, 10.0, 50.0])
+
+    def test_the_settings_say_so(self):
+        self.assertEqual((DT.SETTINGS_VERSION, DT.SETTINGS["torque_actuator_strength"], DT.SETTINGS["torque_actuator_round_up_Nm"],
+                          DT.SETTINGS["initial_guess"], DT.SETTINGS["mesh_interval_s"]),
+                         (3, "peak_inverse_dynamics", 10.0, "contact_balance", 0.02))
+        self.assertEqual(len(DT.TORQUE_DRIVEN), 13)
+
+
+@unittest.skipUnless(HAVE_S2, "needs OpenSim, subject2's models (both arms) and its kinematics")
+class SettingsV3OnSubject2(unittest.TestCase):
+    """Settings v3 on subject2's distributed model (arm B) and its arm-A model."""
+
+    @classmethod
+    def setUpClass(cls):
+        cls.settings = dict(DT.SETTINGS, torque_actuator_strength=None)
+        cls.model = DT.process_model(ARM_B_S2, cls.settings)
+        cls.windows = {t: DT.squat_window(p)[:2] for t, p in IK_S2.items()}
+
+    def test_the_torque_actuators_are_the_trunk_and_the_arms(self):
+        acts = DT.torque_driven(self.model)
+        self.assertEqual(set(acts), set(DT.TORQUE_DRIVEN))
+        trees = DT.check_no_ground_load(self.model)
+        self.assertEqual(set(trees["lumbar_extension"]), {"torso", "humerus_r", "ulna_r", "radius_r", "hand_r",
+                                                          "humerus_l", "ulna_l", "radius_l", "hand_l"})
+        self.assertEqual(set(trees["arm_flex_l"]), {"humerus_l", "ulna_l", "radius_l", "hand_l"})
+        self.assertEqual(set(DT.check_no_ground_load(DT.process_model(ARM_A_S2, self.settings))), set(DT.TORQUE_DRIVEN))
+
+    def test_a_contact_sphere_on_the_trunk_is_refused(self):
+        m = osim.Model(str(ARM_B_S2))
+        floor = osim.ContactHalfSpace.safeDownCast(m.getContactGeometrySet().get("floor"))
+        sp = osim.ContactSphere(0.03, osim.Vec3(0, 0, 0), m.getBodySet().get("torso"), "on_the_trunk")
+        m.addContactGeometry(sp)
+        f = osim.SmoothSphereHalfSpaceForce("force_on_the_trunk", sp, floor)
+        m.addForce(f); m.finalizeConnections(); m.initSystem()
+        with self.assertRaisesRegex(ValueError, "on_the_trunk is on torso, which lumbar_extension moves"):
+            DT.check_no_ground_load(m)
+
+    def test_contact_forces_on_the_feet_change_no_trunk_or_arm_torque(self):
+        for path in (ARM_B_S2, ARM_A_S2):
+            taus, chk = DT.inverse_dynamics_torques(DT.process_model(path, self.settings), IK_S2["squats1"],
+                                                    self.windows["squats1"], DT.SETTINGS)
+            self.assertLess(chk["max_change_Nm"], 1e-9)
+            self.assertGreater(min(chk["ankle_change_Nm"]), 1.0)          # the check does reach the legs
+            self.assertGreater(min(chk["contact_force_bw"]), 1.0)
+            self.assertEqual(set(taus), set(DT.TORQUE_DRIVEN))
+
+    def test_strengths_are_the_peaks_rounded_up_and_the_same_for_both_arms(self):
+        trials = [(IK_S2[t], self.windows[t]) for t in ("squats1", "squatsAsym1")]
+        ts = DT.torque_actuator_strengths([ARM_B_S2, ARM_A_S2], trials, DT.SETTINGS)
+        for c in DT.TORQUE_DRIVEN:
+            s, pk = ts["strengths_Nm"][c], ts["peak_Nm"][c]
+            self.assertEqual(s % 10.0, 0.0)
+            self.assertTrue(max(10.0, pk) <= s < max(10.0, pk) + 10.0 + 1e-9, (c, s, pk))
+        self.assertEqual(max(ts["strengths_Nm"], key=ts["strengths_Nm"].get), "lumbar_extension")
+        self.assertEqual(len(ts["check"]), 4)                            # two models, two trials
+
+    def test_the_solve_model_needs_the_strengths_and_takes_them(self):
+        with self.assertRaisesRegex(ValueError, "need the torque actuators' strengths"):
+            DT.process_model(ARM_B_S2, dict(DT.SETTINGS, version=3))
+        strengths = {c: 10.0 * (k + 1) for k, c in enumerate(DT.TORQUE_DRIVEN)}
+        m = DT.process_model(ARM_B_S2, DT.SETTINGS, strengths)
+        for c, name in DT.torque_driven(m).items():
+            self.assertEqual(osim.CoordinateActuator.safeDownCast(m.getForceSet().get(name)).getOptimalForce(), strengths[c])
+        with self.assertRaisesRegex(ValueError, "strengths for"):
+            DT.process_model(ARM_B_S2, DT.SETTINGS, {c: 10.0 for c in DT.TORQUE_DRIVEN[1:]})
+
+    def test_the_guess_starts_each_arm_at_its_own_contact_balance(self):
+        settings = dict(DT.SETTINGS, version=3)
+        for path, band_mm in ((ARM_B_S2, (-40.0, -5.0)), (ARM_A_S2, (-25.0, 5.0))):
+            strengths = {c: 10.0 for c in DT.TORQUE_DRIVEN}
+            m = DT.process_model(path, settings, strengths)
+            here = os.getcwd()
+            with tempfile.TemporaryDirectory() as d:
+                os.chdir(d)                                  # MocoTrack writes its tracked states to the working directory
+                try:
+                    study, solver = DT.tracking_study(m, path, IK_S2["squats1"], self.windows["squats1"], settings)
+                finally:
+                    os.chdir(here)
+                name = next(n for n in solver.getGuess().getStateNames() if n.endswith("/pelvis_ty/value"))
+                before = solver.getGuess().getStateMat(name).copy()
+                off = DT.guess_at_contact_balance(m, study, solver, d)
+                self.assertTrue((Path(d) / "guess.sto").exists())
+            g = solver.getGuess()
+            np.testing.assert_allclose(g.getStateMat(name), before + off, atol=1e-12)
+            self.assertTrue(band_mm[0] < 1000 * off.min() <= 1000 * off.max() < band_mm[1], (path.name, off.min(), off.max()))
+            st = m.initSystem(); cs = m.getCoordinateSet(); W = m.getTotalMass(st) * 9.80665
+            labels = set(g.getStateNames())
+            for k in np.linspace(0, g.getNumTimes() - 1, 5).astype(int):
+                for i in range(cs.getSize()):
+                    lab = cs.get(i).getAbsolutePathString() + "/value"
+                    if lab in labels:
+                        cs.get(i).setValue(st, float(g.getStateMat(lab)[k]), False)
+                    cs.get(i).setSpeedValue(st, 0.0)
+                m.realizeDynamics(st)
+                self.assertAlmostEqual(sum(DT._sphere_force_y(f, st) for f in DT._spheres(m)) / W, 1.0, places=6)
 
 if __name__ == "__main__":
     unittest.main()

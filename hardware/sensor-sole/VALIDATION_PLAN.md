@@ -145,6 +145,20 @@ validity rule.
   `foot_models/dynamic_metrics.py` selects with that validity. The solver code is unchanged, so solves already
   running or finished are not redone.
 
+**Amendment 7, to item 2, the dynamic comparison: a stop rule (2026-11-09).** Decided by the owner after the
+settings v2 pilot stopped, and before any dynamic result was compared with the force plates. Amendments 4–6 above
+stay as written.
+- **Stop rule:** if arm A fails the pilot gate under settings v3, the dynamic comparison stops there and the result
+  is reported to the owner. No further settings version is tried. The rule is checked by 2026-11-11 and owned by
+  the owner (`plan/nodes/sole-forceplate-dynamic.md`).
+- **The owner's options then:**
+  - an amendment to the contact itself;
+  - reporting arm A as not solvable with the assumed contact (v1);
+  - pausing the dynamic stage until the coupon test (the sensor film's measured response).
+- **Recorded with it:** arm A did not converge in the v1 or the v2 pilot (3000 iterations each).
+- **Unchanged:** the pilot gate (both arms must pass before the batch), validity (amendments 5 and 6), the
+  plate-coverage rule, H1, H2 and their thresholds.
+
 **Metrics and thresholds.** The quasi-static thresholds were **agreed on 2026-11-05, before any data was
 downloaded or opened**, as a first attempt. They may be revised only before the force data is opened; a revision
 after that is reported as one, beside the original result.
