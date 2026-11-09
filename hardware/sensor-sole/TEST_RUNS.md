@@ -15,8 +15,10 @@
 skip. **A skip is not a pass.** A module with no unittest cases is reported as an error, not as an empty pass;
 the KiCad checks are scripts, recorded by their exit code.
 
-CI (`.github/workflows/validate.yml`) runs only `test_channel_map.py`, so none of the OpenSim, CasADi or KiCad
-suites run there.
+CI (`.github/workflows/validate.yml`, job `plan-and-sole`, from 2026-11-09) runs the suites that need no external
+files on every push: `test_channel_map.py`, `test_case_store.py`, `test_compare_results.py`,
+`test_forceplate_metrics.py` and `test_static_ik.py`, under Python 3.13 with numpy 2.5.4. Before they were added,
+all 47 cases ran there with none skipped, on this machine. None of the OpenSim, CasADi or KiCad suites run in CI.
 
 ## Summary
 
@@ -59,7 +61,7 @@ environment's packages, the slow generator cases, and the KiCad checks (KiCad no
 **`test_compare_results.py`** (the results checker, added 2026-11-05) has so far run only on that laptop: under
 the system Python through `setup.sh tests`, and under the pipeline Python directly. Its negative controls were
 checked against two deliberately broken checkers, one blind to changed values and one blind to missing and
-extra cases; the matching tests failed. CI does not run it.
+extra cases; the matching tests failed. CI runs it from 2026-11-09.
 
 **`test_double_support.py`** (the force-plate check's double support and frame rule, added 2026-11-06) has so far
 run only on that laptop. Its 15 cases passed through `setup.sh tests --slow`, where every other suite passed too;

@@ -122,8 +122,9 @@ class Adding(unittest.TestCase):
         self.tmp = tempfile.TemporaryDirectory()
         self.plan = Path(self.tmp.name) / "plan"
         (self.plan / "nodes").mkdir(parents=True)
-        for k in ("root", "s2"):
-            (self.plan / "nodes" / f"{k}.md").write_text(f"---\n{BASE[k] if k == 'root' else BASE['s2'].replace(chr(10) + 'depends_on:' + chr(10) + '  - \"[[s1]]\"', '')}\n---\n")
+        s2 = BASE["s2"].replace('\ndepends_on:\n  - "[[s1]]"', "")      # no f-string backslash: CI runs 3.11
+        for k, text in (("root", BASE["root"]), ("s2", s2)):
+            (self.plan / "nodes" / f"{k}.md").write_text(f"---\n{text}\n---\n")
         import add as A
         self.A = A
 

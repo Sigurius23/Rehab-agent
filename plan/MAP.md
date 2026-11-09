@@ -2,7 +2,7 @@
 
 # Plan map
 
-164 notes: 17 goals, 42 steps, 31 tests, 50 ideas, 24 decisions.
+165 notes: 17 goals, 42 steps, 32 tests, 50 ideas, 24 decisions.
 
 ## The engine
 
@@ -19,7 +19,7 @@ flowchart TB
   r --> p3
   p4(["Act: feedback and assistance<br/>from the twin<br/><i>1 done · 2 open · 2 blocked · 3 ideas · 4 decisions</i>"]):::goal_open
   r --> p4
-  p5(["How we work: tests, CI and<br/>standing rules<br/><i>2 open · 1 idea</i>"]):::goal_open
+  p5(["How we work: tests, CI and<br/>standing rules<br/><i>1 done · 1 doing · 1 idea</i>"]):::goal_open
   r --> p5
   classDef goal_open fill:#e1d5f5,stroke:#555,color:#111
   classDef goal_done fill:#c8e6c9,stroke:#555,color:#111
@@ -62,7 +62,7 @@ flowchart LR
   n13>"Pain during the movement, recorded<br/>with the session"]:::idea_new
   n14>"Phone sensors alone, once the twin<br/>is built"]:::idea_new
   n15>"Higher-resolution T1 sole<br/>candidate"]:::idea_new
-  n16["Video kinematics on OpenCap<br/>LabValidation against marker<br/>motion capture<br/>tests ○1"]:::step_open
+  n16["Video kinematics on OpenCap<br/>LabValidation against marker<br/>motion capture<br/>tests ○2"]:::step_open
   n17["One volunteer, one exercise,<br/>recorded with our own hardware<br/>tests ○1"]:::step_open
   n18(["Sense: measure the person's<br/>movement, forces and body"]):::goal_open
   n19["Boards designed, routed and<br/>checked: EU 37, 42, 46 and a<br/>personal foot, both sides<br/>tests ✓1"]:::step_done
@@ -373,7 +373,7 @@ flowchart LR
   n13>"Personalised footwear from the<br/>foot scan: last, sole and five-toe<br/>shoe"]:::idea_new
   n14(["Act: feedback and assistance from<br/>the twin"]):::goal_open
   n15["BLE write to SenseShift on a bench<br/>ESP32<br/>tests ○1"]:::step_open
-  n16["Video kinematics on OpenCap<br/>LabValidation against marker<br/>motion capture<br/>tests ○1<br/><i>(Sense)</i>"]:::external
+  n16["Video kinematics on OpenCap<br/>LabValidation against marker<br/>motion capture<br/>tests ○2<br/><i>(Sense)</i>"]:::external
   n0 -. blocks .-> n3
   n1 -. blocks .-> n6
   n2 -. blocks .-> n3
@@ -419,8 +419,8 @@ flowchart LR
 flowchart LR
   n0(["How we work: tests, CI and<br/>standing rules"]):::goal_open
   n1>"EU compliance before any device<br/>leaves the lab"]:::idea_new
-  n2["CI runs every test suite that<br/>needs no external files<br/>tests ○1"]:::step_open
-  n3["Standing rules for agent sessions<br/>in CLAUDE.md<br/>tests ○1"]:::step_open
+  n2["CI runs every test suite that<br/>needs no external files<br/>tests ○1"]:::step_doing
+  n3["Standing rules for agent sessions<br/>in CLAUDE.md<br/>tests ○1"]:::step_done
   n1 -.-o n0
   n0 --> n2
   n0 --> n3
@@ -475,14 +475,12 @@ flowchart LR
 - sole-physical-prototype: priority-1 step needs a stop rule (a number, a date, an owner)
 - t-anatomy-geometry: no expected result: write it before the test runs
 - t-bone-geometry: no expected result: write it before the test runs
-- t-coupon: no expected result: write it before the test runs
 - t-exo-assist: no expected result: write it before the test runs
 - t-foot-capture-pilot: no expected result: write it before the test runs
 - t-footbed: no expected result: write it before the test runs
 - t-forces-session: no expected result: write it before the test runs
 - t-insole: no expected result: write it before the test runs
 - t-joint-load-scenarios: no expected result: write it before the test runs
-- t-kin-labvalidation: no expected result: write it before the test runs
 - t-kin-volunteer: no expected result: write it before the test runs
 - t-loads-measured-forces: no expected result: write it before the test runs
 - t-nutrition-dxa: no expected result: write it before the test runs
@@ -502,8 +500,6 @@ Open steps whose dependencies are done and that no open decision blocks.
 - [[exo-assist-simulation]]: Predictive simulation of assistance for the person's body
 - [[foot-capture-pilot]]: Phone-only foot capture: protocol, consent plan and a repeatability pilot
 - [[kin-labvalidation]]: Video kinematics on OpenCap LabValidation against marker motion capture
-- [[project-ci-suites]]: CI runs every test suite that needs no external files
-- [[project-claude-md]]: Standing rules for agent sessions in CLAUDE.md
 - [[sim-joint-load-scenarios]]: Joint load runs on the corrected motion and on assistance scenarios
 - [[sole-footbed-layers]]: Footbed and shoe layers in the simulation
 - [[sole-rebuild-reproducibility]]: Boards and the self-test model rebuild identically on another machine
@@ -523,7 +519,7 @@ Open steps whose dependencies are done and that no open decision blocks.
 | [[t-bone-geometry]] | planned |  |  |  |
 | [[t-ci-suites]] | planned |  | On every push, CI runs test_channel_map, test_case_store, test_compare_results, plan/test_build and plan/build.py --check, and all pass |  |
 | [[t-claude-md-fresh-session]] | planned |  | A fresh session given only a one-line task keeps every standing rule without them in the prompt |  |
-| [[t-coupon]] | planned |  |  |  |
+| [[t-coupon]] | planned | n/a | Proposal: a material qualifies if, on 3 coupons, repeatability is within 5 % over 100 cycles, hysteresis and 10-minute creep are each at most 10 % of full scale, and the 10 mm bend shifts the baseline by at most 5 % of full scale |  |
 | [[t-dyn-h1]] | planned | no | Peak error at most 10 % of body weight (recorded mass) in every evaluated subject |  |
 | [[t-dyn-h2]] | planned | no | RMS error at most 15 % of foot length in every evaluated subject |  |
 | [[t-exo-assist]] | planned |  |  |  |
@@ -535,7 +531,8 @@ Open steps whose dependencies are done and that no open decision blocks.
 | [[t-fp-vertical]] | failed | yes | RMS error at most 5 % of body weight in every subject | Fail in subjects 6, 9 and 10. Post hoc: follows the gap between recorded mass and plate weight (6 % in 6 and 10); 9 had a foot off the plates |
 | [[t-insole]] | planned |  |  |  |
 | [[t-joint-load-scenarios]] | planned |  |  |  |
-| [[t-kin-labvalidation]] | planned |  |  |  |
+| [[t-kin-labvalidation]] | planned | yes | Proposal: per route, joint and plane, the RMSE against the motion capture's inverse kinematics; a joint passes on a route if it is within docs/accuracy.md's target (sagittal at most 3 degrees, frontal at most 5) in every evaluated subject; transverse angles are reported only |  |
+| [[t-kin-pilot]] | planned | no | Proposal: on subject 2's squats1, the comparison runs end to end for all four routes, and the five-camera route with the augmenter has an error against the motion capture within 2 degrees of its error against OpenCap at every joint |  |
 | [[t-kin-volunteer]] | planned |  |  |  |
 | [[t-loads-measured-forces]] | planned |  |  |  |
 | [[t-nutrition-dxa]] | planned |  |  |  |

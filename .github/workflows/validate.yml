@@ -23,6 +23,31 @@ jobs:
           python3 scripts/generate_catalog.py
           git diff --exit-code catalog/repos.csv catalog/repos.yaml docs/catalog.md
 
+  plan-and-sole:
+    # The plan's check and the sensor-sole suites that need no external files (no OpenSim, CasADi or KiCad)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+      - name: numpy, at the workstation environments' pin
+        run: pip install numpy==2.5.4
+      - name: Plan check and its tests
+        run: |
+          python3 plan/build.py --check
+          python3 plan/test_build.py
+      - name: The plan's map must be up to date
+        run: |
+          python3 plan/build.py
+          git diff --exit-code plan/MAP.md plan/map.canvas
+      - name: Sensor-sole suites that need no external files
+        working-directory: hardware/sensor-sole
+        run: |
+          for t in test_channel_map test_case_store test_compare_results test_forceplate_metrics test_static_ik; do
+            python3 -m unittest discover -s tests -p "$t.py" -v
+          done
+
   pipeline:
     # rehabtwin: unit tests + OpenSim end-to-end round trips against synthetic truth
     runs-on: ubuntu-latest

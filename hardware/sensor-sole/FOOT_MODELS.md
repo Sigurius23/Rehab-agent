@@ -118,8 +118,10 @@ earlier XML query missed it. The subject file's curve is a generic, much weaker 
 ## 4. Contact, and the tasks
 
 **The assumed sole contact** (`sole_sim.ASSUMED_CONTACT_V1`), the same on every foot model. It is **assumed,
-not measured**: it stands in for the sole stack plus the plantar soft tissue until the coupon test gives a
-measured curve.
+not measured**: it stands in for everything between the bones and the floor, that is the plantar soft tissue,
+the shoe and the sensor stack. The coupon test measures only the sensor stack. That is the thinnest of the three
+(about 0.4 mm against a 4 mm midsole and a 4 mm outsole in the KSO Trek), so it cannot give the whole curve on its
+own (section 9).
 - **Law:** each sphere carries p = 100 kPa × (indentation / 3 mm)^1.5 over its grid cell (the Hertz exponent).
   Its stiffness is calibrated numerically in OpenSim, so the law is the same at any spacing.
 - **Smoothing:** constant-contact term 1e-8 and Hertz smoothing 2000 /m, instead of OpenSim's defaults (1e-5 and
@@ -378,8 +380,15 @@ Within these simulations only, and for a passive foot with a prescribed centre o
    - a force-plate comparison of the current foot-to-ground model first (OpenCap LabValidation as first choice);
    - regional plantar pressure, barefoot;
    - foot–insole contact.
-2. **Replace the assumed contact law** with the sole's measured response once the coupon test exists. Keep the
-   assumed law as the comparison's reference.
+2. **Replace the assumed contact law** with measured parts once they exist. Keep the assumed law as the
+   comparison's reference.
+   - The coupon test gives the sensor stack's response. It can also give the compression of the stack on the
+     footbed, if the rig measures it.
+   - The shoe's midsole and outsole need their own compression test.
+   - The plantar soft tissue (heel and forefoot pads) is not measured by any planned test. It would come from
+     published in-vivo measurements, labelled as such.
+   - A law for our sole and shoe describes a person wearing them. It does not describe the people in a dataset
+     recorded in other footwear, such as OpenCap LabValidation.
 3. **Converge the contact spacing** before quoting absolute shares. Not reached at 2.5 mm (5.3), where one
    case already takes 6–12 minutes.
 4. **A muscle-driven tracking simulation** (OpenSim Moco) of the squat on the D'Hondt port, reported separately
