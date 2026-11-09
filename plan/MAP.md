@@ -415,7 +415,13 @@ flowchart LR
 
 ## Inbox
 
-0 unsorted ideas in `plan/inbox.md`; the next session turns each into a note.
+5 unsorted ideas in `plan/inbox.md`; the next session turns each into a note.
+
+- My shoe CAD map (foot-to-last capability map: 20 shoe and last design tools compared by feature; uploaded 2026-11-02 as a workspace zip, not in the repository): add personalised footwear from the foot scan (last, sole, five-toe shoe) as an idea; ask me before committing the files themselves
+- A detailed pass over my research note on fascia, nerve and motor-control models (uploaded 2026-11-04): items beyond the headline recommendations already in the plan
+- A detailed pass over my foot capture and pressure insole research (uploaded 2026-11-02)
+- A detailed pass over my OpenGo open-source alternatives research and its comparison table (uploaded 2026-11-02 and 2026-11-03)
+- The 22 partial or record-only items of the 2026-10-29 knee variable inventory: which become steps
 
 ## Needs your input
 
