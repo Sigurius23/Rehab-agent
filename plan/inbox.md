@@ -11,5 +11,3 @@ clear enough), links it to the pillar it belongs to, and removes the line here. 
 the lines under "Inbox".
 
 ## Inbox
-
-- Research food timing for [[idea-nutrition-body-composition]]: what the evidence says about meal timing, protein spread over the day and intake around training, for muscle and fat change, and how strong each effect is compared with total intake and protein amount (owner, 2026-11-09)

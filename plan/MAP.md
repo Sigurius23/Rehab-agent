@@ -408,9 +408,7 @@ flowchart LR
 
 ## Inbox
 
-1 unsorted idea in `plan/inbox.md`; the next session turns each into a note.
-
-- Research food timing for [[idea-nutrition-body-composition]]: what the evidence says about meal timing, protein spread over the day and intake around training, for muscle and fat change, and how strong each effect is compared with total intake and protein amount (owner, 2026-11-09)
+0 unsorted ideas in `plan/inbox.md`; the next session turns each into a note.
 
 ## Needs your input
 
