@@ -117,6 +117,48 @@ class Plans(unittest.TestCase):
         self.assertTrue(any("s2: open step with no test" in w for w in warns))
 
 
+class Adding(unittest.TestCase):
+    def setUp(self):
+        self.tmp = tempfile.TemporaryDirectory()
+        self.plan = Path(self.tmp.name) / "plan"
+        (self.plan / "nodes").mkdir(parents=True)
+        for k in ("root", "s2"):
+            (self.plan / "nodes" / f"{k}.md").write_text(f"---\n{BASE[k] if k == 'root' else BASE['s2'].replace(chr(10) + 'depends_on:' + chr(10) + '  - \"[[s1]]\"', '')}\n---\n")
+        import add as A
+        self.A = A
+
+    def tearDown(self):
+        self.tmp.cleanup()
+
+    def run_add(self, *args):
+        import contextlib, io
+        with contextlib.redirect_stdout(io.StringIO()):
+            return self.A.main([*args, "--dir", str(self.plan)])
+
+    def test_added_notes_pass_the_check(self):
+        self.assertEqual(self.run_add("idea", "Brain: regions light up", "--serves", "s2", "--area", "neuro",
+                                      "--link", "paper=https://example.org/x"), 0)
+        self.assertEqual(self.run_add("test", "It responds", "--parent", "s2", "--expected", "at most 5 points"), 0)
+        self.assertEqual(self.run_add("decision", "Buy the film", "--blocks", "s2"), 0)
+        notes = {p.stem for p in (self.plan / "nodes").glob("*.md")}
+        self.assertIn("idea-brain-regions-light-up", notes)
+        text = (self.plan / "nodes" / "idea-brain-regions-light-up.md").read_text()
+        self.assertIn("[paper](https://example.org/x)", text)
+        nodes, errs = B.load(self.plan / "nodes")
+        self.assertEqual(errs + B.check(nodes, self.plan.parent)[0], [])
+
+    def test_unknown_reference_and_missing_parent_are_refused(self):
+        import contextlib, io
+        for args in (("idea", "X", "--serves", "nope"), ("step", "Y")):
+            with self.assertRaises(SystemExit), contextlib.redirect_stderr(io.StringIO()):
+                self.run_add(*args)
+
+    def test_inbox_lines_are_listed(self):
+        (self.plan / "inbox.md").write_text("# Inbox\n\nIntro.\n\n## Inbox\n\n- a TRIBE-style brain view\n- \n"
+                                           "- food timing and muscle\n\n## Other\n\n- not this\n")
+        self.assertEqual(B.inbox(self.plan), ["a TRIBE-style brain view", "food timing and muscle"])
+
+
 class RealPlan(unittest.TestCase):
     def test_the_plan_in_this_repository_has_no_errors(self):
         nodes, errs = B.load(HERE / "nodes")

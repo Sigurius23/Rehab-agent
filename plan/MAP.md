@@ -2,7 +2,7 @@
 
 # Plan map
 
-101 notes: 17 goals, 35 steps, 24 tests, 10 ideas, 15 decisions.
+103 notes: 17 goals, 35 steps, 24 tests, 12 ideas, 15 decisions.
 
 ## The engine
 
@@ -13,9 +13,9 @@ flowchart TB
   r --> p0
   p1(["Personalise: the person's own<br/>bones, shape, mass and muscles<br/><i>5 done · 1 blocked · 1 idea · 1 decision</i>"]):::goal_open
   r --> p1
-  p2(["Simulate: joint loads, muscle<br/>forces and contact for this<br/>body<br/><i>4 done · 1 doing · 6 open · 4 ideas · 1 decision</i>"]):::goal_open
+  p2(["Simulate: joint loads, muscle<br/>forces and contact for this<br/>body<br/><i>4 done · 1 doing · 6 open · 5 ideas · 1 decision</i>"]):::goal_open
   r --> p2
-  p3(["Adapt: the twin follows the<br/>person over time<br/><i>2 done · 1 idea</i>"]):::goal_open
+  p3(["Adapt: the twin follows the<br/>person over time<br/><i>2 done · 2 ideas</i>"]):::goal_open
   r --> p3
   p4(["Act: feedback and assistance<br/>from the twin<br/><i>1 done · 2 open · 2 blocked · 1 idea · 4 decisions</i>"]):::goal_open
   r --> p4
@@ -164,49 +164,51 @@ flowchart LR
   n0{{"d-sikidar-account: Create a<br/>SimTK account to download the<br/>Sikidar model?"}}:::decision_open
   n1(["Muscle forces and joint loads for<br/>the person's body"]):::goal_open
   n2(["The simulated foot-to-ground<br/>model, checked against measurement"]):::goal_open
-  n3>"MuJoCo / MyoSuite contact layer,<br/>after a feasibility check"]:::idea_new
-  n4>"Sikidar-Kalyanasundaram foot model<br/>in the comparison"]:::idea_new
-  n5>"Per-toe placement for the five-toe<br/>Synergy foot"]:::idea_new
-  n6>"Many-run uncertainty analysis on<br/>the GPU"]:::idea_new
-  n7(["Simulate: joint loads, muscle<br/>forces and contact for this body"]):::goal_open
-  n8["Knee joint load: scenarios within<br/>one person"]:::step_done
-  n9["Muscle and joint-load numbers from<br/>measured ground forces<br/>tests ○1"]:::step_open
-  n10["Muscle forces and weakness<br/>what-ifs (rehabtwin muscles)"]:::step_done
-  n11["Foot models compared on the same<br/>virtual sole<br/>tests ✗1"]:::step_done
-  n12["Footbed and shoe layers in the<br/>simulation<br/>tests ○1"]:::step_open
-  n13["Dynamic force-plate check: our<br/>sole against OpenCap's spheres<br/>tests ○2"]:::step_doing
-  n14["Quasi-static force-plate check on<br/>OpenCap LabValidation (stage A)<br/>tests ✓1 ✗2"]:::step_done
-  n15["Foot-insole contact against an<br/>in-shoe sensor (stage C)<br/>tests ○1"]:::step_open
-  n16["Regional plantar pressure,<br/>barefoot (stage B)<br/>tests ○1"]:::step_open
-  n17["Why the left/right share fails:<br/>centre of mass or foot contact<br/>tests ○1"]:::step_open
-  n18["Contact spacing converged for<br/>regional shares<br/>tests ○1"]:::step_open
-  n19["Measured ground forces in our own<br/>validation session<br/>tests ○1<br/><i>(Sense)</i>"]:::external
-  n20["The sensor film's measured<br/>response (coupon test)<br/>tests ○1<br/><i>(Sense)</i>"]:::external
-  n0 -. blocks .-> n4
-  n7 --> n1
-  n7 --> n2
-  n3 -.-o n2
-  n4 -.-o n11
-  n5 -.-o n11
-  n6 -.-o n2
-  n1 --> n8
+  n3>"Brain regions lighting up with the<br/>person's movement (a TRIBE<br/>v2-style model)"]:::idea_new
+  n4>"MuJoCo / MyoSuite contact layer,<br/>after a feasibility check"]:::idea_new
+  n5>"Sikidar-Kalyanasundaram foot model<br/>in the comparison"]:::idea_new
+  n6>"Per-toe placement for the five-toe<br/>Synergy foot"]:::idea_new
+  n7>"Many-run uncertainty analysis on<br/>the GPU"]:::idea_new
+  n8(["Simulate: joint loads, muscle<br/>forces and contact for this body"]):::goal_open
+  n9["Knee joint load: scenarios within<br/>one person"]:::step_done
+  n10["Muscle and joint-load numbers from<br/>measured ground forces<br/>tests ○1"]:::step_open
+  n11["Muscle forces and weakness<br/>what-ifs (rehabtwin muscles)"]:::step_done
+  n12["Foot models compared on the same<br/>virtual sole<br/>tests ✗1"]:::step_done
+  n13["Footbed and shoe layers in the<br/>simulation<br/>tests ○1"]:::step_open
+  n14["Dynamic force-plate check: our<br/>sole against OpenCap's spheres<br/>tests ○2"]:::step_doing
+  n15["Quasi-static force-plate check on<br/>OpenCap LabValidation (stage A)<br/>tests ✓1 ✗2"]:::step_done
+  n16["Foot-insole contact against an<br/>in-shoe sensor (stage C)<br/>tests ○1"]:::step_open
+  n17["Regional plantar pressure,<br/>barefoot (stage B)<br/>tests ○1"]:::step_open
+  n18["Why the left/right share fails:<br/>centre of mass or foot contact<br/>tests ○1"]:::step_open
+  n19["Contact spacing converged for<br/>regional shares<br/>tests ○1"]:::step_open
+  n20["Measured ground forces in our own<br/>validation session<br/>tests ○1<br/><i>(Sense)</i>"]:::external
+  n21["The sensor film's measured<br/>response (coupon test)<br/>tests ○1<br/><i>(Sense)</i>"]:::external
+  n0 -. blocks .-> n5
+  n8 --> n1
+  n8 --> n2
+  n3 -.-o n8
+  n4 -.-o n2
+  n5 -.-o n12
+  n6 -.-o n12
+  n7 -.-o n2
   n1 --> n9
-  n19 -. needed by .-> n9
   n1 --> n10
-  n2 --> n11
+  n20 -. needed by .-> n10
+  n1 --> n11
   n2 --> n12
   n2 --> n13
-  n14 -. needed by .-> n13
   n2 --> n14
+  n15 -. needed by .-> n14
   n2 --> n15
-  n12 -. needed by .-> n15
-  n20 -. needed by .-> n15
   n2 --> n16
-  n18 -. needed by .-> n16
+  n13 -. needed by .-> n16
+  n21 -. needed by .-> n16
   n2 --> n17
-  n14 -. needed by .-> n17
+  n19 -. needed by .-> n17
   n2 --> n18
-  n11 -. needed by .-> n18
+  n15 -. needed by .-> n18
+  n2 --> n19
+  n12 -. needed by .-> n19
   classDef goal_open fill:#e1d5f5,stroke:#555,color:#111
   classDef goal_done fill:#c8e6c9,stroke:#555,color:#111
   classDef step_open fill:#ffffff,stroke:#555,color:#111
@@ -235,10 +237,12 @@ flowchart LR
   n0["Progress across sessions, with<br/>detectability"]:::step_done
   n1["Strength calibrated from<br/>dynamometry"]:::step_done
   n2>"Re-personalise automatically from<br/>each session's measurements"]:::idea_new
-  n3(["Adapt: the twin follows the person<br/>over time"]):::goal_open
-  n3 --> n0
-  n3 --> n1
-  n2 -.-o n3
+  n3>"Muscle and fat change with what<br/>and when the person eats"]:::idea_new
+  n4(["Adapt: the twin follows the person<br/>over time"]):::goal_open
+  n4 --> n0
+  n4 --> n1
+  n2 -.-o n4
+  n3 -.-o n4
   classDef goal_open fill:#e1d5f5,stroke:#555,color:#111
   classDef goal_done fill:#c8e6c9,stroke:#555,color:#111
   classDef step_open fill:#ffffff,stroke:#555,color:#111
@@ -346,6 +350,10 @@ flowchart LR
   classDef external fill:#f5f5f5,stroke:#aaa,color:#777,stroke-dasharray: 2 2
 ```
 
+## Inbox
+
+0 unsorted ideas in `plan/inbox.md`; the next session turns each into a note.
+
 ## Needs your input
 
 - D-01: open decision: iPhone: fixed tripod viewpoint or moving main camera?
@@ -449,7 +457,9 @@ Open steps whose dependencies are done and that no open decision blocks.
 | [[idea-assurance-case]] | new | The validation evidence as an assurance case |
 | [[idea-auto-repersonalise]] | new | Re-personalise automatically from each session's measurements |
 | [[idea-balance-board]] | new | A consumer balance board for our own quiet-standing measurements |
+| [[idea-brain-activity]] | new | Brain regions lighting up with the person's movement (a TRIBE v2-style model) |
 | [[idea-mujoco]] | new | MuJoCo / MyoSuite contact layer, after a feasibility check |
+| [[idea-nutrition-body-composition]] | new | Muscle and fat change with what and when the person eats |
 | [[idea-sikidar]] | new | Sikidar-Kalyanasundaram foot model in the comparison |
 | [[idea-synergy-toes]] | new | Per-toe placement for the five-toe Synergy foot |
 | [[idea-t1-candidate]] | new | Higher-resolution T1 sole candidate |

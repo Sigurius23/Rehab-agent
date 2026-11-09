@@ -21,6 +21,21 @@ Open the `plan/` folder as a vault. Wikilinks, backlinks and the graph view work
 `map.canvas` opens as a canvas, and `MAP.md` renders its diagram. Sketch freely in Excalidraw, but keep the
 structure in the notes, so the map stays true.
 
+## Adding to the plan
+
+Three ways, from quickest to most structured:
+1. **The inbox.** Write one line per idea in `plan/inbox.md`, under "Inbox", in plain words, with a link if you have
+   one. Any editor works: Obsidian, GitHub's web editor, a phone. The next AI session turns each line into a note
+   and removes it. `MAP.md` lists the lines until then.
+2. **Obsidian templates.** In Obsidian's settings, turn on the core Templates plugin and set its folder to
+   `templates`. Then "Insert template" in a new note under `nodes/` gives an idea, step, test or decision with the
+   header filled in. Set its links (`serves`, `parent`, `blocks`) and run the check.
+3. **The command line,** for sessions and terminals: `python3 plan/add.py idea "Title" --serves pillar-simulate
+   --area neuro --link "Paper=https://..." --text "Why it would help."` It names the note, refuses links to notes
+   that don't exist, then checks the plan and redraws the map. `python3 plan/add.py --help` lists every option.
+
+You can also just tell an AI session what to add, in your own words.
+
 ## Node types
 
 | Type | What it is | Key fields |
@@ -59,7 +74,8 @@ Standard library only.
 - Read `plan/MAP.md` first: what is ready, what needs the owner's input.
 - When work changes the status of a step or test, update its note, then run `python3 plan/build.py` and fix every
   error before committing. Commit the notes with the regenerated `MAP.md` and `map.canvas`.
-- New ideas go in as `idea` notes. They become steps only when they have a test.
+- New ideas go in as `idea` notes (`plan/add.py`). They become steps only when they have a test.
+- Empty `plan/inbox.md`: turn each line under "Inbox" into a note, link it to its pillar, and remove the line.
 - Decisions are the owner's: add a `decision` note and ask, never decide.
 - Nothing private in the notes while the repository is public: no prices, supplier contacts, enquiry drafts or
   unpublished assessments.

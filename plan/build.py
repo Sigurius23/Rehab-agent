@@ -9,7 +9,8 @@ starts with front matter between two `---` lines:
     type: goal | step | test | idea | decision
     title: one line
     status: (by type, see STATUS below)
-    area: project | pipeline | person-model | cues | suit | sole | forces | assistance | catalog
+    area: project | pipeline | person-model | cues | suit | sole | forces | assistance | catalog | neuro |
+          nutrition
     parent: "[[note]]"                  goals (except the root), steps and tests
     depends_on:                         steps: steps that must be done first
       - "[[note]]"
@@ -48,7 +49,8 @@ STATUS = {
     "idea": ("new", "promoted", "dropped"),
     "decision": ("open", "decided"),
 }
-AREAS = ("project", "pipeline", "person-model", "cues", "suit", "sole", "forces", "assistance", "catalog")
+AREAS = ("project", "pipeline", "person-model", "cues", "suit", "sole", "forces", "assistance", "catalog", "neuro",
+         "nutrition")
 PARENT_TYPES = {"goal": ("goal",), "step": ("goal", "step"), "test": ("step", "goal")}
 FINISHED_TESTS = ("passed", "failed", "mixed")
 LINK = re.compile(r"\[\[([^\]|#]+)(?:#[^\]|]*)?(?:\|[^\]]*)?\]\]")
@@ -236,6 +238,20 @@ def check(nodes, repo_root):
             if s == "open":
                 needs.append(f"{nid}: open decision: {m.get('question', '')}")
     return errs, warns, needs, children, roots
+
+
+def inbox(plan_dir):
+    """Unsorted ideas: the `- ` lines under the inbox's `## Inbox` heading."""
+    p = Path(plan_dir) / "inbox.md"
+    if not p.exists():
+        return []
+    items, on = [], False
+    for line in p.read_text(encoding="utf-8").splitlines():
+        if line.startswith("## "):
+            on = line.strip().lower() == "## inbox"
+        elif on and line.startswith("- ") and line[2:].strip():
+            items.append(line[2:].strip())
+    return items
 
 
 def ready(nodes):
@@ -463,6 +479,9 @@ def write_map(nodes, children, roots, errs, warns, needs, out_dir):
     for p in top:
         md += [f"## {nodes[p]['meta'].get('title', p)}", "", "```mermaid", mermaid_pillar(nodes, children, roots, p),
                "```", ""]
+    unsorted = inbox(out_dir)
+    md += ["## Inbox", "", f"{len(unsorted)} unsorted ideas in `plan/inbox.md`; the next session turns each into a note.",
+           ""] + [f"- {x}" for x in unsorted] + ([""] if unsorted else [])
     md += ["## Needs your input", ""]
     md += [f"- {x}" for x in needs] or ["- nothing"]
     md += ["", "## Ready to work on now", "", "Open steps whose dependencies are done and that no open decision "
