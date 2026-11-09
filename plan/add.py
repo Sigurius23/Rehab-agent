@@ -38,9 +38,10 @@ def quote(v):
 
 
 def make(kind, title, area, parent=None, serves=(), blocks=(), depends_on=(), expected=None, question=None,
-         text="", links=(), source=None, today=None):
+         text="", links=(), source=None, today=None, decided=None, recorded_in=None):
     today = today or datetime.date.today().isoformat()
-    fm = [f"type: {quote(kind)}", f"title: {quote(title)}", f"status: {quote(FIRST_STATUS[kind])}",
+    status = "decided" if kind == "decision" and decided else FIRST_STATUS[kind]
+    fm = [f"type: {quote(kind)}", f"title: {quote(title)}", f"status: {quote(status)}",
           f"area: {quote(area)}"]
     if parent:
         fm.append(f'parent: "[[{parent}]]"')
@@ -54,6 +55,9 @@ def make(kind, title, area, parent=None, serves=(), blocks=(), depends_on=(), ex
         fm.append(f"expected: {quote(expected)}")
     if kind == "decision":
         fm.append(f"question: {quote(question or title.rstrip('?') + '?')}")
+        if decided:
+            fm.append(f"decided: {quote(decided)}")
+            fm.append(f"recorded_in: {quote(recorded_in or 'owner ' + today)}")
     fm += [f"source: {quote(source or 'owner ' + today)}", f"updated: {quote(today)}"]
     body = [f"# {title}", ""]
     if text:
@@ -78,6 +82,8 @@ def main(argv=None):
     ap.add_argument("--depends-on", nargs="*", default=[])
     ap.add_argument("--expected", help="tests: the expected result, written before the test runs")
     ap.add_argument("--question", help="decisions: the question (default: the title)")
+    ap.add_argument("--decided", help="decisions already taken: the answer (the note is then `decided`)")
+    ap.add_argument("--recorded-in", help="decisions: where the answer was given")
     ap.add_argument("--text", default="", help="the note's body")
     ap.add_argument("--link", action="append", default=[], metavar="NAME=URL", help="a resource link (repeatable)")
     ap.add_argument("--source")
@@ -98,7 +104,8 @@ def main(argv=None):
         if ref not in known:
             ap.error(f"no note named {ref!r} in {plan / 'nodes'}")
     path.write_text(make(a.kind, a.title, a.area, a.parent if a.kind != "idea" else None, a.serves, a.blocks,
-                         a.depends_on, a.expected, a.question, a.text, a.link, a.source), encoding="utf-8")
+                         a.depends_on, a.expected, a.question, a.text, a.link, a.source, decided=a.decided,
+                         recorded_in=a.recorded_in), encoding="utf-8")
     print(f"wrote {path.relative_to(plan.parent)}")
     return B.main(["--dir", str(plan)])
 

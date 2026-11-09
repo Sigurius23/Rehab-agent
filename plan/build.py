@@ -480,7 +480,8 @@ def write_map(nodes, children, roots, errs, warns, needs, out_dir):
         md += [f"## {nodes[p]['meta'].get('title', p)}", "", "```mermaid", mermaid_pillar(nodes, children, roots, p),
                "```", ""]
     unsorted = inbox(out_dir)
-    md += ["## Inbox", "", f"{len(unsorted)} unsorted ideas in `plan/inbox.md`; the next session turns each into a note.",
+    md += ["## Inbox", "", f"{len(unsorted)} unsorted {'idea' if len(unsorted) == 1 else 'ideas'} in `plan/inbox.md`; "
+           "the next session turns each into a note.",
            ""] + [f"- {x}" for x in unsorted] + ([""] if unsorted else [])
     md += ["## Needs your input", ""]
     md += [f"- {x}" for x in needs] or ["- nothing"]
@@ -491,6 +492,9 @@ def write_map(nodes, children, roots, errs, warns, needs, out_dir):
     md += [row(n, "status", "fresh", "expected", "result") for n in by_type["test"]]
     md += ["", "## Open decisions", "", "| Decision | Question | Blocks |", "|---|---|---|"]
     md += [row(n, "question", "blocks") for n in by_type["decision"] if nodes[n]["meta"].get("status") == "open"]
+    md += ["", "## Decisions taken", "", "| Decision | Question | Answer | Where |", "|---|---|---|---|"]
+    md += [row(n, "question", "decided", "recorded_in") for n in by_type["decision"]
+           if nodes[n]["meta"].get("status") == "decided"]
     md += ["", "## Ideas", "", "| Idea | Status | Title |", "|---|---|---|"]
     md += [row(n, "status", "title") for n in by_type["idea"]]
     md += ["", "## Check", "", f"{len(errs)} errors, {len(warns)} warnings."]

@@ -2,22 +2,22 @@
 
 # Plan map
 
-108 notes: 17 goals, 35 steps, 24 tests, 17 ideas, 15 decisions.
+137 notes: 17 goals, 37 steps, 26 tests, 38 ideas, 19 decisions.
 
 ## The engine
 
 ```mermaid
 flowchart TB
   r(["A full-body digital twin that<br/>personalises to each person and adapts<br/>as they change"]):::goal_open
-  p0(["Sense: measure the person's<br/>movement, forces and body<br/><i>1 done · 7 open · 1 blocked · 2 ideas · 3 decisions</i>"]):::goal_open
+  p0(["Sense: measure the person's<br/>movement, forces and body<br/><i>1 done · 7 open · 1 blocked · 8 ideas · 3 decisions</i>"]):::goal_open
   r --> p0
-  p1(["Personalise: the person's own<br/>bones, shape, mass and muscles<br/><i>5 done · 1 blocked · 2 ideas · 1 decision</i>"]):::goal_open
+  p1(["Personalise: the person's own<br/>bones, shape, mass and muscles<br/><i>5 done · 2 open · 1 blocked · 6 ideas · 1 decision</i>"]):::goal_open
   r --> p1
-  p2(["Simulate: joint loads, muscle<br/>forces and contact for this<br/>body<br/><i>4 done · 1 doing · 6 open · 9 ideas · 1 decision</i>"]):::goal_open
+  p2(["Simulate: joint loads, muscle<br/>forces and contact for this<br/>body<br/><i>4 done · 1 doing · 6 open · 19 ideas · 1 decision</i>"]):::goal_open
   r --> p2
   p3(["Adapt: the twin follows the<br/>person over time<br/><i>2 done · 2 ideas</i>"]):::goal_open
   r --> p3
-  p4(["Act: feedback and assistance<br/>from the twin<br/><i>1 done · 2 open · 2 blocked · 1 idea · 4 decisions</i>"]):::goal_open
+  p4(["Act: feedback and assistance<br/>from the twin<br/><i>1 done · 2 open · 2 blocked · 2 ideas · 4 decisions</i>"]):::goal_open
   r --> p4
   p5(["How we work: tests, CI and<br/>standing rules<br/><i>2 open</i>"]):::goal_open
   r --> p5
@@ -54,42 +54,54 @@ flowchart LR
   n5(["Joint angles measured against a<br/>reference, per joint and movement"]):::goal_open
   n6(["A pressure-sensing sole whose<br/>readings are validated against<br/>measurement"]):::goal_open
   n7>"A consumer balance board for our<br/>own quiet-standing measurements"]:::idea_new
-  n8>"Higher-resolution T1 sole<br/>candidate"]:::idea_new
-  n9["Video kinematics on OpenCap<br/>LabValidation against marker<br/>motion capture<br/>tests ○1"]:::step_open
-  n10["One volunteer, one exercise,<br/>recorded with our own hardware<br/>tests ○1"]:::step_open
-  n11(["Sense: measure the person's<br/>movement, forces and body"]):::goal_open
-  n12["Boards designed, routed and<br/>checked: EU 37, 42, 46 and a<br/>personal foot, both sides<br/>tests ✓1"]:::step_done
-  n13["The sensor film's measured<br/>response (coupon test)<br/>tests ○1"]:::step_open
-  n14["Flex boards fabricated"]:::step_blocked
-  n15["A printed prototype tried on a<br/>real foot<br/>tests ○1"]:::step_open
-  n16["Boards and the self-test model<br/>rebuild identically on another<br/>machine<br/>tests ○1"]:::step_open
-  n17["SlimeVR posture signals against<br/>motion capture<br/>tests ○1"]:::step_open
-  n18["A clinician reviews the cue rules,<br/>per movement<br/><i>(Act)</i>"]:::external
-  n19["Muscle and joint-load numbers from<br/>measured ground forces<br/>tests ○1<br/><i>(Simulate)</i>"]:::external
-  n20["Foot-insole contact against an<br/>in-shoe sensor (stage C)<br/>tests ○1<br/><i>(Simulate)</i>"]:::external
-  n0 -. blocks .-> n10
-  n1 -. blocks .-> n14
-  n2 -. blocks .-> n15
-  n2 -. blocks .-> n13
+  n8>"Breathing: rate and chest<br/>expansion"]:::idea_new
+  n9>"Gait and balance metrics: walking<br/>and sway"]:::idea_new
+  n10>"Head, neck (CVA) and scapula<br/>posture metrics"]:::idea_new
+  n11>"Personalise for movement, not only<br/>shape (the foot-ground interface<br/>as a model)"]:::idea_new
+  n12>"Pain during the movement, recorded<br/>with the session"]:::idea_new
+  n13>"Phone sensors alone, once the twin<br/>is built"]:::idea_new
+  n14>"Higher-resolution T1 sole<br/>candidate"]:::idea_new
+  n15["Video kinematics on OpenCap<br/>LabValidation against marker<br/>motion capture<br/>tests ○1"]:::step_open
+  n16["One volunteer, one exercise,<br/>recorded with our own hardware<br/>tests ○1"]:::step_open
+  n17(["Sense: measure the person's<br/>movement, forces and body"]):::goal_open
+  n18["Boards designed, routed and<br/>checked: EU 37, 42, 46 and a<br/>personal foot, both sides<br/>tests ✓1"]:::step_done
+  n19["The sensor film's measured<br/>response (coupon test)<br/>tests ○1"]:::step_open
+  n20["Flex boards fabricated"]:::step_blocked
+  n21["A printed prototype tried on a<br/>real foot<br/>tests ○1"]:::step_open
+  n22["Boards and the self-test model<br/>rebuild identically on another<br/>machine<br/>tests ○1"]:::step_open
+  n23["SlimeVR posture signals against<br/>motion capture<br/>tests ○1"]:::step_open
+  n24["A clinician reviews the cue rules,<br/>per movement<br/><i>(Act)</i>"]:::external
+  n25["Muscle and joint-load numbers from<br/>measured ground forces<br/>tests ○1<br/><i>(Simulate)</i>"]:::external
+  n26["Foot-insole contact against an<br/>in-shoe sensor (stage C)<br/>tests ○1<br/><i>(Simulate)</i>"]:::external
+  n0 -. blocks .-> n16
+  n1 -. blocks .-> n20
+  n2 -. blocks .-> n21
+  n2 -. blocks .-> n19
   n4 --> n3
-  n10 -. needed by .-> n3
-  n11 --> n4
-  n11 --> n5
+  n16 -. needed by .-> n3
+  n17 --> n4
+  n17 --> n5
   n4 --> n6
   n7 -.-o n4
-  n8 -.-o n6
-  n5 --> n9
-  n5 --> n10
-  n6 --> n12
-  n6 --> n13
-  n6 --> n14
-  n15 -. needed by .-> n14
-  n6 --> n15
-  n6 --> n16
-  n5 --> n17
-  n9 -. needed by .-> n18
-  n3 -. needed by .-> n19
-  n13 -. needed by .-> n20
+  n8 -.-o n17
+  n9 -.-o n17
+  n10 -.-o n17
+  n11 -.-o n6
+  n12 -.-o n17
+  n13 -.-o n17
+  n14 -.-o n6
+  n5 --> n15
+  n5 --> n16
+  n6 --> n18
+  n6 --> n19
+  n6 --> n20
+  n21 -. needed by .-> n20
+  n6 --> n21
+  n6 --> n22
+  n5 --> n23
+  n15 -. needed by .-> n24
+  n3 -. needed by .-> n25
+  n19 -. needed by .-> n26
   classDef goal_open fill:#e1d5f5,stroke:#555,color:#111
   classDef goal_done fill:#c8e6c9,stroke:#555,color:#111
   classDef step_open fill:#ffffff,stroke:#555,color:#111
@@ -119,25 +131,37 @@ flowchart LR
   n1(["A Tier-A personal twin from<br/>imaging"]):::goal_open
   n2(["Twin layers from everyday<br/>measurements (Tier C and B)"]):::goal_open
   n3>"Whole-body fascia, starting with<br/>the Davis IT-band model"]:::idea_new
-  n4>"Thoracolumbar full-body model, for<br/>a later spine-load study"]:::idea_new
-  n5["The person's own knee, leg and<br/>shoulder alignment, with clinician<br/>safety flags"]:::step_done
-  n6["Bones from body shape (SKEL joint<br/>centres to the OpenSim scale set)"]:::step_done
-  n7["Muscle capacity from body size,<br/>age and sex, DXA or imaging, and<br/>strength from dynamometry"]:::step_done
-  n8["One body across sessions: the<br/>person folder"]:::step_done
-  n9["Body surface from depth, and mass<br/>distribution from DXA"]:::step_done
-  n10(["Personalise: the person's own<br/>bones, shape, mass and muscles"]):::goal_open
-  n11["First Tier-A subject: a<br/>personalised model from MRI or CT"]:::step_blocked
-  n0 -. blocks .-> n11
-  n10 --> n1
-  n10 --> n2
+  n4>"Fat distribution from photos and<br/>the body surface, wired into the<br/>twin"]:::idea_new
+  n5>"Photo-based against depth-assisted<br/>foot capture, compared<br/>experimentally"]:::idea_new
+  n6>"A parameter registry: provenance<br/>labels, uncertainty and permitted<br/>uses"]:::idea_new
+  n7>"A smart scale for muscle and fat<br/>distribution"]:::idea_new
+  n8>"Thoracolumbar full-body model, for<br/>a later spine-load study"]:::idea_new
+  n9["The person's own knee, leg and<br/>shoulder alignment, with clinician<br/>safety flags"]:::step_done
+  n10["Bones from body shape (SKEL joint<br/>centres to the OpenSim scale set)"]:::step_done
+  n11["Muscle capacity from body size,<br/>age and sex, DXA or imaging, and<br/>strength from dynamometry"]:::step_done
+  n12["One body across sessions: the<br/>person folder"]:::step_done
+  n13["Body surface from depth, and mass<br/>distribution from DXA"]:::step_done
+  n14(["Personalise: the person's own<br/>bones, shape, mass and muscles"]):::goal_open
+  n15["Torsion, anteversion and<br/>personalised bone geometry as<br/>inferred values with provenance<br/>and uncertainty<br/>tests ○1"]:::step_open
+  n16["A personalised multi-segment foot,<br/>fitted separately for each foot<br/>tests ○1"]:::step_open
+  n17["First Tier-A subject: a<br/>personalised model from MRI or CT"]:::step_blocked
+  n0 -. blocks .-> n17
+  n14 --> n1
+  n14 --> n2
   n3 -.-o n2
   n4 -.-o n2
-  n2 --> n5
-  n2 --> n6
-  n2 --> n7
-  n2 --> n8
+  n5 -.-o n16
+  n6 -.-o n2
+  n7 -.-o n2
+  n8 -.-o n2
   n2 --> n9
-  n1 --> n11
+  n2 --> n10
+  n2 --> n11
+  n2 --> n12
+  n2 --> n13
+  n2 --> n15
+  n2 --> n16
+  n1 --> n17
   classDef goal_open fill:#e1d5f5,stroke:#555,color:#111
   classDef goal_done fill:#c8e6c9,stroke:#555,color:#111
   classDef step_open fill:#ffffff,stroke:#555,color:#111
@@ -167,58 +191,78 @@ flowchart LR
   n1(["Muscle forces and joint loads for<br/>the person's body"]):::goal_open
   n2(["The simulated foot-to-ground<br/>model, checked against measurement"]):::goal_open
   n3>"Brain regions lighting up with the<br/>person's movement (a TRIBE<br/>v2-style model)"]:::idea_new
-  n4>"Validate muscle activations<br/>against EMG (Gait120)"]:::idea_new
-  n5>"Compare the twin's muscle<br/>estimates with SCONE and<br/>MuscleMimic controllers"]:::idea_new
-  n6>"MuJoCo / MyoSuite contact layer,<br/>after a feasibility check"]:::idea_new
-  n7>"A neural motor-control chain:<br/>brain-inspired controller, spinal<br/>cord and motor units, then muscles"]:::idea_new
-  n8>"Peripheral nerve layer: nerve<br/>fibre and bundle models"]:::idea_new
-  n9>"Sikidar-Kalyanasundaram foot model<br/>in the comparison"]:::idea_new
-  n10>"Per-toe placement for the five-toe<br/>Synergy foot"]:::idea_new
-  n11>"Many-run uncertainty analysis on<br/>the GPU"]:::idea_new
-  n12(["Simulate: joint loads, muscle<br/>forces and contact for this body"]):::goal_open
-  n13["Knee joint load: scenarios within<br/>one person"]:::step_done
-  n14["Muscle and joint-load numbers from<br/>measured ground forces<br/>tests ○1"]:::step_open
-  n15["Muscle forces and weakness<br/>what-ifs (rehabtwin muscles)"]:::step_done
-  n16["Foot models compared on the same<br/>virtual sole<br/>tests ✗1"]:::step_done
-  n17["Footbed and shoe layers in the<br/>simulation<br/>tests ○1"]:::step_open
-  n18["Dynamic force-plate check: our<br/>sole against OpenCap's spheres<br/>tests ○2"]:::step_doing
-  n19["Quasi-static force-plate check on<br/>OpenCap LabValidation (stage A)<br/>tests ✓1 ✗2"]:::step_done
-  n20["Foot-insole contact against an<br/>in-shoe sensor (stage C)<br/>tests ○1"]:::step_open
-  n21["Regional plantar pressure,<br/>barefoot (stage B)<br/>tests ○1"]:::step_open
-  n22["Why the left/right share fails:<br/>centre of mass or foot contact<br/>tests ○1"]:::step_open
-  n23["Contact spacing converged for<br/>regional shares<br/>tests ○1"]:::step_open
-  n24["Measured ground forces in our own<br/>validation session<br/>tests ○1<br/><i>(Sense)</i>"]:::external
-  n25["The sensor film's measured<br/>response (coupon test)<br/>tests ○1<br/><i>(Sense)</i>"]:::external
-  n0 -. blocks .-> n9
-  n12 --> n1
-  n12 --> n2
-  n3 -.-o n12
+  n4>"Cumulative load per distance (a<br/>per-mile view)"]:::idea_new
+  n5>"EMG-informed muscle forces,<br/>reflexes and spasticity"]:::idea_new
+  n6>"External load scenarios: how much,<br/>and where it is carried"]:::idea_new
+  n7>"Validate muscle activations<br/>against EMG (Gait120)"]:::idea_new
+  n8>"Insole left/right load split<br/>against force plates, and its<br/>effect on knee load"]:::idea_new
+  n9>"Knee detail: medial-lateral<br/>contact split, Q-angle and patella<br/>height, tibial rotation"]:::idea_new
+  n10>"Ligament loads and cartilage and<br/>bone stress (finite elements)"]:::idea_new
+  n11>"Metabolic cost"]:::idea_new
+  n12>"More joint loads: hip, ankle,<br/>spine (L4/L5), shoulder and elbow"]:::idea_new
+  n13>"Compare the twin's muscle<br/>estimates with SCONE and<br/>MuscleMimic controllers"]:::idea_new
+  n14>"MuJoCo / MyoSuite contact layer,<br/>after a feasibility check"]:::idea_new
+  n15>"Muscle stress and a stretch map"]:::idea_new
+  n16>"A neural motor-control chain:<br/>brain-inspired controller, spinal<br/>cord and motor units, then muscles"]:::idea_new
+  n17>"Peripheral nerve layer: nerve<br/>fibre and bundle models"]:::idea_new
+  n18>"Predictive re-simulation: how<br/>movement adapts after a change"]:::idea_new
+  n19>"Sikidar-Kalyanasundaram foot model<br/>in the comparison"]:::idea_new
+  n20>"Per-toe placement for the five-toe<br/>Synergy foot"]:::idea_new
+  n21>"Many-run uncertainty analysis on<br/>the GPU"]:::idea_new
+  n22(["Simulate: joint loads, muscle<br/>forces and contact for this body"]):::goal_open
+  n23["Knee joint load: scenarios within<br/>one person"]:::step_done
+  n24["Muscle and joint-load numbers from<br/>measured ground forces<br/>tests ○1"]:::step_open
+  n25["Muscle forces and weakness<br/>what-ifs (rehabtwin muscles)"]:::step_done
+  n26["Foot models compared on the same<br/>virtual sole<br/>tests ✗1"]:::step_done
+  n27["Footbed and shoe layers in the<br/>simulation<br/>tests ○1"]:::step_open
+  n28["Dynamic force-plate check: our<br/>sole against OpenCap's spheres<br/>tests ○2"]:::step_doing
+  n29["Quasi-static force-plate check on<br/>OpenCap LabValidation (stage A)<br/>tests ✓1 ✗2"]:::step_done
+  n30["Foot-insole contact against an<br/>in-shoe sensor (stage C)<br/>tests ○1"]:::step_open
+  n31["Regional plantar pressure,<br/>barefoot (stage B)<br/>tests ○1"]:::step_open
+  n32["Why the left/right share fails:<br/>centre of mass or foot contact<br/>tests ○1"]:::step_open
+  n33["Contact spacing converged for<br/>regional shares<br/>tests ○1"]:::step_open
+  n34["Measured ground forces in our own<br/>validation session<br/>tests ○1<br/><i>(Sense)</i>"]:::external
+  n35["The sensor film's measured<br/>response (coupon test)<br/>tests ○1<br/><i>(Sense)</i>"]:::external
+  n0 -. blocks .-> n19
+  n22 --> n1
+  n22 --> n2
+  n3 -.-o n22
   n4 -.-o n1
   n5 -.-o n1
-  n6 -.-o n2
-  n7 -.-o n12
-  n8 -.-o n12
-  n9 -.-o n16
-  n10 -.-o n16
-  n11 -.-o n2
-  n1 --> n13
-  n1 --> n14
-  n24 -. needed by .-> n14
-  n1 --> n15
-  n2 --> n16
-  n2 --> n17
-  n2 --> n18
-  n19 -. needed by .-> n18
-  n2 --> n19
-  n2 --> n20
-  n17 -. needed by .-> n20
-  n25 -. needed by .-> n20
-  n2 --> n21
-  n23 -. needed by .-> n21
-  n2 --> n22
-  n19 -. needed by .-> n22
-  n2 --> n23
-  n16 -. needed by .-> n23
+  n6 -.-o n1
+  n7 -.-o n1
+  n8 -.-o n1
+  n9 -.-o n1
+  n10 -.-o n1
+  n11 -.-o n22
+  n12 -.-o n1
+  n13 -.-o n1
+  n14 -.-o n2
+  n15 -.-o n1
+  n16 -.-o n22
+  n17 -.-o n22
+  n18 -.-o n22
+  n19 -.-o n26
+  n20 -.-o n26
+  n21 -.-o n2
+  n1 --> n23
+  n1 --> n24
+  n34 -. needed by .-> n24
+  n1 --> n25
+  n2 --> n26
+  n2 --> n27
+  n2 --> n28
+  n29 -. needed by .-> n28
+  n2 --> n29
+  n2 --> n30
+  n27 -. needed by .-> n30
+  n35 -. needed by .-> n30
+  n2 --> n31
+  n33 -. needed by .-> n31
+  n2 --> n32
+  n29 -. needed by .-> n32
+  n2 --> n33
+  n26 -. needed by .-> n33
   classDef goal_open fill:#e1d5f5,stroke:#555,color:#111
   classDef goal_done fill:#c8e6c9,stroke:#555,color:#111
   classDef step_open fill:#ffffff,stroke:#555,color:#111
@@ -290,25 +334,27 @@ flowchart LR
   n9(["Exoskeleton assistance sized and<br/>tuned from the person's twin"]):::goal_open
   n10(["Haptic cues reach the body<br/>reliably"]):::goal_open
   n11>"The validation evidence as an<br/>assurance case"]:::idea_new
-  n12(["Act: feedback and assistance from<br/>the twin"]):::goal_open
-  n13["BLE write to SenseShift on a bench<br/>ESP32<br/>tests ○1"]:::step_open
-  n14["Video kinematics on OpenCap<br/>LabValidation against marker<br/>motion capture<br/>tests ○1<br/><i>(Sense)</i>"]:::external
+  n12>"Exercise recommendations from the<br/>person's twin"]:::idea_new
+  n13(["Act: feedback and assistance from<br/>the twin"]):::goal_open
+  n14["BLE write to SenseShift on a bench<br/>ESP32<br/>tests ○1"]:::step_open
+  n15["Video kinematics on OpenCap<br/>LabValidation against marker<br/>motion capture<br/>tests ○1<br/><i>(Sense)</i>"]:::external
   n0 -. blocks .-> n3
   n1 -. blocks .-> n6
   n2 -. blocks .-> n3
   n8 --> n3
-  n14 -. needed by .-> n3
-  n4 -. blocks .-> n13
+  n15 -. needed by .-> n3
+  n4 -. blocks .-> n14
   n9 --> n5
   n7 -. needed by .-> n5
   n9 --> n6
   n5 -. needed by .-> n6
   n9 --> n7
-  n12 --> n8
-  n12 --> n9
-  n12 --> n10
+  n13 --> n8
+  n13 --> n9
+  n13 --> n10
   n11 -.-o n8
-  n10 --> n13
+  n12 -.-o n13
+  n10 --> n14
   classDef goal_open fill:#e1d5f5,stroke:#555,color:#111
   classDef goal_done fill:#c8e6c9,stroke:#555,color:#111
   classDef step_open fill:#ffffff,stroke:#555,color:#111
@@ -362,7 +408,9 @@ flowchart LR
 
 ## Inbox
 
-0 unsorted ideas in `plan/inbox.md`; the next session turns each into a note.
+1 unsorted idea in `plan/inbox.md`; the next session turns each into a note.
+
+- Research food timing for [[idea-nutrition-body-composition]]: what the evidence says about meal timing, protein spread over the day and intake around training, for muscle and fat change, and how strong each effect is compared with total intake and protein amount (owner, 2026-11-09)
 
 ## Needs your input
 
@@ -377,12 +425,14 @@ flowchart LR
 - D-10: open decision: Gravity reference for monocular captures?
 - D-11: open decision: Monocular front-end: HSMR/SKEL, OpenCap Monocular or SAM4Dcap?
 - d-fabricator-enquiry: open decision: Send the flex fabrication enquiry?
+- d-moticon-enquiry: open decision: Send the drafted Moticon quote request (bilateral raw data, sensor geometry, calibration, SDK terms)?
 - d-prototype-materials: open decision: Buy the materials for the printed prototype and the coupon test?
 - d-repo-visibility: open decision: Keep rehab-agent public, or make it private?
 - d-sikidar-account: open decision: Create a SimTK account to download the Sikidar model?
 - d-suit-bench-hardware: open decision: Buy one ESP32 and vibration motors for the BLE bench test?
 - kin-labvalidation: priority-1 step needs a stop rule (a number, a date, an owner)
 - sole-physical-prototype: priority-1 step needs a stop rule (a number, a date, an owner)
+- t-bone-geometry: no expected result: write it before the test runs
 - t-coupon: no expected result: write it before the test runs
 - t-exo-assist: no expected result: write it before the test runs
 - t-footbed: no expected result: write it before the test runs
@@ -391,6 +441,7 @@ flowchart LR
 - t-kin-labvalidation: no expected result: write it before the test runs
 - t-kin-volunteer: no expected result: write it before the test runs
 - t-loads-measured-forces: no expected result: write it before the test runs
+- t-personalised-foot: no expected result: write it before the test runs
 - t-prototype-press: no expected result: write it before the test runs
 - t-regional: no expected result: write it before the test runs
 - t-slimevr: no expected result: write it before the test runs
@@ -409,12 +460,15 @@ Open steps whose dependencies are done and that no open decision blocks.
 - [[sole-share-diagnostic]]: Why the left/right share fails: centre of mass or foot contact
 - [[sole-spacing-converge]]: Contact spacing converged for regional shares
 - [[suit-slimevr-validation]]: SlimeVR posture signals against motion capture
+- [[twin-bone-geometry]]: Torsion, anteversion and personalised bone geometry as inferred values with provenance and uncertainty
+- [[twin-personalised-foot]]: A personalised multi-segment foot, fitted separately for each foot
 
 ## Tests
 
 | Test | Status | Fresh | Expected | Result |
 |---|---|---|---|---|
 | [[t-boards-checker]] | passed | n/a | All eight boards pass DRC, the region map traced through the copper, numbering, coverlay and provenance | All eight pass. Passing is not a release for fabrication |
+| [[t-bone-geometry]] | planned |  |  |  |
 | [[t-ci-suites]] | planned |  | On every push, CI runs test_channel_map, test_case_store, test_compare_results, plan/test_build and plan/build.py --check, and all pass |  |
 | [[t-claude-md-fresh-session]] | planned |  | A fresh session given only a one-line task keeps every standing rule without them in the prompt |  |
 | [[t-coupon]] | planned |  |  |  |
@@ -430,6 +484,7 @@ Open steps whose dependencies are done and that no open decision blocks.
 | [[t-kin-labvalidation]] | planned |  |  |  |
 | [[t-kin-volunteer]] | planned |  |  |  |
 | [[t-loads-measured-forces]] | planned |  |  |  |
+| [[t-personalised-foot]] | planned |  |  |  |
 | [[t-prototype-press]] | planned |  |  |  |
 | [[t-rebuild-laptop]] | planned |  | The design hash is 636645a928, or the first generator step whose output differs is identified |  |
 | [[t-regional]] | planned |  |  |  |
@@ -454,10 +509,19 @@ Open steps whose dependencies are done and that no open decision blocks.
 | [[D-10]] | Gravity reference for monocular captures? |  |
 | [[D-11]] | Monocular front-end: HSMR/SKEL, OpenCap Monocular or SAM4Dcap? |  |
 | [[d-fabricator-enquiry]] | Send the flex fabrication enquiry? | ['[[sole-fabrication]]'] |
+| [[d-moticon-enquiry]] | Send the drafted Moticon quote request (bilateral raw data, sensor geometry, calibration, SDK terms)? |  |
 | [[d-prototype-materials]] | Buy the materials for the printed prototype and the coupon test? | ['[[sole-physical-prototype]]', '[[sole-coupon-test]]'] |
 | [[d-repo-visibility]] | Keep rehab-agent public, or make it private? |  |
 | [[d-sikidar-account]] | Create a SimTK account to download the Sikidar model? | ['[[idea-sikidar]]'] |
 | [[d-suit-bench-hardware]] | Buy one ESP32 and vibration motors for the BLE bench test? | ['[[suit-ble-bench]]'] |
+
+## Decisions taken
+
+| Decision | Question | Answer | Where |
+|---|---|---|---|
+| [[d-anatomy-scope]] | Do torsion, anteversion, bone geometry and the personalised foot stay in the twin? | Yes. They are retained as inferred or uncertain values with provenance; nothing is removed or shown as measured when it is not | owner's scope correction of 2026-11-02 |
+| [[d-dxa-optional]] | Does the twin need a DXA scan? | No: a DXA scan gives the best generation when the person has one, but the system must work without it | owner's message of 2026-10-26 |
+| [[d-first-build-platform]] | Which platform does the first build target? | Windows first; ideally, once the twin exists, a phone's sensors alone should be enough | owner's message of 2026-10-24 |
 
 ## Ideas
 
@@ -468,14 +532,35 @@ Open steps whose dependencies are done and that no open decision blocks.
 | [[idea-auto-repersonalise]] | new | Re-personalise automatically from each session's measurements |
 | [[idea-balance-board]] | new | A consumer balance board for our own quiet-standing measurements |
 | [[idea-brain-activity]] | new | Brain regions lighting up with the person's movement (a TRIBE v2-style model) |
+| [[idea-breathing]] | new | Breathing: rate and chest expansion |
+| [[idea-cumulative-load]] | new | Cumulative load per distance (a per-mile view) |
+| [[idea-emg-reflex]] | new | EMG-informed muscle forces, reflexes and spasticity |
+| [[idea-exercise-recommendation]] | new | Exercise recommendations from the person's twin |
+| [[idea-external-load]] | new | External load scenarios: how much, and where it is carried |
 | [[idea-fascia-it-band]] | new | Whole-body fascia, starting with the Davis IT-band model |
+| [[idea-fat-from-surface]] | new | Fat distribution from photos and the body surface, wired into the twin |
+| [[idea-foot-capture-comparison]] | new | Photo-based against depth-assisted foot capture, compared experimentally |
+| [[idea-gait-balance]] | new | Gait and balance metrics: walking and sway |
 | [[idea-gait120-emg]] | new | Validate muscle activations against EMG (Gait120) |
+| [[idea-head-neck-scapula]] | new | Head, neck (CVA) and scapula posture metrics |
+| [[idea-insole-split-knee-load]] | new | Insole left/right load split against force plates, and its effect on knee load |
+| [[idea-knee-detail]] | new | Knee detail: medial-lateral contact split, Q-angle and patella height, tibial rotation |
+| [[idea-ligament-cartilage-fe]] | new | Ligament loads and cartilage and bone stress (finite elements) |
+| [[idea-metabolic-cost]] | new | Metabolic cost |
+| [[idea-more-joint-loads]] | new | More joint loads: hip, ankle, spine (L4/L5), shoulder and elbow |
 | [[idea-motor-control-comparators]] | new | Compare the twin's muscle estimates with SCONE and MuscleMimic controllers |
+| [[idea-movement-personalisation]] | new | Personalise for movement, not only shape (the foot-ground interface as a model) |
 | [[idea-mujoco]] | new | MuJoCo / MyoSuite contact layer, after a feasibility check |
+| [[idea-muscle-stress-stretch]] | new | Muscle stress and a stretch map |
 | [[idea-neural-motor-chain]] | new | A neural motor-control chain: brain-inspired controller, spinal cord and motor units, then muscles |
 | [[idea-nutrition-body-composition]] | new | Muscle and fat change with what and when the person eats |
+| [[idea-pain-input]] | new | Pain during the movement, recorded with the session |
+| [[idea-parameter-registry]] | new | A parameter registry: provenance labels, uncertainty and permitted uses |
 | [[idea-peripheral-nerves]] | new | Peripheral nerve layer: nerve fibre and bundle models |
+| [[idea-phone-only-capture]] | new | Phone sensors alone, once the twin is built |
+| [[idea-predictive-resimulation]] | new | Predictive re-simulation: how movement adapts after a change |
 | [[idea-sikidar]] | new | Sikidar-Kalyanasundaram foot model in the comparison |
+| [[idea-smart-scale]] | new | A smart scale for muscle and fat distribution |
 | [[idea-synergy-toes]] | new | Per-toe placement for the five-toe Synergy foot |
 | [[idea-t1-candidate]] | new | Higher-resolution T1 sole candidate |
 | [[idea-thoracolumbar-model]] | new | Thoracolumbar full-body model, for a later spine-load study |
