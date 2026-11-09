@@ -1,8 +1,9 @@
 ---
 type: "idea"
 title: "Muscle and fat change with what and when the person eats"
-status: "new"
+status: "promoted"
 area: "nutrition"
+promoted_to: "[[adapt-nutrition-body-composition]]"
 serves:
   - "[[pillar-adapt]]"
 source: "owner's idea, 2026-11-09"
@@ -50,8 +51,8 @@ From strongest to weakest:
   small lean-mass cost; late eating through appetite and energy expenditure, not directly through composition.
 - **The person calibrates it.** Each prediction is checked against the next DXA, body-shape or strength
   measurement, so the twin learns this person's response instead of assuming the average.
-- **A first test, if the idea becomes a step:** predicted against measured DXA change over 8–12 weeks, with logged
-  intake and training.
+- **Promoted to a step** ([[adapt-nutrition-body-composition]]), with this test: predicted against measured DXA
+  change over 8–12 weeks, with logged intake and training ([[t-nutrition-dxa]]).
 
 ## Resources
 

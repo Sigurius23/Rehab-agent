@@ -2,7 +2,7 @@
 
 # Plan map
 
-137 notes: 17 goals, 37 steps, 26 tests, 38 ideas, 19 decisions.
+139 notes: 17 goals, 38 steps, 27 tests, 38 ideas, 19 decisions.
 
 ## The engine
 
@@ -15,7 +15,7 @@ flowchart TB
   r --> p1
   p2(["Simulate: joint loads, muscle<br/>forces and contact for this<br/>body<br/><i>4 done · 1 doing · 6 open · 19 ideas · 1 decision</i>"]):::goal_open
   r --> p2
-  p3(["Adapt: the twin follows the<br/>person over time<br/><i>2 done · 2 ideas</i>"]):::goal_open
+  p3(["Adapt: the twin follows the<br/>person over time<br/><i>2 done · 1 open · 1 idea</i>"]):::goal_open
   r --> p3
   p4(["Act: feedback and assistance<br/>from the twin<br/><i>1 done · 2 open · 2 blocked · 2 ideas · 4 decisions</i>"]):::goal_open
   r --> p4
@@ -145,6 +145,7 @@ flowchart LR
   n15["Torsion, anteversion and<br/>personalised bone geometry as<br/>inferred values with provenance<br/>and uncertainty<br/>tests ○1"]:::step_open
   n16["A personalised multi-segment foot,<br/>fitted separately for each foot<br/>tests ○1"]:::step_open
   n17["First Tier-A subject: a<br/>personalised model from MRI or CT"]:::step_blocked
+  n18["Predict muscle and fat change from<br/>what and when the person eats<br/>tests ○1<br/><i>(Adapt)</i>"]:::external
   n0 -. blocks .-> n17
   n14 --> n1
   n14 --> n2
@@ -162,6 +163,8 @@ flowchart LR
   n2 --> n15
   n2 --> n16
   n1 --> n17
+  n11 -. needed by .-> n18
+  n13 -. needed by .-> n18
   classDef goal_open fill:#e1d5f5,stroke:#555,color:#111
   classDef goal_done fill:#c8e6c9,stroke:#555,color:#111
   classDef step_open fill:#ffffff,stroke:#555,color:#111
@@ -288,14 +291,18 @@ flowchart LR
 
 ```mermaid
 flowchart LR
-  n0["Progress across sessions, with<br/>detectability"]:::step_done
-  n1["Strength calibrated from<br/>dynamometry"]:::step_done
-  n2>"Re-personalise automatically from<br/>each session's measurements"]:::idea_new
-  n3>"Muscle and fat change with what<br/>and when the person eats"]:::idea_new
+  n0["Predict muscle and fat change from<br/>what and when the person eats<br/>tests ○1"]:::step_open
+  n1["Progress across sessions, with<br/>detectability"]:::step_done
+  n2["Strength calibrated from<br/>dynamometry"]:::step_done
+  n3>"Re-personalise automatically from<br/>each session's measurements"]:::idea_new
   n4(["Adapt: the twin follows the person<br/>over time"]):::goal_open
+  n5["Muscle capacity from body size,<br/>age and sex, DXA or imaging, and<br/>strength from dynamometry<br/><i>(Personalise)</i>"]:::external
+  n6["Body surface from depth, and mass<br/>distribution from DXA<br/><i>(Personalise)</i>"]:::external
   n4 --> n0
+  n5 -. needed by .-> n0
+  n6 -. needed by .-> n0
   n4 --> n1
-  n2 -.-o n4
+  n4 --> n2
   n3 -.-o n4
   classDef goal_open fill:#e1d5f5,stroke:#555,color:#111
   classDef goal_done fill:#c8e6c9,stroke:#555,color:#111
@@ -439,6 +446,7 @@ flowchart LR
 - t-kin-labvalidation: no expected result: write it before the test runs
 - t-kin-volunteer: no expected result: write it before the test runs
 - t-loads-measured-forces: no expected result: write it before the test runs
+- t-nutrition-dxa: no expected result: write it before the test runs
 - t-personalised-foot: no expected result: write it before the test runs
 - t-prototype-press: no expected result: write it before the test runs
 - t-regional: no expected result: write it before the test runs
@@ -449,6 +457,7 @@ flowchart LR
 
 Open steps whose dependencies are done and that no open decision blocks.
 
+- [[adapt-nutrition-body-composition]]: Predict muscle and fat change from what and when the person eats
 - [[exo-assist-simulation]]: Predictive simulation of assistance for the person's body
 - [[kin-labvalidation]]: Video kinematics on OpenCap LabValidation against marker motion capture
 - [[project-ci-suites]]: CI runs every test suite that needs no external files
@@ -482,6 +491,7 @@ Open steps whose dependencies are done and that no open decision blocks.
 | [[t-kin-labvalidation]] | planned |  |  |  |
 | [[t-kin-volunteer]] | planned |  |  |  |
 | [[t-loads-measured-forces]] | planned |  |  |  |
+| [[t-nutrition-dxa]] | planned |  |  |  |
 | [[t-personalised-foot]] | planned |  |  |  |
 | [[t-prototype-press]] | planned |  |  |  |
 | [[t-rebuild-laptop]] | planned |  | The design hash is 636645a928, or the first generator step whose output differs is identified |  |
@@ -551,7 +561,7 @@ Open steps whose dependencies are done and that no open decision blocks.
 | [[idea-mujoco]] | new | MuJoCo / MyoSuite contact layer, after a feasibility check |
 | [[idea-muscle-stress-stretch]] | new | Muscle stress and a stretch map |
 | [[idea-neural-motor-chain]] | new | A neural motor-control chain: brain-inspired controller, spinal cord and motor units, then muscles |
-| [[idea-nutrition-body-composition]] | new | Muscle and fat change with what and when the person eats |
+| [[idea-nutrition-body-composition]] | promoted | Muscle and fat change with what and when the person eats |
 | [[idea-pain-input]] | new | Pain during the movement, recorded with the session |
 | [[idea-parameter-registry]] | new | A parameter registry: provenance labels, uncertainty and permitted uses |
 | [[idea-peripheral-nerves]] | new | Peripheral nerve layer: nerve fibre and bundle models |
