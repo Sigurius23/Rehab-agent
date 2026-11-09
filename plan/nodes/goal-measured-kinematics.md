@@ -3,9 +3,9 @@ type: "goal"
 title: "Joint angles measured against a reference, per joint and movement"
 status: "open"
 area: "pipeline"
-parent: "[[rehab-agent]]"
+parent: "[[pillar-sense]]"
 source: "docs/roadmap.md Phase 1-2; docs/gaps-and-open-decisions.md G-01"
-updated: "2026-11-08"
+updated: "2026-11-09"
 ---
 # Joint angles measured against a reference, per joint and movement
 

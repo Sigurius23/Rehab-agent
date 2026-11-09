@@ -3,9 +3,9 @@ type: "goal"
 title: "A pressure-sensing sole whose readings are validated against measurement"
 status: "open"
 area: "sole"
-parent: "[[rehab-agent]]"
+parent: "[[goal-measured-forces]]"
 source: "hardware/sensor-sole/README.md"
-updated: "2026-11-08"
+updated: "2026-11-09"
 ---
 # A pressure-sensing sole whose readings are validated against measurement
 

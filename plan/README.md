@@ -5,8 +5,11 @@
 
 The project's open work, as one note per item in `plan/nodes/`. The notes are the source. The map is drawn from
 them by `build.py`, so it never goes stale:
-- **`MAP.md`:** an overview diagram (goals, steps with a tally of their tests, and the decisions that block them),
-  plus lists of what needs your input, what is ready to work on, and every test, open decision and idea.
+- **`MAP.md`:** first the engine: the end goal and its pillars (sense, personalise, simulate, adapt, act, and how
+  we work), each with a tally of its work. Then one diagram per pillar, in the pillars' `order`: its goals, steps
+  (with a tally of their tests), open ideas and the decisions that block them; notes from other pillars that link
+  in are drawn faded. Then lists of what needs your input, what is ready to work on, and every test, open decision
+  and idea.
 - **`map.canvas`:** every note on an Obsidian Canvas, laid out as a tree, with ideas and decisions in rows below.
 
 Never edit `MAP.md` or `map.canvas` by hand: edit the notes and run the script. The documents elsewhere in the

@@ -3,10 +3,10 @@ type: "step"
 title: "Standing rules for agent sessions in CLAUDE.md"
 status: "open"
 area: "project"
-parent: "[[rehab-agent]]"
+parent: "[[goal-working-method]]"
 priority: "2"
 source: "planning discussion 2026-11-08"
-updated: "2026-11-08"
+updated: "2026-11-09"
 ---
 # Standing rules for agent sessions in CLAUDE.md
 

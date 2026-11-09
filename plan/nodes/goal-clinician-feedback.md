@@ -3,9 +3,9 @@ type: "goal"
 title: "Clinician-authored feedback, switched on only where validated"
 status: "open"
 area: "cues"
-parent: "[[rehab-agent]]"
+parent: "[[pillar-act]]"
 source: "docs/roadmap.md Phase 3"
-updated: "2026-11-08"
+updated: "2026-11-09"
 ---
 # Clinician-authored feedback, switched on only where validated
 

@@ -1,12 +1,13 @@
 ---
 type: "idea"
 title: "Predictive simulation of assistance"
-status: "new"
+status: "promoted"
 area: "assistance"
 serves:
-  - "[[goal-measured-forces]]"
+  - "[[goal-exoskeleton]]"
 source: "docs/roadmap.md Phase 4"
-updated: "2026-11-08"
+promoted_to: "[[exo-assist-simulation]]"
+updated: "2026-11-09"
 ---
 # Predictive simulation of assistance
 

@@ -22,6 +22,7 @@ starts with front matter between two `---` lines:
     serves: ["[[note]]"]                ideas: what they would help
     question / options / blocks / decided / recorded_in      decisions
     source: where the item came from (file and section)
+    order: 1, 2, ...                    the root goal's children: their order in the map
 
 Only a small YAML subset is read: `key: value`, `key: [a, b]` and block lists (`  - item`).
 
@@ -270,43 +271,130 @@ def _test_tally(nid, nodes, children):
     return " ".join(f"{marks[s]}{count[s]}" for s in marks if count[s])
 
 
-def mermaid(nodes, children, roots):
-    """Overview: goals, steps (with a tally of their tests) and the decisions that block something. Tests and ideas
-    are listed in tables below and shown in full on the canvas."""
-    shown = {nid for nid, n in nodes.items() if n["meta"].get("type") in ("goal", "step")}
-    shown |= {nid for nid, n in nodes.items() if n["meta"].get("type") == "decision"
-              and any(b in shown for b in links(n["meta"].get("blocks")))}
-    ids = {nid: f"n{i}" for i, nid in enumerate(sorted(shown))}
-    lines = ["flowchart LR"]
-    for nid in sorted(shown):
-        m = nodes[nid]["meta"]
-        t, s = m.get("type"), m.get("status")
-        text = _label(m.get("title", nid)) if t != "decision" else _label(f"{nid}: {m.get('question', '')}", 30)
-        tally = _test_tally(nid, nodes, children) if t == "step" else ""
-        if tally:
-            text += f"<br/>tests {tally}"
-        shape = {"goal": ('(["', '"])'), "decision": ('{{"', '"}}')}.get(t, ('["', '"]'))
-        lines.append(f'  {ids[nid]}{shape[0]}{text}{shape[1]}:::{t}_{s}')
-    for nid in sorted(shown):
-        m = nodes[nid]["meta"]
-        for p in links(m.get("parent")):
-            if p in ids:
-                lines.append(f"  {ids[p]} --> {ids[nid]}")
-        for d in links(m.get("depends_on")):
-            if d in ids:
-                lines.append(f"  {ids[d]} -. needed by .-> {ids[nid]}")
-        for b in links(m.get("blocks")):
-            if b in ids:
-                lines.append(f"  {ids[nid]} -. blocks .-> {ids[b]}")
+def _pillar(nid, nodes, root):
+    """The child of the root goal this note sits under (via parents, or what it serves or blocks), else None."""
+    seen, cur = set(), nid
+    while cur and cur not in seen:
+        seen.add(cur)
+        m = nodes[cur]["meta"]
+        par = links(m.get("parent"))
+        if par and par[0] == root:
+            return cur
+        nxt = par or links(m.get("serves")) or links(m.get("blocks"))
+        cur = nxt[0] if nxt and nxt[0] in nodes else None
+    return None
+
+
+def _classdefs():
     colours = {"done": "#c8e6c9", "passed": "#c8e6c9", "failed": "#ffcdd2", "mixed": "#fff3c4",
                "doing": "#fff3c4", "running": "#fff3c4", "blocked": "#ffe0b2", "dropped": "#eeeeee",
                "promoted": "#eeeeee"}
+    lines = []
     for t in TYPES:
         for s in STATUS[t]:
             fill = colours.get(s, {"goal": "#e1d5f5", "idea": "#d7f0f7", "decision": "#ffe0b2"}.get(t, "#ffffff"))
             dash = ",stroke-dasharray: 4 3" if t == "idea" else ""
             lines.append(f"  classDef {t}_{s} fill:{fill},stroke:#555,color:#111{dash}")
-    return "\n".join(lines)
+    lines.append("  classDef external fill:#f5f5f5,stroke:#aaa,color:#777,stroke-dasharray: 2 2")
+    return lines
+
+
+def pillars(nodes, roots):
+    """The root's child goals in their `order`, and every shown note grouped under its pillar."""
+    root = roots[0] if len(roots) == 1 else None
+    def rank(p):
+        o = str(nodes[p]["meta"].get("order", ""))
+        return (int(o) if o.isdigit() else 999, p)
+    top = sorted((c for c, n in nodes.items() if links(n["meta"].get("parent")) == [root]
+                  and n["meta"].get("type") == "goal"), key=rank) if root else []
+    shown = {nid for nid, n in nodes.items() if n["meta"].get("type") in ("goal", "step")
+             or (n["meta"].get("type") == "idea" and n["meta"].get("status") == "new")}
+    shown |= {nid for nid, n in nodes.items() if n["meta"].get("type") == "decision"
+              and any(b in shown for b in links(n["meta"].get("blocks")))}
+    groups = defaultdict(list)
+    for nid in sorted(shown - {root}):
+        groups[_pillar(nid, nodes, root)].append(nid)
+    return root, top, groups
+
+
+def mermaid_engine(nodes, children, roots):
+    """The end goal and its pillars, each with a tally of the work under it."""
+    root, top, groups = pillars(nodes, roots)
+    if not root:
+        return "flowchart TB\n  none[No single root goal]"
+    lines = ["flowchart TB", f'  r(["{_label(nodes[root]["meta"].get("title", root), 40)}"]):::goal_open']
+    for k, p in enumerate(top):
+        count = defaultdict(int)
+        for nid in groups.get(p, []):
+            m = nodes[nid]["meta"]
+            t, st = m.get("type"), m.get("status")
+            if t == "step":
+                count[st] += 1
+            elif t in ("idea", "decision"):
+                count[t + "s"] += 1
+        word = lambda x, n: x[:-1] if x.endswith("s") and n == 1 else x
+        tally = " · ".join(f"{count[x]} {word(x, count[x])}" for x in
+                           ("done", "doing", "open", "blocked", "ideas", "decisions") if count[x])
+        lines.append(f'  p{k}(["{_label(nodes[p]["meta"].get("title", p), 30)}<br/><i>{tally}</i>"]):::goal_open')
+        lines.append(f"  r --> p{k}")
+    return "\n".join(lines + _classdefs())
+
+
+def mermaid_pillar(nodes, children, roots, pillar):
+    """One pillar: its goals, steps (with a tally of their tests), open ideas and blocking decisions. Notes from other
+    pillars that link to it are drawn faded, so no connection is lost."""
+    root, top, groups = pillars(nodes, roots)
+    members = groups.get(pillar, [])
+    member_set = set(members)
+    edges, external = [], []
+    for nid in members:
+        m = nodes[nid]["meta"]
+        for p in links(m.get("parent")):
+            if p in member_set:
+                edges.append((p, nid, "-->", ""))
+        for d in links(m.get("depends_on")):
+            edges.append((d, nid, "-.->", "needed by"))
+        for b in links(m.get("blocks")):
+            edges.append((nid, b, "-.->", "blocks"))
+        for s_ in links(m.get("serves")):
+            edges.append((nid, s_, "-.-o", ""))
+    for nid, n in nodes.items():                      # links from other pillars into this one
+        if nid in member_set:
+            continue
+        m = n["meta"]
+        for d in links(m.get("depends_on")):
+            if d in member_set:
+                edges.append((d, nid, "-.->", "needed by"))
+        for b in links(m.get("blocks")):
+            if b in member_set and m.get("type") == "decision":
+                edges.append((nid, b, "-.->", "blocks"))
+    for a, b_, _, _ in edges:
+        for x in (a, b_):
+            if x in nodes and x not in member_set and x not in external and x != root:
+                external.append(x)
+    shown = members + external
+    ids = {nid: f"n{i}" for i, nid in enumerate(shown)}
+    lines = ["flowchart LR"]
+    for nid in shown:
+        m = nodes[nid]["meta"]
+        t, st = m.get("type"), m.get("status")
+        text = _label(m.get("title", nid)) if t != "decision" else _label(f"{nid}: {m.get('question', '')}", 30)
+        tally = _test_tally(nid, nodes, children) if t == "step" else ""
+        if tally:
+            text += f"<br/>tests {tally}"
+        if nid in external:
+            owner = _pillar(nid, nodes, root)
+            text += "<br/><i>(" + _label(str(nodes[owner]["meta"].get("title", "")).split(":")[0] if owner else "elsewhere") + ")</i>"
+        shape = {"goal": ('(["', '"])'), "decision": ('{{"', '"}}'), "idea": ('>"', '"]')}.get(t, ('["', '"]'))
+        cls = "external" if nid in external else f"{t}_{st}"
+        lines.append(f'  {ids[nid]}{shape[0]}{text}{shape[1]}:::{cls}')
+    seen = set()
+    for a, b_, arrow, label in edges:
+        if a in ids and b_ in ids and (a, b_, arrow) not in seen:
+            seen.add((a, b_, arrow))
+            link = f"-. {label} .->" if label else arrow
+            lines.append(f"  {ids[a]} {link} {ids[b_]}")
+    return "\n".join(lines + _classdefs())
 
 
 def canvas(nodes, children, roots):
@@ -369,8 +457,13 @@ def write_map(nodes, children, roots, errs, warns, needs, out_dir):
     md = ["<!-- Generated by plan/build.py from plan/nodes/. Do not edit; edit the notes and run the script. -->",
           "", "# Plan map", "",
           f"{len(nodes)} notes: " + ", ".join(f"{len(by_type[t])} {t}s" for t in TYPES) + ".", "",
-          "```mermaid", mermaid(nodes, children, roots), "```", "",
-          "## Needs your input", ""]
+          "## The engine", "",
+          "```mermaid", mermaid_engine(nodes, children, roots), "```", ""]
+    root, top, groups = pillars(nodes, roots)
+    for p in top:
+        md += [f"## {nodes[p]['meta'].get('title', p)}", "", "```mermaid", mermaid_pillar(nodes, children, roots, p),
+               "```", ""]
+    md += ["## Needs your input", ""]
     md += [f"- {x}" for x in needs] or ["- nothing"]
     md += ["", "## Ready to work on now", "", "Open steps whose dependencies are done and that no open decision "
            "blocks.", ""]

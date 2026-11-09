@@ -5,7 +5,7 @@
    "type": "file",
    "file": "nodes/D-01.md",
    "x": 0,
-   "y": 1540,
+   "y": 1760,
    "width": 280,
    "height": 120,
    "color": "2"
@@ -15,7 +15,7 @@
    "type": "file",
    "file": "nodes/D-02.md",
    "x": 320,
-   "y": 1540,
+   "y": 1760,
    "width": 280,
    "height": 120,
    "color": "2"
@@ -25,7 +25,7 @@
    "type": "file",
    "file": "nodes/D-03.md",
    "x": 640,
-   "y": 1540,
+   "y": 1760,
    "width": 280,
    "height": 120,
    "color": "2"
@@ -35,7 +35,7 @@
    "type": "file",
    "file": "nodes/D-04.md",
    "x": 960,
-   "y": 1540,
+   "y": 1760,
    "width": 280,
    "height": 120,
    "color": "2"
@@ -45,7 +45,7 @@
    "type": "file",
    "file": "nodes/D-05.md",
    "x": 1280,
-   "y": 1540,
+   "y": 1760,
    "width": 280,
    "height": 120,
    "color": "2"
@@ -55,7 +55,7 @@
    "type": "file",
    "file": "nodes/D-06.md",
    "x": 1600,
-   "y": 1540,
+   "y": 1760,
    "width": 280,
    "height": 120,
    "color": "2"
@@ -65,7 +65,7 @@
    "type": "file",
    "file": "nodes/D-07.md",
    "x": 1920,
-   "y": 1540,
+   "y": 1760,
    "width": 280,
    "height": 120,
    "color": "2"
@@ -75,7 +75,7 @@
    "type": "file",
    "file": "nodes/D-09.md",
    "x": 2240,
-   "y": 1540,
+   "y": 1760,
    "width": 280,
    "height": 120,
    "color": "2"
@@ -85,7 +85,7 @@
    "type": "file",
    "file": "nodes/D-10.md",
    "x": 2560,
-   "y": 1540,
+   "y": 1760,
    "width": 280,
    "height": 120,
    "color": "2"
@@ -95,17 +95,37 @@
    "type": "file",
    "file": "nodes/D-11.md",
    "x": 2880,
-   "y": 1540,
+   "y": 1760,
    "width": 280,
    "height": 120,
    "color": "2"
   },
   {
+   "id": "adapt-progress",
+   "type": "file",
+   "file": "nodes/adapt-progress.md",
+   "x": 2240,
+   "y": 440,
+   "width": 280,
+   "height": 120,
+   "color": "4"
+  },
+  {
+   "id": "adapt-strength-calibration",
+   "type": "file",
+   "file": "nodes/adapt-strength-calibration.md",
+   "x": 2560,
+   "y": 440,
+   "width": 280,
+   "height": 120,
+   "color": "4"
+  },
+  {
    "id": "cues-clinician-review",
    "type": "file",
    "file": "nodes/cues-clinician-review.md",
-   "x": 0,
-   "y": 440,
+   "x": 640,
+   "y": 660,
    "width": 280,
    "height": 120,
    "color": "2"
@@ -115,7 +135,7 @@
    "type": "file",
    "file": "nodes/d-fabricator-enquiry.md",
    "x": 3200,
-   "y": 1540,
+   "y": 1760,
    "width": 280,
    "height": 120,
    "color": "2"
@@ -125,7 +145,7 @@
    "type": "file",
    "file": "nodes/d-prototype-materials.md",
    "x": 3520,
-   "y": 1540,
+   "y": 1760,
    "width": 280,
    "height": 120,
    "color": "2"
@@ -135,7 +155,7 @@
    "type": "file",
    "file": "nodes/d-repo-visibility.md",
    "x": 3840,
-   "y": 1540,
+   "y": 1760,
    "width": 280,
    "height": 120,
    "color": "2"
@@ -145,7 +165,7 @@
    "type": "file",
    "file": "nodes/d-sikidar-account.md",
    "x": 4160,
-   "y": 1540,
+   "y": 1760,
    "width": 280,
    "height": 120,
    "color": "2"
@@ -155,17 +175,46 @@
    "type": "file",
    "file": "nodes/d-suit-bench-hardware.md",
    "x": 4480,
-   "y": 1540,
+   "y": 1760,
    "width": 280,
    "height": 120,
    "color": "2"
   },
   {
+   "id": "exo-assist-simulation",
+   "type": "file",
+   "file": "nodes/exo-assist-simulation.md",
+   "x": 960,
+   "y": 660,
+   "width": 280,
+   "height": 120
+  },
+  {
+   "id": "exo-hardware",
+   "type": "file",
+   "file": "nodes/exo-hardware.md",
+   "x": 1280,
+   "y": 660,
+   "width": 280,
+   "height": 120,
+   "color": "2"
+  },
+  {
+   "id": "exo-ideal-sizing",
+   "type": "file",
+   "file": "nodes/exo-ideal-sizing.md",
+   "x": 1600,
+   "y": 660,
+   "width": 280,
+   "height": 120,
+   "color": "4"
+  },
+  {
    "id": "forces-session-measurement",
    "type": "file",
    "file": "nodes/forces-session-measurement.md",
-   "x": 960,
-   "y": 440,
+   "x": 4800,
+   "y": 660,
    "width": 280,
    "height": 120
   },
@@ -173,8 +222,18 @@
    "id": "goal-clinician-feedback",
    "type": "file",
    "file": "nodes/goal-clinician-feedback.md",
-   "x": 0,
-   "y": 220,
+   "x": 640,
+   "y": 440,
+   "width": 280,
+   "height": 120,
+   "color": "6"
+  },
+  {
+   "id": "goal-exoskeleton",
+   "type": "file",
+   "file": "nodes/goal-exoskeleton.md",
+   "x": 1280,
+   "y": 440,
    "width": 280,
    "height": 120,
    "color": "6"
@@ -183,8 +242,8 @@
    "id": "goal-haptic-suit",
    "type": "file",
    "file": "nodes/goal-haptic-suit.md",
-   "x": 480,
-   "y": 220,
+   "x": 1920,
+   "y": 440,
    "width": 280,
    "height": 120,
    "color": "6"
@@ -193,8 +252,8 @@
    "id": "goal-measured-forces",
    "type": "file",
    "file": "nodes/goal-measured-forces.md",
-   "x": 960,
-   "y": 220,
+   "x": 5280,
+   "y": 440,
    "width": 280,
    "height": 120,
    "color": "6"
@@ -203,8 +262,18 @@
    "id": "goal-measured-kinematics",
    "type": "file",
    "file": "nodes/goal-measured-kinematics.md",
-   "x": 1440,
-   "y": 220,
+   "x": 7040,
+   "y": 440,
+   "width": 280,
+   "height": 120,
+   "color": "6"
+  },
+  {
+   "id": "goal-muscle-loads",
+   "type": "file",
+   "file": "nodes/goal-muscle-loads.md",
+   "x": 8000,
+   "y": 440,
    "width": 280,
    "height": 120,
    "color": "6"
@@ -213,8 +282,8 @@
    "id": "goal-personal-twin",
    "type": "file",
    "file": "nodes/goal-personal-twin.md",
-   "x": 1920,
-   "y": 220,
+   "x": 2880,
+   "y": 440,
    "width": 280,
    "height": 120,
    "color": "6"
@@ -223,8 +292,8 @@
    "id": "goal-sensor-sole",
    "type": "file",
    "file": "nodes/goal-sensor-sole.md",
-   "x": 5440,
-   "y": 220,
+   "x": 5760,
+   "y": 660,
    "width": 280,
    "height": 120,
    "color": "6"
@@ -233,8 +302,28 @@
    "id": "goal-sole-simulation",
    "type": "file",
    "file": "nodes/goal-sole-simulation.md",
+   "x": 10240,
+   "y": 440,
+   "width": 280,
+   "height": 120,
+   "color": "6"
+  },
+  {
+   "id": "goal-twin-layers",
+   "type": "file",
+   "file": "nodes/goal-twin-layers.md",
    "x": 3840,
    "y": 440,
+   "width": 280,
+   "height": 120,
+   "color": "6"
+  },
+  {
+   "id": "goal-working-method",
+   "type": "file",
+   "file": "nodes/goal-working-method.md",
+   "x": 160,
+   "y": 220,
    "width": 280,
    "height": 120,
    "color": "6"
@@ -244,7 +333,7 @@
    "type": "file",
    "file": "nodes/idea-assistance-track.md",
    "x": 0,
-   "y": 1320,
+   "y": 1540,
    "width": 280,
    "height": 120,
    "color": "5"
@@ -254,7 +343,17 @@
    "type": "file",
    "file": "nodes/idea-assurance-case.md",
    "x": 320,
-   "y": 1320,
+   "y": 1540,
+   "width": 280,
+   "height": 120,
+   "color": "5"
+  },
+  {
+   "id": "idea-auto-repersonalise",
+   "type": "file",
+   "file": "nodes/idea-auto-repersonalise.md",
+   "x": 640,
+   "y": 1540,
    "width": 280,
    "height": 120,
    "color": "5"
@@ -263,8 +362,8 @@
    "id": "idea-balance-board",
    "type": "file",
    "file": "nodes/idea-balance-board.md",
-   "x": 640,
-   "y": 1320,
+   "x": 960,
+   "y": 1540,
    "width": 280,
    "height": 120,
    "color": "5"
@@ -273,8 +372,8 @@
    "id": "idea-mujoco",
    "type": "file",
    "file": "nodes/idea-mujoco.md",
-   "x": 960,
-   "y": 1320,
+   "x": 1280,
+   "y": 1540,
    "width": 280,
    "height": 120,
    "color": "5"
@@ -283,8 +382,8 @@
    "id": "idea-sikidar",
    "type": "file",
    "file": "nodes/idea-sikidar.md",
-   "x": 1280,
-   "y": 1320,
+   "x": 1600,
+   "y": 1540,
    "width": 280,
    "height": 120,
    "color": "5"
@@ -293,8 +392,8 @@
    "id": "idea-synergy-toes",
    "type": "file",
    "file": "nodes/idea-synergy-toes.md",
-   "x": 1600,
-   "y": 1320,
+   "x": 1920,
+   "y": 1540,
    "width": 280,
    "height": 120,
    "color": "5"
@@ -303,8 +402,8 @@
    "id": "idea-t1-candidate",
    "type": "file",
    "file": "nodes/idea-t1-candidate.md",
-   "x": 1920,
-   "y": 1320,
+   "x": 2240,
+   "y": 1540,
    "width": 280,
    "height": 120,
    "color": "5"
@@ -313,8 +412,8 @@
    "id": "idea-thoracolumbar-model",
    "type": "file",
    "file": "nodes/idea-thoracolumbar-model.md",
-   "x": 2240,
-   "y": 1320,
+   "x": 2560,
+   "y": 1540,
    "width": 280,
    "height": 120,
    "color": "5"
@@ -323,8 +422,8 @@
    "id": "idea-uncertainty-runs",
    "type": "file",
    "file": "nodes/idea-uncertainty-runs.md",
-   "x": 2560,
-   "y": 1320,
+   "x": 2880,
+   "y": 1540,
    "width": 280,
    "height": 120,
    "color": "5"
@@ -333,8 +432,8 @@
    "id": "kin-labvalidation",
    "type": "file",
    "file": "nodes/kin-labvalidation.md",
-   "x": 1280,
-   "y": 440,
+   "x": 6720,
+   "y": 660,
    "width": 280,
    "height": 120
   },
@@ -342,17 +441,117 @@
    "id": "kin-volunteer-recording",
    "type": "file",
    "file": "nodes/kin-volunteer-recording.md",
-   "x": 1600,
-   "y": 440,
+   "x": 7040,
+   "y": 660,
    "width": 280,
    "height": 120
+  },
+  {
+   "id": "layer-alignment",
+   "type": "file",
+   "file": "nodes/layer-alignment.md",
+   "x": 3200,
+   "y": 660,
+   "width": 280,
+   "height": 120,
+   "color": "4"
+  },
+  {
+   "id": "layer-bones-from-shape",
+   "type": "file",
+   "file": "nodes/layer-bones-from-shape.md",
+   "x": 3520,
+   "y": 660,
+   "width": 280,
+   "height": 120,
+   "color": "4"
+  },
+  {
+   "id": "layer-muscles",
+   "type": "file",
+   "file": "nodes/layer-muscles.md",
+   "x": 3840,
+   "y": 660,
+   "width": 280,
+   "height": 120,
+   "color": "4"
+  },
+  {
+   "id": "layer-person-folder",
+   "type": "file",
+   "file": "nodes/layer-person-folder.md",
+   "x": 4160,
+   "y": 660,
+   "width": 280,
+   "height": 120,
+   "color": "4"
+  },
+  {
+   "id": "layer-shape-and-mass",
+   "type": "file",
+   "file": "nodes/layer-shape-and-mass.md",
+   "x": 4480,
+   "y": 660,
+   "width": 280,
+   "height": 120,
+   "color": "4"
+  },
+  {
+   "id": "pillar-act",
+   "type": "file",
+   "file": "nodes/pillar-act.md",
+   "x": 1280,
+   "y": 220,
+   "width": 280,
+   "height": 120,
+   "color": "6"
+  },
+  {
+   "id": "pillar-adapt",
+   "type": "file",
+   "file": "nodes/pillar-adapt.md",
+   "x": 2400,
+   "y": 220,
+   "width": 280,
+   "height": 120,
+   "color": "6"
+  },
+  {
+   "id": "pillar-personalise",
+   "type": "file",
+   "file": "nodes/pillar-personalise.md",
+   "x": 3360,
+   "y": 220,
+   "width": 280,
+   "height": 120,
+   "color": "6"
+  },
+  {
+   "id": "pillar-sense",
+   "type": "file",
+   "file": "nodes/pillar-sense.md",
+   "x": 6160,
+   "y": 220,
+   "width": 280,
+   "height": 120,
+   "color": "6"
+  },
+  {
+   "id": "pillar-simulate",
+   "type": "file",
+   "file": "nodes/pillar-simulate.md",
+   "x": 9120,
+   "y": 220,
+   "width": 280,
+   "height": 120,
+   "color": "6"
   },
   {
    "id": "project-ci-suites",
    "type": "file",
    "file": "nodes/project-ci-suites.md",
-   "x": 7360,
-   "y": 220,
+   "x": 0,
+   "y": 440,
    "width": 280,
    "height": 120
   },
@@ -360,8 +559,8 @@
    "id": "project-claude-md",
    "type": "file",
    "file": "nodes/project-claude-md.md",
-   "x": 7680,
-   "y": 220,
+   "x": 320,
+   "y": 440,
    "width": 280,
    "height": 120
   },
@@ -369,18 +568,47 @@
    "id": "rehab-agent",
    "type": "file",
    "file": "nodes/rehab-agent.md",
-   "x": 3840,
+   "x": 4640,
    "y": 0,
    "width": 280,
    "height": 120,
    "color": "6"
   },
   {
+   "id": "sim-joint-load",
+   "type": "file",
+   "file": "nodes/sim-joint-load.md",
+   "x": 7680,
+   "y": 660,
+   "width": 280,
+   "height": 120,
+   "color": "4"
+  },
+  {
+   "id": "sim-loads-measured-forces",
+   "type": "file",
+   "file": "nodes/sim-loads-measured-forces.md",
+   "x": 8000,
+   "y": 660,
+   "width": 280,
+   "height": 120
+  },
+  {
+   "id": "sim-muscles",
+   "type": "file",
+   "file": "nodes/sim-muscles.md",
+   "x": 8320,
+   "y": 660,
+   "width": 280,
+   "height": 120,
+   "color": "4"
+  },
+  {
    "id": "sole-boards-verified",
    "type": "file",
    "file": "nodes/sole-boards-verified.md",
-   "x": 5760,
-   "y": 440,
+   "x": 5120,
+   "y": 880,
    "width": 280,
    "height": 120,
    "color": "4"
@@ -389,8 +617,8 @@
    "id": "sole-coupon-test",
    "type": "file",
    "file": "nodes/sole-coupon-test.md",
-   "x": 6080,
-   "y": 440,
+   "x": 5440,
+   "y": 880,
    "width": 280,
    "height": 120
   },
@@ -398,8 +626,8 @@
    "id": "sole-fabrication",
    "type": "file",
    "file": "nodes/sole-fabrication.md",
-   "x": 6400,
-   "y": 440,
+   "x": 5760,
+   "y": 880,
    "width": 280,
    "height": 120,
    "color": "2"
@@ -408,7 +636,7 @@
    "id": "sole-foot-model-comparison",
    "type": "file",
    "file": "nodes/sole-foot-model-comparison.md",
-   "x": 2240,
+   "x": 8640,
    "y": 660,
    "width": 280,
    "height": 120,
@@ -418,7 +646,7 @@
    "id": "sole-footbed-layers",
    "type": "file",
    "file": "nodes/sole-footbed-layers.md",
-   "x": 2560,
+   "x": 8960,
    "y": 660,
    "width": 280,
    "height": 120
@@ -427,7 +655,7 @@
    "id": "sole-forceplate-dynamic",
    "type": "file",
    "file": "nodes/sole-forceplate-dynamic.md",
-   "x": 3040,
+   "x": 9440,
    "y": 660,
    "width": 280,
    "height": 120,
@@ -437,7 +665,7 @@
    "id": "sole-forceplate-quasistatic",
    "type": "file",
    "file": "nodes/sole-forceplate-quasistatic.md",
-   "x": 3840,
+   "x": 10240,
    "y": 660,
    "width": 280,
    "height": 120,
@@ -447,7 +675,7 @@
    "id": "sole-insole-contact",
    "type": "file",
    "file": "nodes/sole-insole-contact.md",
-   "x": 4480,
+   "x": 10880,
    "y": 660,
    "width": 280,
    "height": 120
@@ -456,8 +684,8 @@
    "id": "sole-physical-prototype",
    "type": "file",
    "file": "nodes/sole-physical-prototype.md",
-   "x": 6720,
-   "y": 440,
+   "x": 6080,
+   "y": 880,
    "width": 280,
    "height": 120
   },
@@ -465,8 +693,8 @@
    "id": "sole-rebuild-reproducibility",
    "type": "file",
    "file": "nodes/sole-rebuild-reproducibility.md",
-   "x": 7040,
-   "y": 440,
+   "x": 6400,
+   "y": 880,
    "width": 280,
    "height": 120
   },
@@ -474,7 +702,7 @@
    "id": "sole-regional-pressure",
    "type": "file",
    "file": "nodes/sole-regional-pressure.md",
-   "x": 4800,
+   "x": 11200,
    "y": 660,
    "width": 280,
    "height": 120
@@ -483,7 +711,7 @@
    "id": "sole-share-diagnostic",
    "type": "file",
    "file": "nodes/sole-share-diagnostic.md",
-   "x": 5120,
+   "x": 11520,
    "y": 660,
    "width": 280,
    "height": 120
@@ -492,7 +720,7 @@
    "id": "sole-spacing-converge",
    "type": "file",
    "file": "nodes/sole-spacing-converge.md",
-   "x": 5440,
+   "x": 11840,
    "y": 660,
    "width": 280,
    "height": 120
@@ -501,8 +729,8 @@
    "id": "suit-ble-bench",
    "type": "file",
    "file": "nodes/suit-ble-bench.md",
-   "x": 320,
-   "y": 440,
+   "x": 1920,
+   "y": 660,
    "width": 280,
    "height": 120
   },
@@ -510,8 +738,8 @@
    "id": "suit-slimevr-validation",
    "type": "file",
    "file": "nodes/suit-slimevr-validation.md",
-   "x": 640,
-   "y": 440,
+   "x": 7360,
+   "y": 660,
    "width": 280,
    "height": 120
   },
@@ -519,8 +747,8 @@
    "id": "t-boards-checker",
    "type": "file",
    "file": "nodes/t-boards-checker.md",
-   "x": 5760,
-   "y": 660,
+   "x": 5120,
+   "y": 1100,
    "width": 280,
    "height": 120,
    "color": "4"
@@ -529,8 +757,8 @@
    "id": "t-ci-suites",
    "type": "file",
    "file": "nodes/t-ci-suites.md",
-   "x": 7360,
-   "y": 440,
+   "x": 0,
+   "y": 660,
    "width": 280,
    "height": 120
   },
@@ -538,8 +766,8 @@
    "id": "t-claude-md-fresh-session",
    "type": "file",
    "file": "nodes/t-claude-md-fresh-session.md",
-   "x": 7680,
-   "y": 440,
+   "x": 320,
+   "y": 660,
    "width": 280,
    "height": 120
   },
@@ -547,8 +775,8 @@
    "id": "t-coupon",
    "type": "file",
    "file": "nodes/t-coupon.md",
-   "x": 6080,
-   "y": 660,
+   "x": 5440,
+   "y": 1100,
    "width": 280,
    "height": 120
   },
@@ -556,7 +784,7 @@
    "id": "t-dyn-h1",
    "type": "file",
    "file": "nodes/t-dyn-h1.md",
-   "x": 2880,
+   "x": 9280,
    "y": 880,
    "width": 280,
    "height": 120
@@ -565,7 +793,16 @@
    "id": "t-dyn-h2",
    "type": "file",
    "file": "nodes/t-dyn-h2.md",
-   "x": 3200,
+   "x": 9600,
+   "y": 880,
+   "width": 280,
+   "height": 120
+  },
+  {
+   "id": "t-exo-assist",
+   "type": "file",
+   "file": "nodes/t-exo-assist.md",
+   "x": 960,
    "y": 880,
    "width": 280,
    "height": 120
@@ -574,7 +811,7 @@
    "id": "t-footbed",
    "type": "file",
    "file": "nodes/t-footbed.md",
-   "x": 2560,
+   "x": 8960,
    "y": 880,
    "width": 280,
    "height": 120
@@ -583,8 +820,8 @@
    "id": "t-forces-session",
    "type": "file",
    "file": "nodes/t-forces-session.md",
-   "x": 960,
-   "y": 660,
+   "x": 4800,
+   "y": 880,
    "width": 280,
    "height": 120
   },
@@ -592,7 +829,7 @@
    "id": "t-fp-cop",
    "type": "file",
    "file": "nodes/t-fp-cop.md",
-   "x": 3520,
+   "x": 9920,
    "y": 880,
    "width": 280,
    "height": 120,
@@ -602,7 +839,7 @@
    "id": "t-fp-share",
    "type": "file",
    "file": "nodes/t-fp-share.md",
-   "x": 3840,
+   "x": 10240,
    "y": 880,
    "width": 280,
    "height": 120,
@@ -612,7 +849,7 @@
    "id": "t-fp-vertical",
    "type": "file",
    "file": "nodes/t-fp-vertical.md",
-   "x": 4160,
+   "x": 10560,
    "y": 880,
    "width": 280,
    "height": 120,
@@ -622,7 +859,7 @@
    "id": "t-insole",
    "type": "file",
    "file": "nodes/t-insole.md",
-   "x": 4480,
+   "x": 10880,
    "y": 880,
    "width": 280,
    "height": 120
@@ -631,8 +868,8 @@
    "id": "t-kin-labvalidation",
    "type": "file",
    "file": "nodes/t-kin-labvalidation.md",
-   "x": 1280,
-   "y": 660,
+   "x": 6720,
+   "y": 880,
    "width": 280,
    "height": 120
   },
@@ -640,8 +877,17 @@
    "id": "t-kin-volunteer",
    "type": "file",
    "file": "nodes/t-kin-volunteer.md",
-   "x": 1600,
-   "y": 660,
+   "x": 7040,
+   "y": 880,
+   "width": 280,
+   "height": 120
+  },
+  {
+   "id": "t-loads-measured-forces",
+   "type": "file",
+   "file": "nodes/t-loads-measured-forces.md",
+   "x": 8000,
+   "y": 880,
    "width": 280,
    "height": 120
   },
@@ -649,8 +895,8 @@
    "id": "t-prototype-press",
    "type": "file",
    "file": "nodes/t-prototype-press.md",
-   "x": 6720,
-   "y": 660,
+   "x": 6080,
+   "y": 1100,
    "width": 280,
    "height": 120
   },
@@ -658,8 +904,8 @@
    "id": "t-rebuild-laptop",
    "type": "file",
    "file": "nodes/t-rebuild-laptop.md",
-   "x": 7040,
-   "y": 660,
+   "x": 6400,
+   "y": 1100,
    "width": 280,
    "height": 120
   },
@@ -667,7 +913,7 @@
    "id": "t-regional",
    "type": "file",
    "file": "nodes/t-regional.md",
-   "x": 4800,
+   "x": 11200,
    "y": 880,
    "width": 280,
    "height": 120
@@ -676,7 +922,7 @@
    "id": "t-share-lever-rule",
    "type": "file",
    "file": "nodes/t-share-lever-rule.md",
-   "x": 5120,
+   "x": 11520,
    "y": 880,
    "width": 280,
    "height": 120
@@ -685,8 +931,8 @@
    "id": "t-slimevr",
    "type": "file",
    "file": "nodes/t-slimevr.md",
-   "x": 640,
-   "y": 660,
+   "x": 7360,
+   "y": 880,
    "width": 280,
    "height": 120
   },
@@ -694,7 +940,7 @@
    "id": "t-spacing-convergence",
    "type": "file",
    "file": "nodes/t-spacing-convergence.md",
-   "x": 2240,
+   "x": 8640,
    "y": 880,
    "width": 280,
    "height": 120,
@@ -704,7 +950,7 @@
    "id": "t-spacing-finer",
    "type": "file",
    "file": "nodes/t-spacing-finer.md",
-   "x": 5440,
+   "x": 11840,
    "y": 880,
    "width": 280,
    "height": 120
@@ -713,8 +959,8 @@
    "id": "t-suit-ble",
    "type": "file",
    "file": "nodes/t-suit-ble.md",
-   "x": 320,
-   "y": 660,
+   "x": 1920,
+   "y": 880,
    "width": 280,
    "height": 120
   },
@@ -722,8 +968,8 @@
    "id": "twin-tier-a-subject",
    "type": "file",
    "file": "nodes/twin-tier-a-subject.md",
-   "x": 1920,
-   "y": 440,
+   "x": 2880,
+   "y": 660,
    "width": 280,
    "height": 120,
    "color": "2"
@@ -749,9 +995,9 @@
    "label": "blocks"
   },
   {
-   "id": "D-05--blocks--idea-assistance-track",
+   "id": "D-05--blocks--exo-hardware",
    "fromNode": "D-05",
-   "toNode": "idea-assistance-track",
+   "toNode": "exo-hardware",
    "fromSide": "bottom",
    "toSide": "top",
    "color": "2",
@@ -774,6 +1020,20 @@
    "toSide": "top",
    "color": "2",
    "label": "blocks"
+  },
+  {
+   "id": "pillar-adapt--parent--adapt-progress",
+   "fromNode": "pillar-adapt",
+   "toNode": "adapt-progress",
+   "fromSide": "bottom",
+   "toSide": "top"
+  },
+  {
+   "id": "pillar-adapt--parent--adapt-strength-calibration",
+   "fromNode": "pillar-adapt",
+   "toNode": "adapt-strength-calibration",
+   "fromSide": "bottom",
+   "toSide": "top"
   },
   {
    "id": "goal-clinician-feedback--parent--cues-clinician-review",
@@ -837,6 +1097,45 @@
    "label": "blocks"
   },
   {
+   "id": "goal-exoskeleton--parent--exo-assist-simulation",
+   "fromNode": "goal-exoskeleton",
+   "toNode": "exo-assist-simulation",
+   "fromSide": "bottom",
+   "toSide": "top"
+  },
+  {
+   "id": "exo-ideal-sizing--needed by--exo-assist-simulation",
+   "fromNode": "exo-ideal-sizing",
+   "toNode": "exo-assist-simulation",
+   "fromSide": "bottom",
+   "toSide": "top",
+   "color": "3",
+   "label": "needed by"
+  },
+  {
+   "id": "goal-exoskeleton--parent--exo-hardware",
+   "fromNode": "goal-exoskeleton",
+   "toNode": "exo-hardware",
+   "fromSide": "bottom",
+   "toSide": "top"
+  },
+  {
+   "id": "exo-assist-simulation--needed by--exo-hardware",
+   "fromNode": "exo-assist-simulation",
+   "toNode": "exo-hardware",
+   "fromSide": "bottom",
+   "toSide": "top",
+   "color": "3",
+   "label": "needed by"
+  },
+  {
+   "id": "goal-exoskeleton--parent--exo-ideal-sizing",
+   "fromNode": "goal-exoskeleton",
+   "toNode": "exo-ideal-sizing",
+   "fromSide": "bottom",
+   "toSide": "top"
+  },
+  {
    "id": "goal-measured-forces--parent--forces-session-measurement",
    "fromNode": "goal-measured-forces",
    "toNode": "forces-session-measurement",
@@ -853,58 +1152,86 @@
    "label": "needed by"
   },
   {
-   "id": "rehab-agent--parent--goal-clinician-feedback",
-   "fromNode": "rehab-agent",
+   "id": "pillar-act--parent--goal-clinician-feedback",
+   "fromNode": "pillar-act",
    "toNode": "goal-clinician-feedback",
    "fromSide": "bottom",
    "toSide": "top"
   },
   {
-   "id": "rehab-agent--parent--goal-haptic-suit",
-   "fromNode": "rehab-agent",
+   "id": "pillar-act--parent--goal-exoskeleton",
+   "fromNode": "pillar-act",
+   "toNode": "goal-exoskeleton",
+   "fromSide": "bottom",
+   "toSide": "top"
+  },
+  {
+   "id": "pillar-act--parent--goal-haptic-suit",
+   "fromNode": "pillar-act",
    "toNode": "goal-haptic-suit",
    "fromSide": "bottom",
    "toSide": "top"
   },
   {
-   "id": "rehab-agent--parent--goal-measured-forces",
-   "fromNode": "rehab-agent",
+   "id": "pillar-sense--parent--goal-measured-forces",
+   "fromNode": "pillar-sense",
    "toNode": "goal-measured-forces",
    "fromSide": "bottom",
    "toSide": "top"
   },
   {
-   "id": "rehab-agent--parent--goal-measured-kinematics",
-   "fromNode": "rehab-agent",
+   "id": "pillar-sense--parent--goal-measured-kinematics",
+   "fromNode": "pillar-sense",
    "toNode": "goal-measured-kinematics",
    "fromSide": "bottom",
    "toSide": "top"
   },
   {
-   "id": "rehab-agent--parent--goal-personal-twin",
-   "fromNode": "rehab-agent",
+   "id": "pillar-simulate--parent--goal-muscle-loads",
+   "fromNode": "pillar-simulate",
+   "toNode": "goal-muscle-loads",
+   "fromSide": "bottom",
+   "toSide": "top"
+  },
+  {
+   "id": "pillar-personalise--parent--goal-personal-twin",
+   "fromNode": "pillar-personalise",
    "toNode": "goal-personal-twin",
    "fromSide": "bottom",
    "toSide": "top"
   },
   {
-   "id": "rehab-agent--parent--goal-sensor-sole",
-   "fromNode": "rehab-agent",
+   "id": "goal-measured-forces--parent--goal-sensor-sole",
+   "fromNode": "goal-measured-forces",
    "toNode": "goal-sensor-sole",
    "fromSide": "bottom",
    "toSide": "top"
   },
   {
-   "id": "goal-sensor-sole--parent--goal-sole-simulation",
-   "fromNode": "goal-sensor-sole",
+   "id": "pillar-simulate--parent--goal-sole-simulation",
+   "fromNode": "pillar-simulate",
    "toNode": "goal-sole-simulation",
    "fromSide": "bottom",
    "toSide": "top"
   },
   {
-   "id": "idea-assistance-track--serves--goal-measured-forces",
+   "id": "pillar-personalise--parent--goal-twin-layers",
+   "fromNode": "pillar-personalise",
+   "toNode": "goal-twin-layers",
+   "fromSide": "bottom",
+   "toSide": "top"
+  },
+  {
+   "id": "rehab-agent--parent--goal-working-method",
+   "fromNode": "rehab-agent",
+   "toNode": "goal-working-method",
+   "fromSide": "bottom",
+   "toSide": "top"
+  },
+  {
+   "id": "idea-assistance-track--serves--goal-exoskeleton",
    "fromNode": "idea-assistance-track",
-   "toNode": "goal-measured-forces",
+   "toNode": "goal-exoskeleton",
    "fromSide": "bottom",
    "toSide": "top",
    "color": "5",
@@ -914,6 +1241,15 @@
    "id": "idea-assurance-case--serves--goal-clinician-feedback",
    "fromNode": "idea-assurance-case",
    "toNode": "goal-clinician-feedback",
+   "fromSide": "bottom",
+   "toSide": "top",
+   "color": "5",
+   "label": "serves"
+  },
+  {
+   "id": "idea-auto-repersonalise--serves--pillar-adapt",
+   "fromNode": "idea-auto-repersonalise",
+   "toNode": "pillar-adapt",
    "fromSide": "bottom",
    "toSide": "top",
    "color": "5",
@@ -965,9 +1301,9 @@
    "label": "serves"
   },
   {
-   "id": "idea-thoracolumbar-model--serves--rehab-agent",
+   "id": "idea-thoracolumbar-model--serves--goal-twin-layers",
    "fromNode": "idea-thoracolumbar-model",
-   "toNode": "rehab-agent",
+   "toNode": "goal-twin-layers",
    "fromSide": "bottom",
    "toSide": "top",
    "color": "5",
@@ -997,16 +1333,116 @@
    "toSide": "top"
   },
   {
-   "id": "rehab-agent--parent--project-ci-suites",
+   "id": "goal-twin-layers--parent--layer-alignment",
+   "fromNode": "goal-twin-layers",
+   "toNode": "layer-alignment",
+   "fromSide": "bottom",
+   "toSide": "top"
+  },
+  {
+   "id": "goal-twin-layers--parent--layer-bones-from-shape",
+   "fromNode": "goal-twin-layers",
+   "toNode": "layer-bones-from-shape",
+   "fromSide": "bottom",
+   "toSide": "top"
+  },
+  {
+   "id": "goal-twin-layers--parent--layer-muscles",
+   "fromNode": "goal-twin-layers",
+   "toNode": "layer-muscles",
+   "fromSide": "bottom",
+   "toSide": "top"
+  },
+  {
+   "id": "goal-twin-layers--parent--layer-person-folder",
+   "fromNode": "goal-twin-layers",
+   "toNode": "layer-person-folder",
+   "fromSide": "bottom",
+   "toSide": "top"
+  },
+  {
+   "id": "goal-twin-layers--parent--layer-shape-and-mass",
+   "fromNode": "goal-twin-layers",
+   "toNode": "layer-shape-and-mass",
+   "fromSide": "bottom",
+   "toSide": "top"
+  },
+  {
+   "id": "rehab-agent--parent--pillar-act",
    "fromNode": "rehab-agent",
+   "toNode": "pillar-act",
+   "fromSide": "bottom",
+   "toSide": "top"
+  },
+  {
+   "id": "rehab-agent--parent--pillar-adapt",
+   "fromNode": "rehab-agent",
+   "toNode": "pillar-adapt",
+   "fromSide": "bottom",
+   "toSide": "top"
+  },
+  {
+   "id": "rehab-agent--parent--pillar-personalise",
+   "fromNode": "rehab-agent",
+   "toNode": "pillar-personalise",
+   "fromSide": "bottom",
+   "toSide": "top"
+  },
+  {
+   "id": "rehab-agent--parent--pillar-sense",
+   "fromNode": "rehab-agent",
+   "toNode": "pillar-sense",
+   "fromSide": "bottom",
+   "toSide": "top"
+  },
+  {
+   "id": "rehab-agent--parent--pillar-simulate",
+   "fromNode": "rehab-agent",
+   "toNode": "pillar-simulate",
+   "fromSide": "bottom",
+   "toSide": "top"
+  },
+  {
+   "id": "goal-working-method--parent--project-ci-suites",
+   "fromNode": "goal-working-method",
    "toNode": "project-ci-suites",
    "fromSide": "bottom",
    "toSide": "top"
   },
   {
-   "id": "rehab-agent--parent--project-claude-md",
-   "fromNode": "rehab-agent",
+   "id": "goal-working-method--parent--project-claude-md",
+   "fromNode": "goal-working-method",
    "toNode": "project-claude-md",
+   "fromSide": "bottom",
+   "toSide": "top"
+  },
+  {
+   "id": "goal-muscle-loads--parent--sim-joint-load",
+   "fromNode": "goal-muscle-loads",
+   "toNode": "sim-joint-load",
+   "fromSide": "bottom",
+   "toSide": "top"
+  },
+  {
+   "id": "goal-muscle-loads--parent--sim-loads-measured-forces",
+   "fromNode": "goal-muscle-loads",
+   "toNode": "sim-loads-measured-forces",
+   "fromSide": "bottom",
+   "toSide": "top"
+  },
+  {
+   "id": "forces-session-measurement--needed by--sim-loads-measured-forces",
+   "fromNode": "forces-session-measurement",
+   "toNode": "sim-loads-measured-forces",
+   "fromSide": "bottom",
+   "toSide": "top",
+   "color": "3",
+   "label": "needed by"
+  },
+  {
+   "id": "goal-muscle-loads--parent--sim-muscles",
+   "fromNode": "goal-muscle-loads",
+   "toNode": "sim-muscles",
    "fromSide": "bottom",
    "toSide": "top"
   },
@@ -1172,8 +1608,8 @@
    "toSide": "top"
   },
   {
-   "id": "goal-haptic-suit--parent--suit-slimevr-validation",
-   "fromNode": "goal-haptic-suit",
+   "id": "goal-measured-kinematics--parent--suit-slimevr-validation",
+   "fromNode": "goal-measured-kinematics",
    "toNode": "suit-slimevr-validation",
    "fromSide": "bottom",
    "toSide": "top"
@@ -1217,6 +1653,13 @@
    "id": "sole-forceplate-dynamic--parent--t-dyn-h2",
    "fromNode": "sole-forceplate-dynamic",
    "toNode": "t-dyn-h2",
+   "fromSide": "bottom",
+   "toSide": "top"
+  },
+  {
+   "id": "exo-assist-simulation--parent--t-exo-assist",
+   "fromNode": "exo-assist-simulation",
+   "toNode": "t-exo-assist",
    "fromSide": "bottom",
    "toSide": "top"
   },
@@ -1273,6 +1716,13 @@
    "id": "kin-volunteer-recording--parent--t-kin-volunteer",
    "fromNode": "kin-volunteer-recording",
    "toNode": "t-kin-volunteer",
+   "fromSide": "bottom",
+   "toSide": "top"
+  },
+  {
+   "id": "sim-loads-measured-forces--parent--t-loads-measured-forces",
+   "fromNode": "sim-loads-measured-forces",
+   "toNode": "t-loads-measured-forces",
    "fromSide": "bottom",
    "toSide": "top"
   },

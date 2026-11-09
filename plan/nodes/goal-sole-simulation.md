@@ -3,9 +3,9 @@ type: "goal"
 title: "The simulated foot-to-ground model, checked against measurement"
 status: "open"
 area: "sole"
-parent: "[[goal-sensor-sole]]"
+parent: "[[pillar-simulate]]"
 source: "hardware/sensor-sole/VALIDATION_PLAN.md"
-updated: "2026-11-08"
+updated: "2026-11-09"
 ---
 # The simulated foot-to-ground model, checked against measurement
 

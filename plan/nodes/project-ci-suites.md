@@ -3,10 +3,10 @@ type: "step"
 title: "CI runs every test suite that needs no external files"
 status: "open"
 area: "project"
-parent: "[[rehab-agent]]"
+parent: "[[goal-working-method]]"
 priority: "2"
 source: "hardware/sensor-sole/TEST_RUNS.md"
-updated: "2026-11-08"
+updated: "2026-11-09"
 ---
 # CI runs every test suite that needs no external files
 

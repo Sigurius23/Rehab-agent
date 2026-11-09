@@ -3,9 +3,9 @@ type: "goal"
 title: "Haptic cues reach the body reliably"
 status: "open"
 area: "suit"
-parent: "[[rehab-agent]]"
+parent: "[[pillar-act]]"
 source: "docs/gaps-and-open-decisions.md G-04, G-05"
-updated: "2026-11-08"
+updated: "2026-11-09"
 ---
 # Haptic cues reach the body reliably
 

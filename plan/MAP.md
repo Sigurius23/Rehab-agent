@@ -2,93 +2,25 @@
 
 # Plan map
 
-76 notes: 8 goals, 22 steps, 22 tests, 9 ideas, 15 decisions.
+101 notes: 17 goals, 35 steps, 24 tests, 10 ideas, 15 decisions.
+
+## The engine
 
 ```mermaid
-flowchart LR
-  n0{{"D-02: MRI/CT access pathway<br/>for Tier-A onboarding?"}}:::decision_open
-  n1{{"D-03: Clinical acceptance<br/>thresholds: adopt<br/>docs/accuracy.md as is, or<br/>clinician-adjusted per<br/>movement?"}}:::decision_open
-  n2{{"D-06: Patient-facing surface?"}}:::decision_open
-  n3{{"D-07: Data jurisdiction and<br/>retention for RGB-D health<br/>data?"}}:::decision_open
-  n4["A clinician reviews the cue rules,<br/>per movement"]:::step_blocked
-  n5{{"d-fabricator-enquiry: Send the<br/>flex fabrication enquiry?"}}:::decision_open
-  n6{{"d-prototype-materials: Buy the<br/>materials for the printed<br/>prototype and the coupon test?"}}:::decision_open
-  n7{{"d-suit-bench-hardware: Buy one<br/>ESP32 and vibration motors for<br/>the BLE bench test?"}}:::decision_open
-  n8["Measured ground forces in our own<br/>validation session<br/>tests ○1"]:::step_open
-  n9(["Clinician-authored feedback,<br/>switched on only where validated"]):::goal_open
-  n10(["Haptic cues reach the body<br/>reliably"]):::goal_open
-  n11(["Muscle and exoskeleton numbers<br/>rest on measured ground forces"]):::goal_open
-  n12(["Joint angles measured against a<br/>reference, per joint and movement"]):::goal_open
-  n13(["A Tier-A personal twin from<br/>imaging"]):::goal_open
-  n14(["A pressure-sensing sole whose<br/>readings are validated against<br/>measurement"]):::goal_open
-  n15(["The simulated foot-to-ground<br/>model, checked against measurement"]):::goal_open
-  n16["Video kinematics on OpenCap<br/>LabValidation against marker<br/>motion capture<br/>tests ○1"]:::step_open
-  n17["One volunteer, one exercise,<br/>recorded with our own hardware<br/>tests ○1"]:::step_open
-  n18["CI runs every test suite that<br/>needs no external files<br/>tests ○1"]:::step_open
-  n19["Standing rules for agent sessions<br/>in CLAUDE.md<br/>tests ○1"]:::step_open
-  n20(["Rehab Agent: an anatomically<br/>accurate movement twin a clinician<br/>can trust"]):::goal_open
-  n21["Boards designed, routed and<br/>checked: EU 37, 42, 46 and a<br/>personal foot, both sides<br/>tests ✓1"]:::step_done
-  n22["The sensor film's measured<br/>response (coupon test)<br/>tests ○1"]:::step_open
-  n23["Flex boards fabricated"]:::step_blocked
-  n24["Foot models compared on the same<br/>virtual sole<br/>tests ✗1"]:::step_done
-  n25["Footbed and shoe layers in the<br/>simulation<br/>tests ○1"]:::step_open
-  n26["Dynamic force-plate check: our<br/>sole against OpenCap's spheres<br/>tests ○2"]:::step_doing
-  n27["Quasi-static force-plate check on<br/>OpenCap LabValidation (stage A)<br/>tests ✓1 ✗2"]:::step_done
-  n28["Foot-insole contact against an<br/>in-shoe sensor (stage C)<br/>tests ○1"]:::step_open
-  n29["A printed prototype tried on a<br/>real foot<br/>tests ○1"]:::step_open
-  n30["Boards and the self-test model<br/>rebuild identically on another<br/>machine<br/>tests ○1"]:::step_open
-  n31["Regional plantar pressure,<br/>barefoot (stage B)<br/>tests ○1"]:::step_open
-  n32["Why the left/right share fails:<br/>centre of mass or foot contact<br/>tests ○1"]:::step_open
-  n33["Contact spacing converged for<br/>regional shares<br/>tests ○1"]:::step_open
-  n34["BLE write to SenseShift on a bench<br/>ESP32<br/>tests ○1"]:::step_open
-  n35["SlimeVR posture signals against<br/>motion capture<br/>tests ○1"]:::step_open
-  n36["First Tier-A subject: a<br/>personalised model from MRI or CT"]:::step_blocked
-  n0 -. blocks .-> n36
-  n1 -. blocks .-> n4
-  n2 -. blocks .-> n4
-  n3 -. blocks .-> n17
-  n9 --> n4
-  n16 -. needed by .-> n4
-  n5 -. blocks .-> n23
-  n6 -. blocks .-> n29
-  n6 -. blocks .-> n22
-  n7 -. blocks .-> n34
-  n11 --> n8
-  n17 -. needed by .-> n8
-  n20 --> n9
-  n20 --> n10
-  n20 --> n11
-  n20 --> n12
-  n20 --> n13
-  n20 --> n14
-  n14 --> n15
-  n12 --> n16
-  n12 --> n17
-  n20 --> n18
-  n20 --> n19
-  n14 --> n21
-  n14 --> n22
-  n14 --> n23
-  n29 -. needed by .-> n23
-  n15 --> n24
-  n15 --> n25
-  n15 --> n26
-  n27 -. needed by .-> n26
-  n15 --> n27
-  n15 --> n28
-  n25 -. needed by .-> n28
-  n22 -. needed by .-> n28
-  n14 --> n29
-  n14 --> n30
-  n15 --> n31
-  n33 -. needed by .-> n31
-  n15 --> n32
-  n27 -. needed by .-> n32
-  n15 --> n33
-  n24 -. needed by .-> n33
-  n10 --> n34
-  n10 --> n35
-  n13 --> n36
+flowchart TB
+  r(["A full-body digital twin that<br/>personalises to each person and adapts<br/>as they change"]):::goal_open
+  p0(["Sense: measure the person's<br/>movement, forces and body<br/><i>1 done · 7 open · 1 blocked · 2 ideas · 3 decisions</i>"]):::goal_open
+  r --> p0
+  p1(["Personalise: the person's own<br/>bones, shape, mass and muscles<br/><i>5 done · 1 blocked · 1 idea · 1 decision</i>"]):::goal_open
+  r --> p1
+  p2(["Simulate: joint loads, muscle<br/>forces and contact for this<br/>body<br/><i>4 done · 1 doing · 6 open · 4 ideas · 1 decision</i>"]):::goal_open
+  r --> p2
+  p3(["Adapt: the twin follows the<br/>person over time<br/><i>2 done · 1 idea</i>"]):::goal_open
+  r --> p3
+  p4(["Act: feedback and assistance<br/>from the twin<br/><i>1 done · 2 open · 2 blocked · 1 idea · 4 decisions</i>"]):::goal_open
+  r --> p4
+  p5(["How we work: tests, CI and<br/>standing rules<br/><i>2 open</i>"]):::goal_open
+  r --> p5
   classDef goal_open fill:#e1d5f5,stroke:#555,color:#111
   classDef goal_done fill:#c8e6c9,stroke:#555,color:#111
   classDef step_open fill:#ffffff,stroke:#555,color:#111
@@ -107,6 +39,311 @@ flowchart LR
   classDef idea_dropped fill:#eeeeee,stroke:#555,color:#111,stroke-dasharray: 4 3
   classDef decision_open fill:#ffe0b2,stroke:#555,color:#111
   classDef decision_decided fill:#ffe0b2,stroke:#555,color:#111
+  classDef external fill:#f5f5f5,stroke:#aaa,color:#777,stroke-dasharray: 2 2
+```
+
+## Sense: measure the person's movement, forces and body
+
+```mermaid
+flowchart LR
+  n0{{"D-07: Data jurisdiction and<br/>retention for RGB-D health<br/>data?"}}:::decision_open
+  n1{{"d-fabricator-enquiry: Send the<br/>flex fabrication enquiry?"}}:::decision_open
+  n2{{"d-prototype-materials: Buy the<br/>materials for the printed<br/>prototype and the coupon test?"}}:::decision_open
+  n3["Measured ground forces in our own<br/>validation session<br/>tests ○1"]:::step_open
+  n4(["Ground forces and plantar pressure<br/>measured, in the lab and in daily<br/>life"]):::goal_open
+  n5(["Joint angles measured against a<br/>reference, per joint and movement"]):::goal_open
+  n6(["A pressure-sensing sole whose<br/>readings are validated against<br/>measurement"]):::goal_open
+  n7>"A consumer balance board for our<br/>own quiet-standing measurements"]:::idea_new
+  n8>"Higher-resolution T1 sole<br/>candidate"]:::idea_new
+  n9["Video kinematics on OpenCap<br/>LabValidation against marker<br/>motion capture<br/>tests ○1"]:::step_open
+  n10["One volunteer, one exercise,<br/>recorded with our own hardware<br/>tests ○1"]:::step_open
+  n11(["Sense: measure the person's<br/>movement, forces and body"]):::goal_open
+  n12["Boards designed, routed and<br/>checked: EU 37, 42, 46 and a<br/>personal foot, both sides<br/>tests ✓1"]:::step_done
+  n13["The sensor film's measured<br/>response (coupon test)<br/>tests ○1"]:::step_open
+  n14["Flex boards fabricated"]:::step_blocked
+  n15["A printed prototype tried on a<br/>real foot<br/>tests ○1"]:::step_open
+  n16["Boards and the self-test model<br/>rebuild identically on another<br/>machine<br/>tests ○1"]:::step_open
+  n17["SlimeVR posture signals against<br/>motion capture<br/>tests ○1"]:::step_open
+  n18["A clinician reviews the cue rules,<br/>per movement<br/><i>(Act)</i>"]:::external
+  n19["Muscle and joint-load numbers from<br/>measured ground forces<br/>tests ○1<br/><i>(Simulate)</i>"]:::external
+  n20["Foot-insole contact against an<br/>in-shoe sensor (stage C)<br/>tests ○1<br/><i>(Simulate)</i>"]:::external
+  n0 -. blocks .-> n10
+  n1 -. blocks .-> n14
+  n2 -. blocks .-> n15
+  n2 -. blocks .-> n13
+  n4 --> n3
+  n10 -. needed by .-> n3
+  n11 --> n4
+  n11 --> n5
+  n4 --> n6
+  n7 -.-o n4
+  n8 -.-o n6
+  n5 --> n9
+  n5 --> n10
+  n6 --> n12
+  n6 --> n13
+  n6 --> n14
+  n15 -. needed by .-> n14
+  n6 --> n15
+  n6 --> n16
+  n5 --> n17
+  n9 -. needed by .-> n18
+  n3 -. needed by .-> n19
+  n13 -. needed by .-> n20
+  classDef goal_open fill:#e1d5f5,stroke:#555,color:#111
+  classDef goal_done fill:#c8e6c9,stroke:#555,color:#111
+  classDef step_open fill:#ffffff,stroke:#555,color:#111
+  classDef step_doing fill:#fff3c4,stroke:#555,color:#111
+  classDef step_done fill:#c8e6c9,stroke:#555,color:#111
+  classDef step_blocked fill:#ffe0b2,stroke:#555,color:#111
+  classDef step_dropped fill:#eeeeee,stroke:#555,color:#111
+  classDef test_planned fill:#ffffff,stroke:#555,color:#111
+  classDef test_running fill:#fff3c4,stroke:#555,color:#111
+  classDef test_passed fill:#c8e6c9,stroke:#555,color:#111
+  classDef test_failed fill:#ffcdd2,stroke:#555,color:#111
+  classDef test_mixed fill:#fff3c4,stroke:#555,color:#111
+  classDef test_dropped fill:#eeeeee,stroke:#555,color:#111
+  classDef idea_new fill:#d7f0f7,stroke:#555,color:#111,stroke-dasharray: 4 3
+  classDef idea_promoted fill:#eeeeee,stroke:#555,color:#111,stroke-dasharray: 4 3
+  classDef idea_dropped fill:#eeeeee,stroke:#555,color:#111,stroke-dasharray: 4 3
+  classDef decision_open fill:#ffe0b2,stroke:#555,color:#111
+  classDef decision_decided fill:#ffe0b2,stroke:#555,color:#111
+  classDef external fill:#f5f5f5,stroke:#aaa,color:#777,stroke-dasharray: 2 2
+```
+
+## Personalise: the person's own bones, shape, mass and muscles
+
+```mermaid
+flowchart LR
+  n0{{"D-02: MRI/CT access pathway<br/>for Tier-A onboarding?"}}:::decision_open
+  n1(["A Tier-A personal twin from<br/>imaging"]):::goal_open
+  n2(["Twin layers from everyday<br/>measurements (Tier C and B)"]):::goal_open
+  n3>"Thoracolumbar full-body model, for<br/>a later spine-load study"]:::idea_new
+  n4["The person's own knee, leg and<br/>shoulder alignment, with clinician<br/>safety flags"]:::step_done
+  n5["Bones from body shape (SKEL joint<br/>centres to the OpenSim scale set)"]:::step_done
+  n6["Muscle capacity from body size,<br/>age and sex, DXA or imaging, and<br/>strength from dynamometry"]:::step_done
+  n7["One body across sessions: the<br/>person folder"]:::step_done
+  n8["Body surface from depth, and mass<br/>distribution from DXA"]:::step_done
+  n9(["Personalise: the person's own<br/>bones, shape, mass and muscles"]):::goal_open
+  n10["First Tier-A subject: a<br/>personalised model from MRI or CT"]:::step_blocked
+  n0 -. blocks .-> n10
+  n9 --> n1
+  n9 --> n2
+  n3 -.-o n2
+  n2 --> n4
+  n2 --> n5
+  n2 --> n6
+  n2 --> n7
+  n2 --> n8
+  n1 --> n10
+  classDef goal_open fill:#e1d5f5,stroke:#555,color:#111
+  classDef goal_done fill:#c8e6c9,stroke:#555,color:#111
+  classDef step_open fill:#ffffff,stroke:#555,color:#111
+  classDef step_doing fill:#fff3c4,stroke:#555,color:#111
+  classDef step_done fill:#c8e6c9,stroke:#555,color:#111
+  classDef step_blocked fill:#ffe0b2,stroke:#555,color:#111
+  classDef step_dropped fill:#eeeeee,stroke:#555,color:#111
+  classDef test_planned fill:#ffffff,stroke:#555,color:#111
+  classDef test_running fill:#fff3c4,stroke:#555,color:#111
+  classDef test_passed fill:#c8e6c9,stroke:#555,color:#111
+  classDef test_failed fill:#ffcdd2,stroke:#555,color:#111
+  classDef test_mixed fill:#fff3c4,stroke:#555,color:#111
+  classDef test_dropped fill:#eeeeee,stroke:#555,color:#111
+  classDef idea_new fill:#d7f0f7,stroke:#555,color:#111,stroke-dasharray: 4 3
+  classDef idea_promoted fill:#eeeeee,stroke:#555,color:#111,stroke-dasharray: 4 3
+  classDef idea_dropped fill:#eeeeee,stroke:#555,color:#111,stroke-dasharray: 4 3
+  classDef decision_open fill:#ffe0b2,stroke:#555,color:#111
+  classDef decision_decided fill:#ffe0b2,stroke:#555,color:#111
+  classDef external fill:#f5f5f5,stroke:#aaa,color:#777,stroke-dasharray: 2 2
+```
+
+## Simulate: joint loads, muscle forces and contact for this body
+
+```mermaid
+flowchart LR
+  n0{{"d-sikidar-account: Create a<br/>SimTK account to download the<br/>Sikidar model?"}}:::decision_open
+  n1(["Muscle forces and joint loads for<br/>the person's body"]):::goal_open
+  n2(["The simulated foot-to-ground<br/>model, checked against measurement"]):::goal_open
+  n3>"MuJoCo / MyoSuite contact layer,<br/>after a feasibility check"]:::idea_new
+  n4>"Sikidar-Kalyanasundaram foot model<br/>in the comparison"]:::idea_new
+  n5>"Per-toe placement for the five-toe<br/>Synergy foot"]:::idea_new
+  n6>"Many-run uncertainty analysis on<br/>the GPU"]:::idea_new
+  n7(["Simulate: joint loads, muscle<br/>forces and contact for this body"]):::goal_open
+  n8["Knee joint load: scenarios within<br/>one person"]:::step_done
+  n9["Muscle and joint-load numbers from<br/>measured ground forces<br/>tests ○1"]:::step_open
+  n10["Muscle forces and weakness<br/>what-ifs (rehabtwin muscles)"]:::step_done
+  n11["Foot models compared on the same<br/>virtual sole<br/>tests ✗1"]:::step_done
+  n12["Footbed and shoe layers in the<br/>simulation<br/>tests ○1"]:::step_open
+  n13["Dynamic force-plate check: our<br/>sole against OpenCap's spheres<br/>tests ○2"]:::step_doing
+  n14["Quasi-static force-plate check on<br/>OpenCap LabValidation (stage A)<br/>tests ✓1 ✗2"]:::step_done
+  n15["Foot-insole contact against an<br/>in-shoe sensor (stage C)<br/>tests ○1"]:::step_open
+  n16["Regional plantar pressure,<br/>barefoot (stage B)<br/>tests ○1"]:::step_open
+  n17["Why the left/right share fails:<br/>centre of mass or foot contact<br/>tests ○1"]:::step_open
+  n18["Contact spacing converged for<br/>regional shares<br/>tests ○1"]:::step_open
+  n19["Measured ground forces in our own<br/>validation session<br/>tests ○1<br/><i>(Sense)</i>"]:::external
+  n20["The sensor film's measured<br/>response (coupon test)<br/>tests ○1<br/><i>(Sense)</i>"]:::external
+  n0 -. blocks .-> n4
+  n7 --> n1
+  n7 --> n2
+  n3 -.-o n2
+  n4 -.-o n11
+  n5 -.-o n11
+  n6 -.-o n2
+  n1 --> n8
+  n1 --> n9
+  n19 -. needed by .-> n9
+  n1 --> n10
+  n2 --> n11
+  n2 --> n12
+  n2 --> n13
+  n14 -. needed by .-> n13
+  n2 --> n14
+  n2 --> n15
+  n12 -. needed by .-> n15
+  n20 -. needed by .-> n15
+  n2 --> n16
+  n18 -. needed by .-> n16
+  n2 --> n17
+  n14 -. needed by .-> n17
+  n2 --> n18
+  n11 -. needed by .-> n18
+  classDef goal_open fill:#e1d5f5,stroke:#555,color:#111
+  classDef goal_done fill:#c8e6c9,stroke:#555,color:#111
+  classDef step_open fill:#ffffff,stroke:#555,color:#111
+  classDef step_doing fill:#fff3c4,stroke:#555,color:#111
+  classDef step_done fill:#c8e6c9,stroke:#555,color:#111
+  classDef step_blocked fill:#ffe0b2,stroke:#555,color:#111
+  classDef step_dropped fill:#eeeeee,stroke:#555,color:#111
+  classDef test_planned fill:#ffffff,stroke:#555,color:#111
+  classDef test_running fill:#fff3c4,stroke:#555,color:#111
+  classDef test_passed fill:#c8e6c9,stroke:#555,color:#111
+  classDef test_failed fill:#ffcdd2,stroke:#555,color:#111
+  classDef test_mixed fill:#fff3c4,stroke:#555,color:#111
+  classDef test_dropped fill:#eeeeee,stroke:#555,color:#111
+  classDef idea_new fill:#d7f0f7,stroke:#555,color:#111,stroke-dasharray: 4 3
+  classDef idea_promoted fill:#eeeeee,stroke:#555,color:#111,stroke-dasharray: 4 3
+  classDef idea_dropped fill:#eeeeee,stroke:#555,color:#111,stroke-dasharray: 4 3
+  classDef decision_open fill:#ffe0b2,stroke:#555,color:#111
+  classDef decision_decided fill:#ffe0b2,stroke:#555,color:#111
+  classDef external fill:#f5f5f5,stroke:#aaa,color:#777,stroke-dasharray: 2 2
+```
+
+## Adapt: the twin follows the person over time
+
+```mermaid
+flowchart LR
+  n0["Progress across sessions, with<br/>detectability"]:::step_done
+  n1["Strength calibrated from<br/>dynamometry"]:::step_done
+  n2>"Re-personalise automatically from<br/>each session's measurements"]:::idea_new
+  n3(["Adapt: the twin follows the person<br/>over time"]):::goal_open
+  n3 --> n0
+  n3 --> n1
+  n2 -.-o n3
+  classDef goal_open fill:#e1d5f5,stroke:#555,color:#111
+  classDef goal_done fill:#c8e6c9,stroke:#555,color:#111
+  classDef step_open fill:#ffffff,stroke:#555,color:#111
+  classDef step_doing fill:#fff3c4,stroke:#555,color:#111
+  classDef step_done fill:#c8e6c9,stroke:#555,color:#111
+  classDef step_blocked fill:#ffe0b2,stroke:#555,color:#111
+  classDef step_dropped fill:#eeeeee,stroke:#555,color:#111
+  classDef test_planned fill:#ffffff,stroke:#555,color:#111
+  classDef test_running fill:#fff3c4,stroke:#555,color:#111
+  classDef test_passed fill:#c8e6c9,stroke:#555,color:#111
+  classDef test_failed fill:#ffcdd2,stroke:#555,color:#111
+  classDef test_mixed fill:#fff3c4,stroke:#555,color:#111
+  classDef test_dropped fill:#eeeeee,stroke:#555,color:#111
+  classDef idea_new fill:#d7f0f7,stroke:#555,color:#111,stroke-dasharray: 4 3
+  classDef idea_promoted fill:#eeeeee,stroke:#555,color:#111,stroke-dasharray: 4 3
+  classDef idea_dropped fill:#eeeeee,stroke:#555,color:#111,stroke-dasharray: 4 3
+  classDef decision_open fill:#ffe0b2,stroke:#555,color:#111
+  classDef decision_decided fill:#ffe0b2,stroke:#555,color:#111
+  classDef external fill:#f5f5f5,stroke:#aaa,color:#777,stroke-dasharray: 2 2
+```
+
+## Act: feedback and assistance from the twin
+
+```mermaid
+flowchart LR
+  n0{{"D-03: Clinical acceptance<br/>thresholds: adopt<br/>docs/accuracy.md as is, or<br/>clinician-adjusted per<br/>movement?"}}:::decision_open
+  n1{{"D-05: Who owns exoskeleton<br/>safety, with what risk<br/>assessment?"}}:::decision_open
+  n2{{"D-06: Patient-facing surface?"}}:::decision_open
+  n3["A clinician reviews the cue rules,<br/>per movement"]:::step_blocked
+  n4{{"d-suit-bench-hardware: Buy one<br/>ESP32 and vibration motors for<br/>the BLE bench test?"}}:::decision_open
+  n5["Predictive simulation of<br/>assistance for the person's body<br/>tests ○1"]:::step_open
+  n6["An exoskeleton powered near a<br/>person"]:::step_blocked
+  n7["Ideal assistive device sizing<br/>(muscles --assist)"]:::step_done
+  n8(["Clinician-authored feedback,<br/>switched on only where validated"]):::goal_open
+  n9(["Exoskeleton assistance sized and<br/>tuned from the person's twin"]):::goal_open
+  n10(["Haptic cues reach the body<br/>reliably"]):::goal_open
+  n11>"The validation evidence as an<br/>assurance case"]:::idea_new
+  n12(["Act: feedback and assistance from<br/>the twin"]):::goal_open
+  n13["BLE write to SenseShift on a bench<br/>ESP32<br/>tests ○1"]:::step_open
+  n14["Video kinematics on OpenCap<br/>LabValidation against marker<br/>motion capture<br/>tests ○1<br/><i>(Sense)</i>"]:::external
+  n0 -. blocks .-> n3
+  n1 -. blocks .-> n6
+  n2 -. blocks .-> n3
+  n8 --> n3
+  n14 -. needed by .-> n3
+  n4 -. blocks .-> n13
+  n9 --> n5
+  n7 -. needed by .-> n5
+  n9 --> n6
+  n5 -. needed by .-> n6
+  n9 --> n7
+  n12 --> n8
+  n12 --> n9
+  n12 --> n10
+  n11 -.-o n8
+  n10 --> n13
+  classDef goal_open fill:#e1d5f5,stroke:#555,color:#111
+  classDef goal_done fill:#c8e6c9,stroke:#555,color:#111
+  classDef step_open fill:#ffffff,stroke:#555,color:#111
+  classDef step_doing fill:#fff3c4,stroke:#555,color:#111
+  classDef step_done fill:#c8e6c9,stroke:#555,color:#111
+  classDef step_blocked fill:#ffe0b2,stroke:#555,color:#111
+  classDef step_dropped fill:#eeeeee,stroke:#555,color:#111
+  classDef test_planned fill:#ffffff,stroke:#555,color:#111
+  classDef test_running fill:#fff3c4,stroke:#555,color:#111
+  classDef test_passed fill:#c8e6c9,stroke:#555,color:#111
+  classDef test_failed fill:#ffcdd2,stroke:#555,color:#111
+  classDef test_mixed fill:#fff3c4,stroke:#555,color:#111
+  classDef test_dropped fill:#eeeeee,stroke:#555,color:#111
+  classDef idea_new fill:#d7f0f7,stroke:#555,color:#111,stroke-dasharray: 4 3
+  classDef idea_promoted fill:#eeeeee,stroke:#555,color:#111,stroke-dasharray: 4 3
+  classDef idea_dropped fill:#eeeeee,stroke:#555,color:#111,stroke-dasharray: 4 3
+  classDef decision_open fill:#ffe0b2,stroke:#555,color:#111
+  classDef decision_decided fill:#ffe0b2,stroke:#555,color:#111
+  classDef external fill:#f5f5f5,stroke:#aaa,color:#777,stroke-dasharray: 2 2
+```
+
+## How we work: tests, CI and standing rules
+
+```mermaid
+flowchart LR
+  n0(["How we work: tests, CI and<br/>standing rules"]):::goal_open
+  n1["CI runs every test suite that<br/>needs no external files<br/>tests ○1"]:::step_open
+  n2["Standing rules for agent sessions<br/>in CLAUDE.md<br/>tests ○1"]:::step_open
+  n0 --> n1
+  n0 --> n2
+  classDef goal_open fill:#e1d5f5,stroke:#555,color:#111
+  classDef goal_done fill:#c8e6c9,stroke:#555,color:#111
+  classDef step_open fill:#ffffff,stroke:#555,color:#111
+  classDef step_doing fill:#fff3c4,stroke:#555,color:#111
+  classDef step_done fill:#c8e6c9,stroke:#555,color:#111
+  classDef step_blocked fill:#ffe0b2,stroke:#555,color:#111
+  classDef step_dropped fill:#eeeeee,stroke:#555,color:#111
+  classDef test_planned fill:#ffffff,stroke:#555,color:#111
+  classDef test_running fill:#fff3c4,stroke:#555,color:#111
+  classDef test_passed fill:#c8e6c9,stroke:#555,color:#111
+  classDef test_failed fill:#ffcdd2,stroke:#555,color:#111
+  classDef test_mixed fill:#fff3c4,stroke:#555,color:#111
+  classDef test_dropped fill:#eeeeee,stroke:#555,color:#111
+  classDef idea_new fill:#d7f0f7,stroke:#555,color:#111,stroke-dasharray: 4 3
+  classDef idea_promoted fill:#eeeeee,stroke:#555,color:#111,stroke-dasharray: 4 3
+  classDef idea_dropped fill:#eeeeee,stroke:#555,color:#111,stroke-dasharray: 4 3
+  classDef decision_open fill:#ffe0b2,stroke:#555,color:#111
+  classDef decision_decided fill:#ffe0b2,stroke:#555,color:#111
+  classDef external fill:#f5f5f5,stroke:#aaa,color:#777,stroke-dasharray: 2 2
 ```
 
 ## Needs your input
@@ -129,11 +366,13 @@ flowchart LR
 - kin-labvalidation: priority-1 step needs a stop rule (a number, a date, an owner)
 - sole-physical-prototype: priority-1 step needs a stop rule (a number, a date, an owner)
 - t-coupon: no expected result: write it before the test runs
+- t-exo-assist: no expected result: write it before the test runs
 - t-footbed: no expected result: write it before the test runs
 - t-forces-session: no expected result: write it before the test runs
 - t-insole: no expected result: write it before the test runs
 - t-kin-labvalidation: no expected result: write it before the test runs
 - t-kin-volunteer: no expected result: write it before the test runs
+- t-loads-measured-forces: no expected result: write it before the test runs
 - t-prototype-press: no expected result: write it before the test runs
 - t-regional: no expected result: write it before the test runs
 - t-slimevr: no expected result: write it before the test runs
@@ -143,6 +382,7 @@ flowchart LR
 
 Open steps whose dependencies are done and that no open decision blocks.
 
+- [[exo-assist-simulation]]: Predictive simulation of assistance for the person's body
 - [[kin-labvalidation]]: Video kinematics on OpenCap LabValidation against marker motion capture
 - [[project-ci-suites]]: CI runs every test suite that needs no external files
 - [[project-claude-md]]: Standing rules for agent sessions in CLAUDE.md
@@ -162,6 +402,7 @@ Open steps whose dependencies are done and that no open decision blocks.
 | [[t-coupon]] | planned |  |  |  |
 | [[t-dyn-h1]] | planned | no | Peak error at most 10 % of body weight (recorded mass) in every evaluated subject |  |
 | [[t-dyn-h2]] | planned | no | RMS error at most 15 % of foot length in every evaluated subject |  |
+| [[t-exo-assist]] | planned |  |  |  |
 | [[t-footbed]] | planned |  |  |  |
 | [[t-forces-session]] | planned |  |  |  |
 | [[t-fp-cop]] | passed | yes | RMS error at most 10 % of foot length in every subject | Pass: median 2.85 %, range 0.97-6.67 %. Measured lies ahead of the model in every subject |
@@ -170,6 +411,7 @@ Open steps whose dependencies are done and that no open decision blocks.
 | [[t-insole]] | planned |  |  |  |
 | [[t-kin-labvalidation]] | planned |  |  |  |
 | [[t-kin-volunteer]] | planned |  |  |  |
+| [[t-loads-measured-forces]] | planned |  |  |  |
 | [[t-prototype-press]] | planned |  |  |  |
 | [[t-rebuild-laptop]] | planned |  | The design hash is 636645a928, or the first generator step whose output differs is identified |  |
 | [[t-regional]] | planned |  |  |  |
@@ -187,7 +429,7 @@ Open steps whose dependencies are done and that no open decision blocks.
 | [[D-02]] | MRI/CT access pathway for Tier-A onboarding? | ['[[twin-tier-a-subject]]'] |
 | [[D-03]] | Clinical acceptance thresholds: adopt docs/accuracy.md as is, or clinician-adjusted per movement? | ['[[cues-clinician-review]]'] |
 | [[D-04]] | Ground truth for kinematics validation: LabValidation now, then a gait-lab collaboration? |  |
-| [[D-05]] | Who owns exoskeleton safety, with what risk assessment? | ['[[idea-assistance-track]]'] |
+| [[D-05]] | Who owns exoskeleton safety, with what risk assessment? | ['[[exo-hardware]]'] |
 | [[D-06]] | Patient-facing surface? | ['[[cues-clinician-review]]'] |
 | [[D-07]] | Data jurisdiction and retention for RGB-D health data? | ['[[kin-volunteer-recording]]'] |
 | [[D-09]] | SKEL/SMPL licensing for anything beyond research? |  |
@@ -203,8 +445,9 @@ Open steps whose dependencies are done and that no open decision blocks.
 
 | Idea | Status | Title |
 |---|---|---|
-| [[idea-assistance-track]] | new | Predictive simulation of assistance |
+| [[idea-assistance-track]] | promoted | Predictive simulation of assistance |
 | [[idea-assurance-case]] | new | The validation evidence as an assurance case |
+| [[idea-auto-repersonalise]] | new | Re-personalise automatically from each session's measurements |
 | [[idea-balance-board]] | new | A consumer balance board for our own quiet-standing measurements |
 | [[idea-mujoco]] | new | MuJoCo / MyoSuite contact layer, after a feasibility check |
 | [[idea-sikidar]] | new | Sikidar-Kalyanasundaram foot model in the comparison |

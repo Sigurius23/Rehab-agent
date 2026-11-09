@@ -96,6 +96,21 @@ class Plans(unittest.TestCase):
         self.assertTrue(any("cannot have a idea as parent" in e for e in errs))
         self.assertTrue(any("status 'maybe'" in e for e in errs))
 
+    def test_pillars_follow_their_order(self):
+        _, _, _, _, nodes = self.build(
+            pa='type: "goal"\ntitle: "Zeta pillar"\nstatus: "open"\narea: "project"\nparent: "[[root]]"\norder: "1"',
+            pb='type: "goal"\ntitle: "Alpha pillar"\nstatus: "open"\narea: "project"\nparent: "[[root]]"\norder: "2"',
+            s1=BASE["s1"].replace("[[root]]", "[[pb]]"), s2=BASE["s2"].replace("[[root]]", "[[pa]]"))
+        roots = [n for n in nodes if not B.links(nodes[n]["meta"].get("parent"))
+                 and nodes[n]["meta"].get("type") == "goal"]
+        root, top, groups = B.pillars(nodes, roots)
+        self.assertEqual(top, ["pa", "pb"])
+        engine = B.mermaid_engine(nodes, {}, roots)
+        self.assertLess(engine.index("Zeta pillar"), engine.index("Alpha pillar"))
+        self.assertIn("1 idea", engine)                          # singular
+        self.assertIn("s2", groups["pa"])
+        self.assertIn("i1", groups["pa"])                        # an idea sits with what it serves
+
     def test_open_step_without_test_is_a_warning(self):
         errs, warns, *_ = self.build(t2=None)
         self.assertEqual(errs, [])

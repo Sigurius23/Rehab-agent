@@ -4,7 +4,7 @@ title: "Thoracolumbar full-body model, for a later spine-load study"
 status: "new"
 area: "person-model"
 serves:
-  - "[[rehab-agent]]"
+  - "[[goal-twin-layers]]"
 source: "discussion 2026-11-09, settings v2 pilot diagnosis of [[sole-forceplate-dynamic]]"
 updated: "2026-11-09"
 ---
