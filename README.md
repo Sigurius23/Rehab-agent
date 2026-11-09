@@ -68,6 +68,12 @@ quantification → Tier A) vs shape/silhouette-predicted depots (Pseudo-DXA,
 UK-Biobank silhouette model → Tier B, **estimate only**), plus paper-only and
 closed reference models: [`fat-distribution/README.md`](fat-distribution/README.md).
 
+## 👟 Shoe CAD capability map (separate folder)
+
+From a foot scan to a last, sole and printable shoe: 20 shoe and last design tools rated on 26 features, as an
+interactive page with its generator and a CSV. Ratings are from published vendor material, not hands-on testing:
+[`shoe-cad-map/README.md`](shoe-cad-map/README.md).
+
 ## Quick start
 
 ```bash

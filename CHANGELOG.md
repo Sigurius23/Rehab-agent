@@ -443,6 +443,10 @@
       boards. 14 pass and have maps.
     - **Corrected:** CANDIDATES.md's T1 coverlay column now gives the checker's figures, 0.18–0.20 mm².
     - **Still open:** the copper trace counts a single-point touch as a connection.
+- **Shoe CAD capability map** (`shoe-cad-map/`). This is the owner's research note of 2026-11-02, from a foot scan
+  to a last. It rates 20 shoe and last design tools on 26 features, from published vendor material, not
+  hands-on testing. The folder has the data, its generator, the self-contained page and a CSV. The committed
+  scripts regenerate all three outputs byte for byte. The plan's decision `d-shoe-cad-map-files` is now decided.
 - **Flaky live-chain test fixed** (`test_live_chain_posture_to_suit_payloads`). It had failed in CI on nearly every
   run since 2026-10-24, and once in a local full-suite run.
   - The engine sent its cue correctly, but the suit bridge sometimes had not yet connected to the cue stream. LSL

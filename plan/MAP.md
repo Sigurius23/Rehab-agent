@@ -468,7 +468,6 @@ flowchart LR
 - d-moticon-enquiry: open decision: Send the drafted Moticon quote request (bilateral raw data, sensor geometry, calibration, SDK terms)?
 - d-prototype-materials: open decision: Buy the materials for the printed prototype and the coupon test?
 - d-repo-visibility: open decision: Keep rehab-agent public, or make it private?
-- d-shoe-cad-map-files: open decision: Put the shoe CAD capability map's files (feature table and page) into the repository?
 - d-sikidar-account: open decision: Create a SimTK account to download the Sikidar model?
 - d-suit-bench-hardware: open decision: Buy one ESP32 and vibration motors for the BLE bench test?
 - d-wearables-tier: open decision: Do optional wearables and pressure hardware belong in a later research or advanced tier?
@@ -572,7 +571,6 @@ Open steps whose dependencies are done and that no open decision blocks.
 | [[d-moticon-enquiry]] | Send the drafted Moticon quote request (bilateral raw data, sensor geometry, calibration, SDK terms)? |  |
 | [[d-prototype-materials]] | Buy the materials for the printed prototype and the coupon test? | ['[[sole-physical-prototype]]', '[[sole-coupon-test]]'] |
 | [[d-repo-visibility]] | Keep rehab-agent public, or make it private? |  |
-| [[d-shoe-cad-map-files]] | Put the shoe CAD capability map's files (feature table and page) into the repository? |  |
 | [[d-sikidar-account]] | Create a SimTK account to download the Sikidar model? | ['[[idea-sikidar]]'] |
 | [[d-suit-bench-hardware]] | Buy one ESP32 and vibration motors for the BLE bench test? | ['[[suit-ble-bench]]'] |
 | [[d-wearables-tier]] | Do optional wearables and pressure hardware belong in a later research or advanced tier? |  |
@@ -584,6 +582,7 @@ Open steps whose dependencies are done and that no open decision blocks.
 | [[d-anatomy-scope]] | Do torsion, anteversion, bone geometry and the personalised foot stay in the twin? | Yes. They are retained as inferred or uncertain values with provenance; nothing is removed or shown as measured when it is not | owner's scope correction of 2026-11-02 |
 | [[d-dxa-optional]] | Does the twin need a DXA scan? | No: a DXA scan gives the best generation when the person has one, but the system must work without it | owner's message of 2026-10-26 |
 | [[d-first-build-platform]] | Which platform does the first build target? | Windows first; ideally, once the twin exists, a phone's sensors alone should be enough | owner's message of 2026-10-24 |
+| [[d-shoe-cad-map-files]] | Put the shoe CAD capability map's files (feature table and page) into the repository? | Yes: committed to shoe-cad-map/, with its generator | owner, 2026-11-09 |
 
 ## Ideas
 

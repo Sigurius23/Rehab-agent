@@ -5,7 +5,7 @@ status: "new"
 area: "sole"
 serves:
   - "[[pillar-act]]"
-source: "owner's shoe CAD capability map, compiled and verified 2026-11-02 (uploaded, not in the repository)"
+source: "owner's shoe CAD capability map, compiled and verified 2026-11-02; shoe-cad-map/ in the repository"
 updated: "2026-11-09"
 ---
 # Personalised footwear from the foot scan: last, sole and five-toe shoe
@@ -21,5 +21,5 @@ upper and pattern, design the sole and footbed, prepare for printing.
   FreeCAD, OpenSCAD, Blender, MeshLab, CloudCompare and Open3D, Open Shoe Designer.
 
 It joins the personalised foot ([[twin-personalised-foot]]), the sensor sole that must fit the shoe
-([[goal-sensor-sole]]) and personalising for movement ([[idea-movement-personalisation]]). Whether the map's own
-files go into the repository: [[d-shoe-cad-map-files]].
+([[goal-sensor-sole]]) and personalising for movement ([[idea-movement-personalisation]]). The map's page, table and
+generator are in [`shoe-cad-map/`](../../shoe-cad-map/README.md) ([[d-shoe-cad-map-files]]).

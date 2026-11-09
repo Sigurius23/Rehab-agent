@@ -1,0 +1,31 @@
+feature_key,group,feature,3DShoemaker,Shoemaster,ICad3D+ / IcadPAN,Romans CAD,Crispin ShoeMaker,PROTIQ Last Configurator,Open Shoe Designer,Gensole,Materialise (3-matic / Phits / Footscan),FitStation powered by HP,Rhino + Grasshopper,nTop,Fusion 360,FreeCAD,OpenSCAD,Blender,Shoefactory.ai,Fitasy,MeshLab / CloudCompare / Open3D,PrusaSlicer / Cura / Orca Slicer
+scan_in,A. Foot-shape input,Imports 3D foot scan (STL/OBJ/PLY),2,2,2,1,?,2,1,2,2,2,2,2,1,1,0,2,2,2,2,1
+scan2d_in,A. Foot-shape input,Imports 2D scan / photo / outline trace,1,2,2,1,1,2,1,1,2,1,1,0,1,1,0,1,0,0,2,0
+measure_in,A. Foot-shape input,Takes manual measurements as input,2,2,2,2,2,2,2,1,1,1,2,1,2,2,2,1,0,0,0,0
+wb,A. Foot-shape input,Weight-bearing vs non-weight-bearing handling,?,?,?,?,0,?,0,1,2,1,1,1,0,0,0,0,1,1,1,0
+clean,B. Mesh handling,Built-in scan cleanup / repair,1,1,1,0,0,0,0,0,2,1,1,2,1,1,0,2,0,0,2,1
+meas_extract,B. Mesh handling,Automatic key-measurement extraction,1,2,1,1,1,2,0,1,2,2,1,0,0,0,0,0,2,1,1,0
+gait,B. Mesh handling,Pressure / gait data input,0,0,0,0,0,0,0,0,2,2,0,1,0,0,0,0,?,?,0,0
+last_gen,C. Last creation,Generates a last from foot geometry,2,2,2,2,2,2,2,0,1,1,2,1,1,1,1,1,2,2,0,0
+last_lib,C. Last creation,Last library / base-last reuse,2,2,2,2,2,1,1,0,0,1,1,0,0,0,0,0,1,1,0,0
+allowances,C. Last creation,"Allowances: toe, fit, sock, heel seat",2,2,2,2,2,2,2,1,2,2,2,1,1,1,2,1,2,2,0,0
+param_last,C. Last creation,Parametric last control (length / girth / width / heel),2,2,2,2,2,2,2,1,2,1,2,2,2,2,2,1,?,?,0,0
+morph,C. Last creation,Morph / deform between base last and foot,2,2,1,1,1,1,0,0,2,1,2,2,1,1,0,2,?,?,1,0
+sculpt,C. Last creation,Freeform sculpt / surface editing on the last,2,2,1,1,1,0,0,0,2,0,2,1,1,1,0,2,0,0,1,0
+ortho_corr,C. Last creation,"Clinical correction (leg axis, torsion, deformity)",1,1,1,0,0,2,0,1,2,1,1,1,0,0,0,0,0,0,0,0
+compare,C. Last creation,Side-by-side foot-vs-last deviation analysis,1,2,1,1,1,1,0,0,2,1,1,2,1,1,0,1,0,0,2,0
+pattern,D. Upper / pattern,Pattern flattening (2D pieces from the last),0,2,2,2,2,0,2,0,0,0,1,0,0,0,0,0,?,?,0,0
+grading,D. Upper / pattern,Grading / size scaling,0,2,1,2,2,0,0,0,0,0,1,0,1,1,1,0,0,0,0,0
+upper,D. Upper / pattern,Upper / shoe-volume design,1,2,2,2,2,0,0,0,0,1,2,1,1,1,0,2,2,2,0,0
+sole,E. Sole / midsole,Sole / midsole / footbed design,2,2,2,2,2,0,2,2,2,2,2,2,2,2,2,2,2,2,0,0
+lattice,E. Sole / midsole,Lattice / cellular structures,1,1,0,0,0,1,0,2,2,1,2,2,1,1,1,1,2,1,0,1
+insole,E. Sole / midsole,Anatomical insole generation,2,1,2,1,1,1,1,2,2,2,2,2,1,1,1,1,2,2,0,0
+print_check,F. Print readiness,Wall-thickness / manifold / print checks,1,?,?,?,?,2,0,1,2,2,1,2,2,1,1,1,2,2,2,2
+export_am,F. Print readiness,Direct AM export (STL / 3MF / AMF),2,1,1,?,?,1,1,2,2,1,2,2,2,2,2,2,1,1,2,2
+print_service,F. Print readiness,Print / fulfilment service attached,0,0,0,0,0,2,0,0,2,2,0,0,0,0,0,0,2,2,0,0
+cloud,G. Access & licence,Cloud / web based,0,0,0,2,0,2,0,2,1,1,0,0,1,0,0,0,2,2,0,0
+oss,G. Access & licence,Open source,0,0,0,0,0,0,2,0,0,0,0,0,0,2,2,2,0,0,2,2
+cost,G. Access & licence,Entry cost (indicative),"Commercial: $99 personal / $349 business, + Rhino licence; Windows only","Commercial, on quote; professional seat + training","Commercial; basic package from ~$30, full on quote","Commercial, on quote; cloud subscription",Legacy commercial; availability unclear after Autodesk/Delcam changes,Free web configurator; you pay for the printed last,"Free, GPLv3; early-stage C++/wxWidgets",Free for non-commercial makers/researchers; AMF export,"Commercial, on quote; healthcare/orthotics pricing",Commercial service (HP / Materialise); retail deployment,Commercial Rhino licence; Grasshopper included; high skill requirement,"Commercial, on quote; steep learning curve",Free personal tier / commercial subscription,"Free, open source","Free, open source; code-only, no scan import","Free, open source; not parametric","Commercial service; price per pair, limited styles","Commercial service; smartphone scan, patent-pending","Free, open source; processing only, no design","Free, open source; print preparation only"
+
+score_core,,Score (core),59/68,58/64,51/64,41/58,38/54,50/68,34/70,31/70,61/70,45/70,58/70,48/70,40/70,38/70,30/70,41/70,36/60,34/60,31/70,14/70
+score_full,,Score (full),70/98,81/94,71/94,62/88,59/84,55/98,45/100,41/100,75/100,60/100,79/100,62/100,52/100,50/100,39/100,54/100,54/82,50/82,31/100,16/100
