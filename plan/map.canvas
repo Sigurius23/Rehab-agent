@@ -1449,7 +1449,8 @@
    "x": 8960,
    "y": 880,
    "width": 280,
-   "height": 120
+   "height": 120,
+   "color": "3"
   },
   {
    "id": "t-kin-volunteer",
