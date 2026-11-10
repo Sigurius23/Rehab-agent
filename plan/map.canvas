@@ -1479,7 +1479,8 @@
    "x": 9280,
    "y": 880,
    "width": 280,
-   "height": 120
+   "height": 120,
+   "color": "4"
   },
   {
    "id": "t-kin-pilot",

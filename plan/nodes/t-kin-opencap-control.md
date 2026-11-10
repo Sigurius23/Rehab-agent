@@ -83,3 +83,7 @@ results, 144 per subject: three pose estimators (HRNet, OpenPose default, OpenPo
 5 cameras, and 16 trials per setup (squats, sit-to-stand, drop jumps, walking), about 2.1 GB uncompressed. The
 laptop's extracted copy holds only the motion capture, so these would have to be extracted first. HRNet with two
 cameras also has a `Dynamics` folder, which was not opened. None of it has been run.
+
+**Seen later, 2026-11-10 ([[t-kin-opencap-control-all]]):** in the LabValidation zip, OpenCap's results for the same
+trial lie on the motion capture's clock (lag 0.00 s), while the fixture's file was 0.417 s off. The zip's
+result for five-camera OpenPose (default) gives 6.05°, close to the fixture's 6.32°.
