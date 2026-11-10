@@ -2,7 +2,7 @@
 
 # Plan map
 
-165 notes: 17 goals, 42 steps, 32 tests, 50 ideas, 24 decisions.
+166 notes: 17 goals, 42 steps, 32 tests, 50 ideas, 25 decisions.
 
 ## The engine
 
@@ -13,7 +13,7 @@ flowchart TB
   r --> p0
   p1(["Personalise: the person's own<br/>bones, shape, mass and muscles<br/><i>5 done · 4 open · 1 blocked · 10 ideas · 1 decision</i>"]):::goal_open
   r --> p1
-  p2(["Simulate: joint loads, muscle<br/>forces and contact for this<br/>body<br/><i>4 done · 1 doing · 7 open · 24 ideas · 1 decision</i>"]):::goal_open
+  p2(["Simulate: joint loads, muscle<br/>forces and contact for this<br/>body<br/><i>4 done · 7 open · 24 ideas · 1 decision</i>"]):::goal_open
   r --> p2
   p3(["Adapt: the twin follows the<br/>person over time<br/><i>2 done · 2 open · 1 idea</i>"]):::goal_open
   r --> p3
@@ -238,7 +238,7 @@ flowchart LR
   n31["Muscle forces and weakness<br/>what-ifs (rehabtwin muscles)"]:::step_done
   n32["Foot models compared on the same<br/>virtual sole<br/>tests ✗1"]:::step_done
   n33["Footbed and shoe layers in the<br/>simulation<br/>tests ○1"]:::step_open
-  n34["Dynamic force-plate check: our<br/>sole against OpenCap's spheres<br/>tests ○2"]:::step_doing
+  n34["Dynamic force-plate check: our<br/>sole against OpenCap's spheres"]:::step_dropped
   n35["Quasi-static force-plate check on<br/>OpenCap LabValidation (stage A)<br/>tests ✓1 ✗2"]:::step_done
   n36["Foot-insole contact against an<br/>in-shoe sensor (stage C)<br/>tests ○1"]:::step_open
   n37["Regional plantar pressure,<br/>barefoot (stage B)<br/>tests ○1"]:::step_open
@@ -520,8 +520,8 @@ Open steps whose dependencies are done and that no open decision blocks.
 | [[t-ci-suites]] | passed | n/a | On every push, CI runs test_channel_map, test_case_store, test_compare_results, plan/test_build and plan/build.py --check, and all pass | GitHub Actions run 42722409612 on fa5c7b2, job plan-and-sole: plan check 0 errors, 14 plan tests OK, map up to date, the five sole suites 47 cases OK with none skipped |
 | [[t-claude-md-fresh-session]] | planned |  | A fresh session given only a one-line task keeps every standing rule without them in the prompt |  |
 | [[t-coupon]] | planned | n/a | Proposal: a material qualifies if, on 3 coupons, repeatability is within 5 % over 100 cycles, hysteresis and 10-minute creep are each at most 10 % of full scale, and the 10 mm bend shifts the baseline by at most 5 % of full scale |  |
-| [[t-dyn-h1]] | planned | no | Peak error at most 10 % of body weight (recorded mass) in every evaluated subject |  |
-| [[t-dyn-h2]] | planned | no | RMS error at most 15 % of foot length in every evaluated subject |  |
+| [[t-dyn-h1]] | dropped | no | Peak error at most 10 % of body weight (recorded mass) in every evaluated subject | Not evaluated: closed by the stop rule (amendment 7) after the v3 pilot, 2026-11-10; neither passed nor failed |
+| [[t-dyn-h2]] | dropped | no | RMS error at most 15 % of foot length in every evaluated subject | Not evaluated: closed by the stop rule (amendment 7) after the v3 pilot, 2026-11-10; neither passed nor failed |
 | [[t-exo-assist]] | planned |  |  |  |
 | [[t-foot-capture-pilot]] | planned |  |  |  |
 | [[t-footbed]] | planned |  |  |  |
@@ -578,6 +578,7 @@ Open steps whose dependencies are done and that no open decision blocks.
 |---|---|---|---|
 | [[d-anatomy-scope]] | Do torsion, anteversion, bone geometry and the personalised foot stay in the twin? | Yes. They are retained as inferred or uncertain values with provenance; nothing is removed or shown as measured when it is not | owner's scope correction of 2026-11-02 |
 | [[d-dxa-optional]] | Does the twin need a DXA scan? | No: a DXA scan gives the best generation when the person has one, but the system must work without it | owner's message of 2026-10-26 |
+| [[d-dynamic-check-arm-a]] | Arm A failed the pilot gate under settings v3: amend the contact, report arm A as not solvable with the assumed contact, or pause until the coupon test? | Option 2: arm A is reported as not solvable with the assumed contact; the LabValidation dynamic comparison is closed, and H1 and H2 are not evaluated | owner, 2026-11-10 |
 | [[d-first-build-platform]] | Which platform does the first build target? | Windows first; ideally, once the twin exists, a phone's sensors alone should be enough | owner's message of 2026-10-24 |
 | [[d-shoe-cad-map-files]] | Put the shoe CAD capability map's files (feature table and page) into the repository? | Yes: committed to shoe-cad-map/, with its generator | owner, 2026-11-09 |
 

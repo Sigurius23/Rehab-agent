@@ -398,6 +398,15 @@
               carry the model's weight at rest (subject 2: about 20 mm in arm B, 9 mm in arm A).
 
             The tracking weights, the mesh and both contact models are unchanged.
+          - **The v3 pilot failed the gate, and the stop rule closed the comparison** (2026-11-09/10;
+            `foot_models/dynamic_solutions_2026-11-09.json`):
+            - arm A did not converge and was never feasible;
+            - arm B converged, with residuals far inside the limits, but missed the gate on pelvis tilt (10.8° RMS
+              against 5°).
+
+            The owner chose to report arm A as not solvable with the assumed contact and to close the LabValidation
+            dynamic comparison (VALIDATION_PLAN.md, after amendment 7). H1 and H2 are not evaluated: neither passed
+            nor failed. No dynamic force data was opened.
     - **Printed prototype** (`PRINTED.md`, `sole_print.py`). A TPU carrier is built from the same design:
       - underside wire channels along the routing plan;
       - a floor with one hole per region;

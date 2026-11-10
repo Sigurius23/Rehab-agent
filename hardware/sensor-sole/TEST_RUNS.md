@@ -49,6 +49,7 @@ all 47 cases ran there with none skipped, on this machine. None of the OpenSim, 
 | Pipeline Python (OpenSim 4.6), the laptop below, 2026-11-08, amendment 5 | `test_dynamic.py` | 19 | 0 | 0 | 0 | — |
 | Pipeline Python (OpenSim 4.6), the laptop below, 2026-11-08, amendment 6 | `test_dynamic.py` | 25 | 0 | 0 | 0 | — |
 | Pipeline Python (OpenSim 4.6), the laptop below, 2026-11-09, settings v3 | `test_dynamic.py` | 33 | 0 | 0 | 0 | — |
+| Pipeline Python (OpenSim 4.6), the laptop below, 2026-11-10, after the v3 pilot | `test_dynamic.py` | 33 | 0 | 0 | 0 | — |
 | Generator Python (shapely 2.2.0), slow cases, the laptop below, 2026-11-06 | `test_generator_regressions.py` | 10 | 0 | 1 | 0 | — |
 | KiCad 7.0.11's Python (pcbnew), script-style check | `test_verify_drc.py` | 1 | 0 | 0 | 0 | — |
 

@@ -250,7 +250,7 @@
     "max_rotation_rms_deg": 5.0,
     "max_translation_rms_mm": 20.0
    },
-   "judged_by": "pending: the v3 pilot. Stop rule (VALIDATION_PLAN.md amendment 7, owner, 2026-11-09): if arm A fails the pilot gate under settings v3, the dynamic comparison stops there and is reported to the owner."
+   "judged_by": "pilot, subject2 squats1, 2026-11-09 (11:09 to 22:32): the gate failed and the stop rule (VALIDATION_PLAN.md amendment 7) was triggered. The batch did not start, and no force data was opened. Arm A did not converge (3000 iterations, Maximum_Iterations_Exceeded) and was never feasible (barrier parameter at lg(mu) 3.9 from about iteration 200, restoration phase from about iteration 1650); worst rotation RMS 95.5 deg (arm_flex_r), mean 24.2 deg; pelvis translation RMS 576.2 mm; pelvis residuals 2211 N and 7009 Nm (limits on body weight 38.3 N and 3.6 Nm); maximum penetration 1029 mm. Arm B converged (1965 iterations, Solve_Succeeded), with pelvis residuals 0.02 N and 0.04 Nm (limits 38.3 N and 8.5 Nm) and pelvis translation RMS 9.0 mm, but missed the gate on pelvis_tilt: RMS 10.8 deg, a near-constant offset (mean rotation 1.9 deg); maximum penetration 21 mm. Owner's decision, 2026-11-10: option 2 of amendment 7. The LabValidation dynamic comparison is closed; H1 and H2 are not evaluated (VALIDATION_PLAN.md, 'Result of the v3 pilot and the owner's decision')."
   }
  ]
 }

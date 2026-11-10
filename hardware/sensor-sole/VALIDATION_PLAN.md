@@ -159,6 +159,33 @@ stay as written.
 - **Unchanged:** the pilot gate (both arms must pass before the batch), validity (amendments 5 and 6), the
   plate-coverage rule, H1, H2 and their thresholds.
 
+**Result of the v3 pilot and the owner's decision (2026-11-10).** The pilot ran on subject 2's `squats1` under
+settings v3, from 2026-11-09 11:09 to 22:32 (`foot_models/dynamic_solutions_2026-11-09.json`, and the settings log
+`foot_models/dynamic_settings_log.json`). No force data was opened, and the batch did not start.
+
+| Pilot, settings v3 | Arm A (our sole, assumed contact v1) | Arm B (OpenCap's spheres) | Gate |
+|---|---|---|---|
+| Converged | no: 3000 iterations, never feasible | yes: 1965 iterations | required |
+| Worst rotation RMS | 95.5° (arm_flex_r) | 10.8° (pelvis_tilt) | ≤ 5° |
+| Mean rotation RMS | 24.2° | 1.9° | — |
+| Worst pelvis translation RMS | 576.2 mm | 9.0 mm | ≤ 20 mm |
+| Pelvis residuals, with the limits on body weight (amendment 6) | 2211 N, 7009 Nm (38.3 N, 3.6 Nm) | 0.02 N, 0.04 Nm (38.3 N, 8.5 Nm) | validity |
+| Maximum contact penetration | 1029 mm | 21 mm | reported only |
+
+- **The gate failed in both arms, and arm A's failure triggered the stop rule.** Arm B missed the gate on
+  pelvis_tilt alone, by a near-constant offset. Under the stop rule, no further settings version was tried.
+- **The owner's decision (2026-11-10): option 2,** recorded in the wording the owner approved: "Arm A did not
+  converge in three pilots (settings v1–v3) with the assumed contact (v1). Under v3, arm B, identical except for the
+  contact, converged. In this setup the assumed contact is therefore the likely cause; this does not show that no
+  solution exists. The LabValidation dynamic comparison is closed. H1 and H2 are not evaluated."
+- **Why not option 3 (pausing until the coupon test):**
+  - the coupon test measures only the sensor stack (about 0.4 mm), while the assumed contact stands for everything
+    between the bones and the floor: the plantar soft tissue, the shoe and the sensor stack;
+  - a law for our sole and shoe would describe a person wearing them, not LabValidation's participants, who were
+    recorded in other footwear (`FOOT_MODELS.md` section 9, item 2).
+- **What this means:** H1 and H2 are not evaluated. They were closed by the stop rule and neither passed nor
+  failed. The quasi-static result is unaffected.
+
 **Metrics and thresholds.** The quasi-static thresholds were **agreed on 2026-11-05, before any data was
 downloaded or opened**, as a first attempt. They may be revised only before the force data is opened; a revision
 after that is reported as one, beside the original result.

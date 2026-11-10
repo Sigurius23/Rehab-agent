@@ -1,0 +1,636 @@
+{
+ "what": "Dynamic comparison, phase 1 (no force data): the solves of both arms, each with its solution's sha256, validity (amendments 5 and 6: convergence, pelvis residuals within Hicks et al. 2015 on the recorded body weight, and tracking), pelvis residuals with the old and the new limits, tracking error and maximum contact penetration. VALIDATION_PLAN.md, amendments 4 to 6. Evaluated trials (validity and plate coverage) come in phase 2.",
+ "written": "2026-11-09T22:32:34+0100",
+ "settings_version": 3,
+ "pilot_gate": {
+  "max_rotation_rms_deg": 5.0,
+  "max_translation_rms_mm": 20.0
+ },
+ "validity_limits": {
+  "max_rotation_rms_deg": 5.0,
+  "max_translation_rms_mm": 20.0,
+  "residuals": "amendment 6, Hicks et al. 2015 on the recorded body weight: force <= 5 % of body weight, moment <= 1 % of COM height times body weight; body weight = recorded mass x 9.80665 m/s^2",
+  "residuals_amendment4": "force <= 5 % of the solution's peak external force, moment <= 1 % of COM height times that force (reported beside, no longer used)"
+ },
+ "solves": 2,
+ "converged": 1,
+ "valid": 0,
+ "valid_amendment4": 1,
+ "valid_amendment5": 0,
+ "within_pilot_gate": 0,
+ "per_arm": {
+  "A": {
+   "solves": 1,
+   "converged": 0,
+   "valid_trials": 0,
+   "valid_subjects": 0
+  },
+  "B": {
+   "solves": 1,
+   "converged": 1,
+   "valid_trials": 0,
+   "valid_subjects": 0
+  }
+ },
+ "valid_in_both_arms": {
+  "trials": 0,
+  "subjects": 0
+ },
+ "solutions": [
+  {
+   "subject": "subject2",
+   "trial": "squats1",
+   "arm": "A",
+   "settings_version": 3,
+   "max_iterations": null,
+   "model_sha256": "ecce952c0988967f866ba9777c3816cbc1bf20ea3d58a1c206353cb63580d957",
+   "ik_sha256": "8d80b8b4825b8ac48f1291e24cd3af9b8d442c5227205467b046a382d632b218",
+   "code_sha256": {
+    "foot_models/dynamic_track.py": "6b0fa02774903673e8db74baa63299ee20beeef3ce8f0a8b1fd8a9d8b9095b5d",
+    "foot_models/opencap_contacts.py": "f2c877b9f3f1acb0e80a673de13cf42a8d3c7cad78ef37c501c195a3fbdb6292",
+    "sole_sim.py": "3cd31ce1061fd47ff8da4d129a9ffccf186c6acbf4e3a28eba46017e1cd1f9c5"
+   },
+   "fingerprint": "2b8d16b4ee84abfbed56cad58a16e618faf68e05b9b7a6570f4d132ef81f3065",
+   "finished": "2026-11-09T22:32:31+0100",
+   "case": "cases/subject2_squats1_A/2b8d16b4ee84abfb",
+   "settings": {
+    "active_force_width_scale": 1.5,
+    "constraint_tolerance": 0.001,
+    "control_effort_weight": 1.0,
+    "convergence_tolerance": 0.01,
+    "coordinate_weights": {
+     "pelvis_tx": 100.0,
+     "pelvis_ty": 100.0,
+     "pelvis_tz": 100.0
+    },
+    "filter_hz": 6.0,
+    "initial_guess": "contact_balance",
+    "max_iterations": 3000,
+    "mesh_interval_s": 0.02,
+    "reserve_optimal_force_Nm_or_N": 1.0,
+    "states_tracking_weight": 10.0,
+    "torque_actuator_round_up_Nm": 10.0,
+    "torque_actuator_strength": "peak_inverse_dynamics",
+    "transcription": "hermite-simpson",
+    "untracked": [
+     "knee_angle_r_beta",
+     "knee_angle_l_beta"
+    ],
+    "version": 3
+   },
+   "torque_actuator_strengths_Nm": {
+    "arm_add_l": 10.0,
+    "arm_add_r": 10.0,
+    "arm_flex_l": 20.0,
+    "arm_flex_r": 20.0,
+    "arm_rot_l": 10.0,
+    "arm_rot_r": 10.0,
+    "elbow_flex_l": 10.0,
+    "elbow_flex_r": 10.0,
+    "lumbar_bending": 50.0,
+    "lumbar_extension": 260.0,
+    "lumbar_rotation": 10.0,
+    "pro_sup_l": 10.0,
+    "pro_sup_r": 10.0
+   },
+   "valid_amendment4": false,
+   "converged": false,
+   "status": "Maximum_Iterations_Exceeded",
+   "iterations": 3000,
+   "solve_seconds": 40953.7,
+   "solution_sha256": "b2d9c751ac966503945a574e44aa212be519afe116bea949d7599fb2a69b832d",
+   "window_s": [
+    0.35,
+    1.47
+   ],
+   "peak_external_force_N": 35455238.35,
+   "com_height_m": 0.475,
+   "pelvis_residual_force_max_N": 2210.908,
+   "residual_force_limit_N": 1772761.918,
+   "pelvis_residual_moment_max_Nm": 7008.879,
+   "residual_moment_limit_Nm": 168429.95,
+   "tracking_rms": {
+    "max_rotation_deg": 95.524,
+    "mean_rotation_deg": 24.219,
+    "max_translation_mm": 576.221,
+    "worst": "arm_flex_r"
+   },
+   "initial_guess_pelvis_offset_mm": {
+    "min": -18.742,
+    "median": -9.285,
+    "max": -0.83,
+    "time_points": 801
+   },
+   "residuals": {
+    "force_N": 2210.908,
+    "moment_Nm": 7008.879,
+    "body_mass_kg": 78.2,
+    "body_weight_N": 766.88,
+    "com_height_m": 0.475,
+    "amendment4": {
+     "basis": "force 5 % and moment 1 % x COM height of the solution's own peak external force",
+     "force_limit_N": 1772761.918,
+     "moment_limit_Nm": 168429.95,
+     "force_within": true,
+     "moment_within": true
+    },
+    "amendment6": {
+     "basis": "force 5 % and moment 1 % x COM height of the recorded body weight",
+     "force_limit_N": 38.344,
+     "moment_limit_Nm": 3.643,
+     "force_within": false,
+     "moment_within": false
+    }
+   },
+   "valid_amendment5": false,
+   "valid": false,
+   "invalid_because": [
+    "not converged (Maximum_Iterations_Exceeded, 3000 iterations)",
+    "pelvis residual force 2210.908 N over Hicks et al. (2015) on body weight, limit 38.344 N",
+    "pelvis residual moment 7008.879 Nm over Hicks et al. (2015) on body weight, limit 3.643 Nm",
+    "rotation RMS 95.524 deg (arm_flex_r) > 5.0",
+    "pelvis translation RMS 576.221 mm > 20.0"
+   ],
+   "max_penetration_mm": 1028.52,
+   "max_penetration_time_s": 0.6742
+  },
+  {
+   "subject": "subject2",
+   "trial": "squats1",
+   "arm": "B",
+   "settings_version": 3,
+   "max_iterations": null,
+   "model_sha256": "0b4f3b0480a2aba7c6db1d7247d766361f5d5c0039873971a80458b1832a9d5e",
+   "ik_sha256": "8d80b8b4825b8ac48f1291e24cd3af9b8d442c5227205467b046a382d632b218",
+   "code_sha256": {
+    "foot_models/dynamic_track.py": "6b0fa02774903673e8db74baa63299ee20beeef3ce8f0a8b1fd8a9d8b9095b5d",
+    "foot_models/opencap_contacts.py": "f2c877b9f3f1acb0e80a673de13cf42a8d3c7cad78ef37c501c195a3fbdb6292",
+    "sole_sim.py": "3cd31ce1061fd47ff8da4d129a9ffccf186c6acbf4e3a28eba46017e1cd1f9c5"
+   },
+   "fingerprint": "e9adbab53994983ee000415ce0255a6eb32d049b9ad85d7049c34a0b807e00b4",
+   "finished": "2026-11-09T19:27:32+0100",
+   "case": "cases/subject2_squats1_B/e9adbab53994983e",
+   "settings": {
+    "active_force_width_scale": 1.5,
+    "constraint_tolerance": 0.001,
+    "control_effort_weight": 1.0,
+    "convergence_tolerance": 0.01,
+    "coordinate_weights": {
+     "pelvis_tx": 100.0,
+     "pelvis_ty": 100.0,
+     "pelvis_tz": 100.0
+    },
+    "filter_hz": 6.0,
+    "initial_guess": "contact_balance",
+    "max_iterations": 3000,
+    "mesh_interval_s": 0.02,
+    "reserve_optimal_force_Nm_or_N": 1.0,
+    "states_tracking_weight": 10.0,
+    "torque_actuator_round_up_Nm": 10.0,
+    "torque_actuator_strength": "peak_inverse_dynamics",
+    "transcription": "hermite-simpson",
+    "untracked": [
+     "knee_angle_r_beta",
+     "knee_angle_l_beta"
+    ],
+    "version": 3
+   },
+   "torque_actuator_strengths_Nm": {
+    "arm_add_l": 10.0,
+    "arm_add_r": 10.0,
+    "arm_flex_l": 20.0,
+    "arm_flex_r": 20.0,
+    "arm_rot_l": 10.0,
+    "arm_rot_r": 10.0,
+    "elbow_flex_l": 10.0,
+    "elbow_flex_r": 10.0,
+    "lumbar_bending": 50.0,
+    "lumbar_extension": 260.0,
+    "lumbar_rotation": 10.0,
+    "pro_sup_l": 10.0,
+    "pro_sup_r": 10.0
+   },
+   "valid_amendment4": true,
+   "converged": true,
+   "status": "Solve_Succeeded",
+   "iterations": 1965,
+   "solve_seconds": 29889.4,
+   "solution_sha256": "e41eaa9029eb8c1157e2bc0655113acf7b519923e0e9a0e86001ce7f4f158213",
+   "window_s": [
+    0.35,
+    1.47
+   ],
+   "peak_external_force_N": 1184.53,
+   "com_height_m": 1.107,
+   "pelvis_residual_force_max_N": 0.018,
+   "residual_force_limit_N": 59.227,
+   "pelvis_residual_moment_max_Nm": 0.041,
+   "residual_moment_limit_Nm": 13.113,
+   "tracking_rms": {
+    "max_rotation_deg": 10.816,
+    "mean_rotation_deg": 1.945,
+    "max_translation_mm": 9.018,
+    "worst": "pelvis_tilt"
+   },
+   "initial_guess_pelvis_offset_mm": {
+    "min": -32.018,
+    "median": -19.946,
+    "max": -14.783,
+    "time_points": 801
+   },
+   "residuals": {
+    "force_N": 0.018,
+    "moment_Nm": 0.041,
+    "body_mass_kg": 78.2,
+    "body_weight_N": 766.88,
+    "com_height_m": 1.107,
+    "amendment4": {
+     "basis": "force 5 % and moment 1 % x COM height of the solution's own peak external force",
+     "force_limit_N": 59.227,
+     "moment_limit_Nm": 13.113,
+     "force_within": true,
+     "moment_within": true
+    },
+    "amendment6": {
+     "basis": "force 5 % and moment 1 % x COM height of the recorded body weight",
+     "force_limit_N": 38.344,
+     "moment_limit_Nm": 8.489,
+     "force_within": true,
+     "moment_within": true
+    }
+   },
+   "valid_amendment5": false,
+   "valid": false,
+   "invalid_because": [
+    "rotation RMS 10.816 deg (pelvis_tilt) > 5.0"
+   ],
+   "max_penetration_mm": 20.74,
+   "max_penetration_time_s": 1.0181
+  }
+ ],
+ "superseded": [
+  {
+   "subject": "subject2",
+   "trial": "squats1",
+   "arm": "A",
+   "settings_version": 1,
+   "max_iterations": null,
+   "model_sha256": "ecce952c0988967f866ba9777c3816cbc1bf20ea3d58a1c206353cb63580d957",
+   "ik_sha256": "8d80b8b4825b8ac48f1291e24cd3af9b8d442c5227205467b046a382d632b218",
+   "code_sha256": {
+    "foot_models/dynamic_track.py": "8c125d71c42a7efef08440dc4083b573ed28b4116e640a3a4acb62fc146c63ec",
+    "foot_models/opencap_contacts.py": "f2c877b9f3f1acb0e80a673de13cf42a8d3c7cad78ef37c501c195a3fbdb6292",
+    "sole_sim.py": "3cd31ce1061fd47ff8da4d129a9ffccf186c6acbf4e3a28eba46017e1cd1f9c5"
+   },
+   "fingerprint": "c985ed43f90eca0bbc21b45f2cf5ba5799ea07551f920bf35aa1c37ebec88b9d",
+   "finished": "2026-11-07T02:47:47+0100",
+   "case": "cases/subject2_squats1_A/c985ed43f90eca0b",
+   "settings": {
+    "active_force_width_scale": 1.5,
+    "constraint_tolerance": 0.001,
+    "control_effort_weight": 1.0,
+    "convergence_tolerance": 0.01,
+    "filter_hz": 6.0,
+    "max_iterations": 3000,
+    "mesh_interval_s": 0.04,
+    "reserve_optimal_force_Nm_or_N": 1.0,
+    "states_tracking_weight": 10.0,
+    "transcription": "hermite-simpson",
+    "untracked": [
+     "knee_angle_r_beta",
+     "knee_angle_l_beta"
+    ],
+    "version": 1
+   },
+   "torque_actuator_strengths_Nm": null,
+   "valid_amendment4": false,
+   "converged": false,
+   "status": "Maximum_Iterations_Exceeded",
+   "iterations": 3000,
+   "solve_seconds": 21866.6,
+   "solution_sha256": "e7a62e82c6e409005983f17d236f6baa750d04afbb0d0bb6ae77dc54e0de762b",
+   "window_s": [
+    0.35,
+    1.47
+   ],
+   "peak_external_force_N": 70886977.73,
+   "com_height_m": 0.4962,
+   "pelvis_residual_force_max_N": 2.735,
+   "residual_force_limit_N": 3544348.886,
+   "pelvis_residual_moment_max_Nm": 34.737,
+   "residual_moment_limit_Nm": 351756.951,
+   "tracking_rms": {
+    "max_rotation_deg": 90.902,
+    "mean_rotation_deg": 23.881,
+    "max_translation_mm": 571.689,
+    "worst": "arm_flex_r"
+   },
+   "initial_guess_pelvis_offset_mm": null,
+   "residuals": {
+    "force_N": 2.735,
+    "moment_Nm": 34.737,
+    "body_mass_kg": 78.2,
+    "body_weight_N": 766.88,
+    "com_height_m": 0.4962,
+    "amendment4": {
+     "basis": "force 5 % and moment 1 % x COM height of the solution's own peak external force",
+     "force_limit_N": 3544348.886,
+     "moment_limit_Nm": 351756.951,
+     "force_within": true,
+     "moment_within": true
+    },
+    "amendment6": {
+     "basis": "force 5 % and moment 1 % x COM height of the recorded body weight",
+     "force_limit_N": 38.344,
+     "moment_limit_Nm": 3.805,
+     "force_within": true,
+     "moment_within": false
+    }
+   },
+   "valid_amendment5": false,
+   "valid": false,
+   "invalid_because": [
+    "not converged (Maximum_Iterations_Exceeded, 3000 iterations)",
+    "pelvis residual moment 34.737 Nm over Hicks et al. (2015) on body weight, limit 3.805 Nm",
+    "rotation RMS 90.902 deg (arm_flex_r) > 5.0",
+    "pelvis translation RMS 571.689 mm > 20.0"
+   ],
+   "max_penetration_mm": 805.62,
+   "max_penetration_time_s": 0.5238
+  },
+  {
+   "subject": "subject2",
+   "trial": "squats1",
+   "arm": "A",
+   "settings_version": 2,
+   "max_iterations": null,
+   "model_sha256": "ecce952c0988967f866ba9777c3816cbc1bf20ea3d58a1c206353cb63580d957",
+   "ik_sha256": "8d80b8b4825b8ac48f1291e24cd3af9b8d442c5227205467b046a382d632b218",
+   "code_sha256": {
+    "foot_models/dynamic_track.py": "e23f3753a51dd45f6476d3a780628e9b53f5e9f723397f7272a8d367939c51ed",
+    "foot_models/opencap_contacts.py": "f2c877b9f3f1acb0e80a673de13cf42a8d3c7cad78ef37c501c195a3fbdb6292",
+    "sole_sim.py": "3cd31ce1061fd47ff8da4d129a9ffccf186c6acbf4e3a28eba46017e1cd1f9c5"
+   },
+   "fingerprint": "52d1c9178960152d75ee938121d1399e423566726a3178f7f35b6888ba9c8571",
+   "finished": "2026-11-09T06:13:07+0100",
+   "case": "cases/subject2_squats1_A/52d1c9178960152d",
+   "settings": {
+    "active_force_width_scale": 1.5,
+    "constraint_tolerance": 0.001,
+    "control_effort_weight": 1.0,
+    "convergence_tolerance": 0.01,
+    "coordinate_weights": {
+     "pelvis_tx": 100.0,
+     "pelvis_ty": 100.0,
+     "pelvis_tz": 100.0
+    },
+    "filter_hz": 6.0,
+    "max_iterations": 3000,
+    "mesh_interval_s": 0.02,
+    "reserve_optimal_force_Nm_or_N": 1.0,
+    "states_tracking_weight": 10.0,
+    "transcription": "hermite-simpson",
+    "untracked": [
+     "knee_angle_r_beta",
+     "knee_angle_l_beta"
+    ],
+    "version": 2
+   },
+   "torque_actuator_strengths_Nm": null,
+   "valid_amendment4": false,
+   "converged": false,
+   "status": "Maximum_Iterations_Exceeded",
+   "iterations": 3000,
+   "solve_seconds": 45867.2,
+   "solution_sha256": "498b933f989b07b9c425836e9580786c2ebe8e9e3c731844f6363b476dfcec7d",
+   "window_s": [
+    0.35,
+    1.47
+   ],
+   "peak_external_force_N": 1857391.95,
+   "com_height_m": 0.7922,
+   "pelvis_residual_force_max_N": 46.128,
+   "residual_force_limit_N": 92869.597,
+   "pelvis_residual_moment_max_Nm": 248.338,
+   "residual_moment_limit_Nm": 14713.441,
+   "tracking_rms": {
+    "max_rotation_deg": 95.453,
+    "mean_rotation_deg": 30.573,
+    "max_translation_mm": 893.647,
+    "worst": "arm_flex_l"
+   },
+   "initial_guess_pelvis_offset_mm": null,
+   "residuals": {
+    "force_N": 46.128,
+    "moment_Nm": 248.338,
+    "body_mass_kg": 78.2,
+    "body_weight_N": 766.88,
+    "com_height_m": 0.7922,
+    "amendment4": {
+     "basis": "force 5 % and moment 1 % x COM height of the solution's own peak external force",
+     "force_limit_N": 92869.597,
+     "moment_limit_Nm": 14713.441,
+     "force_within": true,
+     "moment_within": true
+    },
+    "amendment6": {
+     "basis": "force 5 % and moment 1 % x COM height of the recorded body weight",
+     "force_limit_N": 38.344,
+     "moment_limit_Nm": 6.075,
+     "force_within": false,
+     "moment_within": false
+    }
+   },
+   "valid_amendment5": false,
+   "valid": false,
+   "invalid_because": [
+    "not converged (Maximum_Iterations_Exceeded, 3000 iterations)",
+    "pelvis residual force 46.128 N over Hicks et al. (2015) on body weight, limit 38.344 N",
+    "pelvis residual moment 248.338 Nm over Hicks et al. (2015) on body weight, limit 6.075 Nm",
+    "rotation RMS 95.453 deg (arm_flex_l) > 5.0",
+    "pelvis translation RMS 893.647 mm > 20.0"
+   ],
+   "max_penetration_mm": 501.46,
+   "max_penetration_time_s": 0.4974
+  },
+  {
+   "subject": "subject2",
+   "trial": "squats1",
+   "arm": "B",
+   "settings_version": 1,
+   "max_iterations": null,
+   "model_sha256": "0b4f3b0480a2aba7c6db1d7247d766361f5d5c0039873971a80458b1832a9d5e",
+   "ik_sha256": "8d80b8b4825b8ac48f1291e24cd3af9b8d442c5227205467b046a382d632b218",
+   "code_sha256": {
+    "foot_models/dynamic_track.py": "8c125d71c42a7efef08440dc4083b573ed28b4116e640a3a4acb62fc146c63ec",
+    "foot_models/opencap_contacts.py": "f2c877b9f3f1acb0e80a673de13cf42a8d3c7cad78ef37c501c195a3fbdb6292",
+    "sole_sim.py": "3cd31ce1061fd47ff8da4d129a9ffccf186c6acbf4e3a28eba46017e1cd1f9c5"
+   },
+   "fingerprint": "e0f292c4ae5fa8e2a0f9190f169dd28c595002e8783ebf6adce254efa63a5a9b",
+   "finished": "2026-11-06T23:19:41+0100",
+   "case": "cases/subject2_squats1_B/e0f292c4ae5fa8e2",
+   "settings": {
+    "active_force_width_scale": 1.5,
+    "constraint_tolerance": 0.001,
+    "control_effort_weight": 1.0,
+    "convergence_tolerance": 0.01,
+    "filter_hz": 6.0,
+    "max_iterations": 3000,
+    "mesh_interval_s": 0.04,
+    "reserve_optimal_force_Nm_or_N": 1.0,
+    "states_tracking_weight": 10.0,
+    "transcription": "hermite-simpson",
+    "untracked": [
+     "knee_angle_r_beta",
+     "knee_angle_l_beta"
+    ],
+    "version": 1
+   },
+   "torque_actuator_strengths_Nm": null,
+   "valid_amendment4": true,
+   "converged": true,
+   "status": "Solve_Succeeded",
+   "iterations": 1168,
+   "solve_seconds": 9380.9,
+   "solution_sha256": "928adc541eea3239758cb38d103d0497e25fc2460660e42cc94589f1acc498c2",
+   "window_s": [
+    0.35,
+    1.47
+   ],
+   "peak_external_force_N": 780.69,
+   "com_height_m": 0.3992,
+   "pelvis_residual_force_max_N": 0.222,
+   "residual_force_limit_N": 39.035,
+   "pelvis_residual_moment_max_Nm": 0.09,
+   "residual_moment_limit_Nm": 3.117,
+   "tracking_rms": {
+    "max_rotation_deg": 50.465,
+    "mean_rotation_deg": 4.782,
+    "max_translation_mm": 672.537,
+    "worst": "pelvis_tilt"
+   },
+   "initial_guess_pelvis_offset_mm": null,
+   "residuals": {
+    "force_N": 0.222,
+    "moment_Nm": 0.09,
+    "body_mass_kg": 78.2,
+    "body_weight_N": 766.88,
+    "com_height_m": 0.3992,
+    "amendment4": {
+     "basis": "force 5 % and moment 1 % x COM height of the solution's own peak external force",
+     "force_limit_N": 39.035,
+     "moment_limit_Nm": 3.117,
+     "force_within": true,
+     "moment_within": true
+    },
+    "amendment6": {
+     "basis": "force 5 % and moment 1 % x COM height of the recorded body weight",
+     "force_limit_N": 38.344,
+     "moment_limit_Nm": 3.061,
+     "force_within": true,
+     "moment_within": true
+    }
+   },
+   "valid_amendment5": false,
+   "valid": false,
+   "invalid_because": [
+    "rotation RMS 50.465 deg (pelvis_tilt) > 5.0",
+    "pelvis translation RMS 672.537 mm > 20.0"
+   ],
+   "max_penetration_mm": 491.27,
+   "max_penetration_time_s": 0.35
+  },
+  {
+   "subject": "subject2",
+   "trial": "squats1",
+   "arm": "B",
+   "settings_version": 2,
+   "max_iterations": null,
+   "model_sha256": "0b4f3b0480a2aba7c6db1d7247d766361f5d5c0039873971a80458b1832a9d5e",
+   "ik_sha256": "8d80b8b4825b8ac48f1291e24cd3af9b8d442c5227205467b046a382d632b218",
+   "code_sha256": {
+    "foot_models/dynamic_track.py": "e23f3753a51dd45f6476d3a780628e9b53f5e9f723397f7272a8d367939c51ed",
+    "foot_models/opencap_contacts.py": "f2c877b9f3f1acb0e80a673de13cf42a8d3c7cad78ef37c501c195a3fbdb6292",
+    "sole_sim.py": "3cd31ce1061fd47ff8da4d129a9ffccf186c6acbf4e3a28eba46017e1cd1f9c5"
+   },
+   "fingerprint": "d5accfb17a7a5fe0923f36a915f4f0bf50d5cf34c75012e57710508a55191961",
+   "finished": "2026-11-09T05:44:40+0100",
+   "case": "cases/subject2_squats1_B/d5accfb17a7a5fe0",
+   "settings": {
+    "active_force_width_scale": 1.5,
+    "constraint_tolerance": 0.001,
+    "control_effort_weight": 1.0,
+    "convergence_tolerance": 0.01,
+    "coordinate_weights": {
+     "pelvis_tx": 100.0,
+     "pelvis_ty": 100.0,
+     "pelvis_tz": 100.0
+    },
+    "filter_hz": 6.0,
+    "max_iterations": 3000,
+    "mesh_interval_s": 0.02,
+    "reserve_optimal_force_Nm_or_N": 1.0,
+    "states_tracking_weight": 10.0,
+    "transcription": "hermite-simpson",
+    "untracked": [
+     "knee_angle_r_beta",
+     "knee_angle_l_beta"
+    ],
+    "version": 2
+   },
+   "torque_actuator_strengths_Nm": null,
+   "valid_amendment4": false,
+   "converged": false,
+   "status": "Maximum_Iterations_Exceeded",
+   "iterations": 3000,
+   "solve_seconds": 44160.4,
+   "solution_sha256": "31dce4772af5afa15e17914a38ade0dd4897989445aeccd8eb9b9bef68a159fe",
+   "window_s": [
+    0.35,
+    1.47
+   ],
+   "peak_external_force_N": 1146.29,
+   "com_height_m": 1.0792,
+   "pelvis_residual_force_max_N": 0.066,
+   "residual_force_limit_N": 57.314,
+   "pelvis_residual_moment_max_Nm": 0.088,
+   "residual_moment_limit_Nm": 12.371,
+   "tracking_rms": {
+    "max_rotation_deg": 53.112,
+    "mean_rotation_deg": 10.569,
+    "max_translation_mm": 7.242,
+    "worst": "lumbar_extension"
+   },
+   "initial_guess_pelvis_offset_mm": null,
+   "residuals": {
+    "force_N": 0.066,
+    "moment_Nm": 0.088,
+    "body_mass_kg": 78.2,
+    "body_weight_N": 766.88,
+    "com_height_m": 1.0792,
+    "amendment4": {
+     "basis": "force 5 % and moment 1 % x COM height of the solution's own peak external force",
+     "force_limit_N": 57.314,
+     "moment_limit_Nm": 12.371,
+     "force_within": true,
+     "moment_within": true
+    },
+    "amendment6": {
+     "basis": "force 5 % and moment 1 % x COM height of the recorded body weight",
+     "force_limit_N": 38.344,
+     "moment_limit_Nm": 8.276,
+     "force_within": true,
+     "moment_within": true
+    }
+   },
+   "valid_amendment5": false,
+   "valid": false,
+   "invalid_because": [
+    "not converged (Maximum_Iterations_Exceeded, 3000 iterations)",
+    "rotation RMS 53.112 deg (lumbar_extension) > 5.0"
+   ],
+   "max_penetration_mm": 33.88,
+   "max_penetration_time_s": 0.9788
+  }
+ ]
+}

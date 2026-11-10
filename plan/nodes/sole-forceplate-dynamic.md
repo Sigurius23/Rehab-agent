@@ -1,7 +1,7 @@
 ---
 type: "step"
 title: "Dynamic force-plate check: our sole against OpenCap's spheres"
-status: "doing"
+status: "dropped"
 area: "sole"
 parent: "[[goal-sole-simulation]]"
 depends_on:
@@ -11,8 +11,8 @@ stop_rule: "arm A fails the pilot gate under settings v3"
 stop_by: "2026-11-11"
 stop_owner: "owner"
 record: "hardware/sensor-sole/VALIDATION_PLAN.md"
-source: "hardware/sensor-sole/VALIDATION_PLAN.md stage A item 2, Amendments 4-7"
-updated: "2026-11-09"
+source: "hardware/sensor-sole/VALIDATION_PLAN.md stage A item 2, Amendments 4-7 and the v3 pilot's result"
+updated: "2026-11-10"
 ---
 # Dynamic force-plate check: our sole against OpenCap's spheres
 
@@ -27,3 +27,10 @@ actuators made tracking the trunk costly. Settings v3 changes the solver setting
 Stop rule (Amendment 7, owner, 2026-11-09): if arm A fails the pilot gate under settings v3, stop and report. The
 owner then chooses: an amendment to the contact, reporting arm A as not solvable with the assumed contact, or
 pausing the dynamic stage until the coupon test ([[sole-coupon-test]]).
+
+**Closed by the stop rule, 2026-11-10: not evaluated, not failed.** The v3 pilot (2026-11-09) failed the gate in both
+arms. Arm A did not converge and was never feasible (worst rotation RMS 95.5°, pelvis 576 mm). Arm B converged, with
+residuals far inside the limits, but missed the gate on pelvis tilt (10.8° RMS against 5°). No force data was opened.
+The owner chose option 2 ([[d-dynamic-check-arm-a]]): arm A is reported as not solvable with the assumed contact,
+and the LabValidation dynamic comparison is closed. [[t-dyn-h1]] and [[t-dyn-h2]] are not evaluated. The figures
+and the decision's wording are in VALIDATION_PLAN.md, after amendment 7.
