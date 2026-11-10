@@ -18,10 +18,23 @@ The thresholds are those of `docs/accuracy.md`, as a first attempt; their clinic
 [[D-11]].
 
 **What it needs (2026-11-09, laptop line updated 2026-11-10):**
-- **The videos.** The laptop's copy is `LabValidation_withoutVideos.zip`. The version with videos is a separate
-  SimTK download, which the owner makes. Its size is to be checked on SimTK; this session cannot reach SimTK.
+- **The videos: on the laptop since 2026-11-10.** `LabValidation_withVideos.zip` holds 19.97 GB, 24.6 GB
+  uncompressed, in 15,645 entries; its listing reads, but its CRCs have not been tested. From the listing only:
+  - **Videos:** 1,628 (1,620 `.avi`, 8 `.mp4`), 17.0 GB. Each trial has five cameras (Cam0–Cam4). The 8 `.mp4` files
+    are extra rotated copies of subject 2's `squatsAsym1` and `static1` for Cam1–Cam4.
+  - **Sessions:** `Session0` for every subject. `Session1` for 9 subjects holds the walking trials, with its own
+    calibration.
+  - **Sync:** every trial video comes twice, as recorded (`<trial>.avi`) and as `<trial>_syncdWithMocap.avi`
+    (765 of each). Each session also has a `mocapToVideoTransform.yaml`. There is no separate timestamp file. In
+    the positive control, OpenCap's results from this dataset lie at zero lag against the motion capture
+    ([[t-kin-opencap-control-all]]).
+  - **Calibration:** `cameraIntrinsicsExtrinsics.pickle` per camera and session (90), and a checkerboard video
+    `extrinsics/extrinsics.avi` per camera and session (90). There is also `sessionMetadata.yaml` per subject.
+  - **Also in the zip:** OpenSimData, MarkerData, EMGData and ForceData. They are not extracted or opened.
 - **For HSMR:** the SKEL model files. They are licence-gated (an MPI-IS registration by the owner) and
-  non-commercial ([[D-09]]). The other front-ends can start without them.
+  non-commercial ([[D-09]]). The other front-ends can start without them. Found on the laptop on 2026-11-10: `skel_models_v1.1.zip` (174 MB, with
+  `skel_male.pkl` and `skel_female.pkl`), inside the owner's Drive export `Rehab agent -20261106T152938Z-1-002`.
+  HSMR's own trained weights are a separate download and have not been checked.
 - **On the laptop:** the pipeline's environment and a MediaPipe environment. Both were set up for the pilot, and
   their versions are in the pilot's results file. `workstation/setup.sh` does not install them yet.
 

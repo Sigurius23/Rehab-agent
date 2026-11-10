@@ -140,3 +140,16 @@ with no clear peak (ratio 1.19–1.66), so it is not evaluated under the rule. I
 4.65° for HRNet with two cameras and 6.05° for OpenPose default with five cameras. The fixture's OpenCap result for
 the same trial was 0.417 s off the motion capture and gave 6.32° ([[t-kin-opencap-control]]), so the fixture's
 file and the zip's are on different clocks.
+
+**Post hoc, not pre-registered (owner, 2026-11-10, after the result above): the same comparison at zero lag.**
+There is no lag search and no clear-peak rule. A trial is evaluated when its coverage is not short and all 18
+angles exist. It does not replace the result above. Figures: `validation/results/kin_control_opencap_all_subjects_zerolag_posthoc.json`.
+- **Counts:** every result is evaluated: 160 run per configuration, 159 in the averages, with subject 2's `squats1`
+  apart. The 645 results evaluated before change by a median of 0.05° (at most 1.43°), since their lags were
+  near zero.
+- **Primary configuration (HRNet, two cameras):** 4.57°, +0.07° from the paper's 4.5°.
+- **Per movement:** drop jump 5.14° (60 trials), sit-to-stand 4.67° (20 trials), squat 4.10° (19 trials), walking 4.13° (60 trials).
+- **Per configuration:** HRNet 2-cameras 4.57°, HRNet 3-cameras 4.52°, HRNet 5-cameras 4.39°, OpenPose default 2-cameras 4.88°, OpenPose default 3-cameras 4.95°, OpenPose default 5-cameras 4.72°, OpenPose highAccuracy 2-cameras 4.53°, OpenPose highAccuracy 3-cameras 4.29°, OpenPose highAccuracy 5-cameras 4.19°.
+- **The prediction's first part fails at zero lag:** squats (4.10°) are better than the average over movements
+  (4.51°). Pelvis tilt and hip flexion still have opposite biases in 10 of 10 subjects.
+- **Subject 2's `squats1`** at zero lag: 4.65° for HRNet with two cameras.
