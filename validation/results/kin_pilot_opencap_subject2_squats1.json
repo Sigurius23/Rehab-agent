@@ -1,0 +1,3789 @@
+{
+ "what": "Video-benchmark pilot (plan/nodes/t-kin-pilot.md), OpenCap LabValidation subject2 squats1: four video routes against the trial's marker motion capture, with the error against OpenCap's markerless result beside it. Aggregate numbers only; the data stay on the lab laptop. Every RMSE is after a lag search and so the route's best case.",
+ "date": "2026-11-10",
+ "alignment_check": {
+  "criterion": "best lag at least 0.2 s inside the +-4 s window, and every other local minimum more than 0.3 s away at least 2x the best's objective (validation.best_lag's objective); fixed before the check",
+  "results": [
+   {
+    "label": "multi vs mocap",
+    "coords": 16,
+    "step_s": 0.0167,
+    "best_lag_s": 0.4834,
+    "best_lag_inside_window": true,
+    "local_minima": 6,
+    "next_minimum": {
+     "lag_s": -1.117,
+     "ratio_to_best": 1.12
+    },
+    "clear_peak": false
+   },
+   {
+    "label": "multi vs OpenCap",
+    "coords": 16,
+    "step_s": 0.0167,
+    "best_lag_s": 0.0501,
+    "best_lag_inside_window": true,
+    "local_minima": 6,
+    "next_minimum": {
+     "lag_s": 3.217,
+     "ratio_to_best": 1.41
+    },
+    "clear_peak": false
+   },
+   {
+    "label": "multi_aug vs mocap",
+    "coords": 16,
+    "step_s": 0.0167,
+    "best_lag_s": 0.4834,
+    "best_lag_inside_window": true,
+    "local_minima": 6,
+    "next_minimum": {
+     "lag_s": -1.117,
+     "ratio_to_best": 3.39
+    },
+    "clear_peak": true
+   },
+   {
+    "label": "multi_aug vs OpenCap",
+    "coords": 16,
+    "step_s": 0.0167,
+    "best_lag_s": 0.0667,
+    "best_lag_inside_window": true,
+    "local_minima": 6,
+    "next_minimum": {
+     "lag_s": 1.65,
+     "ratio_to_best": 13.68
+    },
+    "clear_peak": true
+   },
+   {
+    "label": "mono vs mocap",
+    "coords": 16,
+    "step_s": 0.0167,
+    "best_lag_s": 1.3168,
+    "best_lag_inside_window": true,
+    "local_minima": 6,
+    "next_minimum": {
+     "lag_s": 2.883,
+     "ratio_to_best": 1.66
+    },
+    "clear_peak": false
+   },
+   {
+    "label": "mono vs OpenCap",
+    "coords": 16,
+    "step_s": 0.0167,
+    "best_lag_s": 0.9001,
+    "best_lag_inside_window": true,
+    "local_minima": 6,
+    "next_minimum": {
+     "lag_s": 2.483,
+     "ratio_to_best": 2.07
+    },
+    "clear_peak": true
+   },
+   {
+    "label": "mono_aug vs mocap",
+    "coords": 16,
+    "step_s": 0.0167,
+    "best_lag_s": 1.4668,
+    "best_lag_inside_window": true,
+    "local_minima": 5,
+    "next_minimum": {
+     "lag_s": -0.017,
+     "ratio_to_best": 5.26
+    },
+    "clear_peak": true
+   },
+   {
+    "label": "mono_aug vs OpenCap",
+    "coords": 16,
+    "step_s": 0.0167,
+    "best_lag_s": 0.9834,
+    "best_lag_inside_window": true,
+    "local_minima": 5,
+    "next_minimum": {
+     "lag_s": -0.483,
+     "ratio_to_best": 5.64
+    },
+    "clear_peak": true
+   },
+   {
+    "label": "OpenCap result vs mocap (added after the check failed)",
+    "coords": 16,
+    "step_s": 0.0167,
+    "best_lag_s": 0.4167,
+    "best_lag_inside_window": true,
+    "local_minima": 6,
+    "next_minimum": {
+     "lag_s": -1.183,
+     "ratio_to_best": 2.94
+    },
+    "clear_peak": true
+   }
+  ],
+  "decision": "owner, 2026-11-10: option A, the lag search unchanged (+-4 s)"
+ },
+ "shared_lag": {
+  "five_camera_augmenter_lag_s": 0.4834229999999966,
+  "cam2_sync_lag_frames": 46,
+  "reference_start_frame": 5,
+  "fps": 60.0,
+  "cam2_offset_s": 0.85,
+  "shared_lag_s": 1.3334229999999967
+ },
+ "provenance": {
+  "written": "2026-11-10T01:10:35+01:00",
+  "fixture": {
+   "source": "https://raw.githubusercontent.com/stanfordnmbl/opencap-test-data/63546b73ab2a3c6dd6c95a05d66e0527bab873c7/Data/labvalidation-fixtures/subject2_session0_5-cameras",
+   "commit": "63546b73ab2a3c6dd6c95a05d66e0527bab873c7",
+   "files": {
+    "OpenSimData/Kinematics/squats1.mot": {
+     "bytes": 334772,
+     "sha256": "8a3bbbbd5a3c831e06fe5b64825c14df1f3e7e0ada98ef2349b27ab66953d61d"
+    },
+    "OpenSimData/Model/LaiUhlrich2022_scaled.osim": {
+     "bytes": 877660,
+     "sha256": "1059dd74dc1718a82a06ada7a3d50776cf02b8d070d88e874aa9d08ba02c92be"
+    },
+    "Videos/Cam0/InputMedia/squats1/squats1.mov": {
+     "bytes": 25008342,
+     "sha256": "aed70c01f07fdf68e4b9f88599ba9a07d9f723b58f14d7178920ff8a70b1ff8a"
+    },
+    "Videos/Cam0/cameraIntrinsicsExtrinsics.pickle": {
+     "bytes": 683,
+     "sha256": "5dc81a47e9c9fe440c12dd01a8c6cfdc566c38744cc06417988fc8eba58888af"
+    },
+    "Videos/Cam1/InputMedia/squats1/squats1.mov": {
+     "bytes": 25958934,
+     "sha256": "246b9bf447d69ac075f3053ca802e273a6ba2b7d0c7b6075cd61d6132c8f29fc"
+    },
+    "Videos/Cam1/cameraIntrinsicsExtrinsics.pickle": {
+     "bytes": 683,
+     "sha256": "5af60adf187454f7b7b014871bc221dbcf0cc23f7ee121bdf34be1ea2cf4c48d"
+    },
+    "Videos/Cam2/InputMedia/squats1/squats1.mov": {
+     "bytes": 24609646,
+     "sha256": "dbeba897df8520d2aeed95923513d803477a47cef10af0604866a52ec1630c41"
+    },
+    "Videos/Cam2/cameraIntrinsicsExtrinsics.pickle": {
+     "bytes": 683,
+     "sha256": "9e4105931eee987963da4e03aa734b77b35a971e1cc8c85b75c796cb924c5e60"
+    },
+    "Videos/Cam3/InputMedia/squats1/squats1.mov": {
+     "bytes": 20333336,
+     "sha256": "35647d56b70a98dc32691602fb96d9d72ca9332c4ff6eedc5591371b35e6774b"
+    },
+    "Videos/Cam3/cameraIntrinsicsExtrinsics.pickle": {
+     "bytes": 683,
+     "sha256": "5a90edf4602f4d5a3c7bd0fcf92ca69797a40149e1179f33b37260638d0ca130"
+    },
+    "Videos/Cam4/InputMedia/squats1/squats1.mov": {
+     "bytes": 20705774,
+     "sha256": "22746b73c371e55ee21be765c67e52ac13d2defb697ebd1b7be20de78354158b"
+    },
+    "Videos/Cam4/cameraIntrinsicsExtrinsics.pickle": {
+     "bytes": 683,
+     "sha256": "e4b12d3fc44c5576bca9b0f3e70b4113949d2da4e09b8e20f9c0046a08dbfe9c"
+    },
+    "sessionMetadata.yaml": {
+     "bytes": 578,
+     "sha256": "4e127f384299591247e0cb76d4fd08fb8c4115091ed006d57e2fb05422378d88"
+    }
+   }
+  },
+  "mediapipe_model": {
+   "source": "https://storage.googleapis.com/mediapipe-models/pose_landmarker/pose_landmarker_heavy/float16/latest/pose_landmarker_heavy.task",
+   "etag": "453dec4d02ccc4d3ce812b6de84fa516",
+   "generation": "1682642785588631",
+   "last_modified": "Fri, 28 Apr 2023 00:46:25 GMT",
+   "bytes": 30664242,
+   "sha256": "64437af838a65d18e5ba7a0d39b465540069bc8aae8308de3e318aad31fcbc7b"
+  },
+  "pose2sim": {
+   "source": "https://github.com/perfanalytics/pose2sim",
+   "depth": 1,
+   "commit": "c6db0ca3c620a7543c5f7960c95309dad87d4e6c",
+   "lstm": {
+    "Pose2Sim/MarkerAugmenter/LSTM/v0.3_lower/mean.npy": "e8783601a37f827c728bb1f2bbb143d66f59c92a3268306697cfc2932e99888f",
+    "Pose2Sim/MarkerAugmenter/LSTM/v0.3_lower/model.onnx": "8dbd686784f6c6e3b42fdfe968a8808a789bdcaff284e3dd9e8c321bbca4e52c",
+    "Pose2Sim/MarkerAugmenter/LSTM/v0.3_lower/std.npy": "e7bcbe84f460666696fb500663a281c418ed20205aab9d8e1b18fd8568c77436",
+    "Pose2Sim/MarkerAugmenter/LSTM/v0.3_upper/mean.npy": "d919b25a44f3a9438a69f0627ee3067d914796e4c42d3c48d0b3680ff2bbd7af",
+    "Pose2Sim/MarkerAugmenter/LSTM/v0.3_upper/model.onnx": "c674fbf1eafbc30f82141137e4ca6bea8a5578b0c30ce954fc6384f776570b7e",
+    "Pose2Sim/MarkerAugmenter/LSTM/v0.3_upper/std.npy": "7da7519963969616fb06b06b507f4615d72602cb078b20ca23f5e8c8bfbcd57e"
+   }
+  },
+  "repo_commit": "5449ee156545edeae31d17bc505380d9c4d59482",
+  "environments": {
+   "pipeline": [
+    "attrs==26.1.0",
+    "flatbuffers==25.12.19",
+    "iniconfig==2.3.1",
+    "jsonschema==4.26.0",
+    "jsonschema-specifications==2025.9.1",
+    "numpy==2.5.4",
+    "onnxruntime==1.31.1",
+    "opensim==4.6",
+    "packaging==26.3",
+    "pluggy==1.7.0",
+    "protobuf==7.36.2",
+    "pygments==2.21.0",
+    "pytest==9.2.0",
+    "referencing==0.37.0",
+    "-e",
+    "file://~/rehab-agent/pipeline",
+    "rpds-py==2026.9.1",
+    "scipy==1.18.1"
+   ],
+   "mediapipe": [
+    "absl-py==2.5.1",
+    "certifi==2026.10.23",
+    "cffi==2.1.1",
+    "contourpy==1.4.0",
+    "cycler==0.12.1",
+    "flatbuffers==25.12.19",
+    "fonttools==4.68.0",
+    "kiwisolver==1.5.1",
+    "matplotlib==3.11.2",
+    "mediapipe==1.2.2",
+    "numpy==2.5.4",
+    "opencv-contrib-python==5.0.0.93",
+    "opencv-python==5.0.0.93",
+    "packaging==26.3",
+    "pillow==13.0.0",
+    "pycparser==3.12",
+    "pyparsing==3.3.3",
+    "python-dateutil==4.0.0",
+    "sounddevice==0.5.6",
+    "tzdata==2026.6"
+   ],
+   "python": {
+    "pipeline": "3.13.16",
+    "mediapipe": "3.13.16"
+   }
+  }
+ },
+ "counts": {
+  "mocap": {
+   "run": 4,
+   "evaluated": 3
+  },
+  "opencap": {
+   "run": 4,
+   "evaluated": 3
+  }
+ },
+ "routes": {
+  "multi": {
+   "lag_vs_mocap_s": 0.4834229999999966,
+   "lag_vs_opencap_s": 0.050080999999996934,
+   "coverage_vs_mocap": {
+    "compared_s": 7.983,
+    "overlap_s": 8.0,
+    "fraction": 0.998,
+    "min_fraction": 0.8
+   },
+   "evaluated_vs_mocap": true,
+   "evaluated_vs_opencap": true,
+   "approved_for": [
+    "screening"
+   ],
+   "rows": [
+    {
+     "joint": "ankle_l",
+     "plane": "sagittal",
+     "rmse_deg": 4.275,
+     "worst_coordinate": "ankle_angle_l",
+     "gate": "fail",
+     "rmse_vs_opencap_deg": 6.472,
+     "difference_deg": -2.197,
+     "coordinates": [
+      {
+       "coordinate": "ankle_angle_l",
+       "rmse_deg": 4.275,
+       "bias_deg": 2.129,
+       "spread_deg": 3.707,
+       "rom_deg": 24.453,
+       "rmse_vs_opencap_deg": 6.472,
+       "difference_deg": -2.197
+      }
+     ]
+    },
+    {
+     "joint": "ankle_r",
+     "plane": "sagittal",
+     "rmse_deg": 4.097,
+     "worst_coordinate": "ankle_angle_r",
+     "gate": "fail",
+     "rmse_vs_opencap_deg": 8.344,
+     "difference_deg": -4.247,
+     "coordinates": [
+      {
+       "coordinate": "ankle_angle_r",
+       "rmse_deg": 4.097,
+       "bias_deg": 1.809,
+       "spread_deg": 3.676,
+       "rom_deg": 21.386,
+       "rmse_vs_opencap_deg": 8.344,
+       "difference_deg": -4.247
+      }
+     ]
+    },
+    {
+     "joint": "elbow_l",
+     "plane": "sagittal",
+     "rmse_deg": 7.485,
+     "worst_coordinate": "elbow_flex_l",
+     "gate": "fail",
+     "rmse_vs_opencap_deg": 6.48,
+     "difference_deg": 1.005,
+     "coordinates": [
+      {
+       "coordinate": "elbow_flex_l",
+       "rmse_deg": 7.485,
+       "bias_deg": 3.555,
+       "spread_deg": 6.587,
+       "rom_deg": 54.279,
+       "rmse_vs_opencap_deg": 6.48,
+       "difference_deg": 1.005
+      }
+     ]
+    },
+    {
+     "joint": "elbow_r",
+     "plane": "sagittal",
+     "rmse_deg": 6.275,
+     "worst_coordinate": "elbow_flex_r",
+     "gate": "fail",
+     "rmse_vs_opencap_deg": 5.545,
+     "difference_deg": 0.73,
+     "coordinates": [
+      {
+       "coordinate": "elbow_flex_r",
+       "rmse_deg": 6.275,
+       "bias_deg": 2.704,
+       "spread_deg": 5.663,
+       "rom_deg": 52.927,
+       "rmse_vs_opencap_deg": 5.545,
+       "difference_deg": 0.73
+      }
+     ]
+    },
+    {
+     "joint": "forearm_l",
+     "plane": "transverse",
+     "rmse_deg": 12.729,
+     "worst_coordinate": "pro_sup_l",
+     "gate": "fail",
+     "rmse_vs_opencap_deg": 18.939,
+     "difference_deg": -6.21,
+     "coordinates": [
+      {
+       "coordinate": "pro_sup_l",
+       "rmse_deg": 12.729,
+       "bias_deg": -10.893,
+       "spread_deg": 6.586,
+       "rom_deg": 19.406,
+       "rmse_vs_opencap_deg": 18.939,
+       "difference_deg": -6.21
+      }
+     ]
+    },
+    {
+     "joint": "forearm_r",
+     "plane": "transverse",
+     "rmse_deg": 11.397,
+     "worst_coordinate": "pro_sup_r",
+     "gate": "fail",
+     "rmse_vs_opencap_deg": 5.664,
+     "difference_deg": 5.733,
+     "coordinates": [
+      {
+       "coordinate": "pro_sup_r",
+       "rmse_deg": 11.397,
+       "bias_deg": -10.288,
+       "spread_deg": 4.905,
+       "rom_deg": 28.987,
+       "rmse_vs_opencap_deg": 5.664,
+       "difference_deg": 5.733
+      }
+     ]
+    },
+    {
+     "joint": "hip_l",
+     "plane": "frontal",
+     "rmse_deg": 4.33,
+     "worst_coordinate": "hip_adduction_l",
+     "gate": "pass",
+     "rmse_vs_opencap_deg": 3.87,
+     "difference_deg": 0.46,
+     "coordinates": [
+      {
+       "coordinate": "hip_adduction_l",
+       "rmse_deg": 4.33,
+       "bias_deg": 2.539,
+       "spread_deg": 3.508,
+       "rom_deg": 15.502,
+       "rmse_vs_opencap_deg": 3.87,
+       "difference_deg": 0.46
+      }
+     ]
+    },
+    {
+     "joint": "hip_l",
+     "plane": "sagittal",
+     "rmse_deg": 27.488,
+     "worst_coordinate": "hip_flexion_l",
+     "gate": "fail",
+     "rmse_vs_opencap_deg": 34.833,
+     "difference_deg": -7.345,
+     "coordinates": [
+      {
+       "coordinate": "hip_flexion_l",
+       "rmse_deg": 27.488,
+       "bias_deg": 20.745,
+       "spread_deg": 18.033,
+       "rom_deg": 128.502,
+       "rmse_vs_opencap_deg": 34.833,
+       "difference_deg": -7.345
+      }
+     ]
+    },
+    {
+     "joint": "hip_l",
+     "plane": "transverse",
+     "rmse_deg": 7.546,
+     "worst_coordinate": "hip_rotation_l",
+     "gate": "fail",
+     "rmse_vs_opencap_deg": 10.141,
+     "difference_deg": -2.595,
+     "coordinates": [
+      {
+       "coordinate": "hip_rotation_l",
+       "rmse_deg": 7.546,
+       "bias_deg": -6.989,
+       "spread_deg": 2.846,
+       "rom_deg": 27.405,
+       "rmse_vs_opencap_deg": 10.141,
+       "difference_deg": -2.595
+      }
+     ]
+    },
+    {
+     "joint": "hip_r",
+     "plane": "frontal",
+     "rmse_deg": 8.142,
+     "worst_coordinate": "hip_adduction_r",
+     "gate": "fail",
+     "rmse_vs_opencap_deg": 2.373,
+     "difference_deg": 5.769,
+     "coordinates": [
+      {
+       "coordinate": "hip_adduction_r",
+       "rmse_deg": 8.142,
+       "bias_deg": -6.104,
+       "spread_deg": 5.388,
+       "rom_deg": 10.663,
+       "rmse_vs_opencap_deg": 2.373,
+       "difference_deg": 5.769
+      }
+     ]
+    },
+    {
+     "joint": "hip_r",
+     "plane": "sagittal",
+     "rmse_deg": 30.108,
+     "worst_coordinate": "hip_flexion_r",
+     "gate": "fail",
+     "rmse_vs_opencap_deg": 36.214,
+     "difference_deg": -6.106,
+     "coordinates": [
+      {
+       "coordinate": "hip_flexion_r",
+       "rmse_deg": 30.108,
+       "bias_deg": 22.804,
+       "spread_deg": 19.658,
+       "rom_deg": 121.492,
+       "rmse_vs_opencap_deg": 36.214,
+       "difference_deg": -6.106
+      }
+     ]
+    },
+    {
+     "joint": "hip_r",
+     "plane": "transverse",
+     "rmse_deg": 12.711,
+     "worst_coordinate": "hip_rotation_r",
+     "gate": "fail",
+     "rmse_vs_opencap_deg": 10.593,
+     "difference_deg": 2.118,
+     "coordinates": [
+      {
+       "coordinate": "hip_rotation_r",
+       "rmse_deg": 12.711,
+       "bias_deg": -9.51,
+       "spread_deg": 8.434,
+       "rom_deg": 11.584,
+       "rmse_vs_opencap_deg": 10.593,
+       "difference_deg": 2.118
+      }
+     ]
+    },
+    {
+     "joint": "knee_l",
+     "plane": "frontal",
+     "rmse_deg": 31.464,
+     "worst_coordinate": "knee_fppa_l",
+     "gate": "fail",
+     "rmse_vs_opencap_deg": 21.351,
+     "difference_deg": 10.113,
+     "coordinates": [
+      {
+       "coordinate": "knee_fppa_l",
+       "rmse_deg": 31.464,
+       "bias_deg": 15.661,
+       "spread_deg": 27.29,
+       "rom_deg": 59.255,
+       "rmse_vs_opencap_deg": 21.351,
+       "difference_deg": 10.113
+      }
+     ]
+    },
+    {
+     "joint": "knee_l",
+     "plane": "sagittal",
+     "rmse_deg": 3.687,
+     "worst_coordinate": "knee_angle_l",
+     "gate": "fail",
+     "rmse_vs_opencap_deg": 5.933,
+     "difference_deg": -2.246,
+     "coordinates": [
+      {
+       "coordinate": "knee_angle_l",
+       "rmse_deg": 3.687,
+       "bias_deg": 1.499,
+       "spread_deg": 3.368,
+       "rom_deg": 89.546,
+       "rmse_vs_opencap_deg": 5.933,
+       "difference_deg": -2.246
+      }
+     ]
+    },
+    {
+     "joint": "knee_r",
+     "plane": "frontal",
+     "rmse_deg": 23.953,
+     "worst_coordinate": "knee_fppa_r",
+     "gate": "fail",
+     "rmse_vs_opencap_deg": 20.426,
+     "difference_deg": 3.527,
+     "coordinates": [
+      {
+       "coordinate": "knee_fppa_r",
+       "rmse_deg": 23.953,
+       "bias_deg": -9.163,
+       "spread_deg": 22.131,
+       "rom_deg": 22.449,
+       "rmse_vs_opencap_deg": 20.426,
+       "difference_deg": 3.527
+      }
+     ]
+    },
+    {
+     "joint": "knee_r",
+     "plane": "sagittal",
+     "rmse_deg": 9.394,
+     "worst_coordinate": "knee_angle_r",
+     "gate": "fail",
+     "rmse_vs_opencap_deg": 8.109,
+     "difference_deg": 1.285,
+     "coordinates": [
+      {
+       "coordinate": "knee_angle_r",
+       "rmse_deg": 9.394,
+       "bias_deg": 6.348,
+       "spread_deg": 6.924,
+       "rom_deg": 83.774,
+       "rmse_vs_opencap_deg": 8.109,
+       "difference_deg": 1.285
+      }
+     ]
+    },
+    {
+     "joint": "lumbar",
+     "plane": "frontal",
+     "rmse_deg": 4.67,
+     "worst_coordinate": "lumbar_total.frontal",
+     "gate": "pass",
+     "rmse_vs_opencap_deg": 4.512,
+     "difference_deg": 0.158,
+     "coordinates": [
+      {
+       "coordinate": "lumbar_total.frontal",
+       "rmse_deg": 4.67,
+       "bias_deg": 3.983,
+       "spread_deg": 2.439,
+       "rom_deg": 7.596,
+       "rmse_vs_opencap_deg": 4.512,
+       "difference_deg": 0.158
+      }
+     ]
+    },
+    {
+     "joint": "lumbar",
+     "plane": "sagittal",
+     "rmse_deg": 49.844,
+     "worst_coordinate": "lumbar_total.sagittal",
+     "gate": "fail",
+     "rmse_vs_opencap_deg": 51.155,
+     "difference_deg": -1.311,
+     "coordinates": [
+      {
+       "coordinate": "lumbar_total.sagittal",
+       "rmse_deg": 49.844,
+       "bias_deg": 41.642,
+       "spread_deg": 27.393,
+       "rom_deg": 32.432,
+       "rmse_vs_opencap_deg": 51.155,
+       "difference_deg": -1.311
+      }
+     ]
+    },
+    {
+     "joint": "lumbar",
+     "plane": "transverse",
+     "rmse_deg": 7.677,
+     "worst_coordinate": "lumbar_total.transverse",
+     "gate": "fail",
+     "rmse_vs_opencap_deg": 3.045,
+     "difference_deg": 4.632,
+     "coordinates": [
+      {
+       "coordinate": "lumbar_total.transverse",
+       "rmse_deg": 7.677,
+       "bias_deg": -7.46,
+       "spread_deg": 1.812,
+       "rom_deg": 15.79,
+       "rmse_vs_opencap_deg": 3.045,
+       "difference_deg": 4.632
+      }
+     ]
+    },
+    {
+     "joint": "mtp_l",
+     "plane": "sagittal",
+     "rmse_deg": 27.693,
+     "worst_coordinate": "mtp_angle_l",
+     "gate": "not-tested",
+     "rmse_vs_opencap_deg": 21.376,
+     "difference_deg": 6.317,
+     "coordinates": [
+      {
+       "coordinate": "mtp_angle_l",
+       "rmse_deg": 27.693,
+       "bias_deg": 25.385,
+       "spread_deg": 11.067,
+       "rom_deg": 3.001,
+       "rmse_vs_opencap_deg": 21.376,
+       "difference_deg": 6.317
+      }
+     ]
+    },
+    {
+     "joint": "mtp_r",
+     "plane": "sagittal",
+     "rmse_deg": 22.034,
+     "worst_coordinate": "mtp_angle_r",
+     "gate": "not-tested",
+     "rmse_vs_opencap_deg": 21.748,
+     "difference_deg": 0.286,
+     "coordinates": [
+      {
+       "coordinate": "mtp_angle_r",
+       "rmse_deg": 22.034,
+       "bias_deg": 6.554,
+       "spread_deg": 21.037,
+       "rom_deg": 3.001,
+       "rmse_vs_opencap_deg": 21.748,
+       "difference_deg": 0.286
+      }
+     ]
+    },
+    {
+     "joint": "pelvis",
+     "plane": "frontal",
+     "rmse_deg": 2.604,
+     "worst_coordinate": "pelvis_list",
+     "gate": "pass",
+     "rmse_vs_opencap_deg": 2.568,
+     "difference_deg": 0.036,
+     "coordinates": [
+      {
+       "coordinate": "pelvis_list",
+       "rmse_deg": 2.604,
+       "bias_deg": 0.916,
+       "spread_deg": 2.437,
+       "rom_deg": 6.266,
+       "rmse_vs_opencap_deg": 2.568,
+       "difference_deg": 0.036
+      }
+     ]
+    },
+    {
+     "joint": "pelvis",
+     "plane": "sagittal",
+     "rmse_deg": 31.932,
+     "worst_coordinate": "pelvis_tilt",
+     "gate": "fail",
+     "rmse_vs_opencap_deg": 37.517,
+     "difference_deg": -5.585,
+     "coordinates": [
+      {
+       "coordinate": "pelvis_tilt",
+       "rmse_deg": 31.932,
+       "bias_deg": -26.652,
+       "spread_deg": 17.587,
+       "rom_deg": 61.949,
+       "rmse_vs_opencap_deg": 37.517,
+       "difference_deg": -5.585
+      }
+     ]
+    },
+    {
+     "joint": "pelvis",
+     "plane": "transverse",
+     "rmse_deg": 6.406,
+     "worst_coordinate": "pelvis_rotation",
+     "gate": "fail",
+     "rmse_vs_opencap_deg": 2.977,
+     "difference_deg": 3.429,
+     "coordinates": [
+      {
+       "coordinate": "pelvis_rotation",
+       "rmse_deg": 6.406,
+       "bias_deg": 6.165,
+       "spread_deg": 1.741,
+       "rom_deg": 11.216,
+       "rmse_vs_opencap_deg": 2.977,
+       "difference_deg": 3.429
+      }
+     ]
+    },
+    {
+     "joint": "pelvis_segment",
+     "plane": "frontal",
+     "rmse_deg": 16.901,
+     "worst_coordinate": "pelvis.frontal",
+     "gate": "fail",
+     "rmse_vs_opencap_deg": 12.476,
+     "difference_deg": 4.425,
+     "coordinates": [
+      {
+       "coordinate": "pelvis.frontal",
+       "rmse_deg": 16.901,
+       "bias_deg": 7.81,
+       "spread_deg": 14.988,
+       "rom_deg": 15.09,
+       "rmse_vs_opencap_deg": 12.476,
+       "difference_deg": 4.425
+      }
+     ]
+    },
+    {
+     "joint": "pelvis_segment",
+     "plane": "sagittal",
+     "rmse_deg": 66.864,
+     "worst_coordinate": "pelvis.sagittal",
+     "gate": "fail",
+     "rmse_vs_opencap_deg": 57.553,
+     "difference_deg": 9.311,
+     "coordinates": [
+      {
+       "coordinate": "pelvis.sagittal",
+       "rmse_deg": 66.864,
+       "bias_deg": -9.734,
+       "spread_deg": 66.151,
+       "rom_deg": 61.368,
+       "rmse_vs_opencap_deg": 57.553,
+       "difference_deg": 9.311
+      }
+     ]
+    },
+    {
+     "joint": "shoulder_l",
+     "plane": "frontal",
+     "rmse_deg": 3.203,
+     "worst_coordinate": "arm_add_l",
+     "gate": "pass",
+     "rmse_vs_opencap_deg": 4.962,
+     "difference_deg": -1.759,
+     "coordinates": [
+      {
+       "coordinate": "arm_add_l",
+       "rmse_deg": 3.203,
+       "bias_deg": -2.621,
+       "spread_deg": 1.841,
+       "rom_deg": 17.838,
+       "rmse_vs_opencap_deg": 4.962,
+       "difference_deg": -1.759
+      }
+     ]
+    },
+    {
+     "joint": "shoulder_l",
+     "plane": "sagittal",
+     "rmse_deg": 27.381,
+     "worst_coordinate": "arm_flex_l",
+     "gate": "fail",
+     "rmse_vs_opencap_deg": 18.834,
+     "difference_deg": 8.547,
+     "coordinates": [
+      {
+       "coordinate": "arm_flex_l",
+       "rmse_deg": 27.381,
+       "bias_deg": -23.876,
+       "spread_deg": 13.404,
+       "rom_deg": 135.678,
+       "rmse_vs_opencap_deg": 18.834,
+       "difference_deg": 8.547
+      }
+     ]
+    },
+    {
+     "joint": "shoulder_l",
+     "plane": "transverse",
+     "rmse_deg": 6.247,
+     "worst_coordinate": "arm_rot_l",
+     "gate": "fail",
+     "rmse_vs_opencap_deg": 5.75,
+     "difference_deg": 0.497,
+     "coordinates": [
+      {
+       "coordinate": "arm_rot_l",
+       "rmse_deg": 6.247,
+       "bias_deg": -5.312,
+       "spread_deg": 3.288,
+       "rom_deg": 47.813,
+       "rmse_vs_opencap_deg": 5.75,
+       "difference_deg": 0.497
+      }
+     ]
+    },
+    {
+     "joint": "shoulder_r",
+     "plane": "frontal",
+     "rmse_deg": 4.295,
+     "worst_coordinate": "arm_add_r",
+     "gate": "pass",
+     "rmse_vs_opencap_deg": 6.86,
+     "difference_deg": -2.565,
+     "coordinates": [
+      {
+       "coordinate": "arm_add_r",
+       "rmse_deg": 4.295,
+       "bias_deg": -3.519,
+       "spread_deg": 2.463,
+       "rom_deg": 15.774,
+       "rmse_vs_opencap_deg": 6.86,
+       "difference_deg": -2.565
+      }
+     ]
+    },
+    {
+     "joint": "shoulder_r",
+     "plane": "sagittal",
+     "rmse_deg": 26.948,
+     "worst_coordinate": "arm_flex_r",
+     "gate": "fail",
+     "rmse_vs_opencap_deg": 16.385,
+     "difference_deg": 10.563,
+     "coordinates": [
+      {
+       "coordinate": "arm_flex_r",
+       "rmse_deg": 26.948,
+       "bias_deg": -23.919,
+       "spread_deg": 12.414,
+       "rom_deg": 144.949,
+       "rmse_vs_opencap_deg": 16.385,
+       "difference_deg": 10.563
+      }
+     ]
+    },
+    {
+     "joint": "shoulder_r",
+     "plane": "transverse",
+     "rmse_deg": 5.477,
+     "worst_coordinate": "arm_rot_r",
+     "gate": "fail",
+     "rmse_vs_opencap_deg": 3.929,
+     "difference_deg": 1.548,
+     "coordinates": [
+      {
+       "coordinate": "arm_rot_r",
+       "rmse_deg": 5.477,
+       "bias_deg": -3.648,
+       "spread_deg": 4.085,
+       "rom_deg": 54.305,
+       "rmse_vs_opencap_deg": 3.929,
+       "difference_deg": 1.548
+      }
+     ]
+    },
+    {
+     "joint": "subtalar_l",
+     "plane": "frontal",
+     "rmse_deg": 8.514,
+     "worst_coordinate": "subtalar_angle_l",
+     "gate": "fail",
+     "rmse_vs_opencap_deg": 7.034,
+     "difference_deg": 1.48,
+     "coordinates": [
+      {
+       "coordinate": "subtalar_angle_l",
+       "rmse_deg": 8.514,
+       "bias_deg": 2.789,
+       "spread_deg": 8.045,
+       "rom_deg": 12.09,
+       "rmse_vs_opencap_deg": 7.034,
+       "difference_deg": 1.48
+      }
+     ]
+    },
+    {
+     "joint": "subtalar_r",
+     "plane": "frontal",
+     "rmse_deg": 7.359,
+     "worst_coordinate": "subtalar_angle_r",
+     "gate": "fail",
+     "rmse_vs_opencap_deg": 16.239,
+     "difference_deg": -8.88,
+     "coordinates": [
+      {
+       "coordinate": "subtalar_angle_r",
+       "rmse_deg": 7.359,
+       "bias_deg": 2.699,
+       "spread_deg": 6.846,
+       "rom_deg": 17.304,
+       "rmse_vs_opencap_deg": 16.239,
+       "difference_deg": -8.88
+      }
+     ]
+    },
+    {
+     "joint": "torso_segment",
+     "plane": "frontal",
+     "rmse_deg": 12.781,
+     "worst_coordinate": "torso.frontal",
+     "gate": "fail",
+     "rmse_vs_opencap_deg": 8.565,
+     "difference_deg": 4.216,
+     "coordinates": [
+      {
+       "coordinate": "torso.frontal",
+       "rmse_deg": 12.781,
+       "bias_deg": 8.725,
+       "spread_deg": 9.339,
+       "rom_deg": 16.749,
+       "rmse_vs_opencap_deg": 8.565,
+       "difference_deg": 4.216
+      }
+     ]
+    },
+    {
+     "joint": "torso_segment",
+     "plane": "sagittal",
+     "rmse_deg": 53.679,
+     "worst_coordinate": "torso.sagittal",
+     "gate": "fail",
+     "rmse_vs_opencap_deg": 47.482,
+     "difference_deg": 6.197,
+     "coordinates": [
+      {
+       "coordinate": "torso.sagittal",
+       "rmse_deg": 53.679,
+       "bias_deg": -32.841,
+       "spread_deg": 42.461,
+       "rom_deg": 83.563,
+       "rmse_vs_opencap_deg": 47.482,
+       "difference_deg": 6.197
+      }
+     ]
+    }
+   ]
+  },
+  "multi_aug": {
+   "lag_vs_mocap_s": 0.4834229999999966,
+   "lag_vs_opencap_s": 0.06674799999999692,
+   "coverage_vs_mocap": {
+    "compared_s": 7.983,
+    "overlap_s": 8.0,
+    "fraction": 0.998,
+    "min_fraction": 0.8
+   },
+   "evaluated_vs_mocap": true,
+   "evaluated_vs_opencap": true,
+   "approved_for": [
+    "screening"
+   ],
+   "rows": [
+    {
+     "joint": "ankle_l",
+     "plane": "sagittal",
+     "rmse_deg": 9.662,
+     "worst_coordinate": "ankle_angle_l",
+     "gate": "fail",
+     "rmse_vs_opencap_deg": 5.293,
+     "difference_deg": 4.369,
+     "coordinates": [
+      {
+       "coordinate": "ankle_angle_l",
+       "rmse_deg": 9.662,
+       "bias_deg": -6.78,
+       "spread_deg": 6.885,
+       "rom_deg": 24.453,
+       "rmse_vs_opencap_deg": 5.293,
+       "difference_deg": 4.369
+      }
+     ]
+    },
+    {
+     "joint": "ankle_r",
+     "plane": "sagittal",
+     "rmse_deg": 6.53,
+     "worst_coordinate": "ankle_angle_r",
+     "gate": "fail",
+     "rmse_vs_opencap_deg": 5.367,
+     "difference_deg": 1.163,
+     "coordinates": [
+      {
+       "coordinate": "ankle_angle_r",
+       "rmse_deg": 6.53,
+       "bias_deg": -5.844,
+       "spread_deg": 2.913,
+       "rom_deg": 21.386,
+       "rmse_vs_opencap_deg": 5.367,
+       "difference_deg": 1.163
+      }
+     ]
+    },
+    {
+     "joint": "elbow_l",
+     "plane": "sagittal",
+     "rmse_deg": 11.949,
+     "worst_coordinate": "elbow_flex_l",
+     "gate": "fail",
+     "rmse_vs_opencap_deg": 10.978,
+     "difference_deg": 0.971,
+     "coordinates": [
+      {
+       "coordinate": "elbow_flex_l",
+       "rmse_deg": 11.949,
+       "bias_deg": 9.086,
+       "spread_deg": 7.76,
+       "rom_deg": 54.279,
+       "rmse_vs_opencap_deg": 10.978,
+       "difference_deg": 0.971
+      }
+     ]
+    },
+    {
+     "joint": "elbow_r",
+     "plane": "sagittal",
+     "rmse_deg": 12.392,
+     "worst_coordinate": "elbow_flex_r",
+     "gate": "fail",
+     "rmse_vs_opencap_deg": 9.126,
+     "difference_deg": 3.266,
+     "coordinates": [
+      {
+       "coordinate": "elbow_flex_r",
+       "rmse_deg": 12.392,
+       "bias_deg": 9.349,
+       "spread_deg": 8.133,
+       "rom_deg": 52.927,
+       "rmse_vs_opencap_deg": 9.126,
+       "difference_deg": 3.266
+      }
+     ]
+    },
+    {
+     "joint": "forearm_l",
+     "plane": "transverse",
+     "rmse_deg": 24.911,
+     "worst_coordinate": "pro_sup_l",
+     "gate": "fail",
+     "rmse_vs_opencap_deg": 9.874,
+     "difference_deg": 15.037,
+     "coordinates": [
+      {
+       "coordinate": "pro_sup_l",
+       "rmse_deg": 24.911,
+       "bias_deg": -24.046,
+       "spread_deg": 6.509,
+       "rom_deg": 19.406,
+       "rmse_vs_opencap_deg": 9.874,
+       "difference_deg": 15.037
+      }
+     ]
+    },
+    {
+     "joint": "forearm_r",
+     "plane": "transverse",
+     "rmse_deg": 25.053,
+     "worst_coordinate": "pro_sup_r",
+     "gate": "fail",
+     "rmse_vs_opencap_deg": 17.047,
+     "difference_deg": 8.006,
+     "coordinates": [
+      {
+       "coordinate": "pro_sup_r",
+       "rmse_deg": 25.053,
+       "bias_deg": -24.353,
+       "spread_deg": 5.883,
+       "rom_deg": 28.987,
+       "rmse_vs_opencap_deg": 17.047,
+       "difference_deg": 8.006
+      }
+     ]
+    },
+    {
+     "joint": "hip_l",
+     "plane": "frontal",
+     "rmse_deg": 4.6,
+     "worst_coordinate": "hip_adduction_l",
+     "gate": "pass",
+     "rmse_vs_opencap_deg": 5.412,
+     "difference_deg": -0.812,
+     "coordinates": [
+      {
+       "coordinate": "hip_adduction_l",
+       "rmse_deg": 4.6,
+       "bias_deg": 0.674,
+       "spread_deg": 4.55,
+       "rom_deg": 15.502,
+       "rmse_vs_opencap_deg": 5.412,
+       "difference_deg": -0.812
+      }
+     ]
+    },
+    {
+     "joint": "hip_l",
+     "plane": "sagittal",
+     "rmse_deg": 7.942,
+     "worst_coordinate": "hip_flexion_l",
+     "gate": "fail",
+     "rmse_vs_opencap_deg": 7.902,
+     "difference_deg": 0.04,
+     "coordinates": [
+      {
+       "coordinate": "hip_flexion_l",
+       "rmse_deg": 7.942,
+       "bias_deg": -1.494,
+       "spread_deg": 7.8,
+       "rom_deg": 128.502,
+       "rmse_vs_opencap_deg": 7.902,
+       "difference_deg": 0.04
+      }
+     ]
+    },
+    {
+     "joint": "hip_l",
+     "plane": "transverse",
+     "rmse_deg": 4.042,
+     "worst_coordinate": "hip_rotation_l",
+     "gate": "pass",
+     "rmse_vs_opencap_deg": 6.943,
+     "difference_deg": -2.901,
+     "coordinates": [
+      {
+       "coordinate": "hip_rotation_l",
+       "rmse_deg": 4.042,
+       "bias_deg": -3.024,
+       "spread_deg": 2.681,
+       "rom_deg": 27.405,
+       "rmse_vs_opencap_deg": 6.943,
+       "difference_deg": -2.901
+      }
+     ]
+    },
+    {
+     "joint": "hip_r",
+     "plane": "frontal",
+     "rmse_deg": 7.241,
+     "worst_coordinate": "hip_adduction_r",
+     "gate": "fail",
+     "rmse_vs_opencap_deg": 2.847,
+     "difference_deg": 4.394,
+     "coordinates": [
+      {
+       "coordinate": "hip_adduction_r",
+       "rmse_deg": 7.241,
+       "bias_deg": -5.227,
+       "spread_deg": 5.012,
+       "rom_deg": 10.663,
+       "rmse_vs_opencap_deg": 2.847,
+       "difference_deg": 4.394
+      }
+     ]
+    },
+    {
+     "joint": "hip_r",
+     "plane": "sagittal",
+     "rmse_deg": 4.336,
+     "worst_coordinate": "hip_flexion_r",
+     "gate": "fail",
+     "rmse_vs_opencap_deg": 8.189,
+     "difference_deg": -3.853,
+     "coordinates": [
+      {
+       "coordinate": "hip_flexion_r",
+       "rmse_deg": 4.336,
+       "bias_deg": -0.93,
+       "spread_deg": 4.235,
+       "rom_deg": 121.492,
+       "rmse_vs_opencap_deg": 8.189,
+       "difference_deg": -3.853
+      }
+     ]
+    },
+    {
+     "joint": "hip_r",
+     "plane": "transverse",
+     "rmse_deg": 9.106,
+     "worst_coordinate": "hip_rotation_r",
+     "gate": "fail",
+     "rmse_vs_opencap_deg": 6.915,
+     "difference_deg": 2.191,
+     "coordinates": [
+      {
+       "coordinate": "hip_rotation_r",
+       "rmse_deg": 9.106,
+       "bias_deg": -6.08,
+       "spread_deg": 6.779,
+       "rom_deg": 11.584,
+       "rmse_vs_opencap_deg": 6.915,
+       "difference_deg": 2.191
+      }
+     ]
+    },
+    {
+     "joint": "knee_l",
+     "plane": "frontal",
+     "rmse_deg": 5.932,
+     "worst_coordinate": "knee_fppa_l",
+     "gate": "fail",
+     "rmse_vs_opencap_deg": 9.609,
+     "difference_deg": -3.677,
+     "coordinates": [
+      {
+       "coordinate": "knee_fppa_l",
+       "rmse_deg": 5.932,
+       "bias_deg": 2.234,
+       "spread_deg": 5.496,
+       "rom_deg": 59.255,
+       "rmse_vs_opencap_deg": 9.609,
+       "difference_deg": -3.677
+      }
+     ]
+    },
+    {
+     "joint": "knee_l",
+     "plane": "sagittal",
+     "rmse_deg": 4.106,
+     "worst_coordinate": "knee_angle_l",
+     "gate": "fail",
+     "rmse_vs_opencap_deg": 7.112,
+     "difference_deg": -3.006,
+     "coordinates": [
+      {
+       "coordinate": "knee_angle_l",
+       "rmse_deg": 4.106,
+       "bias_deg": 3.218,
+       "spread_deg": 2.55,
+       "rom_deg": 89.546,
+       "rmse_vs_opencap_deg": 7.112,
+       "difference_deg": -3.006
+      }
+     ]
+    },
+    {
+     "joint": "knee_r",
+     "plane": "frontal",
+     "rmse_deg": 22.944,
+     "worst_coordinate": "knee_fppa_r",
+     "gate": "fail",
+     "rmse_vs_opencap_deg": 5.242,
+     "difference_deg": 17.702,
+     "coordinates": [
+      {
+       "coordinate": "knee_fppa_r",
+       "rmse_deg": 22.944,
+       "bias_deg": -16.634,
+       "spread_deg": 15.803,
+       "rom_deg": 22.449,
+       "rmse_vs_opencap_deg": 5.242,
+       "difference_deg": 17.702
+      }
+     ]
+    },
+    {
+     "joint": "knee_r",
+     "plane": "sagittal",
+     "rmse_deg": 7.266,
+     "worst_coordinate": "knee_angle_r",
+     "gate": "fail",
+     "rmse_vs_opencap_deg": 7.428,
+     "difference_deg": -0.162,
+     "coordinates": [
+      {
+       "coordinate": "knee_angle_r",
+       "rmse_deg": 7.266,
+       "bias_deg": 6.255,
+       "spread_deg": 3.697,
+       "rom_deg": 83.774,
+       "rmse_vs_opencap_deg": 7.428,
+       "difference_deg": -0.162
+      }
+     ]
+    },
+    {
+     "joint": "lumbar",
+     "plane": "frontal",
+     "rmse_deg": 5.813,
+     "worst_coordinate": "lumbar_total.frontal",
+     "gate": "fail",
+     "rmse_vs_opencap_deg": 5.564,
+     "difference_deg": 0.249,
+     "coordinates": [
+      {
+       "coordinate": "lumbar_total.frontal",
+       "rmse_deg": 5.813,
+       "bias_deg": 5.003,
+       "spread_deg": 2.96,
+       "rom_deg": 7.596,
+       "rmse_vs_opencap_deg": 5.564,
+       "difference_deg": 0.249
+      }
+     ]
+    },
+    {
+     "joint": "lumbar",
+     "plane": "sagittal",
+     "rmse_deg": 9.177,
+     "worst_coordinate": "lumbar_total.sagittal",
+     "gate": "fail",
+     "rmse_vs_opencap_deg": 3.915,
+     "difference_deg": 5.262,
+     "coordinates": [
+      {
+       "coordinate": "lumbar_total.sagittal",
+       "rmse_deg": 9.177,
+       "bias_deg": -0.801,
+       "spread_deg": 9.142,
+       "rom_deg": 32.432,
+       "rmse_vs_opencap_deg": 3.915,
+       "difference_deg": 5.262
+      }
+     ]
+    },
+    {
+     "joint": "lumbar",
+     "plane": "transverse",
+     "rmse_deg": 6.631,
+     "worst_coordinate": "lumbar_total.transverse",
+     "gate": "fail",
+     "rmse_vs_opencap_deg": 5.113,
+     "difference_deg": 1.518,
+     "coordinates": [
+      {
+       "coordinate": "lumbar_total.transverse",
+       "rmse_deg": 6.631,
+       "bias_deg": -6.151,
+       "spread_deg": 2.477,
+       "rom_deg": 15.79,
+       "rmse_vs_opencap_deg": 5.113,
+       "difference_deg": 1.518
+      }
+     ]
+    },
+    {
+     "joint": "mtp_l",
+     "plane": "sagittal",
+     "rmse_deg": 7.471,
+     "worst_coordinate": "mtp_angle_l",
+     "gate": "not-tested",
+     "rmse_vs_opencap_deg": 0.0,
+     "difference_deg": 7.471,
+     "coordinates": [
+      {
+       "coordinate": "mtp_angle_l",
+       "rmse_deg": 7.471,
+       "bias_deg": 7.467,
+       "spread_deg": 0.245,
+       "rom_deg": 3.001,
+       "rmse_vs_opencap_deg": 0.0,
+       "difference_deg": 7.471
+      }
+     ]
+    },
+    {
+     "joint": "mtp_r",
+     "plane": "sagittal",
+     "rmse_deg": 7.471,
+     "worst_coordinate": "mtp_angle_r",
+     "gate": "not-tested",
+     "rmse_vs_opencap_deg": 0.0,
+     "difference_deg": 7.471,
+     "coordinates": [
+      {
+       "coordinate": "mtp_angle_r",
+       "rmse_deg": 7.471,
+       "bias_deg": 7.467,
+       "spread_deg": 0.245,
+       "rom_deg": 3.001,
+       "rmse_vs_opencap_deg": 0.0,
+       "difference_deg": 7.471
+      }
+     ]
+    },
+    {
+     "joint": "pelvis",
+     "plane": "frontal",
+     "rmse_deg": 3.028,
+     "worst_coordinate": "pelvis_list",
+     "gate": "pass",
+     "rmse_vs_opencap_deg": 2.633,
+     "difference_deg": 0.395,
+     "coordinates": [
+      {
+       "coordinate": "pelvis_list",
+       "rmse_deg": 3.028,
+       "bias_deg": 0.748,
+       "spread_deg": 2.934,
+       "rom_deg": 6.266,
+       "rmse_vs_opencap_deg": 2.633,
+       "difference_deg": 0.395
+      }
+     ]
+    },
+    {
+     "joint": "pelvis",
+     "plane": "sagittal",
+     "rmse_deg": 9.182,
+     "worst_coordinate": "pelvis_tilt",
+     "gate": "fail",
+     "rmse_vs_opencap_deg": 2.805,
+     "difference_deg": 6.377,
+     "coordinates": [
+      {
+       "coordinate": "pelvis_tilt",
+       "rmse_deg": 9.182,
+       "bias_deg": 5.999,
+       "spread_deg": 6.951,
+       "rom_deg": 61.949,
+       "rmse_vs_opencap_deg": 2.805,
+       "difference_deg": 6.377
+      }
+     ]
+    },
+    {
+     "joint": "pelvis",
+     "plane": "transverse",
+     "rmse_deg": 5.758,
+     "worst_coordinate": "pelvis_rotation",
+     "gate": "fail",
+     "rmse_vs_opencap_deg": 3.595,
+     "difference_deg": 2.163,
+     "coordinates": [
+      {
+       "coordinate": "pelvis_rotation",
+       "rmse_deg": 5.758,
+       "bias_deg": 5.517,
+       "spread_deg": 1.648,
+       "rom_deg": 11.216,
+       "rmse_vs_opencap_deg": 3.595,
+       "difference_deg": 2.163
+      }
+     ]
+    },
+    {
+     "joint": "pelvis_segment",
+     "plane": "frontal",
+     "rmse_deg": 6.801,
+     "worst_coordinate": "pelvis.frontal",
+     "gate": "fail",
+     "rmse_vs_opencap_deg": 3.957,
+     "difference_deg": 2.844,
+     "coordinates": [
+      {
+       "coordinate": "pelvis.frontal",
+       "rmse_deg": 6.801,
+       "bias_deg": 3.981,
+       "spread_deg": 5.514,
+       "rom_deg": 15.09,
+       "rmse_vs_opencap_deg": 3.957,
+       "difference_deg": 2.844
+      }
+     ]
+    },
+    {
+     "joint": "pelvis_segment",
+     "plane": "sagittal",
+     "rmse_deg": 8.734,
+     "worst_coordinate": "pelvis.sagittal",
+     "gate": "fail",
+     "rmse_vs_opencap_deg": 2.882,
+     "difference_deg": 5.852,
+     "coordinates": [
+      {
+       "coordinate": "pelvis.sagittal",
+       "rmse_deg": 8.734,
+       "bias_deg": -5.593,
+       "spread_deg": 6.708,
+       "rom_deg": 61.368,
+       "rmse_vs_opencap_deg": 2.882,
+       "difference_deg": 5.852
+      }
+     ]
+    },
+    {
+     "joint": "shoulder_l",
+     "plane": "frontal",
+     "rmse_deg": 5.982,
+     "worst_coordinate": "arm_add_l",
+     "gate": "fail",
+     "rmse_vs_opencap_deg": 8.045,
+     "difference_deg": -2.063,
+     "coordinates": [
+      {
+       "coordinate": "arm_add_l",
+       "rmse_deg": 5.982,
+       "bias_deg": -5.352,
+       "spread_deg": 2.672,
+       "rom_deg": 17.838,
+       "rmse_vs_opencap_deg": 8.045,
+       "difference_deg": -2.063
+      }
+     ]
+    },
+    {
+     "joint": "shoulder_l",
+     "plane": "sagittal",
+     "rmse_deg": 8.593,
+     "worst_coordinate": "arm_flex_l",
+     "gate": "fail",
+     "rmse_vs_opencap_deg": 4.44,
+     "difference_deg": 4.153,
+     "coordinates": [
+      {
+       "coordinate": "arm_flex_l",
+       "rmse_deg": 8.593,
+       "bias_deg": -7.115,
+       "spread_deg": 4.82,
+       "rom_deg": 135.678,
+       "rmse_vs_opencap_deg": 4.44,
+       "difference_deg": 4.153
+      }
+     ]
+    },
+    {
+     "joint": "shoulder_l",
+     "plane": "transverse",
+     "rmse_deg": 3.986,
+     "worst_coordinate": "arm_rot_l",
+     "gate": "pass",
+     "rmse_vs_opencap_deg": 3.524,
+     "difference_deg": 0.462,
+     "coordinates": [
+      {
+       "coordinate": "arm_rot_l",
+       "rmse_deg": 3.986,
+       "bias_deg": -2.507,
+       "spread_deg": 3.099,
+       "rom_deg": 47.813,
+       "rmse_vs_opencap_deg": 3.524,
+       "difference_deg": 0.462
+      }
+     ]
+    },
+    {
+     "joint": "shoulder_r",
+     "plane": "frontal",
+     "rmse_deg": 8.932,
+     "worst_coordinate": "arm_add_r",
+     "gate": "fail",
+     "rmse_vs_opencap_deg": 11.255,
+     "difference_deg": -2.323,
+     "coordinates": [
+      {
+       "coordinate": "arm_add_r",
+       "rmse_deg": 8.932,
+       "bias_deg": -8.603,
+       "spread_deg": 2.401,
+       "rom_deg": 15.774,
+       "rmse_vs_opencap_deg": 11.255,
+       "difference_deg": -2.323
+      }
+     ]
+    },
+    {
+     "joint": "shoulder_r",
+     "plane": "sagittal",
+     "rmse_deg": 8.494,
+     "worst_coordinate": "arm_flex_r",
+     "gate": "fail",
+     "rmse_vs_opencap_deg": 5.197,
+     "difference_deg": 3.297,
+     "coordinates": [
+      {
+       "coordinate": "arm_flex_r",
+       "rmse_deg": 8.494,
+       "bias_deg": -6.661,
+       "spread_deg": 5.271,
+       "rom_deg": 144.949,
+       "rmse_vs_opencap_deg": 5.197,
+       "difference_deg": 3.297
+      }
+     ]
+    },
+    {
+     "joint": "shoulder_r",
+     "plane": "transverse",
+     "rmse_deg": 4.231,
+     "worst_coordinate": "arm_rot_r",
+     "gate": "pass",
+     "rmse_vs_opencap_deg": 3.964,
+     "difference_deg": 0.267,
+     "coordinates": [
+      {
+       "coordinate": "arm_rot_r",
+       "rmse_deg": 4.231,
+       "bias_deg": -0.41,
+       "spread_deg": 4.211,
+       "rom_deg": 54.305,
+       "rmse_vs_opencap_deg": 3.964,
+       "difference_deg": 0.267
+      }
+     ]
+    },
+    {
+     "joint": "subtalar_l",
+     "plane": "frontal",
+     "rmse_deg": 16.831,
+     "worst_coordinate": "subtalar_angle_l",
+     "gate": "fail",
+     "rmse_vs_opencap_deg": 13.76,
+     "difference_deg": 3.071,
+     "coordinates": [
+      {
+       "coordinate": "subtalar_angle_l",
+       "rmse_deg": 16.831,
+       "bias_deg": -15.269,
+       "spread_deg": 7.081,
+       "rom_deg": 12.09,
+       "rmse_vs_opencap_deg": 13.76,
+       "difference_deg": 3.071
+      }
+     ]
+    },
+    {
+     "joint": "subtalar_r",
+     "plane": "frontal",
+     "rmse_deg": 11.815,
+     "worst_coordinate": "subtalar_angle_r",
+     "gate": "fail",
+     "rmse_vs_opencap_deg": 7.125,
+     "difference_deg": 4.69,
+     "coordinates": [
+      {
+       "coordinate": "subtalar_angle_r",
+       "rmse_deg": 11.815,
+       "bias_deg": -11.538,
+       "spread_deg": 2.544,
+       "rom_deg": 17.304,
+       "rmse_vs_opencap_deg": 7.125,
+       "difference_deg": 4.69
+      }
+     ]
+    },
+    {
+     "joint": "torso_segment",
+     "plane": "frontal",
+     "rmse_deg": 8.743,
+     "worst_coordinate": "torso.frontal",
+     "gate": "fail",
+     "rmse_vs_opencap_deg": 2.538,
+     "difference_deg": 6.205,
+     "coordinates": [
+      {
+       "coordinate": "torso.frontal",
+       "rmse_deg": 8.743,
+       "bias_deg": 7.683,
+       "spread_deg": 4.173,
+       "rom_deg": 16.749,
+       "rmse_vs_opencap_deg": 2.538,
+       "difference_deg": 6.205
+      }
+     ]
+    },
+    {
+     "joint": "torso_segment",
+     "plane": "sagittal",
+     "rmse_deg": 5.938,
+     "worst_coordinate": "torso.sagittal",
+     "gate": "fail",
+     "rmse_vs_opencap_deg": 2.565,
+     "difference_deg": 3.373,
+     "coordinates": [
+      {
+       "coordinate": "torso.sagittal",
+       "rmse_deg": 5.938,
+       "bias_deg": -4.964,
+       "spread_deg": 3.258,
+       "rom_deg": 83.563,
+       "rmse_vs_opencap_deg": 2.565,
+       "difference_deg": 3.373
+      }
+     ]
+    }
+   ]
+  },
+  "mono": {
+   "lag_vs_mocap_s": 1.316772999999996,
+   "lag_vs_opencap_s": 0.9000979999999963,
+   "coverage_vs_mocap": {
+    "compared_s": 7.983,
+    "overlap_s": 8.0,
+    "fraction": 0.998,
+    "min_fraction": 0.8
+   },
+   "evaluated_vs_mocap": true,
+   "evaluated_vs_opencap": true,
+   "approved_for": [
+    "screening"
+   ],
+   "rows": [
+    {
+     "joint": "ankle_l",
+     "plane": "sagittal",
+     "rmse_deg": 16.932,
+     "worst_coordinate": "ankle_angle_l",
+     "gate": "fail",
+     "rmse_vs_opencap_deg": 11.963,
+     "difference_deg": 4.969,
+     "coordinates": [
+      {
+       "coordinate": "ankle_angle_l",
+       "rmse_deg": 16.932,
+       "bias_deg": -13.223,
+       "spread_deg": 10.576,
+       "rom_deg": 24.453,
+       "rmse_vs_opencap_deg": 11.963,
+       "difference_deg": 4.969
+      }
+     ]
+    },
+    {
+     "joint": "ankle_r",
+     "plane": "sagittal",
+     "rmse_deg": 9.928,
+     "worst_coordinate": "ankle_angle_r",
+     "gate": "fail",
+     "rmse_vs_opencap_deg": 13.542,
+     "difference_deg": -3.614,
+     "coordinates": [
+      {
+       "coordinate": "ankle_angle_r",
+       "rmse_deg": 9.928,
+       "bias_deg": -0.49,
+       "spread_deg": 9.915,
+       "rom_deg": 21.386,
+       "rmse_vs_opencap_deg": 13.542,
+       "difference_deg": -3.614
+      }
+     ]
+    },
+    {
+     "joint": "elbow_l",
+     "plane": "sagittal",
+     "rmse_deg": 19.518,
+     "worst_coordinate": "elbow_flex_l",
+     "gate": "fail",
+     "rmse_vs_opencap_deg": 16.981,
+     "difference_deg": 2.537,
+     "coordinates": [
+      {
+       "coordinate": "elbow_flex_l",
+       "rmse_deg": 19.518,
+       "bias_deg": 14.305,
+       "spread_deg": 13.278,
+       "rom_deg": 54.281,
+       "rmse_vs_opencap_deg": 16.981,
+       "difference_deg": 2.537
+      }
+     ]
+    },
+    {
+     "joint": "elbow_r",
+     "plane": "sagittal",
+     "rmse_deg": 13.406,
+     "worst_coordinate": "elbow_flex_r",
+     "gate": "fail",
+     "rmse_vs_opencap_deg": 11.787,
+     "difference_deg": 1.619,
+     "coordinates": [
+      {
+       "coordinate": "elbow_flex_r",
+       "rmse_deg": 13.406,
+       "bias_deg": -7.332,
+       "spread_deg": 11.223,
+       "rom_deg": 52.928,
+       "rmse_vs_opencap_deg": 11.787,
+       "difference_deg": 1.619
+      }
+     ]
+    },
+    {
+     "joint": "forearm_l",
+     "plane": "transverse",
+     "rmse_deg": 30.629,
+     "worst_coordinate": "pro_sup_l",
+     "gate": "fail",
+     "rmse_vs_opencap_deg": 11.365,
+     "difference_deg": 19.264,
+     "coordinates": [
+      {
+       "coordinate": "pro_sup_l",
+       "rmse_deg": 30.629,
+       "bias_deg": -29.19,
+       "spread_deg": 9.28,
+       "rom_deg": 19.408,
+       "rmse_vs_opencap_deg": 11.365,
+       "difference_deg": 19.264
+      }
+     ]
+    },
+    {
+     "joint": "forearm_r",
+     "plane": "transverse",
+     "rmse_deg": 11.505,
+     "worst_coordinate": "pro_sup_r",
+     "gate": "fail",
+     "rmse_vs_opencap_deg": 7.753,
+     "difference_deg": 3.752,
+     "coordinates": [
+      {
+       "coordinate": "pro_sup_r",
+       "rmse_deg": 11.505,
+       "bias_deg": -5.048,
+       "spread_deg": 10.339,
+       "rom_deg": 28.989,
+       "rmse_vs_opencap_deg": 7.753,
+       "difference_deg": 3.752
+      }
+     ]
+    },
+    {
+     "joint": "hip_l",
+     "plane": "frontal",
+     "rmse_deg": 9.091,
+     "worst_coordinate": "hip_adduction_l",
+     "gate": "fail",
+     "rmse_vs_opencap_deg": 4.194,
+     "difference_deg": 4.897,
+     "coordinates": [
+      {
+       "coordinate": "hip_adduction_l",
+       "rmse_deg": 9.091,
+       "bias_deg": 4.31,
+       "spread_deg": 8.005,
+       "rom_deg": 15.502,
+       "rmse_vs_opencap_deg": 4.194,
+       "difference_deg": 4.897
+      }
+     ]
+    },
+    {
+     "joint": "hip_l",
+     "plane": "sagittal",
+     "rmse_deg": 26.555,
+     "worst_coordinate": "hip_flexion_l",
+     "gate": "fail",
+     "rmse_vs_opencap_deg": 14.753,
+     "difference_deg": 11.802,
+     "coordinates": [
+      {
+       "coordinate": "hip_flexion_l",
+       "rmse_deg": 26.555,
+       "bias_deg": -20.621,
+       "spread_deg": 16.732,
+       "rom_deg": 128.501,
+       "rmse_vs_opencap_deg": 14.753,
+       "difference_deg": 11.802
+      }
+     ]
+    },
+    {
+     "joint": "hip_l",
+     "plane": "transverse",
+     "rmse_deg": 22.063,
+     "worst_coordinate": "hip_rotation_l",
+     "gate": "fail",
+     "rmse_vs_opencap_deg": 20.835,
+     "difference_deg": 1.228,
+     "coordinates": [
+      {
+       "coordinate": "hip_rotation_l",
+       "rmse_deg": 22.063,
+       "bias_deg": 20.009,
+       "spread_deg": 9.295,
+       "rom_deg": 27.405,
+       "rmse_vs_opencap_deg": 20.835,
+       "difference_deg": 1.228
+      }
+     ]
+    },
+    {
+     "joint": "hip_r",
+     "plane": "frontal",
+     "rmse_deg": 7.987,
+     "worst_coordinate": "hip_adduction_r",
+     "gate": "fail",
+     "rmse_vs_opencap_deg": 3.176,
+     "difference_deg": 4.811,
+     "coordinates": [
+      {
+       "coordinate": "hip_adduction_r",
+       "rmse_deg": 7.987,
+       "bias_deg": -4.567,
+       "spread_deg": 6.553,
+       "rom_deg": 10.663,
+       "rmse_vs_opencap_deg": 3.176,
+       "difference_deg": 4.811
+      }
+     ]
+    },
+    {
+     "joint": "hip_r",
+     "plane": "sagittal",
+     "rmse_deg": 27.905,
+     "worst_coordinate": "hip_flexion_r",
+     "gate": "fail",
+     "rmse_vs_opencap_deg": 17.53,
+     "difference_deg": 10.375,
+     "coordinates": [
+      {
+       "coordinate": "hip_flexion_r",
+       "rmse_deg": 27.905,
+       "bias_deg": -24.604,
+       "spread_deg": 13.167,
+       "rom_deg": 121.491,
+       "rmse_vs_opencap_deg": 17.53,
+       "difference_deg": 10.375
+      }
+     ]
+    },
+    {
+     "joint": "hip_r",
+     "plane": "transverse",
+     "rmse_deg": 11.07,
+     "worst_coordinate": "hip_rotation_r",
+     "gate": "fail",
+     "rmse_vs_opencap_deg": 8.936,
+     "difference_deg": 2.134,
+     "coordinates": [
+      {
+       "coordinate": "hip_rotation_r",
+       "rmse_deg": 11.07,
+       "bias_deg": -8.374,
+       "spread_deg": 7.24,
+       "rom_deg": 11.584,
+       "rmse_vs_opencap_deg": 8.936,
+       "difference_deg": 2.134
+      }
+     ]
+    },
+    {
+     "joint": "knee_l",
+     "plane": "frontal",
+     "rmse_deg": 23.824,
+     "worst_coordinate": "knee_fppa_l",
+     "gate": "fail",
+     "rmse_vs_opencap_deg": 10.409,
+     "difference_deg": 13.415,
+     "coordinates": [
+      {
+       "coordinate": "knee_fppa_l",
+       "rmse_deg": 23.824,
+       "bias_deg": 20.312,
+       "spread_deg": 12.451,
+       "rom_deg": 59.256,
+       "rmse_vs_opencap_deg": 10.409,
+       "difference_deg": 13.415
+      }
+     ]
+    },
+    {
+     "joint": "knee_l",
+     "plane": "sagittal",
+     "rmse_deg": 9.128,
+     "worst_coordinate": "knee_angle_l",
+     "gate": "fail",
+     "rmse_vs_opencap_deg": 13.671,
+     "difference_deg": -4.543,
+     "coordinates": [
+      {
+       "coordinate": "knee_angle_l",
+       "rmse_deg": 9.128,
+       "bias_deg": 5.82,
+       "spread_deg": 7.032,
+       "rom_deg": 89.546,
+       "rmse_vs_opencap_deg": 13.671,
+       "difference_deg": -4.543
+      }
+     ]
+    },
+    {
+     "joint": "knee_r",
+     "plane": "frontal",
+     "rmse_deg": 19.534,
+     "worst_coordinate": "knee_fppa_r",
+     "gate": "fail",
+     "rmse_vs_opencap_deg": 6.719,
+     "difference_deg": 12.815,
+     "coordinates": [
+      {
+       "coordinate": "knee_fppa_r",
+       "rmse_deg": 19.534,
+       "bias_deg": -15.392,
+       "spread_deg": 12.027,
+       "rom_deg": 22.449,
+       "rmse_vs_opencap_deg": 6.719,
+       "difference_deg": 12.815
+      }
+     ]
+    },
+    {
+     "joint": "knee_r",
+     "plane": "sagittal",
+     "rmse_deg": 8.284,
+     "worst_coordinate": "knee_angle_r",
+     "gate": "fail",
+     "rmse_vs_opencap_deg": 10.156,
+     "difference_deg": -1.872,
+     "coordinates": [
+      {
+       "coordinate": "knee_angle_r",
+       "rmse_deg": 8.284,
+       "bias_deg": 6.639,
+       "spread_deg": 4.955,
+       "rom_deg": 83.774,
+       "rmse_vs_opencap_deg": 10.156,
+       "difference_deg": -1.872
+      }
+     ]
+    },
+    {
+     "joint": "lumbar",
+     "plane": "frontal",
+     "rmse_deg": 14.689,
+     "worst_coordinate": "lumbar_total.frontal",
+     "gate": "fail",
+     "rmse_vs_opencap_deg": 13.454,
+     "difference_deg": 1.235,
+     "coordinates": [
+      {
+       "coordinate": "lumbar_total.frontal",
+       "rmse_deg": 14.689,
+       "bias_deg": 13.06,
+       "spread_deg": 6.722,
+       "rom_deg": 7.596,
+       "rmse_vs_opencap_deg": 13.454,
+       "difference_deg": 1.235
+      }
+     ]
+    },
+    {
+     "joint": "lumbar",
+     "plane": "sagittal",
+     "rmse_deg": 30.021,
+     "worst_coordinate": "lumbar_total.sagittal",
+     "gate": "fail",
+     "rmse_vs_opencap_deg": 25.329,
+     "difference_deg": 4.692,
+     "coordinates": [
+      {
+       "coordinate": "lumbar_total.sagittal",
+       "rmse_deg": 30.021,
+       "bias_deg": -26.597,
+       "spread_deg": 13.924,
+       "rom_deg": 32.432,
+       "rmse_vs_opencap_deg": 25.329,
+       "difference_deg": 4.692
+      }
+     ]
+    },
+    {
+     "joint": "lumbar",
+     "plane": "transverse",
+     "rmse_deg": 26.168,
+     "worst_coordinate": "lumbar_total.transverse",
+     "gate": "fail",
+     "rmse_vs_opencap_deg": 20.512,
+     "difference_deg": 5.656,
+     "coordinates": [
+      {
+       "coordinate": "lumbar_total.transverse",
+       "rmse_deg": 26.168,
+       "bias_deg": -24.914,
+       "spread_deg": 8.002,
+       "rom_deg": 15.79,
+       "rmse_vs_opencap_deg": 20.512,
+       "difference_deg": 5.656
+      }
+     ]
+    },
+    {
+     "joint": "mtp_l",
+     "plane": "sagittal",
+     "rmse_deg": 19.724,
+     "worst_coordinate": "mtp_angle_l",
+     "gate": "not-tested",
+     "rmse_vs_opencap_deg": 13.693,
+     "difference_deg": 6.031,
+     "coordinates": [
+      {
+       "coordinate": "mtp_angle_l",
+       "rmse_deg": 19.724,
+       "bias_deg": 18.472,
+       "spread_deg": 6.917,
+       "rom_deg": 3.001,
+       "rmse_vs_opencap_deg": 13.693,
+       "difference_deg": 6.031
+      }
+     ]
+    },
+    {
+     "joint": "mtp_r",
+     "plane": "sagittal",
+     "rmse_deg": 30.569,
+     "worst_coordinate": "mtp_angle_r",
+     "gate": "not-tested",
+     "rmse_vs_opencap_deg": 23.084,
+     "difference_deg": 7.485,
+     "coordinates": [
+      {
+       "coordinate": "mtp_angle_r",
+       "rmse_deg": 30.569,
+       "bias_deg": 30.558,
+       "spread_deg": 0.799,
+       "rom_deg": 3.001,
+       "rmse_vs_opencap_deg": 23.084,
+       "difference_deg": 7.485
+      }
+     ]
+    },
+    {
+     "joint": "pelvis",
+     "plane": "frontal",
+     "rmse_deg": 5.485,
+     "worst_coordinate": "pelvis_list",
+     "gate": "fail",
+     "rmse_vs_opencap_deg": 7.834,
+     "difference_deg": -2.349,
+     "coordinates": [
+      {
+       "coordinate": "pelvis_list",
+       "rmse_deg": 5.485,
+       "bias_deg": -5.058,
+       "spread_deg": 2.12,
+       "rom_deg": 6.266,
+       "rmse_vs_opencap_deg": 7.834,
+       "difference_deg": -2.349
+      }
+     ]
+    },
+    {
+     "joint": "pelvis",
+     "plane": "sagittal",
+     "rmse_deg": 28.364,
+     "worst_coordinate": "pelvis_tilt",
+     "gate": "fail",
+     "rmse_vs_opencap_deg": 18.922,
+     "difference_deg": 9.442,
+     "coordinates": [
+      {
+       "coordinate": "pelvis_tilt",
+       "rmse_deg": 28.364,
+       "bias_deg": 24.192,
+       "spread_deg": 14.808,
+       "rom_deg": 61.949,
+       "rmse_vs_opencap_deg": 18.922,
+       "difference_deg": 9.442
+      }
+     ]
+    },
+    {
+     "joint": "pelvis",
+     "plane": "transverse",
+     "rmse_deg": 16.53,
+     "worst_coordinate": "pelvis_rotation",
+     "gate": "fail",
+     "rmse_vs_opencap_deg": 9.669,
+     "difference_deg": 6.861,
+     "coordinates": [
+      {
+       "coordinate": "pelvis_rotation",
+       "rmse_deg": 16.53,
+       "bias_deg": 16.073,
+       "spread_deg": 3.859,
+       "rom_deg": 11.216,
+       "rmse_vs_opencap_deg": 9.669,
+       "difference_deg": 6.861
+      }
+     ]
+    },
+    {
+     "joint": "pelvis_segment",
+     "plane": "frontal",
+     "rmse_deg": 4.996,
+     "worst_coordinate": "pelvis.frontal",
+     "gate": "pass",
+     "rmse_vs_opencap_deg": 9.525,
+     "difference_deg": -4.529,
+     "coordinates": [
+      {
+       "coordinate": "pelvis.frontal",
+       "rmse_deg": 4.996,
+       "bias_deg": -2.291,
+       "spread_deg": 4.439,
+       "rom_deg": 15.09,
+       "rmse_vs_opencap_deg": 9.525,
+       "difference_deg": -4.529
+      }
+     ]
+    },
+    {
+     "joint": "pelvis_segment",
+     "plane": "sagittal",
+     "rmse_deg": 26.763,
+     "worst_coordinate": "pelvis.sagittal",
+     "gate": "fail",
+     "rmse_vs_opencap_deg": 17.659,
+     "difference_deg": 9.104,
+     "coordinates": [
+      {
+       "coordinate": "pelvis.sagittal",
+       "rmse_deg": 26.763,
+       "bias_deg": -22.54,
+       "spread_deg": 14.429,
+       "rom_deg": 61.368,
+       "rmse_vs_opencap_deg": 17.659,
+       "difference_deg": 9.104
+      }
+     ]
+    },
+    {
+     "joint": "shoulder_l",
+     "plane": "frontal",
+     "rmse_deg": 24.89,
+     "worst_coordinate": "arm_add_l",
+     "gate": "fail",
+     "rmse_vs_opencap_deg": 25.586,
+     "difference_deg": -0.696,
+     "coordinates": [
+      {
+       "coordinate": "arm_add_l",
+       "rmse_deg": 24.89,
+       "bias_deg": -24.239,
+       "spread_deg": 5.653,
+       "rom_deg": 17.838,
+       "rmse_vs_opencap_deg": 25.586,
+       "difference_deg": -0.696
+      }
+     ]
+    },
+    {
+     "joint": "shoulder_l",
+     "plane": "sagittal",
+     "rmse_deg": 26.883,
+     "worst_coordinate": "arm_flex_l",
+     "gate": "fail",
+     "rmse_vs_opencap_deg": 18.188,
+     "difference_deg": 8.695,
+     "coordinates": [
+      {
+       "coordinate": "arm_flex_l",
+       "rmse_deg": 26.883,
+       "bias_deg": -23.162,
+       "spread_deg": 13.646,
+       "rom_deg": 135.678,
+       "rmse_vs_opencap_deg": 18.188,
+       "difference_deg": 8.695
+      }
+     ]
+    },
+    {
+     "joint": "shoulder_l",
+     "plane": "transverse",
+     "rmse_deg": 12.203,
+     "worst_coordinate": "arm_rot_l",
+     "gate": "fail",
+     "rmse_vs_opencap_deg": 11.658,
+     "difference_deg": 0.545,
+     "coordinates": [
+      {
+       "coordinate": "arm_rot_l",
+       "rmse_deg": 12.203,
+       "bias_deg": -11.3,
+       "spread_deg": 4.608,
+       "rom_deg": 47.814,
+       "rmse_vs_opencap_deg": 11.658,
+       "difference_deg": 0.545
+      }
+     ]
+    },
+    {
+     "joint": "shoulder_r",
+     "plane": "frontal",
+     "rmse_deg": 5.234,
+     "worst_coordinate": "arm_add_r",
+     "gate": "fail",
+     "rmse_vs_opencap_deg": 3.876,
+     "difference_deg": 1.358,
+     "coordinates": [
+      {
+       "coordinate": "arm_add_r",
+       "rmse_deg": 5.234,
+       "bias_deg": 3.604,
+       "spread_deg": 3.796,
+       "rom_deg": 15.775,
+       "rmse_vs_opencap_deg": 3.876,
+       "difference_deg": 1.358
+      }
+     ]
+    },
+    {
+     "joint": "shoulder_r",
+     "plane": "sagittal",
+     "rmse_deg": 18.746,
+     "worst_coordinate": "arm_flex_r",
+     "gate": "fail",
+     "rmse_vs_opencap_deg": 16.111,
+     "difference_deg": 2.635,
+     "coordinates": [
+      {
+       "coordinate": "arm_flex_r",
+       "rmse_deg": 18.746,
+       "bias_deg": -8.615,
+       "spread_deg": 16.649,
+       "rom_deg": 144.949,
+       "rmse_vs_opencap_deg": 16.111,
+       "difference_deg": 2.635
+      }
+     ]
+    },
+    {
+     "joint": "shoulder_r",
+     "plane": "transverse",
+     "rmse_deg": 8.091,
+     "worst_coordinate": "arm_rot_r",
+     "gate": "fail",
+     "rmse_vs_opencap_deg": 5.354,
+     "difference_deg": 2.737,
+     "coordinates": [
+      {
+       "coordinate": "arm_rot_r",
+       "rmse_deg": 8.091,
+       "bias_deg": -4.92,
+       "spread_deg": 6.423,
+       "rom_deg": 54.306,
+       "rmse_vs_opencap_deg": 5.354,
+       "difference_deg": 2.737
+      }
+     ]
+    },
+    {
+     "joint": "subtalar_l",
+     "plane": "frontal",
+     "rmse_deg": 9.368,
+     "worst_coordinate": "subtalar_angle_l",
+     "gate": "fail",
+     "rmse_vs_opencap_deg": 12.879,
+     "difference_deg": -3.511,
+     "coordinates": [
+      {
+       "coordinate": "subtalar_angle_l",
+       "rmse_deg": 9.368,
+       "bias_deg": -2.485,
+       "spread_deg": 9.033,
+       "rom_deg": 12.09,
+       "rmse_vs_opencap_deg": 12.879,
+       "difference_deg": -3.511
+      }
+     ]
+    },
+    {
+     "joint": "subtalar_r",
+     "plane": "frontal",
+     "rmse_deg": 12.709,
+     "worst_coordinate": "subtalar_angle_r",
+     "gate": "fail",
+     "rmse_vs_opencap_deg": 7.426,
+     "difference_deg": 5.283,
+     "coordinates": [
+      {
+       "coordinate": "subtalar_angle_r",
+       "rmse_deg": 12.709,
+       "bias_deg": -10.817,
+       "spread_deg": 6.672,
+       "rom_deg": 17.303,
+       "rmse_vs_opencap_deg": 7.426,
+       "difference_deg": 5.283
+      }
+     ]
+    },
+    {
+     "joint": "torso_segment",
+     "plane": "frontal",
+     "rmse_deg": 18.828,
+     "worst_coordinate": "torso.frontal",
+     "gate": "fail",
+     "rmse_vs_opencap_deg": 10.266,
+     "difference_deg": 8.562,
+     "coordinates": [
+      {
+       "coordinate": "torso.frontal",
+       "rmse_deg": 18.828,
+       "bias_deg": 16.223,
+       "spread_deg": 9.555,
+       "rom_deg": 16.749,
+       "rmse_vs_opencap_deg": 10.266,
+       "difference_deg": 8.562
+      }
+     ]
+    },
+    {
+     "joint": "torso_segment",
+     "plane": "sagittal",
+     "rmse_deg": 5.704,
+     "worst_coordinate": "torso.sagittal",
+     "gate": "fail",
+     "rmse_vs_opencap_deg": 9.718,
+     "difference_deg": -4.014,
+     "coordinates": [
+      {
+       "coordinate": "torso.sagittal",
+       "rmse_deg": 5.704,
+       "bias_deg": 1.622,
+       "spread_deg": 5.469,
+       "rom_deg": 83.563,
+       "rmse_vs_opencap_deg": 9.718,
+       "difference_deg": -4.014
+      }
+     ]
+    }
+   ]
+  },
+  "mono_aug": {
+   "lag_vs_mocap_s": 1.4667759999999959,
+   "lag_vs_opencap_s": 0.9834329999999962,
+   "coverage_vs_mocap": {
+    "compared_s": 0.7,
+    "overlap_s": 8.0,
+    "fraction": 0.088,
+    "min_fraction": 0.8
+   },
+   "evaluated_vs_mocap": false,
+   "evaluated_vs_opencap": false,
+   "approved_for": [],
+   "rows": [
+    {
+     "joint": "ankle_l",
+     "plane": "sagittal",
+     "rmse_deg": 16.879,
+     "worst_coordinate": "ankle_angle_l",
+     "gate": "not-tested",
+     "rmse_vs_opencap_deg": 14.788,
+     "difference_deg": 2.091,
+     "coordinates": [
+      {
+       "coordinate": "ankle_angle_l",
+       "rmse_deg": 16.879,
+       "bias_deg": -14.948,
+       "spread_deg": 7.841,
+       "rom_deg": 10.942,
+       "rmse_vs_opencap_deg": 14.788,
+       "difference_deg": 2.091
+      }
+     ]
+    },
+    {
+     "joint": "ankle_r",
+     "plane": "sagittal",
+     "rmse_deg": 9.724,
+     "worst_coordinate": "ankle_angle_r",
+     "gate": "not-tested",
+     "rmse_vs_opencap_deg": 5.876,
+     "difference_deg": 3.848,
+     "coordinates": [
+      {
+       "coordinate": "ankle_angle_r",
+       "rmse_deg": 9.724,
+       "bias_deg": -8.566,
+       "spread_deg": 4.602,
+       "rom_deg": 7.998,
+       "rmse_vs_opencap_deg": 5.876,
+       "difference_deg": 3.848
+      }
+     ]
+    },
+    {
+     "joint": "elbow_l",
+     "plane": "sagittal",
+     "rmse_deg": 18.625,
+     "worst_coordinate": "elbow_flex_l",
+     "gate": "not-tested",
+     "rmse_vs_opencap_deg": 17.397,
+     "difference_deg": 1.228,
+     "coordinates": [
+      {
+       "coordinate": "elbow_flex_l",
+       "rmse_deg": 18.625,
+       "bias_deg": 9.34,
+       "spread_deg": 16.114,
+       "rom_deg": 25.503,
+       "rmse_vs_opencap_deg": 17.397,
+       "difference_deg": 1.228
+      }
+     ]
+    },
+    {
+     "joint": "elbow_r",
+     "plane": "sagittal",
+     "rmse_deg": 10.775,
+     "worst_coordinate": "elbow_flex_r",
+     "gate": "not-tested",
+     "rmse_vs_opencap_deg": 8.094,
+     "difference_deg": 2.681,
+     "coordinates": [
+      {
+       "coordinate": "elbow_flex_r",
+       "rmse_deg": 10.775,
+       "bias_deg": 0.848,
+       "spread_deg": 10.741,
+       "rom_deg": 25.154,
+       "rmse_vs_opencap_deg": 8.094,
+       "difference_deg": 2.681
+      }
+     ]
+    },
+    {
+     "joint": "forearm_l",
+     "plane": "transverse",
+     "rmse_deg": 16.6,
+     "worst_coordinate": "pro_sup_l",
+     "gate": "not-tested",
+     "rmse_vs_opencap_deg": 24.441,
+     "difference_deg": -7.841,
+     "coordinates": [
+      {
+       "coordinate": "pro_sup_l",
+       "rmse_deg": 16.6,
+       "bias_deg": -12.253,
+       "spread_deg": 11.199,
+       "rom_deg": 5.683,
+       "rmse_vs_opencap_deg": 24.441,
+       "difference_deg": -7.841
+      }
+     ]
+    },
+    {
+     "joint": "forearm_r",
+     "plane": "transverse",
+     "rmse_deg": 12.186,
+     "worst_coordinate": "pro_sup_r",
+     "gate": "not-tested",
+     "rmse_vs_opencap_deg": 6.155,
+     "difference_deg": 6.031,
+     "coordinates": [
+      {
+       "coordinate": "pro_sup_r",
+       "rmse_deg": 12.186,
+       "bias_deg": -11.424,
+       "spread_deg": 4.242,
+       "rom_deg": 12.3,
+       "rmse_vs_opencap_deg": 6.155,
+       "difference_deg": 6.031
+      }
+     ]
+    },
+    {
+     "joint": "hip_l",
+     "plane": "frontal",
+     "rmse_deg": 6.112,
+     "worst_coordinate": "hip_adduction_l",
+     "gate": "not-tested",
+     "rmse_vs_opencap_deg": 3.908,
+     "difference_deg": 2.204,
+     "coordinates": [
+      {
+       "coordinate": "hip_adduction_l",
+       "rmse_deg": 6.112,
+       "bias_deg": -0.658,
+       "spread_deg": 6.077,
+       "rom_deg": 12.148,
+       "rmse_vs_opencap_deg": 3.908,
+       "difference_deg": 2.204
+      }
+     ]
+    },
+    {
+     "joint": "hip_l",
+     "plane": "sagittal",
+     "rmse_deg": 4.328,
+     "worst_coordinate": "hip_flexion_l",
+     "gate": "not-tested",
+     "rmse_vs_opencap_deg": 6.835,
+     "difference_deg": -2.507,
+     "coordinates": [
+      {
+       "coordinate": "hip_flexion_l",
+       "rmse_deg": 4.328,
+       "bias_deg": -1.681,
+       "spread_deg": 3.989,
+       "rom_deg": 99.955,
+       "rmse_vs_opencap_deg": 6.835,
+       "difference_deg": -2.507
+      }
+     ]
+    },
+    {
+     "joint": "hip_l",
+     "plane": "transverse",
+     "rmse_deg": 17.433,
+     "worst_coordinate": "hip_rotation_l",
+     "gate": "not-tested",
+     "rmse_vs_opencap_deg": 13.894,
+     "difference_deg": 3.539,
+     "coordinates": [
+      {
+       "coordinate": "hip_rotation_l",
+       "rmse_deg": 17.433,
+       "bias_deg": 17.301,
+       "spread_deg": 2.147,
+       "rom_deg": 13.376,
+       "rmse_vs_opencap_deg": 13.894,
+       "difference_deg": 3.539
+      }
+     ]
+    },
+    {
+     "joint": "hip_r",
+     "plane": "frontal",
+     "rmse_deg": 3.508,
+     "worst_coordinate": "hip_adduction_r",
+     "gate": "not-tested",
+     "rmse_vs_opencap_deg": 4.76,
+     "difference_deg": -1.252,
+     "coordinates": [
+      {
+       "coordinate": "hip_adduction_r",
+       "rmse_deg": 3.508,
+       "bias_deg": -1.491,
+       "spread_deg": 3.175,
+       "rom_deg": 5.212,
+       "rmse_vs_opencap_deg": 4.76,
+       "difference_deg": -1.252
+      }
+     ]
+    },
+    {
+     "joint": "hip_r",
+     "plane": "sagittal",
+     "rmse_deg": 5.32,
+     "worst_coordinate": "hip_flexion_r",
+     "gate": "not-tested",
+     "rmse_vs_opencap_deg": 4.714,
+     "difference_deg": 0.606,
+     "coordinates": [
+      {
+       "coordinate": "hip_flexion_r",
+       "rmse_deg": 5.32,
+       "bias_deg": -4.437,
+       "spread_deg": 2.935,
+       "rom_deg": 95.018,
+       "rmse_vs_opencap_deg": 4.714,
+       "difference_deg": 0.606
+      }
+     ]
+    },
+    {
+     "joint": "hip_r",
+     "plane": "transverse",
+     "rmse_deg": 2.31,
+     "worst_coordinate": "hip_rotation_r",
+     "gate": "not-tested",
+     "rmse_vs_opencap_deg": 6.91,
+     "difference_deg": -4.6,
+     "coordinates": [
+      {
+       "coordinate": "hip_rotation_r",
+       "rmse_deg": 2.31,
+       "bias_deg": -0.07,
+       "spread_deg": 2.309,
+       "rom_deg": 6.849,
+       "rmse_vs_opencap_deg": 6.91,
+       "difference_deg": -4.6
+      }
+     ]
+    },
+    {
+     "joint": "knee_l",
+     "plane": "frontal",
+     "rmse_deg": 8.381,
+     "worst_coordinate": "knee_fppa_l",
+     "gate": "not-tested",
+     "rmse_vs_opencap_deg": 3.313,
+     "difference_deg": 5.068,
+     "coordinates": [
+      {
+       "coordinate": "knee_fppa_l",
+       "rmse_deg": 8.381,
+       "bias_deg": 5.868,
+       "spread_deg": 5.984,
+       "rom_deg": 28.21,
+       "rmse_vs_opencap_deg": 3.313,
+       "difference_deg": 5.068
+      }
+     ]
+    },
+    {
+     "joint": "knee_l",
+     "plane": "sagittal",
+     "rmse_deg": 22.428,
+     "worst_coordinate": "knee_angle_l",
+     "gate": "not-tested",
+     "rmse_vs_opencap_deg": 22.882,
+     "difference_deg": -0.454,
+     "coordinates": [
+      {
+       "coordinate": "knee_angle_l",
+       "rmse_deg": 22.428,
+       "bias_deg": 22.295,
+       "spread_deg": 2.444,
+       "rom_deg": 56.823,
+       "rmse_vs_opencap_deg": 22.882,
+       "difference_deg": -0.454
+      }
+     ]
+    },
+    {
+     "joint": "knee_r",
+     "plane": "frontal",
+     "rmse_deg": 8.014,
+     "worst_coordinate": "knee_fppa_r",
+     "gate": "not-tested",
+     "rmse_vs_opencap_deg": 2.544,
+     "difference_deg": 5.47,
+     "coordinates": [
+      {
+       "coordinate": "knee_fppa_r",
+       "rmse_deg": 8.014,
+       "bias_deg": -6.377,
+       "spread_deg": 4.855,
+       "rom_deg": 5.445,
+       "rmse_vs_opencap_deg": 2.544,
+       "difference_deg": 5.47
+      }
+     ]
+    },
+    {
+     "joint": "knee_r",
+     "plane": "sagittal",
+     "rmse_deg": 19.637,
+     "worst_coordinate": "knee_angle_r",
+     "gate": "not-tested",
+     "rmse_vs_opencap_deg": 16.601,
+     "difference_deg": 3.036,
+     "coordinates": [
+      {
+       "coordinate": "knee_angle_r",
+       "rmse_deg": 19.637,
+       "bias_deg": 18.738,
+       "spread_deg": 5.874,
+       "rom_deg": 49.741,
+       "rmse_vs_opencap_deg": 16.601,
+       "difference_deg": 3.036
+      }
+     ]
+    },
+    {
+     "joint": "lumbar",
+     "plane": "frontal",
+     "rmse_deg": 8.68,
+     "worst_coordinate": "lumbar_total.frontal",
+     "gate": "not-tested",
+     "rmse_vs_opencap_deg": 6.237,
+     "difference_deg": 2.443,
+     "coordinates": [
+      {
+       "coordinate": "lumbar_total.frontal",
+       "rmse_deg": 8.68,
+       "bias_deg": 7.767,
+       "spread_deg": 3.874,
+       "rom_deg": 2.383,
+       "rmse_vs_opencap_deg": 6.237,
+       "difference_deg": 2.443
+      }
+     ]
+    },
+    {
+     "joint": "lumbar",
+     "plane": "sagittal",
+     "rmse_deg": 34.198,
+     "worst_coordinate": "lumbar_total.sagittal",
+     "gate": "not-tested",
+     "rmse_vs_opencap_deg": 26.9,
+     "difference_deg": 7.298,
+     "coordinates": [
+      {
+       "coordinate": "lumbar_total.sagittal",
+       "rmse_deg": 34.198,
+       "bias_deg": -32.569,
+       "spread_deg": 10.428,
+       "rom_deg": 16.658,
+       "rmse_vs_opencap_deg": 26.9,
+       "difference_deg": 7.298
+      }
+     ]
+    },
+    {
+     "joint": "lumbar",
+     "plane": "transverse",
+     "rmse_deg": 18.878,
+     "worst_coordinate": "lumbar_total.transverse",
+     "gate": "not-tested",
+     "rmse_vs_opencap_deg": 16.768,
+     "difference_deg": 2.11,
+     "coordinates": [
+      {
+       "coordinate": "lumbar_total.transverse",
+       "rmse_deg": 18.878,
+       "bias_deg": -17.655,
+       "spread_deg": 6.686,
+       "rom_deg": 8.978,
+       "rmse_vs_opencap_deg": 16.768,
+       "difference_deg": 2.11
+      }
+     ]
+    },
+    {
+     "joint": "mtp_l",
+     "plane": "sagittal",
+     "rmse_deg": 7.17,
+     "worst_coordinate": "mtp_angle_l",
+     "gate": "not-tested",
+     "rmse_vs_opencap_deg": 0.0,
+     "difference_deg": 7.17,
+     "coordinates": [
+      {
+       "coordinate": "mtp_angle_l",
+       "rmse_deg": 7.17,
+       "bias_deg": 7.132,
+       "spread_deg": 0.741,
+       "rom_deg": 2.997,
+       "rmse_vs_opencap_deg": 0.0,
+       "difference_deg": 7.17
+      }
+     ]
+    },
+    {
+     "joint": "mtp_r",
+     "plane": "sagittal",
+     "rmse_deg": 7.17,
+     "worst_coordinate": "mtp_angle_r",
+     "gate": "not-tested",
+     "rmse_vs_opencap_deg": 0.0,
+     "difference_deg": 7.17,
+     "coordinates": [
+      {
+       "coordinate": "mtp_angle_r",
+       "rmse_deg": 7.17,
+       "bias_deg": 7.132,
+       "spread_deg": 0.741,
+       "rom_deg": 2.997,
+       "rmse_vs_opencap_deg": 0.0,
+       "difference_deg": 7.17
+      }
+     ]
+    },
+    {
+     "joint": "pelvis",
+     "plane": "frontal",
+     "rmse_deg": 2.238,
+     "worst_coordinate": "pelvis_list",
+     "gate": "not-tested",
+     "rmse_vs_opencap_deg": 4.358,
+     "difference_deg": -2.12,
+     "coordinates": [
+      {
+       "coordinate": "pelvis_list",
+       "rmse_deg": 2.238,
+       "bias_deg": -0.133,
+       "spread_deg": 2.234,
+       "rom_deg": 2.944,
+       "rmse_vs_opencap_deg": 4.358,
+       "difference_deg": -2.12
+      }
+     ]
+    },
+    {
+     "joint": "pelvis",
+     "plane": "sagittal",
+     "rmse_deg": 21.699,
+     "worst_coordinate": "pelvis_tilt",
+     "gate": "not-tested",
+     "rmse_vs_opencap_deg": 15.491,
+     "difference_deg": 6.208,
+     "coordinates": [
+      {
+       "coordinate": "pelvis_tilt",
+       "rmse_deg": 21.699,
+       "bias_deg": 20.895,
+       "spread_deg": 5.851,
+       "rom_deg": 49.818,
+       "rmse_vs_opencap_deg": 15.491,
+       "difference_deg": 6.208
+      }
+     ]
+    },
+    {
+     "joint": "pelvis",
+     "plane": "transverse",
+     "rmse_deg": 12.823,
+     "worst_coordinate": "pelvis_rotation",
+     "gate": "not-tested",
+     "rmse_vs_opencap_deg": 8.706,
+     "difference_deg": 4.117,
+     "coordinates": [
+      {
+       "coordinate": "pelvis_rotation",
+       "rmse_deg": 12.823,
+       "bias_deg": 12.796,
+       "spread_deg": 0.834,
+       "rom_deg": 8.099,
+       "rmse_vs_opencap_deg": 8.706,
+       "difference_deg": 4.117
+      }
+     ]
+    },
+    {
+     "joint": "pelvis_segment",
+     "plane": "frontal",
+     "rmse_deg": 2.191,
+     "worst_coordinate": "pelvis.frontal",
+     "gate": "not-tested",
+     "rmse_vs_opencap_deg": 3.689,
+     "difference_deg": -1.498,
+     "coordinates": [
+      {
+       "coordinate": "pelvis.frontal",
+       "rmse_deg": 2.191,
+       "bias_deg": 0.185,
+       "spread_deg": 2.183,
+       "rom_deg": 10.895,
+       "rmse_vs_opencap_deg": 3.689,
+       "difference_deg": -1.498
+      }
+     ]
+    },
+    {
+     "joint": "pelvis_segment",
+     "plane": "sagittal",
+     "rmse_deg": 21.245,
+     "worst_coordinate": "pelvis.sagittal",
+     "gate": "not-tested",
+     "rmse_vs_opencap_deg": 15.362,
+     "difference_deg": 5.883,
+     "coordinates": [
+      {
+       "coordinate": "pelvis.sagittal",
+       "rmse_deg": 21.245,
+       "bias_deg": -20.509,
+       "spread_deg": 5.541,
+       "rom_deg": 48.93,
+       "rmse_vs_opencap_deg": 15.362,
+       "difference_deg": 5.883
+      }
+     ]
+    },
+    {
+     "joint": "shoulder_l",
+     "plane": "frontal",
+     "rmse_deg": 21.109,
+     "worst_coordinate": "arm_add_l",
+     "gate": "not-tested",
+     "rmse_vs_opencap_deg": 20.163,
+     "difference_deg": 0.946,
+     "coordinates": [
+      {
+       "coordinate": "arm_add_l",
+       "rmse_deg": 21.109,
+       "bias_deg": -20.216,
+       "spread_deg": 6.074,
+       "rom_deg": 6.743,
+       "rmse_vs_opencap_deg": 20.163,
+       "difference_deg": 0.946
+      }
+     ]
+    },
+    {
+     "joint": "shoulder_l",
+     "plane": "sagittal",
+     "rmse_deg": 10.816,
+     "worst_coordinate": "arm_flex_l",
+     "gate": "not-tested",
+     "rmse_vs_opencap_deg": 10.469,
+     "difference_deg": 0.347,
+     "coordinates": [
+      {
+       "coordinate": "arm_flex_l",
+       "rmse_deg": 10.816,
+       "bias_deg": -0.849,
+       "spread_deg": 10.783,
+       "rom_deg": 119.171,
+       "rmse_vs_opencap_deg": 10.469,
+       "difference_deg": 0.347
+      }
+     ]
+    },
+    {
+     "joint": "shoulder_l",
+     "plane": "transverse",
+     "rmse_deg": 8.23,
+     "worst_coordinate": "arm_rot_l",
+     "gate": "not-tested",
+     "rmse_vs_opencap_deg": 5.136,
+     "difference_deg": 3.094,
+     "coordinates": [
+      {
+       "coordinate": "arm_rot_l",
+       "rmse_deg": 8.23,
+       "bias_deg": 2.563,
+       "spread_deg": 7.821,
+       "rom_deg": 36.292,
+       "rmse_vs_opencap_deg": 5.136,
+       "difference_deg": 3.094
+      }
+     ]
+    },
+    {
+     "joint": "shoulder_r",
+     "plane": "frontal",
+     "rmse_deg": 3.043,
+     "worst_coordinate": "arm_add_r",
+     "gate": "not-tested",
+     "rmse_vs_opencap_deg": 2.936,
+     "difference_deg": 0.107,
+     "coordinates": [
+      {
+       "coordinate": "arm_add_r",
+       "rmse_deg": 3.043,
+       "bias_deg": -2.23,
+       "spread_deg": 2.07,
+       "rom_deg": 7.526,
+       "rmse_vs_opencap_deg": 2.936,
+       "difference_deg": 0.107
+      }
+     ]
+    },
+    {
+     "joint": "shoulder_r",
+     "plane": "sagittal",
+     "rmse_deg": 14.549,
+     "worst_coordinate": "arm_flex_r",
+     "gate": "not-tested",
+     "rmse_vs_opencap_deg": 17.504,
+     "difference_deg": -2.955,
+     "coordinates": [
+      {
+       "coordinate": "arm_flex_r",
+       "rmse_deg": 14.549,
+       "bias_deg": 4.672,
+       "spread_deg": 13.778,
+       "rom_deg": 121.526,
+       "rmse_vs_opencap_deg": 17.504,
+       "difference_deg": -2.955
+      }
+     ]
+    },
+    {
+     "joint": "shoulder_r",
+     "plane": "transverse",
+     "rmse_deg": 13.761,
+     "worst_coordinate": "arm_rot_r",
+     "gate": "not-tested",
+     "rmse_vs_opencap_deg": 11.021,
+     "difference_deg": 2.74,
+     "coordinates": [
+      {
+       "coordinate": "arm_rot_r",
+       "rmse_deg": 13.761,
+       "bias_deg": 0.386,
+       "spread_deg": 13.756,
+       "rom_deg": 38.614,
+       "rmse_vs_opencap_deg": 11.021,
+       "difference_deg": 2.74
+      }
+     ]
+    },
+    {
+     "joint": "subtalar_l",
+     "plane": "frontal",
+     "rmse_deg": 12.659,
+     "worst_coordinate": "subtalar_angle_l",
+     "gate": "not-tested",
+     "rmse_vs_opencap_deg": 15.157,
+     "difference_deg": -2.498,
+     "coordinates": [
+      {
+       "coordinate": "subtalar_angle_l",
+       "rmse_deg": 12.659,
+       "bias_deg": -10.48,
+       "spread_deg": 7.1,
+       "rom_deg": 12.09,
+       "rmse_vs_opencap_deg": 15.157,
+       "difference_deg": -2.498
+      }
+     ]
+    },
+    {
+     "joint": "subtalar_r",
+     "plane": "frontal",
+     "rmse_deg": 19.788,
+     "worst_coordinate": "subtalar_angle_r",
+     "gate": "not-tested",
+     "rmse_vs_opencap_deg": 16.364,
+     "difference_deg": 3.424,
+     "coordinates": [
+      {
+       "coordinate": "subtalar_angle_r",
+       "rmse_deg": 19.788,
+       "bias_deg": -19.345,
+       "spread_deg": 4.163,
+       "rom_deg": 10.7,
+       "rmse_vs_opencap_deg": 16.364,
+       "difference_deg": 3.424
+      }
+     ]
+    },
+    {
+     "joint": "torso_segment",
+     "plane": "frontal",
+     "rmse_deg": 11.936,
+     "worst_coordinate": "torso.frontal",
+     "gate": "not-tested",
+     "rmse_vs_opencap_deg": 6.889,
+     "difference_deg": 5.047,
+     "coordinates": [
+      {
+       "coordinate": "torso.frontal",
+       "rmse_deg": 11.936,
+       "bias_deg": 11.129,
+       "spread_deg": 4.316,
+       "rom_deg": 10.49,
+       "rmse_vs_opencap_deg": 6.889,
+       "difference_deg": 5.047
+      }
+     ]
+    },
+    {
+     "joint": "torso_segment",
+     "plane": "sagittal",
+     "rmse_deg": 12.542,
+     "worst_coordinate": "torso.sagittal",
+     "gate": "not-tested",
+     "rmse_vs_opencap_deg": 12.403,
+     "difference_deg": 0.139,
+     "coordinates": [
+      {
+       "coordinate": "torso.sagittal",
+       "rmse_deg": 12.542,
+       "bias_deg": 11.212,
+       "spread_deg": 5.62,
+       "rom_deg": 65.541,
+       "rmse_vs_opencap_deg": 12.403,
+       "difference_deg": 0.139
+      }
+     ]
+    }
+   ]
+  }
+ },
+ "sensitivity_one_camera_shared_lag": {
+  "mono": {
+   "lag_s": 1.3334229999999967,
+   "coverage": {
+    "compared_s": 7.983,
+    "overlap_s": 8.0,
+    "fraction": 0.998,
+    "min_fraction": 0.8
+   },
+   "evaluated": true,
+   "rows": [
+    {
+     "joint": "ankle_l",
+     "plane": "sagittal",
+     "rmse_deg": 16.981,
+     "primary_rmse_deg": 16.932,
+     "gate": "fail"
+    },
+    {
+     "joint": "ankle_r",
+     "plane": "sagittal",
+     "rmse_deg": 9.987,
+     "primary_rmse_deg": 9.928,
+     "gate": "fail"
+    },
+    {
+     "joint": "elbow_l",
+     "plane": "sagittal",
+     "rmse_deg": 19.497,
+     "primary_rmse_deg": 19.518,
+     "gate": "fail"
+    },
+    {
+     "joint": "elbow_r",
+     "plane": "sagittal",
+     "rmse_deg": 13.226,
+     "primary_rmse_deg": 13.406,
+     "gate": "fail"
+    },
+    {
+     "joint": "forearm_l",
+     "plane": "transverse",
+     "rmse_deg": 30.644,
+     "primary_rmse_deg": 30.629,
+     "gate": "fail"
+    },
+    {
+     "joint": "forearm_r",
+     "plane": "transverse",
+     "rmse_deg": 11.445,
+     "primary_rmse_deg": 11.505,
+     "gate": "fail"
+    },
+    {
+     "joint": "hip_l",
+     "plane": "frontal",
+     "rmse_deg": 9.053,
+     "primary_rmse_deg": 9.091,
+     "gate": "fail"
+    },
+    {
+     "joint": "hip_l",
+     "plane": "sagittal",
+     "rmse_deg": 26.573,
+     "primary_rmse_deg": 26.555,
+     "gate": "fail"
+    },
+    {
+     "joint": "hip_l",
+     "plane": "transverse",
+     "rmse_deg": 22.095,
+     "primary_rmse_deg": 22.063,
+     "gate": "fail"
+    },
+    {
+     "joint": "hip_r",
+     "plane": "frontal",
+     "rmse_deg": 7.961,
+     "primary_rmse_deg": 7.987,
+     "gate": "fail"
+    },
+    {
+     "joint": "hip_r",
+     "plane": "sagittal",
+     "rmse_deg": 27.91,
+     "primary_rmse_deg": 27.905,
+     "gate": "fail"
+    },
+    {
+     "joint": "hip_r",
+     "plane": "transverse",
+     "rmse_deg": 11.105,
+     "primary_rmse_deg": 11.07,
+     "gate": "fail"
+    },
+    {
+     "joint": "knee_l",
+     "plane": "frontal",
+     "rmse_deg": 23.737,
+     "primary_rmse_deg": 23.824,
+     "gate": "fail"
+    },
+    {
+     "joint": "knee_l",
+     "plane": "sagittal",
+     "rmse_deg": 9.351,
+     "primary_rmse_deg": 9.128,
+     "gate": "fail"
+    },
+    {
+     "joint": "knee_r",
+     "plane": "frontal",
+     "rmse_deg": 19.498,
+     "primary_rmse_deg": 19.534,
+     "gate": "fail"
+    },
+    {
+     "joint": "knee_r",
+     "plane": "sagittal",
+     "rmse_deg": 8.32,
+     "primary_rmse_deg": 8.284,
+     "gate": "fail"
+    },
+    {
+     "joint": "lumbar",
+     "plane": "frontal",
+     "rmse_deg": 14.683,
+     "primary_rmse_deg": 14.689,
+     "gate": "fail"
+    },
+    {
+     "joint": "lumbar",
+     "plane": "sagittal",
+     "rmse_deg": 30.085,
+     "primary_rmse_deg": 30.021,
+     "gate": "fail"
+    },
+    {
+     "joint": "lumbar",
+     "plane": "transverse",
+     "rmse_deg": 26.181,
+     "primary_rmse_deg": 26.168,
+     "gate": "fail"
+    },
+    {
+     "joint": "mtp_l",
+     "plane": "sagittal",
+     "rmse_deg": 19.755,
+     "primary_rmse_deg": 19.724,
+     "gate": "not-tested"
+    },
+    {
+     "joint": "mtp_r",
+     "plane": "sagittal",
+     "rmse_deg": 30.568,
+     "primary_rmse_deg": 30.569,
+     "gate": "not-tested"
+    },
+    {
+     "joint": "pelvis",
+     "plane": "frontal",
+     "rmse_deg": 5.475,
+     "primary_rmse_deg": 5.485,
+     "gate": "fail"
+    },
+    {
+     "joint": "pelvis",
+     "plane": "sagittal",
+     "rmse_deg": 28.371,
+     "primary_rmse_deg": 28.364,
+     "gate": "fail"
+    },
+    {
+     "joint": "pelvis",
+     "plane": "transverse",
+     "rmse_deg": 16.531,
+     "primary_rmse_deg": 16.53,
+     "gate": "fail"
+    },
+    {
+     "joint": "pelvis_segment",
+     "plane": "frontal",
+     "rmse_deg": 4.991,
+     "primary_rmse_deg": 4.996,
+     "gate": "pass"
+    },
+    {
+     "joint": "pelvis_segment",
+     "plane": "sagittal",
+     "rmse_deg": 26.765,
+     "primary_rmse_deg": 26.763,
+     "gate": "fail"
+    },
+    {
+     "joint": "shoulder_l",
+     "plane": "frontal",
+     "rmse_deg": 24.911,
+     "primary_rmse_deg": 24.89,
+     "gate": "fail"
+    },
+    {
+     "joint": "shoulder_l",
+     "plane": "sagittal",
+     "rmse_deg": 26.848,
+     "primary_rmse_deg": 26.883,
+     "gate": "fail"
+    },
+    {
+     "joint": "shoulder_l",
+     "plane": "transverse",
+     "rmse_deg": 12.132,
+     "primary_rmse_deg": 12.203,
+     "gate": "fail"
+    },
+    {
+     "joint": "shoulder_r",
+     "plane": "frontal",
+     "rmse_deg": 5.226,
+     "primary_rmse_deg": 5.234,
+     "gate": "fail"
+    },
+    {
+     "joint": "shoulder_r",
+     "plane": "sagittal",
+     "rmse_deg": 18.719,
+     "primary_rmse_deg": 18.746,
+     "gate": "fail"
+    },
+    {
+     "joint": "shoulder_r",
+     "plane": "transverse",
+     "rmse_deg": 8.167,
+     "primary_rmse_deg": 8.091,
+     "gate": "fail"
+    },
+    {
+     "joint": "subtalar_l",
+     "plane": "frontal",
+     "rmse_deg": 9.481,
+     "primary_rmse_deg": 9.368,
+     "gate": "fail"
+    },
+    {
+     "joint": "subtalar_r",
+     "plane": "frontal",
+     "rmse_deg": 12.718,
+     "primary_rmse_deg": 12.709,
+     "gate": "fail"
+    },
+    {
+     "joint": "torso_segment",
+     "plane": "frontal",
+     "rmse_deg": 18.823,
+     "primary_rmse_deg": 18.828,
+     "gate": "fail"
+    },
+    {
+     "joint": "torso_segment",
+     "plane": "sagittal",
+     "rmse_deg": 6.008,
+     "primary_rmse_deg": 5.704,
+     "gate": "fail"
+    }
+   ]
+  },
+  "mono_aug": {
+   "lag_s": 1.3334229999999967,
+   "coverage": {
+    "compared_s": 0.833,
+    "overlap_s": 8.0,
+    "fraction": 0.104,
+    "min_fraction": 0.8
+   },
+   "evaluated": false,
+   "rows": [
+    {
+     "joint": "ankle_l",
+     "plane": "sagittal",
+     "rmse_deg": 19.349,
+     "primary_rmse_deg": 16.879,
+     "gate": "not-tested"
+    },
+    {
+     "joint": "ankle_r",
+     "plane": "sagittal",
+     "rmse_deg": 11.862,
+     "primary_rmse_deg": 9.724,
+     "gate": "not-tested"
+    },
+    {
+     "joint": "elbow_l",
+     "plane": "sagittal",
+     "rmse_deg": 25.879,
+     "primary_rmse_deg": 18.625,
+     "gate": "not-tested"
+    },
+    {
+     "joint": "elbow_r",
+     "plane": "sagittal",
+     "rmse_deg": 18.959,
+     "primary_rmse_deg": 10.775,
+     "gate": "not-tested"
+    },
+    {
+     "joint": "forearm_l",
+     "plane": "transverse",
+     "rmse_deg": 17.32,
+     "primary_rmse_deg": 16.6,
+     "gate": "not-tested"
+    },
+    {
+     "joint": "forearm_r",
+     "plane": "transverse",
+     "rmse_deg": 10.799,
+     "primary_rmse_deg": 12.186,
+     "gate": "not-tested"
+    },
+    {
+     "joint": "hip_l",
+     "plane": "frontal",
+     "rmse_deg": 7.089,
+     "primary_rmse_deg": 6.112,
+     "gate": "not-tested"
+    },
+    {
+     "joint": "hip_l",
+     "plane": "sagittal",
+     "rmse_deg": 24.277,
+     "primary_rmse_deg": 4.328,
+     "gate": "not-tested"
+    },
+    {
+     "joint": "hip_l",
+     "plane": "transverse",
+     "rmse_deg": 14.737,
+     "primary_rmse_deg": 17.433,
+     "gate": "not-tested"
+    },
+    {
+     "joint": "hip_r",
+     "plane": "frontal",
+     "rmse_deg": 3.794,
+     "primary_rmse_deg": 3.508,
+     "gate": "not-tested"
+    },
+    {
+     "joint": "hip_r",
+     "plane": "sagittal",
+     "rmse_deg": 23.471,
+     "primary_rmse_deg": 5.32,
+     "gate": "not-tested"
+    },
+    {
+     "joint": "hip_r",
+     "plane": "transverse",
+     "rmse_deg": 3.705,
+     "primary_rmse_deg": 2.31,
+     "gate": "not-tested"
+    },
+    {
+     "joint": "knee_l",
+     "plane": "frontal",
+     "rmse_deg": 16.697,
+     "primary_rmse_deg": 8.381,
+     "gate": "not-tested"
+    },
+    {
+     "joint": "knee_l",
+     "plane": "sagittal",
+     "rmse_deg": 13.565,
+     "primary_rmse_deg": 22.428,
+     "gate": "not-tested"
+    },
+    {
+     "joint": "knee_r",
+     "plane": "frontal",
+     "rmse_deg": 9.538,
+     "primary_rmse_deg": 8.014,
+     "gate": "not-tested"
+    },
+    {
+     "joint": "knee_r",
+     "plane": "sagittal",
+     "rmse_deg": 9.119,
+     "primary_rmse_deg": 19.637,
+     "gate": "not-tested"
+    },
+    {
+     "joint": "lumbar",
+     "plane": "frontal",
+     "rmse_deg": 8.178,
+     "primary_rmse_deg": 8.68,
+     "gate": "not-tested"
+    },
+    {
+     "joint": "lumbar",
+     "plane": "sagittal",
+     "rmse_deg": 29.024,
+     "primary_rmse_deg": 34.198,
+     "gate": "not-tested"
+    },
+    {
+     "joint": "lumbar",
+     "plane": "transverse",
+     "rmse_deg": 20.593,
+     "primary_rmse_deg": 18.878,
+     "gate": "not-tested"
+    },
+    {
+     "joint": "mtp_l",
+     "plane": "sagittal",
+     "rmse_deg": 7.222,
+     "primary_rmse_deg": 7.17,
+     "gate": "not-tested"
+    },
+    {
+     "joint": "mtp_r",
+     "plane": "sagittal",
+     "rmse_deg": 7.222,
+     "primary_rmse_deg": 7.17,
+     "gate": "not-tested"
+    },
+    {
+     "joint": "pelvis",
+     "plane": "frontal",
+     "rmse_deg": 1.867,
+     "primary_rmse_deg": 2.238,
+     "gate": "not-tested"
+    },
+    {
+     "joint": "pelvis",
+     "plane": "sagittal",
+     "rmse_deg": 29.832,
+     "primary_rmse_deg": 21.699,
+     "gate": "not-tested"
+    },
+    {
+     "joint": "pelvis",
+     "plane": "transverse",
+     "rmse_deg": 14.284,
+     "primary_rmse_deg": 12.823,
+     "gate": "not-tested"
+    },
+    {
+     "joint": "pelvis_segment",
+     "plane": "frontal",
+     "rmse_deg": 4.701,
+     "primary_rmse_deg": 2.191,
+     "gate": "not-tested"
+    },
+    {
+     "joint": "pelvis_segment",
+     "plane": "sagittal",
+     "rmse_deg": 29.212,
+     "primary_rmse_deg": 21.245,
+     "gate": "not-tested"
+    },
+    {
+     "joint": "shoulder_l",
+     "plane": "frontal",
+     "rmse_deg": 20.627,
+     "primary_rmse_deg": 21.109,
+     "gate": "not-tested"
+    },
+    {
+     "joint": "shoulder_l",
+     "plane": "sagittal",
+     "rmse_deg": 24.977,
+     "primary_rmse_deg": 10.816,
+     "gate": "not-tested"
+    },
+    {
+     "joint": "shoulder_l",
+     "plane": "transverse",
+     "rmse_deg": 6.485,
+     "primary_rmse_deg": 8.23,
+     "gate": "not-tested"
+    },
+    {
+     "joint": "shoulder_r",
+     "plane": "frontal",
+     "rmse_deg": 2.403,
+     "primary_rmse_deg": 3.043,
+     "gate": "not-tested"
+    },
+    {
+     "joint": "shoulder_r",
+     "plane": "sagittal",
+     "rmse_deg": 27.949,
+     "primary_rmse_deg": 14.549,
+     "gate": "not-tested"
+    },
+    {
+     "joint": "shoulder_r",
+     "plane": "transverse",
+     "rmse_deg": 10.855,
+     "primary_rmse_deg": 13.761,
+     "gate": "not-tested"
+    },
+    {
+     "joint": "subtalar_l",
+     "plane": "frontal",
+     "rmse_deg": 12.576,
+     "primary_rmse_deg": 12.659,
+     "gate": "not-tested"
+    },
+    {
+     "joint": "subtalar_r",
+     "plane": "frontal",
+     "rmse_deg": 19.195,
+     "primary_rmse_deg": 19.788,
+     "gate": "not-tested"
+    },
+    {
+     "joint": "torso_segment",
+     "plane": "frontal",
+     "rmse_deg": 13.867,
+     "primary_rmse_deg": 11.936,
+     "gate": "not-tested"
+    },
+    {
+     "joint": "torso_segment",
+     "plane": "sagittal",
+     "rmse_deg": 6.402,
+     "primary_rmse_deg": 12.542,
+     "gate": "not-tested"
+    }
+   ]
+  }
+ },
+ "expected": {
+  "rule": "per joint x plane cell present in both reports, |RMSE vs motion capture - RMSE vs OpenCap| <= 2.0 deg (five cameras + augmenter); all four routes produce their reports",
+  "end_to_end": true,
+  "cells_compared": 36,
+  "cells_outside": [
+   "ankle_l.sagittal",
+   "elbow_r.sagittal",
+   "forearm_l.transverse",
+   "forearm_r.transverse",
+   "hip_l.transverse",
+   "hip_r.frontal",
+   "hip_r.sagittal",
+   "hip_r.transverse",
+   "knee_l.frontal",
+   "knee_l.sagittal",
+   "knee_r.frontal",
+   "lumbar.sagittal",
+   "mtp_l.sagittal",
+   "mtp_r.sagittal",
+   "pelvis.sagittal",
+   "pelvis.transverse",
+   "pelvis_segment.frontal",
+   "pelvis_segment.sagittal",
+   "shoulder_l.frontal",
+   "shoulder_l.sagittal",
+   "shoulder_r.frontal",
+   "shoulder_r.sagittal",
+   "subtalar_l.frontal",
+   "subtalar_r.frontal",
+   "torso_segment.frontal",
+   "torso_segment.sagittal"
+  ],
+  "coordinates_over_2deg_inside_passing_cells": [],
+  "met": false
+ }
+}
