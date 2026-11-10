@@ -1,0 +1,325 @@
+{
+ "what": "Positive control (plan/nodes/t-kin-opencap-control.md): OpenCap's own five-camera result for subject2 squats1 (fixture) against the marker motion capture, through rehabtwin validate (--reference-grade marker-mocap, --max-lag-s 4). Aggregate only.",
+ "date": "2026-11-10",
+ "lag_check": {
+  "sagittal_coords": [
+   "pelvis_tilt",
+   "hip_flexion_r",
+   "knee_angle_r",
+   "ankle_angle_r",
+   "mtp_angle_r",
+   "hip_flexion_l",
+   "knee_angle_l",
+   "ankle_angle_l",
+   "mtp_angle_l",
+   "lumbar_extension",
+   "arm_flex_r",
+   "elbow_flex_r",
+   "arm_flex_l",
+   "elbow_flex_l"
+  ],
+  "best_lag_s": 0.4167,
+  "inside": true,
+  "next_minimum_s": -1.183,
+  "ratio": 3.02,
+  "clear_peak": true
+ },
+ "inputs": {
+  "estimate": {
+   "file": "OpenSimData/Kinematics/squats1.mot",
+   "fixture_commit": "63546b73ab2a3c6dd6c95a05d66e0527bab873c7",
+   "sha256": "8a3bbbbd5a3c831e06fe5b64825c14df1f3e7e0ada98ef2349b27ab66953d61d"
+  },
+  "reference": {
+   "file": "LabValidation_withoutVideos/subject2/OpenSimData/Mocap/IK/squats1.mot",
+   "sha256": "8d80b8b4825b8ac48f1291e24cd3af9b8d442c5227205467b046a382d632b218"
+  }
+ },
+ "paper_mae_deg": 4.5,
+ "lag_s": 0.4166755000000091,
+ "coverage": {
+  "compared_s": 7.983,
+  "overlap_s": 8.0,
+  "fraction": 0.998,
+  "min_fraction": 0.8
+ },
+ "coordinates": {
+  "pelvis_tilt": {
+   "rmse_deg": 11.663,
+   "mae_deg": 10.112,
+   "bias_deg": 7.386,
+   "spread_deg": 9.026,
+   "n": 480,
+   "in_set": true
+  },
+  "pelvis_list": {
+   "rmse_deg": 3.559,
+   "mae_deg": 2.819,
+   "bias_deg": 2.633,
+   "spread_deg": 2.395,
+   "n": 480,
+   "in_set": true
+  },
+  "pelvis_rotation": {
+   "rmse_deg": 8.816,
+   "mae_deg": 8.364,
+   "bias_deg": 8.364,
+   "spread_deg": 2.786,
+   "n": 480,
+   "in_set": true
+  },
+  "hip_flexion_r": {
+   "rmse_deg": 11.536,
+   "mae_deg": 10.251,
+   "bias_deg": -8.439,
+   "spread_deg": 7.866,
+   "n": 480,
+   "in_set": true
+  },
+  "hip_adduction_r": {
+   "rmse_deg": 8.333,
+   "mae_deg": 6.881,
+   "bias_deg": -6.044,
+   "spread_deg": 5.737,
+   "n": 480,
+   "in_set": true
+  },
+  "hip_rotation_r": {
+   "rmse_deg": 6.083,
+   "mae_deg": 5.137,
+   "bias_deg": -0.407,
+   "spread_deg": 6.07,
+   "n": 480,
+   "in_set": true
+  },
+  "knee_angle_r": {
+   "rmse_deg": 3.126,
+   "mae_deg": 2.648,
+   "bias_deg": -0.645,
+   "spread_deg": 3.059,
+   "n": 480,
+   "in_set": true
+  },
+  "ankle_angle_r": {
+   "rmse_deg": 6.306,
+   "mae_deg": 5.178,
+   "bias_deg": -4.906,
+   "spread_deg": 3.961,
+   "n": 480,
+   "in_set": true
+  },
+  "subtalar_angle_r": {
+   "rmse_deg": 9.423,
+   "mae_deg": 7.396,
+   "bias_deg": -7.219,
+   "spread_deg": 6.056,
+   "n": 480,
+   "in_set": true
+  },
+  "mtp_angle_r": {
+   "rmse_deg": 7.471,
+   "mae_deg": 7.467,
+   "bias_deg": 7.467,
+   "spread_deg": 0.245,
+   "n": 480,
+   "in_set": false
+  },
+  "hip_flexion_l": {
+   "rmse_deg": 13.903,
+   "mae_deg": 12.082,
+   "bias_deg": -8.887,
+   "spread_deg": 10.692,
+   "n": 480,
+   "in_set": true
+  },
+  "hip_adduction_l": {
+   "rmse_deg": 7.861,
+   "mae_deg": 6.488,
+   "bias_deg": 6.238,
+   "spread_deg": 4.784,
+   "n": 480,
+   "in_set": true
+  },
+  "hip_rotation_l": {
+   "rmse_deg": 6.503,
+   "mae_deg": 5.816,
+   "bias_deg": -0.177,
+   "spread_deg": 6.5,
+   "n": 480,
+   "in_set": true
+  },
+  "knee_angle_l": {
+   "rmse_deg": 3.948,
+   "mae_deg": 3.613,
+   "bias_deg": -3.612,
+   "spread_deg": 1.595,
+   "n": 480,
+   "in_set": true
+  },
+  "ankle_angle_l": {
+   "rmse_deg": 4.704,
+   "mae_deg": 3.966,
+   "bias_deg": -3.82,
+   "spread_deg": 2.744,
+   "n": 480,
+   "in_set": true
+  },
+  "subtalar_angle_l": {
+   "rmse_deg": 4.096,
+   "mae_deg": 3.311,
+   "bias_deg": -2.075,
+   "spread_deg": 3.531,
+   "n": 480,
+   "in_set": true
+  },
+  "mtp_angle_l": {
+   "rmse_deg": 7.471,
+   "mae_deg": 7.467,
+   "bias_deg": 7.467,
+   "spread_deg": 0.245,
+   "n": 480,
+   "in_set": false
+  },
+  "lumbar_extension": {
+   "rmse_deg": 10.848,
+   "mae_deg": 9.518,
+   "bias_deg": -3.124,
+   "spread_deg": 10.388,
+   "n": 480,
+   "in_set": true
+  },
+  "lumbar_bending": {
+   "rmse_deg": 1.807,
+   "mae_deg": 1.509,
+   "bias_deg": 0.115,
+   "spread_deg": 1.804,
+   "n": 480,
+   "in_set": true
+  },
+  "lumbar_rotation": {
+   "rmse_deg": 9.397,
+   "mae_deg": 8.686,
+   "bias_deg": -8.686,
+   "spread_deg": 3.586,
+   "n": 480,
+   "in_set": true
+  },
+  "arm_flex_r": {
+   "rmse_deg": 11.608,
+   "mae_deg": 9.858,
+   "bias_deg": -9.41,
+   "spread_deg": 6.796,
+   "n": 480,
+   "in_set": false
+  },
+  "arm_add_r": {
+   "rmse_deg": 3.152,
+   "mae_deg": 2.52,
+   "bias_deg": 2.199,
+   "spread_deg": 2.259,
+   "n": 480,
+   "in_set": false
+  },
+  "arm_rot_r": {
+   "rmse_deg": 4.017,
+   "mae_deg": 3.147,
+   "bias_deg": -1.225,
+   "spread_deg": 3.825,
+   "n": 480,
+   "in_set": false
+  },
+  "elbow_flex_r": {
+   "rmse_deg": 8.421,
+   "mae_deg": 7.427,
+   "bias_deg": 1.089,
+   "spread_deg": 8.351,
+   "n": 480,
+   "in_set": false
+  },
+  "pro_sup_r": {
+   "rmse_deg": 8.491,
+   "mae_deg": 7.466,
+   "bias_deg": -7.261,
+   "spread_deg": 4.401,
+   "n": 480,
+   "in_set": false
+  },
+  "arm_flex_l": {
+   "rmse_deg": 8.725,
+   "mae_deg": 7.177,
+   "bias_deg": -6.544,
+   "spread_deg": 5.77,
+   "n": 480,
+   "in_set": false
+  },
+  "arm_add_l": {
+   "rmse_deg": 2.641,
+   "mae_deg": 2.239,
+   "bias_deg": 1.546,
+   "spread_deg": 2.141,
+   "n": 480,
+   "in_set": false
+  },
+  "arm_rot_l": {
+   "rmse_deg": 2.305,
+   "mae_deg": 1.872,
+   "bias_deg": -0.809,
+   "spread_deg": 2.159,
+   "n": 480,
+   "in_set": false
+  },
+  "elbow_flex_l": {
+   "rmse_deg": 7.483,
+   "mae_deg": 6.189,
+   "bias_deg": -1.324,
+   "spread_deg": 7.365,
+   "n": 480,
+   "in_set": false
+  },
+  "pro_sup_l": {
+   "rmse_deg": 29.655,
+   "mae_deg": 28.712,
+   "bias_deg": -28.703,
+   "spread_deg": 7.455,
+   "n": 480,
+   "in_set": false
+  }
+ },
+ "angle_set": [
+  "pelvis_tilt",
+  "pelvis_list",
+  "pelvis_rotation",
+  "hip_flexion_r",
+  "hip_adduction_r",
+  "hip_rotation_r",
+  "knee_angle_r",
+  "ankle_angle_r",
+  "subtalar_angle_r",
+  "hip_flexion_l",
+  "hip_adduction_l",
+  "hip_rotation_l",
+  "knee_angle_l",
+  "ankle_angle_l",
+  "subtalar_angle_l",
+  "lumbar_extension",
+  "lumbar_bending",
+  "lumbar_rotation"
+ ],
+ "missing_from_set": [],
+ "mae_set18_deg": 6.321,
+ "mae_set16_no_subtalar_deg": 6.442,
+ "expected": {
+  "rule": "MAE over the 18 angles within 2 deg of the paper's 4.5 deg, with one clear lag (0.417 s, ratio 3.02)",
+  "met": true
+ },
+ "labvalidation_copy_video_results": {
+  "where": "LabValidation_withoutVideos.zip, <subject>/OpenSimData/Video/ (not extracted on the laptop)",
+  "ik_files": 1440,
+  "per_subject": 144,
+  "subjects": 10,
+  "setups": "HRNet, OpenPose_default, OpenPose_highAccuracy x 2, 3, 5 cameras",
+  "trials_per_setup": 16,
+  "uncompressed_bytes": 2133056888,
+  "also": "HRNet/2-cameras/Dynamics (not opened)"
+ }
+}
