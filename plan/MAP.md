@@ -63,7 +63,7 @@ flowchart LR
   n14>"Pain during the movement, recorded<br/>with the session"]:::idea_new
   n15>"Phone sensors alone, once the twin<br/>is built"]:::idea_new
   n16>"Higher-resolution T1 sole<br/>candidate"]:::idea_new
-  n17["Video kinematics on OpenCap<br/>LabValidation against marker<br/>motion capture<br/>tests ✓2 ✗1 ○1"]:::step_open
+  n17["Video kinematics on OpenCap<br/>LabValidation against marker<br/>motion capture<br/>tests ✓2 ✗2"]:::step_open
   n18["One volunteer, one exercise,<br/>recorded with our own hardware<br/>tests ○1"]:::step_open
   n19(["Sense: measure the person's<br/>movement, forces and body"]):::goal_open
   n20["Boards designed, routed and<br/>checked: EU 37, 42, 46 and a<br/>personal foot, both sides<br/>tests ✓1"]:::step_done
@@ -376,7 +376,7 @@ flowchart LR
   n14>"Personalised footwear from the<br/>foot scan: last, sole and five-toe<br/>shoe"]:::idea_new
   n15(["Act: feedback and assistance from<br/>the twin"]):::goal_open
   n16["BLE write to SenseShift on a bench<br/>ESP32<br/>tests ○1"]:::step_open
-  n17["Video kinematics on OpenCap<br/>LabValidation against marker<br/>motion capture<br/>tests ✓2 ✗1 ○1<br/><i>(Sense)</i>"]:::external
+  n17["Video kinematics on OpenCap<br/>LabValidation against marker<br/>motion capture<br/>tests ✓2 ✗2<br/><i>(Sense)</i>"]:::external
   n0 -. blocks .-> n3
   n1 -. blocks .-> n6
   n2 -. blocks .-> n3
@@ -534,7 +534,7 @@ Open steps whose dependencies are done and that no open decision blocks.
 | [[t-fp-vertical]] | failed | yes | RMS error at most 5 % of body weight in every subject | Fail in subjects 6, 9 and 10. Post hoc: follows the gap between recorded mass and plate weight (6 % in 6 and 10); 9 had a foot off the plates |
 | [[t-insole]] | planned |  |  |  |
 | [[t-joint-load-scenarios]] | planned |  |  |  |
-| [[t-kin-labvalidation]] | planned | yes | Proposal: per route, joint and plane, the RMSE against the motion capture's inverse kinematics; a joint passes on a route if it is within docs/accuracy.md's target (sagittal at most 3 degrees, frontal at most 5) in every evaluated subject; transverse angles are reported only |  |
+| [[t-kin-labvalidation]] | failed | yes | Proposal: per route, joint and plane, the RMSE against the motion capture's inverse kinematics; a joint passes on a route if it is within docs/accuracy.md's target (sagittal at most 3 degrees, frontal at most 5) in every evaluated subject; transverse angles are reported only | Not met (2026-11-10): no sagittal cell is within 3 deg in every evaluated subject on any route; only the frontal pelvis passes (five cameras; with the augmenter also the frontal pelvis segment). 9 of 10 subjects have videos; at lag 0 |
 | [[t-kin-opencap-control]] | passed | no | Proposal: through this pipeline's comparison, OpenCap's five-camera result on subject 2's squats1 has a mean absolute error over the lower-limb and trunk angles within 2 degrees of the 4.5 degrees its paper reports, with one clear lag | Met (2026-11-10): MAE over the 18 lower-limb and trunk angles 6.32 deg, +1.82 from the paper's 4.5 (16 without subtalar: 6.44); one clear lag, 0.417 s (ratio 3.02) |
 | [[t-kin-opencap-control-all]] | passed | yes | For the primary configuration (HRNet, two cameras, all four activities), the mean absolute error over the 18 angles is within 2 degrees of the paper's 4.5 degrees: computed per trial, averaged over each subject's evaluated trials, then over the 10 subjects | Met (2026-11-10): primary configuration (HRNet, two cameras) 4.80 deg over the 18 angles, +0.30 from the paper's 4.5; all 10 subjects evaluated, 69 of 160 trials; walking almost never passes the clear-lag rule (1 of 60 evaluated) |
 | [[t-kin-pilot]] | failed | no | Proposal: on subject 2's squats1, the comparison runs end to end for all four routes, and the five-camera route with the augmenter has an error against the motion capture within 2 degrees of its error against OpenCap at every joint | Not met (2026-11-10): all four routes ran end to end (4 run, 3 evaluated); for five cameras with the augmenter, 26 of 36 joint x plane cells differ by more than 2 deg between the errors against motion capture and against OpenCap (20 larger against motion capture, 6 smaller) |

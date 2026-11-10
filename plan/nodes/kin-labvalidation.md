@@ -62,3 +62,8 @@ than 8 of the 10 subjects. Check by 2026-12-07; owned by the owner.
 
 HSMR needs the SKEL files, which are on the laptop (above), and its own trained weights, which have not been
 checked yet.
+
+**First full run, the pipeline's routes (2026-11-10;** [[t-kin-labvalidation]]**):** the expected result is not
+met. Only the frontal pelvis passes. Before any fix, the stop rule's count is 7 subjects, under its 8. Subject 6
+shared no videos, so the count can reach 9 at most. The rule allows two rounds of fixes before 2026-12-07; whether
+to make them, and which, is the owner's decision.
