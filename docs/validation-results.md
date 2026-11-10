@@ -224,9 +224,56 @@ built from all five phones, so they favour subsets of the same cameras. For Medi
 `docs/hardware.md`: three phones 40° apart facing the subject. Two phones are enough only when both
 keep the knees in view at full depth.
 
-One trial and one subject, against a markerless reference: nothing here approves a use. It does say
+One trial and one subject, against a markerless reference: nothing here approves a use. Section 4b compares
+the same trial with marker motion capture, and the errors there are larger in most signals. It does say
 which front end to measure against marker mocap first: 5 cameras plus augmenter. It also says which
 signals monocular capture should not drive (pelvis, hip flexion, lumbar).
+
+## 4b. The same trial against marker motion capture — the pilot (2026-11-10)
+
+The lab laptop holds LabValidation's marker motion capture for this trial, so the four routes of section 4 were
+compared with it (`plan/nodes/t-kin-pilot.md`; figures in
+`validation/results/kin_pilot_opencap_subject2_squats1.json`). This is the first comparison of the pipeline with
+marker motion capture. It is one trial of one subject, on videos the pipeline was developed on, so it is a pilot
+and not an accuracy claim.
+
+Values are RMSE in degrees; brackets give (bias / spread after removing the bias). Every figure is after the lag
+search, which picks the time shift that minimises the error, so each is the route's best case.
+
+| Signal | 5 cams + augmenter, against motion capture | The same route against OpenCap (section 4) | 1 cam, against motion capture |
+|---|---|---|---|
+| Trunk inclination, sagittal | 5.9 (−5.0 / 3.3) | 2.6 | 5.7 (+1.6 / 5.5) |
+| Pelvis tilt | 9.2 (+6.0 / 7.0) | 2.8 | 28.4 (+24.2 / 14.8) |
+| Lumbar flexion (total) | 9.2 (−0.8 / 9.1) | 3.9 | 30.0 (−26.6 / 13.9) |
+| Hip flexion R / L | 4.3 / 7.9 | 8.2 / 7.9 | 27.9 / 26.6 |
+| Knee flexion R / L | 7.3 / 4.1 | 7.4 / 7.1 | 8.3 / 9.1 |
+| Ankle dorsiflexion R / L | 6.5 / 9.7 | 5.4 / 5.3 | 9.9 / 16.9 |
+| Pelvis list | 3.0 | 2.6 | 5.5 |
+| Hip adduction R / L | 7.2 / 4.6 | 2.9 / 5.4 | 8.0 / 9.1 |
+| Knee FPPA R / L | 22.9 / 5.9 | 5.2 / 9.6 | 19.5 / 23.8 |
+
+What this shows:
+
+1. **Agreement with OpenCap was not accuracy.** For five cameras with the augmenter, 26 of 36 joint-and-plane
+   cells differ by more than 2° between the two references. In 20 of them the error against motion capture is
+   the larger: pelvis tilt 9.2° against 2.8°, lumbar flexion 9.2° against 3.9°, trunk inclination 5.9° against
+   2.6°. In 6 it is the smaller, right hip flexion among them (4.3° against 8.2°).
+2. **The best route misses the targets of `docs/accuracy.md` in most cells.** Five cameras with the augmenter: 5
+   cells pass, 29 fail and 2 are not tested. No sagittal angle of the trunk, pelvis, hip, knee or ankle is within
+   3°. Over those nine sagittal signals the mean RMSE is 7.1°, with a mean bias of 4.0° and a mean spread of 5.3°.
+3. **The pelvis, lumbar spine and hip trade against each other.** With five cameras and the augmenter, pelvis
+   tilt and lumbar flexion are each 9.2° off, but the trunk's inclination to gravity, which is their sum, is 5.9°
+   off. With one camera this is extreme: pelvis tilt, lumbar flexion and hip flexion are each 27–30° off, with
+   opposite biases, while the trunk's inclination is within 5.7° and the knees within 8–9°.
+4. **One camera with the augmenter is not evaluated.** Only 8.8 % of the time both systems recorded could be
+   compared, so every gate is not-tested.
+5. **The knee's frontal-plane projection angle is unstable in this squat.** The reference's own range is 59° on
+   the left and 22° on the right in a two-legged squat. The cause is not yet diagnosed.
+6. **Part of each bias comes from the models.** The pipeline's model and the motion capture's define some
+   neutral positions differently. The forearm's rotation (24° of bias) and the toes (a constant 7.5°) show it most.
+
+What it does not show: how OpenCap's own result compares with the motion capture in this tool. That is the bar
+for a markerless system here, and it is the next check (`plan/nodes/t-kin-opencap-control.md`).
 
 ## 5. The whole chain on the real squat — and where it stops
 

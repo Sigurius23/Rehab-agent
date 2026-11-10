@@ -2,14 +2,14 @@
 
 # Plan map
 
-166 notes: 17 goals, 42 steps, 32 tests, 50 ideas, 25 decisions.
+169 notes: 17 goals, 42 steps, 33 tests, 52 ideas, 25 decisions.
 
 ## The engine
 
 ```mermaid
 flowchart TB
   r(["A full-body digital twin that<br/>personalises to each person and adapts<br/>as they change"]):::goal_open
-  p0(["Sense: measure the person's<br/>movement, forces and body<br/><i>1 done · 7 open · 1 blocked · 9 ideas · 3 decisions</i>"]):::goal_open
+  p0(["Sense: measure the person's<br/>movement, forces and body<br/><i>1 done · 7 open · 1 blocked · 10 ideas · 3 decisions</i>"]):::goal_open
   r --> p0
   p1(["Personalise: the person's own<br/>bones, shape, mass and muscles<br/><i>5 done · 4 open · 1 blocked · 10 ideas · 1 decision</i>"]):::goal_open
   r --> p1
@@ -17,7 +17,7 @@ flowchart TB
   r --> p2
   p3(["Adapt: the twin follows the<br/>person over time<br/><i>2 done · 2 open · 1 idea</i>"]):::goal_open
   r --> p3
-  p4(["Act: feedback and assistance<br/>from the twin<br/><i>1 done · 2 open · 2 blocked · 3 ideas · 4 decisions</i>"]):::goal_open
+  p4(["Act: feedback and assistance<br/>from the twin<br/><i>1 done · 2 open · 2 blocked · 4 ideas · 4 decisions</i>"]):::goal_open
   r --> p4
   p5(["How we work: tests, CI and<br/>standing rules<br/><i>2 done · 1 idea</i>"]):::goal_open
   r --> p5
@@ -59,51 +59,53 @@ flowchart LR
   n10>"Head, neck (CVA) and scapula<br/>posture metrics"]:::idea_new
   n11>"A reference protocol co-designed<br/>with a biomechanics lab"]:::idea_new
   n12>"Personalise for movement, not only<br/>shape (the foot-ground interface<br/>as a model)"]:::idea_new
-  n13>"Pain during the movement, recorded<br/>with the session"]:::idea_new
-  n14>"Phone sensors alone, once the twin<br/>is built"]:::idea_new
-  n15>"Higher-resolution T1 sole<br/>candidate"]:::idea_new
-  n16["Video kinematics on OpenCap<br/>LabValidation against marker<br/>motion capture<br/>tests ✗1 ○1"]:::step_open
-  n17["One volunteer, one exercise,<br/>recorded with our own hardware<br/>tests ○1"]:::step_open
-  n18(["Sense: measure the person's<br/>movement, forces and body"]):::goal_open
-  n19["Boards designed, routed and<br/>checked: EU 37, 42, 46 and a<br/>personal foot, both sides<br/>tests ✓1"]:::step_done
-  n20["The sensor film's measured<br/>response (coupon test)<br/>tests ○1"]:::step_open
-  n21["Flex boards fabricated"]:::step_blocked
-  n22["A printed prototype tried on a<br/>real foot<br/>tests ○1"]:::step_open
-  n23["Boards and the self-test model<br/>rebuild identically on another<br/>machine<br/>tests ○1"]:::step_open
-  n24["SlimeVR posture signals against<br/>motion capture<br/>tests ○1"]:::step_open
-  n25["A clinician reviews the cue rules,<br/>per movement<br/><i>(Act)</i>"]:::external
-  n26["Muscle and joint-load numbers from<br/>measured ground forces<br/>tests ○1<br/><i>(Simulate)</i>"]:::external
-  n27["Foot-insole contact against an<br/>in-shoe sensor (stage C)<br/>tests ○1<br/><i>(Simulate)</i>"]:::external
-  n0 -. blocks .-> n17
-  n1 -. blocks .-> n21
-  n2 -. blocks .-> n22
-  n2 -. blocks .-> n20
+  n13>"Build the phone-only route on what<br/>one camera measures well"]:::idea_new
+  n14>"Pain during the movement, recorded<br/>with the session"]:::idea_new
+  n15>"Phone sensors alone, once the twin<br/>is built"]:::idea_new
+  n16>"Higher-resolution T1 sole<br/>candidate"]:::idea_new
+  n17["Video kinematics on OpenCap<br/>LabValidation against marker<br/>motion capture<br/>tests ✗1 ○2"]:::step_open
+  n18["One volunteer, one exercise,<br/>recorded with our own hardware<br/>tests ○1"]:::step_open
+  n19(["Sense: measure the person's<br/>movement, forces and body"]):::goal_open
+  n20["Boards designed, routed and<br/>checked: EU 37, 42, 46 and a<br/>personal foot, both sides<br/>tests ✓1"]:::step_done
+  n21["The sensor film's measured<br/>response (coupon test)<br/>tests ○1"]:::step_open
+  n22["Flex boards fabricated"]:::step_blocked
+  n23["A printed prototype tried on a<br/>real foot<br/>tests ○1"]:::step_open
+  n24["Boards and the self-test model<br/>rebuild identically on another<br/>machine<br/>tests ○1"]:::step_open
+  n25["SlimeVR posture signals against<br/>motion capture<br/>tests ○1"]:::step_open
+  n26["A clinician reviews the cue rules,<br/>per movement<br/><i>(Act)</i>"]:::external
+  n27["Muscle and joint-load numbers from<br/>measured ground forces<br/>tests ○1<br/><i>(Simulate)</i>"]:::external
+  n28["Foot-insole contact against an<br/>in-shoe sensor (stage C)<br/>tests ○1<br/><i>(Simulate)</i>"]:::external
+  n0 -. blocks .-> n18
+  n1 -. blocks .-> n22
+  n2 -. blocks .-> n23
+  n2 -. blocks .-> n21
   n4 --> n3
-  n17 -. needed by .-> n3
-  n18 --> n4
-  n18 --> n5
+  n18 -. needed by .-> n3
+  n19 --> n4
+  n19 --> n5
   n4 --> n6
   n7 -.-o n4
-  n8 -.-o n18
-  n9 -.-o n18
-  n10 -.-o n18
+  n8 -.-o n19
+  n9 -.-o n19
+  n10 -.-o n19
   n11 -.-o n4
   n12 -.-o n6
-  n13 -.-o n18
-  n14 -.-o n18
-  n15 -.-o n6
-  n5 --> n16
+  n13 -.-o n5
+  n14 -.-o n19
+  n15 -.-o n19
+  n16 -.-o n6
   n5 --> n17
-  n6 --> n19
+  n5 --> n18
   n6 --> n20
   n6 --> n21
-  n22 -. needed by .-> n21
   n6 --> n22
+  n23 -. needed by .-> n22
   n6 --> n23
-  n5 --> n24
-  n16 -. needed by .-> n25
-  n3 -. needed by .-> n26
-  n20 -. needed by .-> n27
+  n6 --> n24
+  n5 --> n25
+  n17 -. needed by .-> n26
+  n3 -. needed by .-> n27
+  n21 -. needed by .-> n28
   classDef goal_open fill:#e1d5f5,stroke:#555,color:#111
   classDef goal_done fill:#c8e6c9,stroke:#555,color:#111
   classDef step_open fill:#ffffff,stroke:#555,color:#111
@@ -370,28 +372,30 @@ flowchart LR
   n10(["Haptic cues reach the body<br/>reliably"]):::goal_open
   n11>"The validation evidence as an<br/>assurance case"]:::idea_new
   n12>"Exercise recommendations from the<br/>person's twin"]:::idea_new
-  n13>"Personalised footwear from the<br/>foot scan: last, sole and five-toe<br/>shoe"]:::idea_new
-  n14(["Act: feedback and assistance from<br/>the twin"]):::goal_open
-  n15["BLE write to SenseShift on a bench<br/>ESP32<br/>tests ○1"]:::step_open
-  n16["Video kinematics on OpenCap<br/>LabValidation against marker<br/>motion capture<br/>tests ✗1 ○1<br/><i>(Sense)</i>"]:::external
+  n13>"The knee's projection angle only<br/>where it is well conditioned"]:::idea_new
+  n14>"Personalised footwear from the<br/>foot scan: last, sole and five-toe<br/>shoe"]:::idea_new
+  n15(["Act: feedback and assistance from<br/>the twin"]):::goal_open
+  n16["BLE write to SenseShift on a bench<br/>ESP32<br/>tests ○1"]:::step_open
+  n17["Video kinematics on OpenCap<br/>LabValidation against marker<br/>motion capture<br/>tests ✗1 ○2<br/><i>(Sense)</i>"]:::external
   n0 -. blocks .-> n3
   n1 -. blocks .-> n6
   n2 -. blocks .-> n3
   n8 --> n3
-  n16 -. needed by .-> n3
-  n4 -. blocks .-> n15
+  n17 -. needed by .-> n3
+  n4 -. blocks .-> n16
   n9 --> n5
   n7 -. needed by .-> n5
   n9 --> n6
   n5 -. needed by .-> n6
   n9 --> n7
-  n14 --> n8
-  n14 --> n9
-  n14 --> n10
+  n15 --> n8
+  n15 --> n9
+  n15 --> n10
   n11 -.-o n8
-  n12 -.-o n14
-  n13 -.-o n14
-  n10 --> n15
+  n12 -.-o n15
+  n13 -.-o n8
+  n14 -.-o n15
+  n10 --> n16
   classDef goal_open fill:#e1d5f5,stroke:#555,color:#111
   classDef goal_done fill:#c8e6c9,stroke:#555,color:#111
   classDef step_open fill:#ffffff,stroke:#555,color:#111
@@ -532,6 +536,7 @@ Open steps whose dependencies are done and that no open decision blocks.
 | [[t-insole]] | planned |  |  |  |
 | [[t-joint-load-scenarios]] | planned |  |  |  |
 | [[t-kin-labvalidation]] | planned | yes | Proposal: per route, joint and plane, the RMSE against the motion capture's inverse kinematics; a joint passes on a route if it is within docs/accuracy.md's target (sagittal at most 3 degrees, frontal at most 5) in every evaluated subject; transverse angles are reported only |  |
+| [[t-kin-opencap-control]] | planned |  | Proposal: through this pipeline's comparison, OpenCap's five-camera result on subject 2's squats1 has a mean absolute error over the lower-limb and trunk angles within 2 degrees of the 4.5 degrees its paper reports, with one clear lag |  |
 | [[t-kin-pilot]] | failed | no | Proposal: on subject 2's squats1, the comparison runs end to end for all four routes, and the five-camera route with the augmenter has an error against the motion capture within 2 degrees of its error against OpenCap at every joint | Not met (2026-11-10): all four routes ran end to end (4 run, 3 evaluated); for five cameras with the augmenter, 26 of 36 joint x plane cells differ by more than 2 deg between the errors against motion capture and against OpenCap (20 larger against motion capture, 6 smaller) |
 | [[t-kin-volunteer]] | planned |  |  |  |
 | [[t-loads-measured-forces]] | planned |  |  |  |
@@ -603,6 +608,7 @@ Open steps whose dependencies are done and that no open decision blocks.
 | [[idea-fat-from-surface]] | new | Fat distribution from photos and the body surface, wired into the twin |
 | [[idea-foot-capture-comparison]] | new | Photo-based against depth-assisted foot capture, compared experimentally |
 | [[idea-foot-visual-pipeline]] | new | A foot visualisation pipeline: a cleaned skin mesh animated by the functional model |
+| [[idea-fppa-deep-flexion]] | new | The knee's projection angle only where it is well conditioned |
 | [[idea-gait-balance]] | new | Gait and balance metrics: walking and sway |
 | [[idea-gait120-emg]] | new | Validate muscle activations against EMG (Gait120) |
 | [[idea-head-neck-scapula]] | new | Head, neck (CVA) and scapula posture metrics |
@@ -623,6 +629,7 @@ Open steps whose dependencies are done and that no open decision blocks.
 | [[idea-muscle-stress-stretch]] | new | Muscle stress and a stretch map |
 | [[idea-neural-motor-chain]] | new | A neural motor-control chain: brain-inspired controller, spinal cord and motor units, then muscles |
 | [[idea-nutrition-body-composition]] | promoted | Muscle and fat change with what and when the person eats |
+| [[idea-one-camera-robust-signals]] | new | Build the phone-only route on what one camera measures well |
 | [[idea-pain-input]] | new | Pain during the movement, recorded with the session |
 | [[idea-parameter-registry]] | new | A parameter registry: provenance labels, uncertainty and permitted uses |
 | [[idea-peripheral-nerves]] | new | Peripheral nerve layer: nerve fibre and bundle models |
