@@ -475,7 +475,6 @@ flowchart LR
 - d-sikidar-account: open decision: Create a SimTK account to download the Sikidar model?
 - d-suit-bench-hardware: open decision: Buy one ESP32 and vibration motors for the BLE bench test?
 - d-wearables-tier: open decision: Do optional wearables and pressure hardware belong in a later research or advanced tier?
-- kin-labvalidation: priority-1 step needs a stop rule (a number, a date, an owner)
 - sole-physical-prototype: priority-1 step needs a stop rule (a number, a date, an owner)
 - t-anatomy-geometry: no expected result: write it before the test runs
 - t-bone-geometry: no expected result: write it before the test runs

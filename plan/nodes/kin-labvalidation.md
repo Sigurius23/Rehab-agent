@@ -5,6 +5,9 @@ status: "open"
 area: "pipeline"
 parent: "[[goal-measured-kinematics]]"
 priority: "1"
+stop_rule: "after the pilot and at most two rounds of fixes, the five-camera route gives a complete squat repetition through the pipeline's gates for fewer than 8 of the 10 subjects"
+stop_by: "2026-12-07"
+stop_owner: "owner"
 source: "docs/gaps-and-open-decisions.md G-01, D-04, D-11; docs/roadmap.md Phase 1"
 updated: "2026-11-10"
 ---
@@ -48,6 +51,14 @@ OpenCap by more than 2° in 26 of 36 cells, mostly larger. What it changes for t
 - **Follow-ups:** [[idea-fppa-deep-flexion]], [[idea-one-camera-robust-signals]] and the approval label
   ([[d-feature-release-rule]]).
 
-**Proposed stop rule (not yet agreed; the owner sets it):** stop and report if, after the pilot and at most two
+**Stop rule (approved by the owner 2026-11-10):** stop and report if, after the pilot and at most two
 rounds of fixes, the five-camera route gives a complete squat repetition through the pipeline's gates for fewer
 than 8 of the 10 subjects. Check by 2026-12-07; owned by the owner.
+
+**Order of the front ends (owner, 2026-11-10):**
+1. The pipeline's own routes on all subjects: MediaPipe with five cameras or one, with and without the marker
+   augmenter. These need no GPU.
+2. Then the monocular candidates on the GPU, installed one at a time.
+
+HSMR needs the SKEL files, which are on the laptop (above), and its own trained weights, which have not been
+checked yet.

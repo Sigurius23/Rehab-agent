@@ -10,7 +10,9 @@ updated: "2026-11-10"
 ---
 # Per-joint error against LabValidation's motion capture
 
-The expected result above is a proposal (2026-11-09). Confirm or change it before the full run.
+The expected result above was proposed on 2026-11-09 and approved by the owner on 2026-11-10, before the full
+run and before any of its videos were extracted. The proposed changes after the pilot (below) were approved with
+it.
 
 - **Evaluated:** a trial whose result passes the pipeline's own gates (coverage among them). The others are
   reported as not evaluated, never as passing. The counts are given per route.
@@ -23,7 +25,7 @@ The expected result above is a proposal (2026-11-09). Confirm or change it befor
   knee. Against OpenCap it showed 8.2° at hip flexion and 7.4° at the knee, mostly bias. The frontal angles of the
   pelvis and the hip pass. One camera misses most sagittal angles.
 
-**Proposed changes after the pilot (2026-11-10; not yet agreed).** The pilot ([[t-kin-pilot]]) ran on one trial that
+**Changes after the pilot (proposed 2026-11-10; approved by the owner 2026-11-10).** The pilot ([[t-kin-pilot]]) ran on one trial that
 is not part of this test. Its lessons, for the owner to confirm before the full run:
 - **Alignment: one lag per timeline, not per route.** The lag comes from a source that uses no route's error:
   the dataset's own synchronisation where it has one, otherwise the lag of OpenCap's result against the motion
@@ -35,3 +37,10 @@ is not part of this test. Its lessons, for the owner to confirm before the full 
 - **Prediction, revised after the pilot** (the first one stays above): with five cameras and the augmenter, no
   sagittal angle of the pelvis, hip, knee or ankle is within 3° in every subject; pelvis tilt and lumbar flexion
   miss by more than the hip and the knee; the frontal pelvis angle passes.
+
+**How the approved alignment applies here (2026-11-10, before any video was extracted).** The dataset has its own
+synchronisation. Every trial video exists as `<trial>_syncdWithMocap.avi`, and OpenCap's own results from this
+dataset lie at zero lag against the motion capture ([[t-kin-opencap-control-all]]). So the full run uses the
+`_syncdWithMocap` videos, and every route is compared at lag 0. The pipeline's lag search (±4 s) is reported
+beside it as each route's best case. If a route's own processing shifts its timeline (the multi-view sync trims
+frames at the start), that shift is taken from the route's own sync record, not from any error.
