@@ -67,3 +67,26 @@ checked yet.
 met. Only the frontal pelvis passes. Before any fix, the stop rule's count is 7 subjects, under its 8. Subject 6
 shared no videos, so the count can reach 9 at most. The rule allows two rounds of fixes before 2026-12-07; whether
 to make them, and which, is the owner's decision.
+
+**The monocular candidates' setup (2026-11-12, lab laptop; everything outside the repository).** GPU: an RTX 5090
+Laptop (24 GB, compute capability 12.0).
+- **HSMR: set up, but blocked on one file.**
+  - Code: HSMR at 88486dc, with SKEL c32cf16 as its submodule, and SMPL2AddBiomechanics 47b728a for the
+    adapter's marker map.
+  - Environment: `envs/hsmr`, Python 3.10, torch 2.11.0+cu128 (CUDA works on the GPU), Detectron2 0.6; the full
+    freeze is in `envs/hsmr.freeze.txt`.
+  - Files: the checkpoint `HSMR-ViTH-r1d1` (2.5 GB) and three regressors, from HuggingFace
+    `IsshikiHugh/HSMR-data_inputs` at revision 7deaf55, with sha256s recorded; SKEL v1.1.1 from the owner's
+    download.
+  - Every pickle and the checkpoint were scanned before loading: they rebuild only numpy, scipy and torch tensors.
+  - **Blocked:** the demo fetches its person detector (ViTDet, `model_final_f05665.pkl`) from
+    `dl.fbaipublicfiles.com`, whose TLS certificate expired on 2026-11-11 23:59 UTC. It was not downloaded over the
+    broken certificate. It needs either Meta's renewal or a trusted mirror chosen by the owner.
+- **OpenCap Monocular (PolyForm Noncommercial): cloned at 94b1122, not installed.** Its recipe pins torch 2.1.2+cu118
+  and a prebuilt mmcv-full 1.7.2, and neither supports compute capability 12.0. It would need torch ≥ 2.7 and
+  mmcv-full compiled from source, and no CUDA compiler is installed. It also needs the SMPL model, which is on the
+  laptop (SMPL v1.1.0, in the owner's Drive exports), and WHAM's weights.
+- **SAM4Dcap: not set up.** The code is at github.com/wanglihx/SAM4Dcap-core (cloned at b784efa, 952 MB). It has no
+  licence file, so it is treated as all rights reserved. Its full code and environments are not public yet ("will
+  be uploaded to a cloud drive later"). It was built on a 96 GB GPU and needs at least 24 GB.
+
