@@ -119,3 +119,16 @@ gates on the five-camera route, after at most two rounds of fixes, by 2026-12-07
   fixed beforehand.
 
 With subject 6 unable to count, 8 subjects means 8 of the 9 with videos.
+
+**HSMR as the next route (owner, 2026-11-12, before HSMR ran on any trial that is part of this test).** HSMR is
+judged by the same rules as the pipeline's routes:
+- the expected result as approved;
+- per joint × plane, the RMSE against the motion capture at lag 0, since HSMR runs on the same synced Cam2 video
+  as the one-camera routes, and frame k is motion-capture time k/60;
+- the same evaluated rule, and the same readings as `bench_aggregate.py`;
+- the lag search reported beside as the best case;
+- subject 2's `squats1` left out of the pass rule (it is the smoke-test trial).
+
+The stop rule concerns the five-camera route and does not change. HSMR runs with `--rec_bs 32 --max_instances 1`
+and the local mesh-batch patch ([[kin-labvalidation]]).
+
