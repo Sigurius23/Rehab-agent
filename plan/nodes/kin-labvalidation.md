@@ -82,6 +82,17 @@ Laptop (24 GB, compute capability 12.0).
   - **Blocked:** the demo fetches its person detector (ViTDet, `model_final_f05665.pkl`) from
     `dl.fbaipublicfiles.com`, whose TLS certificate expired on 2026-11-11 23:59 UTC. It was not downloaded over the
     broken certificate. It needs either Meta's renewal or a trusted mirror chosen by the owner.
+  - **Unblocked the same day (2026-11-12):** Meta renewed the certificate, valid to 2027-04-25. The detector was
+    downloaded (2,765,948,277 bytes, sha256 8601bc52…) and scanned: an OrderedDict of numpy arrays only. It sits in
+    a cache outside the repository (`FVCORE_CACHE`).
+  - **One local patch to the clone** (`upstream/hsmr_local.patch`): `prepare_mesh` builds SKEL meshes 64 frames at
+    a time instead of 720, which ran out of the GPU's 24 GB. This changes only how many frames go through at once,
+    not the result.
+  - **Smoke test, without a reference:** subject 2's `squats1`, Cam2's synced video. This trial has been seen, so
+    no error was computed. HSMR's demo took 7 minutes for 480 frames. Then the repository's adapter
+    (`hsmr_to_skelseq.py`) and `rehabtwin process` ran. The person was detected in every frame, and the whole
+    trial solved as one segment. Five squat repetitions were found, none with imputed frames or missing markers;
+    the mean IK marker error was 28.6 mm. The route runs end to end.
 - **OpenCap Monocular (PolyForm Noncommercial): cloned at 94b1122, not installed.** Its recipe pins torch 2.1.2+cu118
   and a prebuilt mmcv-full 1.7.2, and neither supports compute capability 12.0. It would need torch ≥ 2.7 and
   mmcv-full compiled from source, and no CUDA compiler is installed. It also needs the SMPL model, which is on the
