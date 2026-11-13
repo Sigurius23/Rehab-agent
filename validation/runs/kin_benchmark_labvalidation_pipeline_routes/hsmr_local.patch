@@ -1,0 +1,13 @@
+diff --git a/lib/kits/hsmr_demo.py b/lib/kits/hsmr_demo.py
+index 2d1446e..a85d277 100644
+--- a/lib/kits/hsmr_demo.py
++++ b/lib/kits/hsmr_demo.py
+@@ -146,7 +146,7 @@ def _img_det2patches(img, det_instances, downsample_ratio:float, max_instances:i
+ # ================== Secondary Outputs Tools ==================
+ 
+ def prepare_mesh(pipeline, pd_params) -> Tuple[Dict, Dict]:
+-    B = 720  # full SKEL inference is memory consuming
++    B = 64  # full SKEL inference is memory consuming (local patch: 720 does not fit 24 GB)
+     v_skin_all, v_skel_all = [], []
+     for bw in asb(total=len(pd_params['poses']), bs_scope=B, enable_tqdm=True):
+         skel_outputs = pipeline.skel_model(

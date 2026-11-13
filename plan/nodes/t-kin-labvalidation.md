@@ -132,3 +132,37 @@ judged by the same rules as the pipeline's routes:
 The stop rule concerns the five-camera route and does not change. HSMR runs with `--rec_bs 32 --max_instances 1`
 and the local mesh-batch patch ([[kin-labvalidation]]).
 
+**Result, HSMR (2026-11-13): no cell passes.** Run on Cam2's synced video, with the rules recorded before it ran.
+Figures: the same results file, route `hsmr`.
+- **Counts:** 144 run and 143 evaluated, from 9 subjects; nothing was refused or short.
+- **One retry:** subject 2's `DJ3` failed once in HSMR's demo with a CUDA library error
+  (`CUBLAS_STATUS_EXECUTION_FAILED`), during the owner's logout. It was retried once and succeeded; the retry is
+  recorded.
+
+Key cells, RMSE in degrees as above: the mean over subjects, the worst subject in brackets, then the lag-search
+best case after the semicolon.
+
+| Cell | HSMR (one camera) | MediaPipe, one camera | MediaPipe, five cameras with the augmenter |
+|---|---|---|---|
+| pelvis.sagittal | 7.1 (10.7); 6.3 | 14.7 (18.2); 14.0 | 14.4 (18.2); 13.9 |
+| pelvis.frontal | 5.4 (6.6); 5.6 | 6.6 (9.2); 6.6 | 2.7 (3.8); 2.5 |
+| hip_r.sagittal | 20.1 (22.2); 14.4 | 30.2 (35.5); 26.1 | 14.8 (21.0); 11.3 |
+| hip_l.sagittal | 21.2 (24.0); 17.3 | 29.2 (33.5); 25.1 | 14.8 (21.5); 11.6 |
+| hip_r.frontal | 7.8 (9.7); 7.7 | 6.7 (10.3); 6.5 | 4.4 (9.2); 4.2 |
+| hip_l.frontal | 4.7 (5.5); 4.7 | 8.1 (9.2); 7.9 | 3.6 (5.2); 3.4 |
+| knee_r.sagittal | 30.3 (38.1); 16.9 | 24.8 (28.9); 16.9 | 19.3 (29.9); 9.9 |
+| knee_l.sagittal | 28.9 (35.4); 16.7 | 26.3 (30.8); 17.1 | 18.6 (27.9); 9.6 |
+| ankle_r.sagittal | 14.9 (17.8); 14.2 | 20.5 (23.4); 17.5 | 14.5 (20.0); 11.1 |
+| ankle_l.sagittal | 14.4 (16.9); 14.2 | 29.1 (33.4); 25.3 | 14.3 (18.5); 11.2 |
+| lumbar.sagittal | 9.9 (16.7) | 22.2 (29.6) | 11.2 (14.8) |
+| lumbar.frontal | 7.3 (9.9) | 12.0 (15.4) | 3.6 (7.5) |
+| pelvis_segment.sagittal | 7.1 (10.7) | 14.4 (18.2) | 14.4 (18.0) |
+| torso_segment.sagittal | 9.6 (13.5) | 14.5 (19.4) | 10.9 (14.7) |
+
+**What it shows** (description, not the pass rule):
+- **Better than MediaPipe from one camera at the pelvis, lumbar spine and hip.** HSMR's pelvis tilt (7.1°) and
+  lumbar flexion (9.9°) are the lowest of any route, five cameras included.
+- **Worse at the knee:** about 30° at lag 0. The lag-search best case is 17°, so much of that is timing, which the
+  lag 0 rule counts in full.
+- **The frontal pelvis does not pass** (5.4°, against 2.7° with five cameras).
+

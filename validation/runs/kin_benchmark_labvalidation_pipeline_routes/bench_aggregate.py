@@ -12,6 +12,7 @@
 #  - Stop rule: per subject, a squat trial (squats1, squatsAsym1; subject2 squats1 included, since the rule is about
 #    getting through) whose five-camera route gave a report and at least one repetition with no imputed frames and
 #    no missing markers. Counted for both five-camera routes (multi, multi_aug).
+# 2026-11-13: the HSMR route added (reports under <trial>/hsmr_route/session); the readings above are unchanged.
 # Args: runs_dir out_json
 import json, sys, collections
 import numpy as np
@@ -20,7 +21,8 @@ from rehabtwin import validation as V
 from rehabtwin.io_formats import read_table, to_degrees
 R, OUT = Path(sys.argv[1]), Path(sys.argv[2])
 MOC = Path.home() / "rehab-agent-data/datasets/opencap-labvalidation/mocap-ik/LabValidation_withoutVideos"
-ROUTES = ("multi", "multi_aug", "mono", "mono_aug"); TARGET = {"sagittal": 3.0, "frontal": 5.0}
+ROUTES = ("multi", "multi_aug", "mono", "mono_aug", "hsmr")
+RDIR = lambda d, r: d / "hsmr_route" / "session" if r == "hsmr" else d / r; TARGET = {"sagittal": 3.0, "frontal": 5.0}
 EXCL = ("subject2", "squats1")
 mean = lambda x: float(np.mean(x)) if len(x) else None
 def movement(t): return "walking" if t.startswith("walking") else "squat" if t.startswith("squats") else "sit-to-stand" if t.startswith("STS") else "drop jump"
@@ -32,21 +34,22 @@ for st_path in sorted(R.glob("*/*/status.json")):
         rec = dict(subject=subj, trial=trial, movement=movement(trial), route=r)
         if not s.get("inputs", {}).get("ok"):
             rows.append(dict(rec, status="not run", why=s.get("inputs", {}).get("error"))); continue
-        rep_p = d / r / "validation-report.json"
+        rep_p = RDIR(d, r) / "validation-report.json"
         if not rep_p.exists():
-            failed = [k for k, v in s.items() if isinstance(v, dict) and v.get("ok") is False and (k.startswith(r.split("_")[0]))]
+            hs = json.loads((d / "hsmr_route" / "status_hsmr.json").read_text()) if r == "hsmr" and (d / "hsmr_route" / "status_hsmr.json").exists() else s
+            failed = [k for k, v in hs.items() if isinstance(v, dict) and v.get("ok") is False and (r == "hsmr" or k.startswith(r.split("_")[0]))]
             rows.append(dict(rec, status="run, not evaluated", why="refused: " + ", ".join(failed))); continue
         v = json.loads(rep_p.read_text()); cov = v["coverage"]
         short = cov["fraction"] < cov["min_fraction"]
         cells = collections.defaultdict(float)
         for c, x in v["per_coordinate"].items():
             cells[f"{x['joint']}.{x['plane']}"] = max(cells[f"{x['joint']}.{x['plane']}"], x["rmse_deg"])
-        m = json.loads((d / r / "metrics.json").read_text())
+        m = json.loads((RDIR(d, r) / "metrics.json").read_text())
         complete = sum(1 for rp in m.get("reps", []) if not rp.get("contains_imputed_frames") and not rp.get("contains_missing_markers"))
         # lag-search best case
         best = None
         try:
-            mots = [p for p in (d / r / "opensim").glob("ik*.mot")]
+            mots = [p for p in (RDIR(d, r) / "opensim").glob("ik*.mot")]
             est = read_table(max(mots, key=lambda p: len(read_table(p).time)))
             ref_p = d / "ref_multi.mot" if r.startswith("multi") else MOC / subj / "OpenSimData/Mocap/IK" / f"{trial}.mot"
             cmp = V.compare(est, read_table(ref_p), max_lag_s=4.0)
