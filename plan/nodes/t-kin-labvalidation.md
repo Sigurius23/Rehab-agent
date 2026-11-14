@@ -177,3 +177,67 @@ best case after the semicolon.
 - **Scope:** only the multi-view routes (five cameras, with and without the augmenter) are rerun, from the same
   MediaPipe dumps, and reported beside round 0.
 
+**Fix round 1, result (2026-11-14): the stop count stays at 7.** Figures:
+`validation/results/kin_benchmark_labvalidation_round1_multiview.json`. Round 0 is unchanged beside it.
+- **The multi-view stage now passes on all 144 trials** (round 0: 89), including subject 8 and all 54 walking trials.
+  The first half of the prediction holds.
+- **Evaluated:**
+  - five cameras: 85 → 88 (walking / squat / sit-to-stand / drop jump: 1 / 15 / 18 / 51 → 44 / 15 / 18 / 11);
+  - with the augmenter: 84 → 42 (1 / 15 / 17 / 51 → 2 / 15 / 17 / 8).
+
+  Walking now gets through on five cameras. The augmenter route loses most walking and drop-jump trials at IK
+  ("no segment long enough to solve").
+- **Drop jumps got worse.** With the offsets at 0, the median reprojection error rose from 4.7 to 11.1 px and the
+  valid frames fell from 100 % to 77 %, so drop jumps mostly failed on coverage. On squats and sit-to-stand the
+  reprojection error rose from about 4.6 to 5.7 px. The round-0 sync's offsets (median largest 6–9 frames)
+  therefore improved the triangulation. The `_syncdWithMocap` videos are not frame-exact between cameras when read
+  frame by frame.
+- **Passing cells:** five cameras none (round 0: frontal pelvis); with the augmenter the frontal pelvis and the
+  frontal pelvis segment, as before.
+- **Mean RMSE over subjects, round 0 → round 1, at lag 0:**
+
+| Cell | Five cameras | Five cameras, augmenter |
+|---|---|---|
+| pelvis.sagittal | 22.6 → 19.2 | 14.4 → 10.9 |
+| pelvis.frontal | 2.6 → 3.8 | 2.7 → 2.4 |
+| hip_r.sagittal | 26.5 → 28.4 | 14.8 → 12.6 |
+| hip_l.sagittal | 26.1 → 28.4 | 14.8 → 13.0 |
+| knee_r.sagittal | 19.6 → 22.3 | 19.3 → 12.5 |
+| knee_l.sagittal | 19.2 → 24.3 | 18.6 → 12.2 |
+| ankle_r.sagittal | 13.6 → 11.4 | 14.5 → 9.3 |
+| ankle_l.sagittal | 13.4 → 11.7 | 14.3 → 9.5 |
+| lumbar.sagittal | 36.2 → 30.2 | 11.2 → 9.8 |
+
+  With the augmenter, the sagittal errors fell (the knee from about 19° to 12°), but on fewer and different trials:
+  42 evaluated, mostly squats and sit-to-stand.
+- **Lags:** on squats, sit-to-stand and drop jumps the median best lag moved by at most about 2.5 frames, in line
+  with the prediction. Walking, newly evaluated, has a median best lag of −16 to −20 frames, which round 0 could
+  not show.
+- **Stop count: 7** on both routes (3, 4, 5, 7, 9, 10, 11). Subject 8's `squats1` is still refused at
+  IK, and every repetition of its `squatsAsym1` contains imputed frames. Subject 2's repetitions all contain imputed
+  frames, as before. One round of fixes is left, by 2026-12-07.
+
+**Post hoc: HSMR's lag (2026-11-14).** This was looked into after the results; nothing in the pipeline was changed.
+- **The cause is the video decoding, not the adapter or the processing.** Many `_syncdWithMocap` videos have a
+  timestamp gap at the start. Their container lists more frames than are stored: 0–11 more, median 6, the same
+  number on all five cameras of a trial.
+  - OpenCV, which the MediaPipe adapter uses, reads the stored frames one after another.
+  - imageio's FFmpeg reader, which HSMR's demo uses, keeps a constant frame rate and fills the gap with
+    duplicated frames.
+
+  On subject 10's `DJ1`, for example, the container lists 149 frames and 138 are stored. imageio returns 149,
+  with 11 duplicates at the start, so from there on each HSMR frame is 11 frames later than the same picture in
+  MediaPipe.
+- **Across 57 trials other than walking,** HSMR's best lag minus MediaPipe's equals the gap: slope 0.99 per frame,
+  r = 0.97. The adapter sets time as frame/fps, and processing filters with a zero-lag Butterworth (`filtfilt`),
+  the same for both routes.
+- **Which clock the motion capture follows is not settled.** HSMR's lag rises with the gap (slope 0.40) and
+  MediaPipe's falls with it (−0.59), both only weakly (r = 0.28 and −0.40). At gap 0 both are within about 2–3
+  frames of lag 0.
+- **Within each trial the cameras share one gap,** so it does not explain the camera offsets that the round-0
+  multi-view sync found.
+- **Possible fixes, for the owner to decide:**
+  - read HSMR's input frames with the same decoder as MediaPipe;
+  - or drop the gap-filling duplicates;
+  - or settle first which clock the motion capture follows.
+

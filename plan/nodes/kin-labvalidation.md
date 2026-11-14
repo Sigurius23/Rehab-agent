@@ -101,3 +101,7 @@ Laptop (24 GB, compute capability 12.0).
   licence file, so it is treated as all rights reserved. Its full code and environments are not public yet ("will
   be uploaded to a cloud drive later"). It was built on a 96 GB GPU and needs at least 24 GB.
 
+**Fix round 1 of 2 (2026-11-14,** [[t-kin-labvalidation]]**):** with the multi-view offsets set to 0, the stop count
+stays at 7. The multi-view stage passed on every trial, but the reprojection error rose and drop jumps lost
+coverage. One round is left before 2026-12-07; the owner decides it.
+
