@@ -93,7 +93,7 @@ Laptop (24 GB, compute capability 12.0).
     (`hsmr_to_skelseq.py`) and `rehabtwin process` ran. The person was detected in every frame, and the whole
     trial solved as one segment. Five squat repetitions were found, none with imputed frames or missing markers;
     the mean IK marker error was 28.6 mm. The route runs end to end.
-- **OpenCap Monocular (PolyForm Noncommercial): cloned at 94b1122, not installed.** Its recipe pins torch 2.1.2+cu118
+- **OpenCap Monocular (PolyForm Noncommercial): environment installed on 2026-11-14 (see below); first cloned at 94b1122.** Originally: Its recipe pins torch 2.1.2+cu118
   and a prebuilt mmcv-full 1.7.2, and neither supports compute capability 12.0. It would need torch ≥ 2.7 and
   mmcv-full compiled from source, and no CUDA compiler is installed. It also needs the SMPL model, which is on the
   laptop (SMPL v1.1.0, in the owner's Drive exports), and WHAM's weights.
@@ -104,4 +104,27 @@ Laptop (24 GB, compute capability 12.0).
 **Fix round 1 of 2 (2026-11-14,** [[t-kin-labvalidation]]**):** with the multi-view offsets set to 0, the stop count
 stays at 7. The multi-view stage passed on every trial, but the reprojection error rose and drop jumps lost
 coverage. One round is left before 2026-12-07; the owner decides it.
+
+**OpenCap Monocular's environment (2026-11-14, lab laptop, outside the repository): installed and checked.**
+The environment only: no weights downloaded, nothing run on any trial.
+- **Built by** `validation/runs/kin_benchmark_labvalidation_pipeline_routes/build_opencap_mono.sh` into
+  `envs/opencap-mono`. It ran at the lowest CPU priority beside the HSMR round-2 run, and the full package lists
+  are in `envs/opencap-mono.{conda,freeze}.txt`.
+- **Versions:**
+  - Python 3.9 with OpenSim 4.4 and numpy 1.21.6, as the recipe specifies;
+  - a CUDA 12.8 toolkit inside the environment, with no system change;
+  - PyTorch 2.7.1+cu128, since the recipe's 2.1.2 does not support compute capability 12.0;
+  - mmcv-full 1.7.2 compiled from source with CUDA ops for 12.0;
+  - ViTPose (mmpose 0.24.0) at d521645, and SLAHMR.
+- **Where it departs from the recipe, for the RTX 5090 and Ubuntu 26.04:**
+  - PyTorch 2.7.1 instead of 2.1.2;
+  - mmcv-full compiled, not prebuilt;
+  - GCC 13 from conda-forge for that compile, because CUDA 12.8 accepts GCC up to 14 and the system's is newer;
+  - **one local patch** (`vitpose_local.patch`): mmpose's version check allowed mmcv up to 1.5.0. It now allows
+    1.7.2, the version the project's own recipe and Dockerfile install. This changes only the check.
+- **Check:** the recipe's own import check passes ("Installation successful."), and CUDA works on the GPU.
+- **Not done yet:**
+  - WHAM's trained weights, which are Google Drive downloads in `WHAM/fetch_demo_data.sh`;
+  - placing the owner's SMPL files. The project's own fetch script asks for the SMPL login, so it is not used;
+  - a smoke test on a seen trial.
 
