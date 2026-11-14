@@ -241,3 +241,18 @@ best case after the semicolon.
   - or drop the gap-filling duplicates;
   - or settle first which clock the motion capture follows.
 
+**Fix round 2 of 2 (owner, 2026-11-14; recorded before the rerun).**
+- **Multi-view:** back to round 0's `--sync` offsets, since round 1 showed they are real: the reprojection error
+  rose at offset 0. The routes are rerun from the same MediaPipe dumps with round 0's settings.
+- **HSMR:** it reads exactly the frames stored in each video, the frames OpenCV returns, so the duplicated gap
+  frames are gone. This is justified by the frame counts, not by any error. HSMR's and the pipeline's code are
+  unchanged. Instead, each Cam2 video's stored frames, read with OpenCV in order, are copied losslessly (FFV1, same
+  fps) to a temporary video, and HSMR and the adapter run on that copy. Before each run, a check confirms that
+  HSMR's reader (imageio/FFmpeg) returns the same number of frames, pixel-identical to OpenCV's. Tested on
+  subject 10's `DJ1`: 149 frames listed, 138 stored; the copy reads back as 138, identical.
+- **Prediction:** HSMR's best lag on squats, sit-to-stand and drop jumps moves within ±2 frames of MediaPipe's, and
+  its knee error at lag 0 falls toward its best case. The stop count stays at 7, because subjects 2 and 8 fail on
+  imputed frames.
+- **Unchanged:** the pass rule, lag 0, the definition of a complete repetition, and the stop count.
+- **Reported:** HSMR and the multi-view routes, beside rounds 0 and 1, with the stop count.
+
