@@ -166,3 +166,14 @@ best case after the semicolon.
   lag 0 rule counts in full.
 - **The frontal pelvis does not pass** (5.4°, against 2.7° with five cameras).
 
+**Fix round 1 of 2 under the stop rule (owner, 2026-11-14; recorded before the rerun).**
+- **Change:** the `_syncdWithMocap` videos are documented as synced, so the multi-view routes take every camera's
+  offset as 0: `mp-multiview` without `--sync`, and no start trim, so the reference is not shifted. This is
+  justified by the dataset's documentation. Without `--sync`, `mp-multiview` pairs frame k across the cameras
+  from frame 0.
+- **Prediction:** subject 8 and most walking trials pass the multi-view stage. The lags are not predicted to change.
+  The round-0 best lags vary in sign between routes on the same video, so they mostly reflect pose error.
+- **Unchanged:** the pass rule, lag 0, the definition of a complete repetition, and the stop count.
+- **Scope:** only the multi-view routes (five cameras, with and without the augmenter) are rerun, from the same
+  MediaPipe dumps, and reported beside round 0.
+
