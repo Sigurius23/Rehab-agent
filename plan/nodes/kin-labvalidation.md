@@ -128,3 +128,6 @@ The environment only: no weights downloaded, nothing run on any trial.
   - placing the owner's SMPL files. The project's own fetch script asks for the SMPL login, so it is not used;
   - a smoke test on a seen trial.
 
+**Stop rule triggered (2026-11-15).** After two rounds of fixes, the stop count is 7, under 8. The pipeline's routes
+are stopped here and reported ([[t-kin-labvalidation]]); the owner decides the next step.
+

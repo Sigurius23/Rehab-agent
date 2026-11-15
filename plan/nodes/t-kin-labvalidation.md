@@ -256,3 +256,35 @@ best case after the semicolon.
 - **Unchanged:** the pass rule, lag 0, the definition of a complete repetition, and the stop count.
 - **Reported:** HSMR and the multi-view routes, beside rounds 0 and 1, with the stop count.
 
+**Fix round 2, result (2026-11-15): the stop count stays at 7, so the stop rule is triggered.** Figures:
+`validation/results/kin_benchmark_labvalidation_round2.json`.
+- **Multi-view routes,** back on round 0's `--sync`: they reproduce round 0 exactly (the same dumps and settings).
+  Five cameras evaluate 85 trials, and 84 with the augmenter; the frontal pelvis passes, as in round 0.
+- **HSMR on the stored frames:** all 144 trials with video ran, and the frame check passed on every one; 143 are
+  evaluated. No cell passes.
+- **The prediction:**
+  - **HSMR's lag: holds.** On squats, sit-to-stand and drop jumps (57 trials), HSMR's best lag minus MediaPipe's
+    one-camera best lag moved from a median of +5.0 frames to 0.0. 88 % of trials are now within ±2 frames,
+    against 21 % before. The decoder difference was the cause.
+  - **HSMR's knee: only a small part holds.** At lag 0 the knee fell by about 1.5° (right 30.3° → 28.8°, left
+    28.9° → 27.3°). That is still far above the best case (about 16–17°), so most of the knee's gap between lag 0
+    and the best case is not the decoder.
+  - **The stop count staying at 7: holds.** The same subjects count (3, 4, 5, 7, 9, 10 and 11). Subjects 2 and 8
+    fail on imputed frames (subject 8's `squats1` is refused at IK), and subject 6 has no videos.
+
+| HSMR cell | Round 0, lag 0 | Round 2, lag 0 | Round 2, best case |
+|---|---|---|---|
+| pelvis.sagittal | 7.1 | 7.0 | 6.3 |
+| hip_r.sagittal | 20.1 | 19.7 | 14.1 |
+| hip_l.sagittal | 21.2 | 20.7 | 17.1 |
+| knee_r.sagittal | 30.3 | 28.8 | 15.9 |
+| knee_l.sagittal | 28.9 | 27.3 | 16.9 |
+| ankle_r.sagittal | 14.9 | 14.7 | 14.4 |
+| ankle_l.sagittal | 14.4 | 14.0 | 14.4 |
+| lumbar.sagittal | 9.9 | 10.6 | None |
+| pelvis.frontal | 5.4 | 5.5 | 5.7 |
+
+**The stop rule is triggered** ([[kin-labvalidation]]). After the pilot and two rounds of fixes, the five-camera
+route gives a complete squat repetition through the pipeline's gates for 7 subjects, fewer than the 8 required,
+before 2026-12-07. Per the rule: stop and report. The owner decides what follows.
+
