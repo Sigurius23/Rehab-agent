@@ -1,0 +1,79 @@
+{
+ "what": "POST HOC (owner, 2026-11-15): lag-search best lag (frames; + = shift added to the reference) regressed on the start gap (frames listed minus stored), round 2, walking and subject2 squats1 left out",
+ "gap_frames": {
+  "n": 90,
+  "median": 5.5
+ },
+ "routes": {
+  "multi": {
+   "all": {
+    "n": 84,
+    "slope": -0.06,
+    "intercept_frames": -5.63,
+    "r": -0.01
+   },
+   "aliases out (|lag| <= 0.3 s)": {
+    "n": 68,
+    "slope": -0.81,
+    "intercept_frames": 3.09,
+    "r": -0.54
+   }
+  },
+  "multi_aug": {
+   "all": {
+    "n": 83,
+    "slope": 0.06,
+    "intercept_frames": -10.12,
+    "r": 0.01
+   },
+   "aliases out (|lag| <= 0.3 s)": {
+    "n": 69,
+    "slope": -0.89,
+    "intercept_frames": 4.14,
+    "r": -0.59
+   }
+  },
+  "hsmr": {
+   "all": {
+    "n": 89,
+    "slope": 0.7,
+    "intercept_frames": -0.44,
+    "r": 0.08
+   },
+   "aliases out (|lag| <= 0.3 s)": {
+    "n": 77,
+    "slope": -0.73,
+    "intercept_frames": 2.65,
+    "r": -0.5
+   }
+  },
+  "mono": {
+   "all": {
+    "n": 89,
+    "slope": -1.72,
+    "intercept_frames": 0.57,
+    "r": -0.1
+   },
+   "aliases out (|lag| <= 0.3 s)": {
+    "n": 61,
+    "slope": -0.6,
+    "intercept_frames": 1.73,
+    "r": -0.4
+   }
+  },
+  "mono_aug": {
+   "all": {
+    "n": 50,
+    "slope": -1.61,
+    "intercept_frames": 15.34,
+    "r": -0.09
+   },
+   "aliases out (|lag| <= 0.3 s)": {
+    "n": 29,
+    "slope": -0.38,
+    "intercept_frames": 2.07,
+    "r": -0.23
+   }
+  }
+ }
+}

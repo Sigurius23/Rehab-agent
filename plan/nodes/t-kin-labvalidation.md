@@ -288,3 +288,28 @@ best case after the semicolon.
 route gives a complete squat repetition through the pipeline's gates for 7 subjects, fewer than the 8 required,
 before 2026-12-07. Per the rule: stop and report. The owner decides what follows.
 
+**Post hoc, changing no result (owner, 2026-11-15): best lag against the start gap.** For every route in round 2,
+each trial's lag-search best lag (in frames) is regressed on its start gap. The gap is the number of frames the
+video's container lists minus the number stored (0–11, median 5.5). Walking and subject 2's `squats1` are left out.
+The one-camera MediaPipe routes were not rerun in round 2, so their round-0 runs are used. Figures:
+`validation/results/kin_benchmark_labvalidation_posthoc_lag_vs_gap.json`.
+
+| Route | n | Slope | r | n, all lags | Slope, all lags | r, all lags |
+|---|---|---|---|---|---|---|
+| Five cameras | 68 | -0.81 | -0.54 | 84 | -0.06 | -0.01 |
+| Five cameras, augmenter | 69 | -0.89 | -0.59 | 83 | +0.06 | +0.01 |
+| HSMR (stored frames) | 77 | -0.73 | -0.50 | 89 | +0.70 | +0.08 |
+| One camera | 61 | -0.60 | -0.40 | 89 | -1.72 | -0.10 |
+| One camera, augmenter | 29 | -0.38 | -0.23 | 50 | -1.61 | -0.09 |
+
+The first three columns leave out the aliases: best lags beyond ±0.3 s, one repetition or more away.
+- **The sign:** the lag is the shift added to the reference's clock. A slope of −1 means each frame of gap makes the
+  estimate one frame early against the motion capture, which is what happens if the motion capture follows the
+  videos' timestamps and the routes read the stored frames one after another. HSMR now reads the stored frames too.
+- **Without the aliases,** the slope is −0.73 to −0.89 on the five-camera routes and HSMR (r −0.50 to −0.59). It is
+  weaker on one camera (−0.60, r −0.40) and with one camera and the augmenter (−0.38, r −0.23, n 29). With the
+  aliases in, there is no relation on any route.
+- **So the slope is not near 1 on every route,** and no rule is proposed. On the three strongest routes it is close
+  to −1, which points to the motion capture following the videos' timestamps. A direct check would settle it: time
+  each stored frame by its own timestamp and compare.
+

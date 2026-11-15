@@ -131,3 +131,8 @@ The environment only: no weights downloaded, nothing run on any trial.
 **Stop rule triggered (2026-11-15).** After two rounds of fixes, the stop count is 7, under 8. The pipeline's routes
 are stopped here and reported ([[t-kin-labvalidation]]); the owner decides the next step.
 
+**The owner's decision on the stop (2026-11-15,** [[d-kin-benchmark-stop]]**):** report the benchmark as it stands.
+The pass rule and the definition of a complete repetition stay unchanged. The reported result is
+[[t-kin-labvalidation]] with rounds 0–2: the pipeline's four routes and HSMR, at lag 0. No route passes beyond the
+frontal pelvis, and the stop count is 7.
+

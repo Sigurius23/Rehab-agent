@@ -2,7 +2,7 @@
 
 # Plan map
 
-170 notes: 17 goals, 42 steps, 34 tests, 52 ideas, 25 decisions.
+171 notes: 17 goals, 42 steps, 34 tests, 52 ideas, 26 decisions.
 
 ## The engine
 
@@ -585,6 +585,7 @@ Open steps whose dependencies are done and that no open decision blocks.
 | [[d-dxa-optional]] | Does the twin need a DXA scan? | No: a DXA scan gives the best generation when the person has one, but the system must work without it | owner's message of 2026-10-26 |
 | [[d-dynamic-check-arm-a]] | Arm A failed the pilot gate under settings v3: amend the contact, report arm A as not solvable with the assumed contact, or pause until the coupon test? | Option 2: arm A is reported as not solvable with the assumed contact; the LabValidation dynamic comparison is closed, and H1 and H2 are not evaluated | owner, 2026-11-10 |
 | [[d-first-build-platform]] | Which platform does the first build target? | Windows first; ideally, once the twin exists, a phone's sensors alone should be enough | owner's message of 2026-10-24 |
+| [[d-kin-benchmark-stop]] | The stop rule triggered after two rounds of fixes (7 of 10 subjects): report as it stands, revise a rule, or go on? | Report the benchmark as it stands; the pass rule and the definition of a complete repetition stay unchanged | owner, 2026-11-15 |
 | [[d-shoe-cad-map-files]] | Put the shoe CAD capability map's files (feature table and page) into the repository? | Yes: committed to shoe-cad-map/, with its generator | owner, 2026-11-09 |
 
 ## Ideas
