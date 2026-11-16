@@ -149,9 +149,12 @@ What this shows:
    but not its tilt, so IK trades pelvis tilt, hip flexion and lumbar flexion freely. It settled on
    up to 95° of pelvis tilt with 56° of lumbar *extension*. The synthetic round trip (§1) could not
    show this, because it uses 105 dense SKEL markers.
-2. **OpenCap's LSTM augmenter fixes it.** It predicts ASIS/PSIS, epicondyles and malleoli from the
-   keypoints, height and mass. With 5 cameras and the marker correction (point 6), the trunk then agrees
-   within 2.6°, pelvis tilt within 2.8°, lumbar within 3.9°, knee FPPA R within 5.2°, and ankle within 5.4°.
+2. **OpenCap's LSTM augmenter brings it into agreement with OpenCap.** It predicts ASIS/PSIS, epicondyles
+   and malleoli from the keypoints, height and mass. With 5 cameras and the marker correction (point 6), the
+   trunk then agrees with OpenCap within 2.6°, pelvis tilt within 2.8°, lumbar within 3.9°, knee FPPA R within
+   5.2°, and ankle within 5.4°. **Against marker motion capture it does not fix the pelvis** (corrected
+   2026-11-16): on the same trial pelvis tilt is 9.2° off (section 4b), and over the LabValidation benchmark
+   14.4° (`plan/nodes/t-kin-labvalidation.md`).
 3. **Pose2Sim's weak L5/S1 prior hurt here.** OpenCap's IK has none. With the prior, pelvis tilt was
    13.0° and hip flexion 20.3°; without it, 6.0° and 13.9° (both before the marker correction).
    `mediapipe_lstm_pose2sim` now leaves the prior out.
@@ -220,9 +223,11 @@ Two phones about 80° apart, both seeing the front of the body, matched the five
 the knee dropouts were bridged. That hides the bottom of every squat, and the pipeline now refuses it.
 Three phones (−40°, 0°, +40°) kept every keypoint and match five phones on most signals. Two near-side
 views 130° apart lose the trunk and lumbar even when bridged. These are differences against a reference
-built from all five phones, so they favour subsets of the same cameras. For MediaPipe this supports
-`docs/hardware.md`: three phones 40° apart facing the subject. Two phones are enough only when both
-keep the knees in view at full depth.
+built from all five phones, so they favour subsets of the same cameras. For MediaPipe this suggested
+three phones 40° apart facing the subject, and two only when both keep the knees in view at full depth.
+That is agreement with OpenCap on one trial, not accuracy (corrected 2026-11-16): against marker motion
+capture the MediaPipe routes miss by 14–19° at the hip and knee even with five phones, so no camera layout
+has been shown to be accurate with this front end.
 
 One trial and one subject, against a markerless reference: nothing here approves a use. Section 4b compares
 the same trial with marker motion capture, and the errors there are larger in most signals. It does say

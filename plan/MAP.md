@@ -2,24 +2,24 @@
 
 # Plan map
 
-170 notes: 17 goals, 42 steps, 34 tests, 52 ideas, 25 decisions.
+180 notes: 17 goals, 46 steps, 38 tests, 52 ideas, 27 decisions.
 
 ## The engine
 
 ```mermaid
 flowchart TB
   r(["A full-body digital twin that<br/>personalises to each person and adapts<br/>as they change"]):::goal_open
-  p0(["Sense: measure the person's<br/>movement, forces and body<br/><i>1 done · 7 open · 1 blocked · 10 ideas · 3 decisions</i>"]):::goal_open
+  p0(["Sense: measure the person's<br/>movement, forces and body<br/><i>1 done · 8 open · 1 blocked · 10 ideas · 3 decisions</i>"]):::goal_open
   r --> p0
-  p1(["Personalise: the person's own<br/>bones, shape, mass and muscles<br/><i>5 done · 4 open · 1 blocked · 10 ideas · 1 decision</i>"]):::goal_open
+  p1(["Personalise: the person's own<br/>bones, shape, mass and muscles<br/><i>5 done · 5 open · 1 blocked · 10 ideas · 1 decision</i>"]):::goal_open
   r --> p1
   p2(["Simulate: joint loads, muscle<br/>forces and contact for this<br/>body<br/><i>4 done · 7 open · 24 ideas · 1 decision</i>"]):::goal_open
   r --> p2
   p3(["Adapt: the twin follows the<br/>person over time<br/><i>2 done · 2 open · 1 idea</i>"]):::goal_open
   r --> p3
-  p4(["Act: feedback and assistance<br/>from the twin<br/><i>1 done · 2 open · 2 blocked · 4 ideas · 4 decisions</i>"]):::goal_open
+  p4(["Act: feedback and assistance<br/>from the twin<br/><i>1 done · 3 open · 2 blocked · 4 ideas · 4 decisions</i>"]):::goal_open
   r --> p4
-  p5(["How we work: tests, CI and<br/>standing rules<br/><i>2 done · 1 idea</i>"]):::goal_open
+  p5(["How we work: tests, CI and<br/>standing rules<br/><i>2 done · 1 open · 1 idea</i>"]):::goal_open
   r --> p5
   classDef goal_open fill:#e1d5f5,stroke:#555,color:#111
   classDef goal_done fill:#c8e6c9,stroke:#555,color:#111
@@ -63,49 +63,51 @@ flowchart LR
   n14>"Pain during the movement, recorded<br/>with the session"]:::idea_new
   n15>"Phone sensors alone, once the twin<br/>is built"]:::idea_new
   n16>"Higher-resolution T1 sole<br/>candidate"]:::idea_new
-  n17["Video kinematics on OpenCap<br/>LabValidation against marker<br/>motion capture<br/>tests ✓2 ✗2"]:::step_open
-  n18["One volunteer, one exercise,<br/>recorded with our own hardware<br/>tests ○1"]:::step_open
-  n19(["Sense: measure the person's<br/>movement, forces and body"]):::goal_open
-  n20["Boards designed, routed and<br/>checked: EU 37, 42, 46 and a<br/>personal foot, both sides<br/>tests ✓1"]:::step_done
-  n21["The sensor film's measured<br/>response (coupon test)<br/>tests ○1"]:::step_open
-  n22["Flex boards fabricated"]:::step_blocked
-  n23["A printed prototype tried on a<br/>real foot<br/>tests ○1"]:::step_open
-  n24["Boards and the self-test model<br/>rebuild identically on another<br/>machine<br/>tests ○1"]:::step_open
-  n25["SlimeVR posture signals against<br/>motion capture<br/>tests ○1"]:::step_open
-  n26["A clinician reviews the cue rules,<br/>per movement<br/><i>(Act)</i>"]:::external
-  n27["Muscle and joint-load numbers from<br/>measured ground forces<br/>tests ○1<br/><i>(Simulate)</i>"]:::external
-  n28["Foot-insole contact against an<br/>in-shoe sensor (stage C)<br/>tests ○1<br/><i>(Simulate)</i>"]:::external
-  n0 -. blocks .-> n18
-  n1 -. blocks .-> n22
-  n2 -. blocks .-> n23
-  n2 -. blocks .-> n21
+  n17["Our back end on OpenCap's own<br/>markers<br/>tests ○1"]:::step_open
+  n18["Video kinematics on OpenCap<br/>LabValidation against marker<br/>motion capture<br/>tests ✓2 ✗2"]:::step_open
+  n19["One volunteer, one exercise,<br/>recorded with our own hardware<br/>tests ○1"]:::step_open
+  n20(["Sense: measure the person's<br/>movement, forces and body"]):::goal_open
+  n21["Boards designed, routed and<br/>checked: EU 37, 42, 46 and a<br/>personal foot, both sides<br/>tests ✓1"]:::step_done
+  n22["The sensor film's measured<br/>response (coupon test)<br/>tests ○1"]:::step_open
+  n23["Flex boards fabricated"]:::step_blocked
+  n24["A printed prototype tried on a<br/>real foot<br/>tests ○1"]:::step_open
+  n25["Boards and the self-test model<br/>rebuild identically on another<br/>machine<br/>tests ○1"]:::step_open
+  n26["SlimeVR posture signals against<br/>motion capture<br/>tests ○1"]:::step_open
+  n27["A clinician reviews the cue rules,<br/>per movement<br/><i>(Act)</i>"]:::external
+  n28["Muscle and joint-load numbers from<br/>measured ground forces<br/>tests ○1<br/><i>(Simulate)</i>"]:::external
+  n29["Foot-insole contact against an<br/>in-shoe sensor (stage C)<br/>tests ○1<br/><i>(Simulate)</i>"]:::external
+  n0 -. blocks .-> n19
+  n1 -. blocks .-> n23
+  n2 -. blocks .-> n24
+  n2 -. blocks .-> n22
   n4 --> n3
-  n18 -. needed by .-> n3
-  n19 --> n4
-  n19 --> n5
+  n19 -. needed by .-> n3
+  n20 --> n4
+  n20 --> n5
   n4 --> n6
   n7 -.-o n4
-  n8 -.-o n19
-  n9 -.-o n19
-  n10 -.-o n19
+  n8 -.-o n20
+  n9 -.-o n20
+  n10 -.-o n20
   n11 -.-o n4
   n12 -.-o n6
   n13 -.-o n5
-  n14 -.-o n19
-  n15 -.-o n19
+  n14 -.-o n20
+  n15 -.-o n20
   n16 -.-o n6
   n5 --> n17
   n5 --> n18
-  n6 --> n20
+  n5 --> n19
   n6 --> n21
   n6 --> n22
-  n23 -. needed by .-> n22
   n6 --> n23
+  n24 -. needed by .-> n23
   n6 --> n24
-  n5 --> n25
-  n17 -. needed by .-> n26
-  n3 -. needed by .-> n27
-  n21 -. needed by .-> n28
+  n6 --> n25
+  n5 --> n26
+  n18 -. needed by .-> n27
+  n3 -. needed by .-> n28
+  n22 -. needed by .-> n29
   classDef goal_open fill:#e1d5f5,stroke:#555,color:#111
   classDef goal_done fill:#c8e6c9,stroke:#555,color:#111
   classDef step_open fill:#ffffff,stroke:#555,color:#111
@@ -152,20 +154,21 @@ flowchart LR
   n18["Body surface from depth, and mass<br/>distribution from DXA"]:::step_done
   n19(["Personalise: the person's own<br/>bones, shape, mass and muscles"]):::goal_open
   n20["Recorded anatomy changes the<br/>model's geometry: alignment,<br/>anteversion, torsion, leg length<br/>tests ○1"]:::step_open
-  n21["Torsion, anteversion and<br/>personalised bone geometry as<br/>inferred values with provenance<br/>and uncertainty<br/>tests ○1"]:::step_open
-  n22["A personalised multi-segment foot,<br/>fitted separately for each foot<br/>tests ○1"]:::step_open
-  n23["First Tier-A subject: a<br/>personalised model from MRI or CT"]:::step_blocked
-  n24["Predict muscle and fat change from<br/>what and when the person eats<br/>tests ○1<br/><i>(Adapt)</i>"]:::external
-  n0 -. blocks .-> n23
-  n22 --> n1
+  n21["Test the central bet: does a<br/>personalised model make one camera<br/>good enough?<br/>tests ○1"]:::step_open
+  n22["Torsion, anteversion and<br/>personalised bone geometry as<br/>inferred values with provenance<br/>and uncertainty<br/>tests ○1"]:::step_open
+  n23["A personalised multi-segment foot,<br/>fitted separately for each foot<br/>tests ○1"]:::step_open
+  n24["First Tier-A subject: a<br/>personalised model from MRI or CT"]:::step_blocked
+  n25["Predict muscle and fat change from<br/>what and when the person eats<br/>tests ○1<br/><i>(Adapt)</i>"]:::external
+  n0 -. blocks .-> n24
+  n23 --> n1
   n19 --> n2
   n19 --> n3
   n4 -.-o n3
   n5 -.-o n2
   n6 -.-o n3
   n7 -.-o n3
-  n8 -.-o n22
-  n9 -.-o n22
+  n8 -.-o n23
+  n9 -.-o n23
   n10 -.-o n3
   n11 -.-o n3
   n12 -.-o n3
@@ -178,9 +181,10 @@ flowchart LR
   n3 --> n20
   n3 --> n21
   n3 --> n22
-  n2 --> n23
-  n16 -. needed by .-> n24
-  n18 -. needed by .-> n24
+  n3 --> n23
+  n2 --> n24
+  n16 -. needed by .-> n25
+  n18 -. needed by .-> n25
   classDef goal_open fill:#e1d5f5,stroke:#555,color:#111
   classDef goal_done fill:#c8e6c9,stroke:#555,color:#111
   classDef step_open fill:#ffffff,stroke:#555,color:#111
@@ -362,40 +366,42 @@ flowchart LR
   n0{{"D-03: Clinical acceptance<br/>thresholds: adopt<br/>docs/accuracy.md as is, or<br/>clinician-adjusted per<br/>movement?"}}:::decision_open
   n1{{"D-05: Who owns exoskeleton<br/>safety, with what risk<br/>assessment?"}}:::decision_open
   n2{{"D-06: Patient-facing surface?"}}:::decision_open
-  n3["A clinician reviews the cue rules,<br/>per movement"]:::step_blocked
-  n4{{"d-suit-bench-hardware: Buy one<br/>ESP32 and vibration motors for<br/>the BLE bench test?"}}:::decision_open
-  n5["Predictive simulation of<br/>assistance for the person's body<br/>tests ○1"]:::step_open
-  n6["An exoskeleton powered near a<br/>person"]:::step_blocked
-  n7["Ideal assistive device sizing<br/>(muscles --assist)"]:::step_done
-  n8(["Clinician-authored feedback,<br/>switched on only where validated"]):::goal_open
-  n9(["Exoskeleton assistance sized and<br/>tuned from the person's twin"]):::goal_open
-  n10(["Haptic cues reach the body<br/>reliably"]):::goal_open
-  n11>"The validation evidence as an<br/>assurance case"]:::idea_new
-  n12>"Exercise recommendations from the<br/>person's twin"]:::idea_new
-  n13>"The knee's projection angle only<br/>where it is well conditioned"]:::idea_new
-  n14>"Personalised footwear from the<br/>foot scan: last, sole and five-toe<br/>shoe"]:::idea_new
-  n15(["Act: feedback and assistance from<br/>the twin"]):::goal_open
-  n16["BLE write to SenseShift on a bench<br/>ESP32<br/>tests ○1"]:::step_open
-  n17["Video kinematics on OpenCap<br/>LabValidation against marker<br/>motion capture<br/>tests ✓2 ✗2<br/><i>(Sense)</i>"]:::external
-  n0 -. blocks .-> n3
-  n1 -. blocks .-> n6
-  n2 -. blocks .-> n3
-  n8 --> n3
-  n17 -. needed by .-> n3
-  n4 -. blocks .-> n16
-  n9 --> n5
-  n7 -. needed by .-> n5
-  n9 --> n6
-  n5 -. needed by .-> n6
-  n9 --> n7
-  n15 --> n8
-  n15 --> n9
-  n15 --> n10
-  n11 -.-o n8
-  n12 -.-o n15
-  n13 -.-o n8
-  n14 -.-o n15
-  n10 --> n16
+  n3["A real-time path from capture to<br/>cue<br/>tests ○1"]:::step_open
+  n4["A clinician reviews the cue rules,<br/>per movement"]:::step_blocked
+  n5{{"d-suit-bench-hardware: Buy one<br/>ESP32 and vibration motors for<br/>the BLE bench test?"}}:::decision_open
+  n6["Predictive simulation of<br/>assistance for the person's body<br/>tests ○1"]:::step_open
+  n7["An exoskeleton powered near a<br/>person"]:::step_blocked
+  n8["Ideal assistive device sizing<br/>(muscles --assist)"]:::step_done
+  n9(["Clinician-authored feedback,<br/>switched on only where validated"]):::goal_open
+  n10(["Exoskeleton assistance sized and<br/>tuned from the person's twin"]):::goal_open
+  n11(["Haptic cues reach the body<br/>reliably"]):::goal_open
+  n12>"The validation evidence as an<br/>assurance case"]:::idea_new
+  n13>"Exercise recommendations from the<br/>person's twin"]:::idea_new
+  n14>"The knee's projection angle only<br/>where it is well conditioned"]:::idea_new
+  n15>"Personalised footwear from the<br/>foot scan: last, sole and five-toe<br/>shoe"]:::idea_new
+  n16(["Act: feedback and assistance from<br/>the twin"]):::goal_open
+  n17["BLE write to SenseShift on a bench<br/>ESP32<br/>tests ○1"]:::step_open
+  n18["Video kinematics on OpenCap<br/>LabValidation against marker<br/>motion capture<br/>tests ✓2 ✗2<br/><i>(Sense)</i>"]:::external
+  n0 -. blocks .-> n4
+  n1 -. blocks .-> n7
+  n2 -. blocks .-> n4
+  n16 --> n3
+  n9 --> n4
+  n18 -. needed by .-> n4
+  n5 -. blocks .-> n17
+  n10 --> n6
+  n8 -. needed by .-> n6
+  n10 --> n7
+  n6 -. needed by .-> n7
+  n10 --> n8
+  n16 --> n9
+  n16 --> n10
+  n16 --> n11
+  n12 -.-o n9
+  n13 -.-o n16
+  n14 -.-o n9
+  n15 -.-o n16
+  n11 --> n17
   classDef goal_open fill:#e1d5f5,stroke:#555,color:#111
   classDef goal_done fill:#c8e6c9,stroke:#555,color:#111
   classDef step_open fill:#ffffff,stroke:#555,color:#111
@@ -421,13 +427,15 @@ flowchart LR
 
 ```mermaid
 flowchart LR
-  n0(["How we work: tests, CI and<br/>standing rules"]):::goal_open
-  n1>"EU compliance before any device<br/>leaves the lab"]:::idea_new
-  n2["CI runs every test suite that<br/>needs no external files<br/>tests ✓1"]:::step_done
-  n3["Standing rules for agent sessions<br/>in CLAUDE.md<br/>tests ○1"]:::step_done
-  n1 -.-o n0
-  n0 --> n2
-  n0 --> n3
+  n0["The pipeline runs on Windows<br/>tests ○1"]:::step_open
+  n1(["How we work: tests, CI and<br/>standing rules"]):::goal_open
+  n2>"EU compliance before any device<br/>leaves the lab"]:::idea_new
+  n3["CI runs every test suite that<br/>needs no external files<br/>tests ✓1"]:::step_done
+  n4["Standing rules for agent sessions<br/>in CLAUDE.md<br/>tests ○1"]:::step_done
+  n1 --> n0
+  n2 -.-o n1
+  n1 --> n3
+  n1 --> n4
   classDef goal_open fill:#e1d5f5,stroke:#555,color:#111
   classDef goal_done fill:#c8e6c9,stroke:#555,color:#111
   classDef step_open fill:#ffffff,stroke:#555,color:#111
@@ -465,10 +473,12 @@ flowchart LR
 - D-09: open decision: SKEL/SMPL licensing for anything beyond research?
 - D-10: open decision: Gravity reference for monocular captures?
 - D-11: open decision: Monocular front-end: HSMR/SKEL, OpenCap Monocular or SAM4Dcap?
+- d-budget-and-time: open decision: What budget is there for hardware and services, and how many laptop hours a week can the project count on?
 - d-commercial-route: open decision: Which commercialisation and licensing route does the project take?
 - d-compute-location: open decision: Edge (phone), desktop or cloud computing for each stage?
 - d-fabricator-enquiry: open decision: Send the flex fabrication enquiry?
 - d-feature-release-rule: open decision: What must an output pass before a consumer feature is allowed to report it?
+- d-freeze-scope: open decision: Freeze, until something is measured: the sole boards, the foot-model and Moco work, the spacing study, and the downstream modules (cues, suit bridge, exoskeleton sizing, muscles, joint load)?
 - d-moticon-enquiry: open decision: Send the drafted Moticon quote request (bilateral raw data, sensor geometry, calibration, SDK terms)?
 - d-prototype-materials: open decision: Buy the materials for the printed prototype and the coupon test?
 - d-repo-visibility: open decision: Keep rehab-agent public, or make it private?
@@ -477,6 +487,7 @@ flowchart LR
 - d-wearables-tier: open decision: Do optional wearables and pressure hardware belong in a later research or advanced tier?
 - sole-physical-prototype: priority-1 step needs a stop rule (a number, a date, an owner)
 - t-anatomy-geometry: no expected result: write it before the test runs
+- t-arch-realtime-path: no expected result: write it before the test runs
 - t-bone-geometry: no expected result: write it before the test runs
 - t-exo-assist: no expected result: write it before the test runs
 - t-foot-capture-pilot: no expected result: write it before the test runs
@@ -500,8 +511,11 @@ Open steps whose dependencies are done and that no open decision blocks.
 
 - [[adapt-nutrition-body-composition]]: Predict muscle and fat change from what and when the person eats
 - [[adapt-smallest-detectable-change]]: The smallest detectable change, measured from repeat sessions
+- [[arch-realtime-path]]: A real-time path from capture to cue
+- [[build-windows]]: The pipeline runs on Windows
 - [[exo-assist-simulation]]: Predictive simulation of assistance for the person's body
 - [[foot-capture-pilot]]: Phone-only foot capture: protocol, consent plan and a repeatability pilot
+- [[kin-backend-markers]]: Our back end on OpenCap's own markers
 - [[kin-labvalidation]]: Video kinematics on OpenCap LabValidation against marker motion capture
 - [[sim-joint-load-scenarios]]: Joint load runs on the corrected motion and on assistance scenarios
 - [[sole-footbed-layers]]: Footbed and shoe layers in the simulation
@@ -510,6 +524,7 @@ Open steps whose dependencies are done and that no open decision blocks.
 - [[sole-spacing-converge]]: Contact spacing converged for regional shares
 - [[suit-slimevr-validation]]: SlimeVR posture signals against motion capture
 - [[twin-anatomy-into-geometry]]: Recorded anatomy changes the model's geometry: alignment, anteversion, torsion, leg length
+- [[twin-bet-scaled-model]]: Test the central bet: does a personalised model make one camera good enough?
 - [[twin-bone-geometry]]: Torsion, anteversion and personalised bone geometry as inferred values with provenance and uncertainty
 - [[twin-personalised-foot]]: A personalised multi-segment foot, fitted separately for each foot
 
@@ -518,8 +533,10 @@ Open steps whose dependencies are done and that no open decision blocks.
 | Test | Status | Fresh | Expected | Result |
 |---|---|---|---|---|
 | [[t-anatomy-geometry]] | planned |  |  |  |
+| [[t-arch-realtime-path]] | planned |  |  |  |
 | [[t-boards-checker]] | passed | n/a | All eight boards pass DRC, the region map traced through the copper, numbering, coverlay and provenance | All eight pass. Passing is not a release for fabrication |
 | [[t-bone-geometry]] | planned |  |  |  |
+| [[t-build-windows]] | planned |  | Proposal: on Windows 11, the pipeline's test suite passes and an end-to-end run on the pilot trial gives the same joint angles as on Linux within 0.1 degrees |  |
 | [[t-ci-suites]] | passed | n/a | On every push, CI runs test_channel_map, test_case_store, test_compare_results, plan/test_build and plan/build.py --check, and all pass | GitHub Actions run 42722409612 on fa5c7b2, job plan-and-sole: plan check 0 errors, 14 plan tests OK, map up to date, the five sole suites 47 cases OK with none skipped |
 | [[t-claude-md-fresh-session]] | planned |  | A fresh session given only a one-line task keeps every standing rule without them in the prompt |  |
 | [[t-coupon]] | planned | n/a | Proposal: a material qualifies if, on 3 coupons, repeatability is within 5 % over 100 cycles, hysteresis and 10-minute creep are each at most 10 % of full scale, and the 10 mm bend shifts the baseline by at most 5 % of full scale |  |
@@ -534,6 +551,7 @@ Open steps whose dependencies are done and that no open decision blocks.
 | [[t-fp-vertical]] | failed | yes | RMS error at most 5 % of body weight in every subject | Fail in subjects 6, 9 and 10. Post hoc: follows the gap between recorded mass and plate weight (6 % in 6 and 10); 9 had a foot off the plates |
 | [[t-insole]] | planned |  |  |  |
 | [[t-joint-load-scenarios]] | planned |  |  |  |
+| [[t-kin-backend-markers]] | planned |  | Proposal: over the trials and lag rule of the zero-lag positive control, our back end's mean absolute error over the 18 angles is within 1.5 degrees of OpenCap's own IK on the same markers (4.57 degrees) |  |
 | [[t-kin-labvalidation]] | failed | yes | Proposal: per route, joint and plane, the RMSE against the motion capture's inverse kinematics; a joint passes on a route if it is within docs/accuracy.md's target (sagittal at most 3 degrees, frontal at most 5) in every evaluated subject; transverse angles are reported only | Not met (2026-11-10): no sagittal cell is within 3 deg in every evaluated subject on any route; only the frontal pelvis passes (five cameras; with the augmenter also the frontal pelvis segment). 9 of 10 subjects have videos; at lag 0 |
 | [[t-kin-opencap-control]] | passed | no | Proposal: through this pipeline's comparison, OpenCap's five-camera result on subject 2's squats1 has a mean absolute error over the lower-limb and trunk angles within 2 degrees of the 4.5 degrees its paper reports, with one clear lag | Met (2026-11-10): MAE over the 18 lower-limb and trunk angles 6.32 deg, +1.82 from the paper's 4.5 (16 without subtalar: 6.44); one clear lag, 0.417 s (ratio 3.02) |
 | [[t-kin-opencap-control-all]] | passed | yes | For the primary configuration (HRNet, two cameras, all four activities), the mean absolute error over the 18 angles is within 2 degrees of the paper's 4.5 degrees: computed per trial, averaged over each subject's evaluated trials, then over the 10 subjects | Met (2026-11-10): primary configuration (HRNet, two cameras) 4.80 deg over the 18 angles, +0.30 from the paper's 4.5; all 10 subjects evaluated, 69 of 160 trials; walking almost never passes the clear-lag rule (1 of 60 evaluated) |
@@ -551,6 +569,7 @@ Open steps whose dependencies are done and that no open decision blocks.
 | [[t-spacing-convergence]] | failed | n/a | The largest change between the two finest spacings is at most 1.0 point for every share and paired difference, shrinking each step | Not converged: 1.67 points from 3.75 to 2.5 mm. Shrinking: yes. Paired differences within 0.89 |
 | [[t-spacing-finer]] | planned |  | The same criterion as the first convergence test, met at the next finer pair of spacings |  |
 | [[t-suit-ble]] | planned |  |  |  |
+| [[t-twin-bet-scaled-model]] | planned |  | Proposal: if personalisation is what makes one camera good enough, the one-camera route's sagittal hip error at lag 0 falls by at least half and its knee error by at least a third, against the same route with the height-scaled body |  |
 
 ## Open decisions
 
@@ -566,10 +585,12 @@ Open steps whose dependencies are done and that no open decision blocks.
 | [[D-09]] | SKEL/SMPL licensing for anything beyond research? |  |
 | [[D-10]] | Gravity reference for monocular captures? |  |
 | [[D-11]] | Monocular front-end: HSMR/SKEL, OpenCap Monocular or SAM4Dcap? |  |
+| [[d-budget-and-time]] | What budget is there for hardware and services, and how many laptop hours a week can the project count on? |  |
 | [[d-commercial-route]] | Which commercialisation and licensing route does the project take? |  |
 | [[d-compute-location]] | Edge (phone), desktop or cloud computing for each stage? |  |
 | [[d-fabricator-enquiry]] | Send the flex fabrication enquiry? | ['[[sole-fabrication]]'] |
 | [[d-feature-release-rule]] | What must an output pass before a consumer feature is allowed to report it? |  |
+| [[d-freeze-scope]] | Freeze, until something is measured: the sole boards, the foot-model and Moco work, the spacing study, and the downstream modules (cues, suit bridge, exoskeleton sizing, muscles, joint load)? |  |
 | [[d-moticon-enquiry]] | Send the drafted Moticon quote request (bilateral raw data, sensor geometry, calibration, SDK terms)? |  |
 | [[d-prototype-materials]] | Buy the materials for the printed prototype and the coupon test? | ['[[sole-physical-prototype]]', '[[sole-coupon-test]]'] |
 | [[d-repo-visibility]] | Keep rehab-agent public, or make it private? |  |
