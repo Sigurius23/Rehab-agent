@@ -1554,7 +1554,8 @@
    "x": 9920,
    "y": 880,
    "width": 280,
-   "height": 120
+   "height": 120,
+   "color": "3"
   },
   {
    "id": "t-kin-labvalidation",
