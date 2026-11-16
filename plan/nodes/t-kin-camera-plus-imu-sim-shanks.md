@@ -89,3 +89,48 @@ Walking, one camera (54 trials, 9 subjects; the augmenter route's 3 walking tria
 
 **This is the last planned analysis on LabValidation.**
 
+**Post hoc (owner, 2026-11-17), changing no recorded figure: the ankle's bias and spread per subject.** Nothing was
+rerun. The figures come from the part-2 aggregation's own per-trial output on the lab laptop; the committed results
+file keeps only each trial's RMSE. Sagittal ankle, right and left averaged, pelvis + thighs + shanks; each figure is
+the subject's mean over trials, in degrees. Figures: `validation/results/kin_camera_plus_imu_sim_shanks_posthoc_ankle.json`.
+
+One camera, without walking:
+
+| Subject | Trials | Noise-free: bias | Spread | Assumed noise: bias | Spread | Bias over the trials (noise) | No sensors: bias | Spread |
+|---|---|---|---|---|---|---|---|---|
+| 2 | 9 | -25.1 | 26.7 | -25.3 | 28.2 | -47.1 to -11.8 | -3.0 | 17.5 |
+| 3 | 10 | -51.1 | 32.2 | -49.7 | 33.8 | -65.1 to -39.8 | -5.3 | 21.4 |
+| 4 | 10 | -47.5 | 29.4 | -44.3 | 31.3 | -56.0 to -25.3 | -9.6 | 20.0 |
+| 5 | 10 | -57.0 | 27.9 | -56.2 | 28.9 | -65.2 to -49.8 | -19.3 | 15.3 |
+| 7 | 10 | -50.1 | 24.2 | -47.9 | 26.9 | -61.7 to -35.9 | -6.4 | 17.4 |
+| 8 | 10 | -49.2 | 29.7 | -43.9 | 32.4 | -56.8 to -21.8 | -8.1 | 18.6 |
+| 9 | 10 | -53.9 | 28.2 | -54.2 | 27.8 | -60.0 to -44.7 | -14.5 | 21.2 |
+| 10 | 10 | -45.6 | 28.2 | -43.2 | 31.0 | -61.5 to -23.0 | -13.4 | 14.0 |
+| 11 | 10 | -41.4 | 28.8 | -38.7 | 29.0 | -56.8 to -18.0 | -8.9 | 18.6 |
+
+One camera, walking:
+
+| Subject | Trials | Noise-free: bias | Spread | Assumed noise: bias | Spread | Bias over the trials (noise) | No sensors: bias | Spread |
+|---|---|---|---|---|---|---|---|---|
+| 2 | 6 | -17.1 | 48.4 | -16.2 | 49.1 | -22.8 to -12.8 | -12.5 | 19.8 |
+| 3 | 6 | -19.3 | 52.4 | -20.4 | 52.0 | -23.9 to -16.5 | -5.2 | 15.6 |
+| 4 | 6 | +0.8 | 48.4 | +2.1 | 48.8 | -11.3 to +6.7 | -2.5 | 18.8 |
+| 5 | 6 | -18.2 | 49.5 | -17.8 | 49.4 | -21.4 to -16.5 | -9.7 | 17.3 |
+| 7 | 6 | -11.2 | 44.9 | -9.7 | 45.5 | -21.4 to -1.2 | -8.9 | 19.3 |
+| 8 | 6 | -15.0 | 46.5 | -13.9 | 47.0 | -25.7 to -2.1 | -12.1 | 17.6 |
+| 9 | 6 | -4.4 | 47.8 | -4.2 | 47.8 | -18.5 to +7.6 | -10.1 | 14.8 |
+| 10 | 6 | -4.7 | 51.8 | -4.8 | 51.9 | -15.9 to +2.0 | -5.0 | 17.9 |
+| 11 | 6 | -10.1 | 50.1 | -9.7 | 50.2 | -15.9 to +0.2 | -4.8 | 16.1 |
+
+- **Without walking it is both: a large offset and a large variable part.** The bias has the same sign in all nine
+  subjects (−25° to −57°, and −39° or more in eight of them), and the spread is 27–34° in every subject. The bias
+  is about 1.5 to 2 times the spread, except in subject 2, where they are equal. So removing a constant offset
+  would not be enough: about 30° of spread would stay.
+- **The offset is not constant within a subject either:** over a subject's trials the bias ranges by 15–35°.
+- **In walking it is mostly variable:** the spread is 45–52° in every subject, against a bias of +2° to −20°.
+- **The noise makes almost no difference:** the noise-free and assumed-noise figures agree within about 5°, so
+  this error comes from the camera's foot keypoints, not from the sensors' noise.
+- **Without sensors** the ankle's bias is −3° to −19° and its spread 14–21°: the shank sensors raise both.
+- The augmenter route shows the same pattern with smaller numbers (bias −24° to −41°, spread 11–21°, without
+  walking; in the results file).
+

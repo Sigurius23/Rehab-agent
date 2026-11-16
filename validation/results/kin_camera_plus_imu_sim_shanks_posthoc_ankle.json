@@ -1,0 +1,934 @@
+{
+ "mono/without_walking": {
+  "subject2": {
+   "trials": 9,
+   "clean": {
+    "bias": -25.1,
+    "spread": 26.7,
+    "rmse": 39.0,
+    "bias_range": [
+     -40.2,
+     5.4
+    ],
+    "bias_sd_over_trials": 12.8
+   },
+   "noisy": {
+    "bias": -25.3,
+    "spread": 28.2,
+    "rmse": 40.3,
+    "bias_range": [
+     -47.1,
+     -11.8
+    ],
+    "bias_sd_over_trials": 10.7
+   },
+   "none": {
+    "bias": -3.0,
+    "spread": 17.5,
+    "rmse": 20.4,
+    "bias_range": [
+     -9.1,
+     1.8
+    ],
+    "bias_sd_over_trials": 3.0
+   }
+  },
+  "subject3": {
+   "trials": 10,
+   "clean": {
+    "bias": -51.1,
+    "spread": 32.2,
+    "rmse": 62.1,
+    "bias_range": [
+     -64.8,
+     -40.6
+    ],
+    "bias_sd_over_trials": 7.8
+   },
+   "noisy": {
+    "bias": -49.7,
+    "spread": 33.8,
+    "rmse": 61.7,
+    "bias_range": [
+     -65.1,
+     -39.8
+    ],
+    "bias_sd_over_trials": 7.4
+   },
+   "none": {
+    "bias": -5.3,
+    "spread": 21.4,
+    "rmse": 25.6,
+    "bias_range": [
+     -14.6,
+     -1.6
+    ],
+    "bias_sd_over_trials": 4.0
+   }
+  },
+  "subject4": {
+   "trials": 10,
+   "clean": {
+    "bias": -47.5,
+    "spread": 29.4,
+    "rmse": 57.0,
+    "bias_range": [
+     -57.4,
+     -27.3
+    ],
+    "bias_sd_over_trials": 9.1
+   },
+   "noisy": {
+    "bias": -44.3,
+    "spread": 31.3,
+    "rmse": 56.5,
+    "bias_range": [
+     -56.0,
+     -25.3
+    ],
+    "bias_sd_over_trials": 9.3
+   },
+   "none": {
+    "bias": -9.6,
+    "spread": 20.0,
+    "rmse": 26.1,
+    "bias_range": [
+     -14.4,
+     -3.1
+    ],
+    "bias_sd_over_trials": 3.0
+   }
+  },
+  "subject5": {
+   "trials": 10,
+   "clean": {
+    "bias": -57.0,
+    "spread": 27.9,
+    "rmse": 65.1,
+    "bias_range": [
+     -66.3,
+     -48.1
+    ],
+    "bias_sd_over_trials": 4.7
+   },
+   "noisy": {
+    "bias": -56.2,
+    "spread": 28.9,
+    "rmse": 64.9,
+    "bias_range": [
+     -65.2,
+     -49.8
+    ],
+    "bias_sd_over_trials": 4.6
+   },
+   "none": {
+    "bias": -19.3,
+    "spread": 15.3,
+    "rmse": 26.6,
+    "bias_range": [
+     -22.9,
+     -15.4
+    ],
+    "bias_sd_over_trials": 2.5
+   }
+  },
+  "subject7": {
+   "trials": 10,
+   "clean": {
+    "bias": -50.1,
+    "spread": 24.2,
+    "rmse": 56.7,
+    "bias_range": [
+     -61.9,
+     -34.3
+    ],
+    "bias_sd_over_trials": 8.3
+   },
+   "noisy": {
+    "bias": -47.9,
+    "spread": 26.9,
+    "rmse": 56.4,
+    "bias_range": [
+     -61.7,
+     -35.9
+    ],
+    "bias_sd_over_trials": 6.9
+   },
+   "none": {
+    "bias": -6.4,
+    "spread": 17.4,
+    "rmse": 21.7,
+    "bias_range": [
+     -16.4,
+     7.0
+    ],
+    "bias_sd_over_trials": 7.2
+   }
+  },
+  "subject8": {
+   "trials": 10,
+   "clean": {
+    "bias": -49.2,
+    "spread": 29.7,
+    "rmse": 59.4,
+    "bias_range": [
+     -58.0,
+     -29.4
+    ],
+    "bias_sd_over_trials": 9.4
+   },
+   "noisy": {
+    "bias": -43.9,
+    "spread": 32.4,
+    "rmse": 57.2,
+    "bias_range": [
+     -56.8,
+     -21.8
+    ],
+    "bias_sd_over_trials": 10.6
+   },
+   "none": {
+    "bias": -8.1,
+    "spread": 18.6,
+    "rmse": 23.7,
+    "bias_range": [
+     -15.5,
+     1.8
+    ],
+    "bias_sd_over_trials": 5.0
+   }
+  },
+  "subject9": {
+   "trials": 10,
+   "clean": {
+    "bias": -53.9,
+    "spread": 28.2,
+    "rmse": 62.6,
+    "bias_range": [
+     -59.2,
+     -44.5
+    ],
+    "bias_sd_over_trials": 4.0
+   },
+   "noisy": {
+    "bias": -54.2,
+    "spread": 27.8,
+    "rmse": 62.4,
+    "bias_range": [
+     -60.0,
+     -44.7
+    ],
+    "bias_sd_over_trials": 4.2
+   },
+   "none": {
+    "bias": -14.5,
+    "spread": 21.2,
+    "rmse": 29.2,
+    "bias_range": [
+     -21.5,
+     -2.7
+    ],
+    "bias_sd_over_trials": 5.3
+   }
+  },
+  "subject10": {
+   "trials": 10,
+   "clean": {
+    "bias": -45.6,
+    "spread": 28.2,
+    "rmse": 56.4,
+    "bias_range": [
+     -60.5,
+     -19.5
+    ],
+    "bias_sd_over_trials": 11.9
+   },
+   "noisy": {
+    "bias": -43.2,
+    "spread": 31.0,
+    "rmse": 56.2,
+    "bias_range": [
+     -61.5,
+     -23.0
+    ],
+    "bias_sd_over_trials": 10.0
+   },
+   "none": {
+    "bias": -13.4,
+    "spread": 14.0,
+    "rmse": 22.7,
+    "bias_range": [
+     -24.8,
+     -0.4
+    ],
+    "bias_sd_over_trials": 9.1
+   }
+  },
+  "subject11": {
+   "trials": 10,
+   "clean": {
+    "bias": -41.4,
+    "spread": 28.8,
+    "rmse": 54.2,
+    "bias_range": [
+     -54.7,
+     -31.7
+    ],
+    "bias_sd_over_trials": 7.2
+   },
+   "noisy": {
+    "bias": -38.7,
+    "spread": 29.0,
+    "rmse": 53.5,
+    "bias_range": [
+     -56.8,
+     -18.0
+    ],
+    "bias_sd_over_trials": 10.4
+   },
+   "none": {
+    "bias": -8.9,
+    "spread": 18.6,
+    "rmse": 24.4,
+    "bias_range": [
+     -18.1,
+     0.3
+    ],
+    "bias_sd_over_trials": 5.4
+   }
+  }
+ },
+ "mono/walking": {
+  "subject2": {
+   "trials": 6,
+   "clean": {
+    "bias": -17.1,
+    "spread": 48.4,
+    "rmse": 52.1,
+    "bias_range": [
+     -24.4,
+     -12.2
+    ],
+    "bias_sd_over_trials": 4.3
+   },
+   "noisy": {
+    "bias": -16.2,
+    "spread": 49.1,
+    "rmse": 52.3,
+    "bias_range": [
+     -22.8,
+     -12.8
+    ],
+    "bias_sd_over_trials": 3.2
+   },
+   "none": {
+    "bias": -12.5,
+    "spread": 19.8,
+    "rmse": 28.1,
+    "bias_range": [
+     -32.7,
+     -3.0
+    ],
+    "bias_sd_over_trials": 9.8
+   }
+  },
+  "subject3": {
+   "trials": 6,
+   "clean": {
+    "bias": -19.3,
+    "spread": 52.4,
+    "rmse": 56.0,
+    "bias_range": [
+     -20.6,
+     -17.5
+    ],
+    "bias_sd_over_trials": 1.1
+   },
+   "noisy": {
+    "bias": -20.4,
+    "spread": 52.0,
+    "rmse": 56.0,
+    "bias_range": [
+     -23.9,
+     -16.5
+    ],
+    "bias_sd_over_trials": 2.3
+   },
+   "none": {
+    "bias": -5.2,
+    "spread": 15.6,
+    "rmse": 20.2,
+    "bias_range": [
+     -9.5,
+     -0.9
+    ],
+    "bias_sd_over_trials": 3.5
+   }
+  },
+  "subject4": {
+   "trials": 6,
+   "clean": {
+    "bias": 0.8,
+    "spread": 48.4,
+    "rmse": 50.2,
+    "bias_range": [
+     -13.5,
+     4.7
+    ],
+    "bias_sd_over_trials": 6.4
+   },
+   "noisy": {
+    "bias": 2.1,
+    "spread": 48.8,
+    "rmse": 50.2,
+    "bias_range": [
+     -11.3,
+     6.7
+    ],
+    "bias_sd_over_trials": 6.2
+   },
+   "none": {
+    "bias": -2.5,
+    "spread": 18.8,
+    "rmse": 25.1,
+    "bias_range": [
+     -8.1,
+     3.5
+    ],
+    "bias_sd_over_trials": 3.4
+   }
+  },
+  "subject5": {
+   "trials": 6,
+   "clean": {
+    "bias": -18.2,
+    "spread": 49.5,
+    "rmse": 52.9,
+    "bias_range": [
+     -21.6,
+     -15.5
+    ],
+    "bias_sd_over_trials": 2.3
+   },
+   "noisy": {
+    "bias": -17.8,
+    "spread": 49.4,
+    "rmse": 52.7,
+    "bias_range": [
+     -21.4,
+     -16.5
+    ],
+    "bias_sd_over_trials": 1.8
+   },
+   "none": {
+    "bias": -9.7,
+    "spread": 17.3,
+    "rmse": 24.5,
+    "bias_range": [
+     -12.3,
+     -6.9
+    ],
+    "bias_sd_over_trials": 2.1
+   }
+  },
+  "subject7": {
+   "trials": 6,
+   "clean": {
+    "bias": -11.2,
+    "spread": 44.9,
+    "rmse": 48.3,
+    "bias_range": [
+     -30.1,
+     -3.3
+    ],
+    "bias_sd_over_trials": 10.5
+   },
+   "noisy": {
+    "bias": -9.7,
+    "spread": 45.5,
+    "rmse": 48.0,
+    "bias_range": [
+     -21.4,
+     -1.2
+    ],
+    "bias_sd_over_trials": 8.3
+   },
+   "none": {
+    "bias": -8.9,
+    "spread": 19.3,
+    "rmse": 27.0,
+    "bias_range": [
+     -19.2,
+     0.7
+    ],
+    "bias_sd_over_trials": 5.9
+   }
+  },
+  "subject8": {
+   "trials": 6,
+   "clean": {
+    "bias": -15.0,
+    "spread": 46.5,
+    "rmse": 50.2,
+    "bias_range": [
+     -26.8,
+     -4.3
+    ],
+    "bias_sd_over_trials": 8.1
+   },
+   "noisy": {
+    "bias": -13.9,
+    "spread": 47.0,
+    "rmse": 50.1,
+    "bias_range": [
+     -25.7,
+     -2.1
+    ],
+    "bias_sd_over_trials": 7.9
+   },
+   "none": {
+    "bias": -12.1,
+    "spread": 17.6,
+    "rmse": 29.9,
+    "bias_range": [
+     -32.4,
+     -4.2
+    ],
+    "bias_sd_over_trials": 9.6
+   }
+  },
+  "subject9": {
+   "trials": 6,
+   "clean": {
+    "bias": -4.4,
+    "spread": 47.8,
+    "rmse": 51.3,
+    "bias_range": [
+     -19.8,
+     6.0
+    ],
+    "bias_sd_over_trials": 10.4
+   },
+   "noisy": {
+    "bias": -4.2,
+    "spread": 47.8,
+    "rmse": 51.3,
+    "bias_range": [
+     -18.5,
+     7.6
+    ],
+    "bias_sd_over_trials": 10.4
+   },
+   "none": {
+    "bias": -10.1,
+    "spread": 14.8,
+    "rmse": 25.4,
+    "bias_range": [
+     -13.3,
+     -6.0
+    ],
+    "bias_sd_over_trials": 2.2
+   }
+  },
+  "subject10": {
+   "trials": 6,
+   "clean": {
+    "bias": -4.7,
+    "spread": 51.8,
+    "rmse": 53.6,
+    "bias_range": [
+     -14.0,
+     2.0
+    ],
+    "bias_sd_over_trials": 6.6
+   },
+   "noisy": {
+    "bias": -4.8,
+    "spread": 51.9,
+    "rmse": 53.8,
+    "bias_range": [
+     -15.9,
+     2.0
+    ],
+    "bias_sd_over_trials": 7.3
+   },
+   "none": {
+    "bias": -5.0,
+    "spread": 17.9,
+    "rmse": 24.3,
+    "bias_range": [
+     -11.1,
+     -1.8
+    ],
+    "bias_sd_over_trials": 3.2
+   }
+  },
+  "subject11": {
+   "trials": 6,
+   "clean": {
+    "bias": -10.1,
+    "spread": 50.1,
+    "rmse": 52.3,
+    "bias_range": [
+     -17.4,
+     0.8
+    ],
+    "bias_sd_over_trials": 7.2
+   },
+   "noisy": {
+    "bias": -9.7,
+    "spread": 50.2,
+    "rmse": 52.3,
+    "bias_range": [
+     -15.9,
+     0.2
+    ],
+    "bias_sd_over_trials": 6.5
+   },
+   "none": {
+    "bias": -4.8,
+    "spread": 16.1,
+    "rmse": 22.7,
+    "bias_range": [
+     -10.1,
+     0.0
+    ],
+    "bias_sd_over_trials": 4.3
+   }
+  }
+ },
+ "mono_aug/without_walking": {
+  "subject3": {
+   "trials": 8,
+   "clean": {
+    "bias": -34.2,
+    "spread": 20.5,
+    "rmse": 40.8,
+    "bias_range": [
+     -47.8,
+     -17.8
+    ],
+    "bias_sd_over_trials": 10.1
+   },
+   "noisy": {
+    "bias": -34.7,
+    "spread": 21.2,
+    "rmse": 41.8,
+    "bias_range": [
+     -49.8,
+     -16.2
+    ],
+    "bias_sd_over_trials": 11.1
+   },
+   "none": {
+    "bias": -7.1,
+    "spread": 20.6,
+    "rmse": 24.7,
+    "bias_range": [
+     -18.6,
+     -1.3
+    ],
+    "bias_sd_over_trials": 5.3
+   }
+  },
+  "subject4": {
+   "trials": 7,
+   "clean": {
+    "bias": -32.1,
+    "spread": 14.8,
+    "rmse": 36.2,
+    "bias_range": [
+     -50.7,
+     -21.7
+    ],
+    "bias_sd_over_trials": 11.1
+   },
+   "noisy": {
+    "bias": -32.1,
+    "spread": 16.1,
+    "rmse": 36.6,
+    "bias_range": [
+     -52.0,
+     -22.6
+    ],
+    "bias_sd_over_trials": 11.6
+   },
+   "none": {
+    "bias": -14.6,
+    "spread": 15.7,
+    "rmse": 23.1,
+    "bias_range": [
+     -18.0,
+     -7.5
+    ],
+    "bias_sd_over_trials": 3.0
+   }
+  },
+  "subject5": {
+   "trials": 9,
+   "clean": {
+    "bias": -25.6,
+    "spread": 14.4,
+    "rmse": 32.9,
+    "bias_range": [
+     -38.9,
+     -15.1
+    ],
+    "bias_sd_over_trials": 8.2
+   },
+   "noisy": {
+    "bias": -24.5,
+    "spread": 15.6,
+    "rmse": 32.6,
+    "bias_range": [
+     -41.5,
+     -14.1
+    ],
+    "bias_sd_over_trials": 10.1
+   },
+   "none": {
+    "bias": -22.8,
+    "spread": 15.6,
+    "rmse": 28.7,
+    "bias_range": [
+     -27.2,
+     -20.7
+    ],
+    "bias_sd_over_trials": 2.0
+   }
+  },
+  "subject7": {
+   "trials": 8,
+   "clean": {
+    "bias": -30.4,
+    "spread": 13.2,
+    "rmse": 33.9,
+    "bias_range": [
+     -38.5,
+     -20.5
+    ],
+    "bias_sd_over_trials": 6.1
+   },
+   "noisy": {
+    "bias": -28.6,
+    "spread": 14.3,
+    "rmse": 33.0,
+    "bias_range": [
+     -43.3,
+     -19.3
+    ],
+    "bias_sd_over_trials": 7.5
+   },
+   "none": {
+    "bias": -11.2,
+    "spread": 17.8,
+    "rmse": 22.7,
+    "bias_range": [
+     -18.5,
+     -3.1
+    ],
+    "bias_sd_over_trials": 4.5
+   }
+  },
+  "subject8": {
+   "trials": 1,
+   "clean": {
+    "bias": -33.8,
+    "spread": 10.9,
+    "rmse": 35.7,
+    "bias_range": [
+     -33.8,
+     -33.8
+    ],
+    "bias_sd_over_trials": 0.0
+   },
+   "noisy": {
+    "bias": -34.7,
+    "spread": 11.5,
+    "rmse": 36.7,
+    "bias_range": [
+     -34.7,
+     -34.7
+    ],
+    "bias_sd_over_trials": 0.0
+   },
+   "none": {
+    "bias": -16.6,
+    "spread": 22.0,
+    "rmse": 29.4,
+    "bias_range": [
+     -16.6,
+     -16.6
+    ],
+    "bias_sd_over_trials": 0.0
+   }
+  },
+  "subject9": {
+   "trials": 6,
+   "clean": {
+    "bias": -40.7,
+    "spread": 19.7,
+    "rmse": 46.0,
+    "bias_range": [
+     -53.7,
+     -34.7
+    ],
+    "bias_sd_over_trials": 6.2
+   },
+   "noisy": {
+    "bias": -41.1,
+    "spread": 20.8,
+    "rmse": 46.9,
+    "bias_range": [
+     -56.4,
+     -34.8
+    ],
+    "bias_sd_over_trials": 7.2
+   },
+   "none": {
+    "bias": -18.1,
+    "spread": 26.8,
+    "rmse": 34.5,
+    "bias_range": [
+     -21.1,
+     -13.9
+    ],
+    "bias_sd_over_trials": 3.0
+   }
+  },
+  "subject10": {
+   "trials": 4,
+   "clean": {
+    "bias": -33.3,
+    "spread": 18.7,
+    "rmse": 39.1,
+    "bias_range": [
+     -47.8,
+     -25.6
+    ],
+    "bias_sd_over_trials": 8.6
+   },
+   "noisy": {
+    "bias": -32.2,
+    "spread": 19.9,
+    "rmse": 39.0,
+    "bias_range": [
+     -47.2,
+     -21.3
+    ],
+    "bias_sd_over_trials": 9.7
+   },
+   "none": {
+    "bias": -17.5,
+    "spread": 13.7,
+    "rmse": 23.4,
+    "bias_range": [
+     -22.6,
+     -7.0
+    ],
+    "bias_sd_over_trials": 6.2
+   }
+  },
+  "subject11": {
+   "trials": 7,
+   "clean": {
+    "bias": -24.9,
+    "spread": 12.5,
+    "rmse": 29.4,
+    "bias_range": [
+     -31.3,
+     -13.0
+    ],
+    "bias_sd_over_trials": 6.0
+   },
+   "noisy": {
+    "bias": -24.0,
+    "spread": 13.9,
+    "rmse": 29.0,
+    "bias_range": [
+     -28.8,
+     -13.4
+    ],
+    "bias_sd_over_trials": 4.9
+   },
+   "none": {
+    "bias": -9.8,
+    "spread": 18.5,
+    "rmse": 23.1,
+    "bias_range": [
+     -17.2,
+     -3.3
+    ],
+    "bias_sd_over_trials": 4.4
+   }
+  }
+ },
+ "mono_aug/walking": {
+  "subject3": {
+   "trials": 1,
+   "clean": {
+    "bias": -20.1,
+    "spread": 55.8,
+    "rmse": 59.5,
+    "bias_range": [
+     -20.1,
+     -20.1
+    ],
+    "bias_sd_over_trials": 0.0
+   },
+   "noisy": {
+    "bias": -20.6,
+    "spread": 54.8,
+    "rmse": 59.0,
+    "bias_range": [
+     -20.6,
+     -20.6
+    ],
+    "bias_sd_over_trials": 0.0
+   },
+   "none": {
+    "bias": -7.8,
+    "spread": 15.4,
+    "rmse": 18.7,
+    "bias_range": [
+     -7.8,
+     -7.8
+    ],
+    "bias_sd_over_trials": 0.0
+   }
+  },
+  "subject4": {
+   "trials": 2,
+   "clean": {
+    "bias": -9.3,
+    "spread": 55.0,
+    "rmse": 56.2,
+    "bias_range": [
+     -10.7,
+     -7.8
+    ],
+    "bias_sd_over_trials": 1.5
+   },
+   "noisy": {
+    "bias": -10.3,
+    "spread": 54.4,
+    "rmse": 56.1,
+    "bias_range": [
+     -13.0,
+     -7.7
+    ],
+    "bias_sd_over_trials": 2.7
+   },
+   "none": {
+    "bias": -7.5,
+    "spread": 13.9,
+    "rmse": 18.7,
+    "bias_range": [
+     -8.6,
+     -6.3
+    ],
+    "bias_sd_over_trials": 1.1
+   }
+  }
+ }
+}
