@@ -154,7 +154,7 @@ flowchart LR
   n18["Body surface from depth, and mass<br/>distribution from DXA"]:::step_done
   n19(["Personalise: the person's own<br/>bones, shape, mass and muscles"]):::goal_open
   n20["Recorded anatomy changes the<br/>model's geometry: alignment,<br/>anteversion, torsion, leg length<br/>tests ○1"]:::step_open
-  n21["Test the central bet: does a<br/>personalised model make one camera<br/>good enough?<br/>tests ○1"]:::step_open
+  n21["Test the central bet: does a<br/>personalised model make one camera<br/>good enough?<br/>tests ▶1"]:::step_open
   n22["Torsion, anteversion and<br/>personalised bone geometry as<br/>inferred values with provenance<br/>and uncertainty<br/>tests ○1"]:::step_open
   n23["A personalised multi-segment foot,<br/>fitted separately for each foot<br/>tests ○1"]:::step_open
   n24["First Tier-A subject: a<br/>personalised model from MRI or CT"]:::step_blocked
@@ -568,7 +568,7 @@ Open steps whose dependencies are done and that no open decision blocks.
 | [[t-spacing-convergence]] | failed | n/a | The largest change between the two finest spacings is at most 1.0 point for every share and paired difference, shrinking each step | Not converged: 1.67 points from 3.75 to 2.5 mm. Shrinking: yes. Paired differences within 0.89 |
 | [[t-spacing-finer]] | planned |  | The same criterion as the first convergence test, met at the next finer pair of spacings |  |
 | [[t-suit-ble]] | planned |  |  |  |
-| [[t-twin-bet-scaled-model]] | planned |  | Proposal: if personalisation is what makes one camera good enough, the one-camera route's sagittal hip error at lag 0 falls by at least half and its knee error by at least a third, against the same route with the height-scaled body |  |
+| [[t-twin-bet-scaled-model]] | running |  | Proposal: if personalisation is what makes one camera good enough, the one-camera route's sagittal hip error at lag 0 falls by at least half and its knee error by at least a third, against the same route with the height-scaled body |  |
 
 ## Open decisions
 
