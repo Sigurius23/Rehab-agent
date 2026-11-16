@@ -8,6 +8,11 @@
 - **Untested:** sensing, fit and durability.
 - **Not released.** The flex circuit (`DESIGN.md`, `kicad/`) remains a later stage.
 
+**2026-11-17. Decided by the project owner: the printed prototype must match the final product.** The stack in
+section 2 is through-mode (film between two electrodes), and the flex sole is shunt-mode (film over interleaved
+combs), so section 2 is superseded. How the printed prototype gets matching comb electrodes is not decided yet
+(`plan/nodes/d-printed-prototype-matches-final.md`). The carrier, pockets and channels below are unaffected.
+
 `sole_print.py` builds the printed sole from the same generator output as the flex board: the outline with
 toe tabs and tail, the sensing regions and the routing plan. Any size, foot or candidate the generator makes
 can therefore be printed, and the printed sole and the simulated sole (`SIMULATION.md`) share their regions.
