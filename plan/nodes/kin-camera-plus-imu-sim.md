@@ -18,3 +18,7 @@ It follows [[t-twin-bet-scaled-model]]: the person's own bones did not reduce on
 pelvis and thigh sensors under assumed noise, the hip is 5.9° and pelvis tilt 4.5°. The knee and ankle are not fixed;
 the error moves down the leg. Whether real sensors come close needs real sensors; that is the owner's to decide.
 
+**Part 2 (2026-11-17,** [[t-kin-camera-plus-imu-sim-shanks]]**):** with shank sensors added, the knee is 5.2°, but the
+ankle is 56.6°, so its expected result is not met. Each sensed segment is fixed, and the camera's error moves to
+the next joint down. This is the last planned analysis on LabValidation.
+
