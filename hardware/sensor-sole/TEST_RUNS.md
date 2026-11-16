@@ -35,6 +35,7 @@ all 47 cases ran there with none skipped, on this machine. None of the OpenSim, 
 | CasADi 3.8.2 Python, paper's saved bspline present | `test_dhondt_port.py` | 7 | 6 | 0 | 0 | needs opensim and DHONDT_NOMINAL_DIR |
 | CasADi 3.8.2 Python, no external files | `test_dhondt_port.py` | 6 | 7 | 0 | 0 | needs casadi and DHONDT_EXP5; needs opensim and DHONDT_NOMINAL_DIR |
 | Generator Python (shapely 2.2.0), fast cases | `test_sim_print.py` | 5 | 0 | 0 | 0 | — |
+| Generator Python (shapely 2.2.0), the laptop below, 2026-11-17, matching printed prototype | `test_sim_print.py` | 9 | 0 | 0 | 0 | — |
 | Generator Python (shapely 2.2.0), fast cases | `test_generator_regressions.py` | 8 | 3 | 0 | 0 | set SOLE_SLOW_TESTS=1 (minutes per test) |
 | System Python 3 (as CI runs it) | `test_channel_map.py` | 10 | 0 | 0 | 0 | — |
 | System Python 3 (as CI runs it) | `test_case_store.py` | 11 | 0 | 0 | 0 | — |

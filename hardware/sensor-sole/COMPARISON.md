@@ -173,3 +173,43 @@ DESIGN.md, section 7.
   drift. Until our coupon test and force-plate comparison report numbers, assume nothing better than the DIY
   piezoresistive insoles.
 - **Electronics, power, synchronisation and software** are designed but not built.
+
+## Revisited on 2026-11-17: the makers' own pages, and where our prototype stands
+
+Read on 2026-11-17 from each maker's or project's own page, for the design of the printed prototype
+(`PRINTED.md`). "Not stated" means the page does not say; we have tested none of these. Three commercial systems
+are added that the earlier comparison did not cover (loadsol, XSENSOR, F-Scan GO). The GRFMS page could not be
+reached this time, so its row above is unchanged.
+
+| | Sensing | Sensors | Range, accuracy | Rate | Thickness | Electronics | Toes, five-toe shoes |
+|---|---|---|---|---|---|---|---|
+| Moticon OpenGo ([page](https://moticon.com/opengo/sensor-insoles)) | Capacitive, textile | 16; "65% area coverage" | Range not stated; "0.25 N/ cm² resolution"; "Individual calibration reduces error below 5 % for total force" | 10–100 Hz | Not stated | In the insole, coin cell, Bluetooth | Not stated; 9 double sizes |
+| JunjianChi/smartinsole ([README](https://github.com/JunjianChi/smartinsole)) | Piezoresistive: Velostat between a Kapton cover and a flex electrode array | 253, 7.5 mm pitch | Not stated; calibration by lookup table | 60 Hz, or 30 Hz dual-frame | Not stated | Custom board, Wi-Fi | Not stated |
+| KAKI_smartinsole ([repository](https://github.com/Ichirun955/KAKI_smartinsole)) | 3D-printed 85A TPU gyroid footbed read by a capacitive touch controller | Not stated | Not stated; data called preliminary | 100 Hz | Not stated | Pod on the shoe, Bluetooth | Not stated |
+| novel loadsol ([page](https://www.novel.de/products/loadsol/)) | Capacitive | 1 to 3 zones, four layouts | Not stated on the page | 100 Hz (200 Hz Pro, from cited studies) | 2.3 mm (sports version) | Small unit, Bluetooth | Not stated; EU 36–50 |
+| XSENSOR Intelligent Insoles Pro ([page](https://www.xsensor.com/solutions-and-platform/human-performance/gait-motion-insoles)) | Not stated | 235, 109 or 220 per insole | "0.7-88.3 n/cm2 (1-128 psi)", that is 7–883 kPa; "±5% full-scale error" | Up to 150 Hz | Not stated | On board, with memory | Not stated; EU 36–48 |
+| Tekscan F-Scan GO ([page](https://www.tekscan.com/products-solutions/systems/f-scan-system)) | Resistive | Trimmable sensor sheets | Not stated on the page | Up to 500 Hz | 0.28 mm | Wearable units, Wi-Fi | Not stated; trimmable |
+| **Our printed prototype** (design only) | Piezoresistive, shunt mode; film not chosen | 16 regions and a reference cell | **Nothing measured.** Range and gain are design targets | 100 Hz (target) | 1.4 mm printed, plus foil, spacer and film | Pod outside the shoe (not built) | Five toe tabs, each toe its own region |
+
+**What the others have that ours does not:**
+- **Measurements.** Moticon and XSENSOR publish an accuracy; ours has none. Until a coupon and a force-plate test
+  exist, no claim that our sole is better, or as good, can be made.
+- **Lower-drift sensing.** Moticon and loadsol are capacitive. Ours is resistive film, known for hysteresis, creep
+  and temperature drift; the reference cell and the coupon test are there because of it.
+- **Resolution.** XSENSOR (109–235 cells) and smartinsole (253) resolve a pressure map; our 16 regions give one
+  value each.
+- **Thinness.** F-Scan GO is 0.28 mm and our flex target is 0.35–0.40 mm, but this prototype is about 1.65 mm.
+- **Factory calibration and a stated life** (Moticon: lifetime calibration, 100,000 load cycles).
+
+**What ours has that none of these pages documents:**
+- a five-toe outline with a sensor under each toe;
+- personal outlines and region layouts from one generator, with every design checked by software;
+- no electronics under the foot, with one line per region and no matrix;
+- a stated vent path and an unloaded reference cell;
+- open hardware (CERN-OHL-S-2.0) with its checks and tests in the repository.
+
+**Taken from them into this prototype:** a reference for drift (the capacitive makers' advantage is drift), a
+pressure range to design the gain for (XSENSOR's), and separate cut layers of electrode, spacer and film
+(smartinsole's Velostat between a cover and a flex electrode array). KAKI shows a printed TPU dielectric read
+capacitively; that is the capacitive coupon proposed in `PRINTED.md`, section 5.
+

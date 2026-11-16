@@ -16,8 +16,9 @@ none has been fitted. Its sensing regions are anchored to the foot's anatomy.
 **Order of work, decided 2026-11-04:** simulation first, then a 3D-printed prototype, then the flex circuit.
 - **Simulation** (`SIMULATION.md`, `sole_sim.py`): the sole is loaded into the musculoskeletal model as a
   sensorised contact layer and read out per region.
-- **Printed prototype** (`PRINTED.md`, `sole_print.py`): a TPU carrier with a pocket per region and wire
-  channels, from the same generator output.
+- **Printed prototype** (`PRINTED.md`, `sole_print.py`): a printed TPU carrier and cover with cut copper comb
+  electrodes, a spacer and film patches, from the same generator output. Since 2026-11-17 it has this flex
+  sole's stack and sensing (the owner's decision).
 - **Flex circuit:** described below and in `kicad/`. It is the later stage.
 
 None of the three has been tested physically. It has two parts:

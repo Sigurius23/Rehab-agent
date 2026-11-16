@@ -7,9 +7,9 @@ parent: "[[goal-sensor-sole]]"
 priority: "1"
 record: "hardware/sensor-sole/PRINTED.md"
 source: "hardware/sensor-sole/PRINTED.md"
-updated: "2026-11-08"
+updated: "2026-11-17"
 ---
 # A printed prototype tried on a real foot
 
-The first real playtest of the sole: the printed TPU carrier with the simple sensor stack (`PRINTED.md`), tried
-on a real foot. Watch fit, wiring, drift, comfort and dead regions. Needs materials ([[d-prototype-materials]]).
+The first real playtest of the sole: the printed prototype with the flex sole's stack and sensing (`PRINTED.md`;
+print and cut files generated on 2026-11-17, [[d-printed-prototype-matches-final]]), tried on a real foot. Watch fit, wiring, drift, comfort and dead regions. Needs materials ([[d-prototype-materials]]).
