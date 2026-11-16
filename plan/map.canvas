@@ -1704,7 +1704,7 @@
    "y": 880,
    "width": 280,
    "height": 120,
-   "color": "3"
+   "color": "1"
   },
   {
    "id": "twin-anatomy-into-geometry",
@@ -1722,7 +1722,8 @@
    "x": 6400,
    "y": 660,
    "width": 280,
-   "height": 120
+   "height": 120,
+   "color": "4"
   },
   {
    "id": "twin-bone-geometry",

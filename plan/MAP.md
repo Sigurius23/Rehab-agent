@@ -11,7 +11,7 @@ flowchart TB
   r(["A full-body digital twin that<br/>personalises to each person and adapts<br/>as they change"]):::goal_open
   p0(["Sense: measure the person's<br/>movement, forces and body<br/><i>2 done · 7 open · 1 blocked · 10 ideas · 3 decisions</i>"]):::goal_open
   r --> p0
-  p1(["Personalise: the person's own<br/>bones, shape, mass and muscles<br/><i>5 done · 5 open · 1 blocked · 10 ideas · 1 decision</i>"]):::goal_open
+  p1(["Personalise: the person's own<br/>bones, shape, mass and muscles<br/><i>6 done · 4 open · 1 blocked · 10 ideas · 1 decision</i>"]):::goal_open
   r --> p1
   p2(["Simulate: joint loads, muscle<br/>forces and contact for this<br/>body<br/><i>4 done · 7 open · 24 ideas · 1 decision</i>"]):::goal_open
   r --> p2
@@ -154,7 +154,7 @@ flowchart LR
   n18["Body surface from depth, and mass<br/>distribution from DXA"]:::step_done
   n19(["Personalise: the person's own<br/>bones, shape, mass and muscles"]):::goal_open
   n20["Recorded anatomy changes the<br/>model's geometry: alignment,<br/>anteversion, torsion, leg length<br/>tests ○1"]:::step_open
-  n21["Test the central bet: does a<br/>personalised model make one camera<br/>good enough?<br/>tests ▶1"]:::step_open
+  n21["Test the central bet: does a<br/>personalised model make one camera<br/>good enough?<br/>tests ✗1"]:::step_done
   n22["Torsion, anteversion and<br/>personalised bone geometry as<br/>inferred values with provenance<br/>and uncertainty<br/>tests ○1"]:::step_open
   n23["A personalised multi-segment foot,<br/>fitted separately for each foot<br/>tests ○1"]:::step_open
   n24["First Tier-A subject: a<br/>personalised model from MRI or CT"]:::step_blocked
@@ -523,7 +523,6 @@ Open steps whose dependencies are done and that no open decision blocks.
 - [[sole-spacing-converge]]: Contact spacing converged for regional shares
 - [[suit-slimevr-validation]]: SlimeVR posture signals against motion capture
 - [[twin-anatomy-into-geometry]]: Recorded anatomy changes the model's geometry: alignment, anteversion, torsion, leg length
-- [[twin-bet-scaled-model]]: Test the central bet: does a personalised model make one camera good enough?
 - [[twin-bone-geometry]]: Torsion, anteversion and personalised bone geometry as inferred values with provenance and uncertainty
 - [[twin-personalised-foot]]: A personalised multi-segment foot, fitted separately for each foot
 
@@ -568,7 +567,7 @@ Open steps whose dependencies are done and that no open decision blocks.
 | [[t-spacing-convergence]] | failed | n/a | The largest change between the two finest spacings is at most 1.0 point for every share and paired difference, shrinking each step | Not converged: 1.67 points from 3.75 to 2.5 mm. Shrinking: yes. Paired differences within 0.89 |
 | [[t-spacing-finer]] | planned |  | The same criterion as the first convergence test, met at the next finer pair of spacings |  |
 | [[t-suit-ble]] | planned |  |  |  |
-| [[t-twin-bet-scaled-model]] | running |  | Proposal: if personalisation is what makes one camera good enough, the one-camera route's sagittal hip error at lag 0 falls by at least half and its knee error by at least a third, against the same route with the height-scaled body |  |
+| [[t-twin-bet-scaled-model]] | failed | no | Proposal: if personalisation is what makes one camera good enough, the one-camera route's sagittal hip error at lag 0 falls by at least half and its knee error by at least a third, against the same route with the height-scaled body | Not met (2026-11-16): with the mocap-scaled body the one-camera route's sagittal hip error at lag 0 rises +8 % and its knee error +10 % (89 trials, 9 subjects); HSMR and the augmenter route change by under 1.3 deg |
 
 ## Open decisions
 
