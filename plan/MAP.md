@@ -2,14 +2,14 @@
 
 # Plan map
 
-181 notes: 17 goals, 46 steps, 38 tests, 52 ideas, 28 decisions.
+183 notes: 17 goals, 47 steps, 39 tests, 52 ideas, 28 decisions.
 
 ## The engine
 
 ```mermaid
 flowchart TB
   r(["A full-body digital twin that<br/>personalises to each person and adapts<br/>as they change"]):::goal_open
-  p0(["Sense: measure the person's<br/>movement, forces and body<br/><i>2 done · 7 open · 1 blocked · 10 ideas · 3 decisions</i>"]):::goal_open
+  p0(["Sense: measure the person's<br/>movement, forces and body<br/><i>2 done · 8 open · 1 blocked · 10 ideas · 3 decisions</i>"]):::goal_open
   r --> p0
   p1(["Personalise: the person's own<br/>bones, shape, mass and muscles<br/><i>6 done · 4 open · 1 blocked · 10 ideas · 1 decision</i>"]):::goal_open
   r --> p1
@@ -64,50 +64,52 @@ flowchart LR
   n15>"Phone sensors alone, once the twin<br/>is built"]:::idea_new
   n16>"Higher-resolution T1 sole<br/>candidate"]:::idea_new
   n17["Our back end on OpenCap's own<br/>markers<br/>tests ✓1"]:::step_done
-  n18["Video kinematics on OpenCap<br/>LabValidation against marker<br/>motion capture<br/>tests ✓2 ✗2"]:::step_open
-  n19["One volunteer, one exercise,<br/>recorded with our own hardware<br/>tests ○1"]:::step_open
-  n20(["Sense: measure the person's<br/>movement, forces and body"]):::goal_open
-  n21["Boards designed, routed and<br/>checked: EU 37, 42, 46 and a<br/>personal foot, both sides<br/>tests ✓1"]:::step_done
-  n22["The sensor film's measured<br/>response (coupon test)<br/>tests ○1"]:::step_open
-  n23["Flex boards fabricated"]:::step_blocked
-  n24["A printed prototype tried on a<br/>real foot<br/>tests ○1"]:::step_open
-  n25["Boards and the self-test model<br/>rebuild identically on another<br/>machine<br/>tests ○1"]:::step_open
-  n26["SlimeVR posture signals against<br/>motion capture<br/>tests ○1"]:::step_open
-  n27["A clinician reviews the cue rules,<br/>per movement<br/><i>(Act)</i>"]:::external
-  n28["Muscle and joint-load numbers from<br/>measured ground forces<br/>tests ○1<br/><i>(Simulate)</i>"]:::external
-  n29["Foot-insole contact against an<br/>in-shoe sensor (stage C)<br/>tests ○1<br/><i>(Simulate)</i>"]:::external
-  n0 -. blocks .-> n19
-  n1 -. blocks .-> n23
-  n2 -. blocks .-> n24
-  n2 -. blocks .-> n22
+  n18["One camera plus simulated<br/>orientation sensors on the pelvis<br/>and thighs<br/>tests ○1"]:::step_open
+  n19["Video kinematics on OpenCap<br/>LabValidation against marker<br/>motion capture<br/>tests ✓2 ✗2"]:::step_open
+  n20["One volunteer, one exercise,<br/>recorded with our own hardware<br/>tests ○1"]:::step_open
+  n21(["Sense: measure the person's<br/>movement, forces and body"]):::goal_open
+  n22["Boards designed, routed and<br/>checked: EU 37, 42, 46 and a<br/>personal foot, both sides<br/>tests ✓1"]:::step_done
+  n23["The sensor film's measured<br/>response (coupon test)<br/>tests ○1"]:::step_open
+  n24["Flex boards fabricated"]:::step_blocked
+  n25["A printed prototype tried on a<br/>real foot<br/>tests ○1"]:::step_open
+  n26["Boards and the self-test model<br/>rebuild identically on another<br/>machine<br/>tests ○1"]:::step_open
+  n27["SlimeVR posture signals against<br/>motion capture<br/>tests ○1"]:::step_open
+  n28["A clinician reviews the cue rules,<br/>per movement<br/><i>(Act)</i>"]:::external
+  n29["Muscle and joint-load numbers from<br/>measured ground forces<br/>tests ○1<br/><i>(Simulate)</i>"]:::external
+  n30["Foot-insole contact against an<br/>in-shoe sensor (stage C)<br/>tests ○1<br/><i>(Simulate)</i>"]:::external
+  n0 -. blocks .-> n20
+  n1 -. blocks .-> n24
+  n2 -. blocks .-> n25
+  n2 -. blocks .-> n23
   n4 --> n3
-  n19 -. needed by .-> n3
-  n20 --> n4
-  n20 --> n5
+  n20 -. needed by .-> n3
+  n21 --> n4
+  n21 --> n5
   n4 --> n6
   n7 -.-o n4
-  n8 -.-o n20
-  n9 -.-o n20
-  n10 -.-o n20
+  n8 -.-o n21
+  n9 -.-o n21
+  n10 -.-o n21
   n11 -.-o n4
   n12 -.-o n6
   n13 -.-o n5
-  n14 -.-o n20
-  n15 -.-o n20
+  n14 -.-o n21
+  n15 -.-o n21
   n16 -.-o n6
   n5 --> n17
   n5 --> n18
   n5 --> n19
-  n6 --> n21
+  n5 --> n20
   n6 --> n22
   n6 --> n23
-  n24 -. needed by .-> n23
   n6 --> n24
+  n25 -. needed by .-> n24
   n6 --> n25
-  n5 --> n26
-  n18 -. needed by .-> n27
-  n3 -. needed by .-> n28
-  n22 -. needed by .-> n29
+  n6 --> n26
+  n5 --> n27
+  n19 -. needed by .-> n28
+  n3 -. needed by .-> n29
+  n23 -. needed by .-> n30
   classDef goal_open fill:#e1d5f5,stroke:#555,color:#111
   classDef goal_done fill:#c8e6c9,stroke:#555,color:#111
   classDef step_open fill:#ffffff,stroke:#555,color:#111
@@ -515,6 +517,7 @@ Open steps whose dependencies are done and that no open decision blocks.
 - [[build-windows]]: The pipeline runs on Windows
 - [[exo-assist-simulation]]: Predictive simulation of assistance for the person's body
 - [[foot-capture-pilot]]: Phone-only foot capture: protocol, consent plan and a repeatability pilot
+- [[kin-camera-plus-imu-sim]]: One camera plus simulated orientation sensors on the pelvis and thighs
 - [[kin-labvalidation]]: Video kinematics on OpenCap LabValidation against marker motion capture
 - [[sim-joint-load-scenarios]]: Joint load runs on the corrected motion and on assistance scenarios
 - [[sole-footbed-layers]]: Footbed and shoe layers in the simulation
@@ -550,6 +553,7 @@ Open steps whose dependencies are done and that no open decision blocks.
 | [[t-insole]] | planned |  |  |  |
 | [[t-joint-load-scenarios]] | planned |  |  |  |
 | [[t-kin-backend-markers]] | passed | no | Proposal: over the trials and lag rule of the zero-lag positive control, our back end's mean absolute error over the 18 angles is within 1.5 degrees of OpenCap's own IK on the same markers (4.57 degrees) | Met (2026-11-16): 5.11 deg over the 18 angles, +0.54 from OpenCap's own IK on the same 159 trials (4.57); all 160 trials evaluated |
+| [[t-kin-camera-plus-imu-sim]] | planned | no | With pelvis and thigh sensors under assumed noise, the one-camera MediaPipe route's sagittal hip error at lag 0 is at most 10 degrees and pelvis tilt at most 5 degrees, as means over subjects |  |
 | [[t-kin-labvalidation]] | failed | yes | Proposal: per route, joint and plane, the RMSE against the motion capture's inverse kinematics; a joint passes on a route if it is within docs/accuracy.md's target (sagittal at most 3 degrees, frontal at most 5) in every evaluated subject; transverse angles are reported only | Not met (2026-11-10): no sagittal cell is within 3 deg in every evaluated subject on any route; only the frontal pelvis passes (five cameras; with the augmenter also the frontal pelvis segment). 9 of 10 subjects have videos; at lag 0 |
 | [[t-kin-opencap-control]] | passed | no | Proposal: through this pipeline's comparison, OpenCap's five-camera result on subject 2's squats1 has a mean absolute error over the lower-limb and trunk angles within 2 degrees of the 4.5 degrees its paper reports, with one clear lag | Met (2026-11-10): MAE over the 18 lower-limb and trunk angles 6.32 deg, +1.82 from the paper's 4.5 (16 without subtalar: 6.44); one clear lag, 0.417 s (ratio 3.02) |
 | [[t-kin-opencap-control-all]] | passed | yes | For the primary configuration (HRNet, two cameras, all four activities), the mean absolute error over the 18 angles is within 2 degrees of the paper's 4.5 degrees: computed per trial, averaged over each subject's evaluated trials, then over the 10 subjects | Met (2026-11-10): primary configuration (HRNet, two cameras) 4.80 deg over the 18 angles, +0.30 from the paper's 4.5; all 10 subjects evaluated, 69 of 160 trials; walking almost never passes the clear-lag rule (1 of 60 evaluated) |
