@@ -1,7 +1,7 @@
 ---
 type: "step"
 title: "One camera plus simulated orientation sensors on the pelvis and thighs"
-status: "open"
+status: "done"
 area: "pipeline"
 parent: "[[goal-measured-kinematics]]"
 priority: "2"
@@ -13,3 +13,8 @@ updated: "2026-11-16"
 **Question:** can orientation sensors on the pelvis and thighs fix one camera's pelvis–hip error? This is simulated sensors only, so it is an upper bound for real ones.
 
 It follows [[t-twin-bet-scaled-model]]: the person's own bones did not reduce one camera's hip and knee error, so the next candidate is an extra sensor. Nothing is bought or built for this; the sensors are computed from the motion capture. The test is [[t-kin-camera-plus-imu-sim]].
+
+**Done (2026-11-16,** [[t-kin-camera-plus-imu-sim]]**):** the expected result is met as an upper bound. With simulated
+pelvis and thigh sensors under assumed noise, the hip is 5.9° and pelvis tilt 4.5°. The knee and ankle are not fixed;
+the error moves down the leg. Whether real sensors come close needs real sensors; that is the owner's to decide.
+

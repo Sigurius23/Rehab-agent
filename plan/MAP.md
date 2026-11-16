@@ -9,7 +9,7 @@
 ```mermaid
 flowchart TB
   r(["A full-body digital twin that<br/>personalises to each person and adapts<br/>as they change"]):::goal_open
-  p0(["Sense: measure the person's<br/>movement, forces and body<br/><i>2 done · 8 open · 1 blocked · 10 ideas · 3 decisions</i>"]):::goal_open
+  p0(["Sense: measure the person's<br/>movement, forces and body<br/><i>3 done · 7 open · 1 blocked · 10 ideas · 3 decisions</i>"]):::goal_open
   r --> p0
   p1(["Personalise: the person's own<br/>bones, shape, mass and muscles<br/><i>6 done · 4 open · 1 blocked · 10 ideas · 1 decision</i>"]):::goal_open
   r --> p1
@@ -64,7 +64,7 @@ flowchart LR
   n15>"Phone sensors alone, once the twin<br/>is built"]:::idea_new
   n16>"Higher-resolution T1 sole<br/>candidate"]:::idea_new
   n17["Our back end on OpenCap's own<br/>markers<br/>tests ✓1"]:::step_done
-  n18["One camera plus simulated<br/>orientation sensors on the pelvis<br/>and thighs<br/>tests ▶1"]:::step_open
+  n18["One camera plus simulated<br/>orientation sensors on the pelvis<br/>and thighs<br/>tests ✓1"]:::step_done
   n19["Video kinematics on OpenCap<br/>LabValidation against marker<br/>motion capture<br/>tests ✓2 ✗2"]:::step_open
   n20["One volunteer, one exercise,<br/>recorded with our own hardware<br/>tests ○1"]:::step_open
   n21(["Sense: measure the person's<br/>movement, forces and body"]):::goal_open
@@ -517,7 +517,6 @@ Open steps whose dependencies are done and that no open decision blocks.
 - [[build-windows]]: The pipeline runs on Windows
 - [[exo-assist-simulation]]: Predictive simulation of assistance for the person's body
 - [[foot-capture-pilot]]: Phone-only foot capture: protocol, consent plan and a repeatability pilot
-- [[kin-camera-plus-imu-sim]]: One camera plus simulated orientation sensors on the pelvis and thighs
 - [[kin-labvalidation]]: Video kinematics on OpenCap LabValidation against marker motion capture
 - [[sim-joint-load-scenarios]]: Joint load runs on the corrected motion and on assistance scenarios
 - [[sole-footbed-layers]]: Footbed and shoe layers in the simulation
@@ -553,7 +552,7 @@ Open steps whose dependencies are done and that no open decision blocks.
 | [[t-insole]] | planned |  |  |  |
 | [[t-joint-load-scenarios]] | planned |  |  |  |
 | [[t-kin-backend-markers]] | passed | no | Proposal: over the trials and lag rule of the zero-lag positive control, our back end's mean absolute error over the 18 angles is within 1.5 degrees of OpenCap's own IK on the same markers (4.57 degrees) | Met (2026-11-16): 5.11 deg over the 18 angles, +0.54 from OpenCap's own IK on the same 159 trials (4.57); all 160 trials evaluated |
-| [[t-kin-camera-plus-imu-sim]] | running | no | With pelvis and thigh sensors under assumed noise, the one-camera MediaPipe route's sagittal hip error at lag 0 is at most 10 degrees and pelvis tilt at most 5 degrees, as means over subjects |  |
+| [[t-kin-camera-plus-imu-sim]] | passed | no | With pelvis and thigh sensors under assumed noise, the one-camera MediaPipe route's sagittal hip error at lag 0 is at most 10 degrees and pelvis tilt at most 5 degrees, as means over subjects | Met (2026-11-16): with simulated pelvis and thigh sensors under assumed noise, the one-camera route's sagittal hip RMSE at lag 0 is 5.9 deg and pelvis tilt 4.5 deg (89 trials, 9 subjects, without walking); an upper bound, since the sensors are computed from the reference |
 | [[t-kin-labvalidation]] | failed | yes | Proposal: per route, joint and plane, the RMSE against the motion capture's inverse kinematics; a joint passes on a route if it is within docs/accuracy.md's target (sagittal at most 3 degrees, frontal at most 5) in every evaluated subject; transverse angles are reported only | Not met (2026-11-10): no sagittal cell is within 3 deg in every evaluated subject on any route; only the frontal pelvis passes (five cameras; with the augmenter also the frontal pelvis segment). 9 of 10 subjects have videos; at lag 0 |
 | [[t-kin-opencap-control]] | passed | no | Proposal: through this pipeline's comparison, OpenCap's five-camera result on subject 2's squats1 has a mean absolute error over the lower-limb and trunk angles within 2 degrees of the 4.5 degrees its paper reports, with one clear lag | Met (2026-11-10): MAE over the 18 lower-limb and trunk angles 6.32 deg, +1.82 from the paper's 4.5 (16 without subtalar: 6.44); one clear lag, 0.417 s (ratio 3.02) |
 | [[t-kin-opencap-control-all]] | passed | yes | For the primary configuration (HRNet, two cameras, all four activities), the mean absolute error over the 18 angles is within 2 degrees of the paper's 4.5 degrees: computed per trial, averaged over each subject's evaluated trials, then over the 10 subjects | Met (2026-11-10): primary configuration (HRNet, two cameras) 4.80 deg over the 18 angles, +0.30 from the paper's 4.5; all 10 subjects evaluated, 69 of 160 trials; walking almost never passes the clear-lag rule (1 of 60 evaluated) |
