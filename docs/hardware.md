@@ -65,6 +65,10 @@ for rooms/objects rather than moving people, and may only be used here for a
   which the pipeline refuses to bridge, so use two only if both keep the knees in view at full depth.
   Two near-side views 130° apart lost trunk and lumbar (8.7°/14° vs 2.8°/7.6° against OpenCap). One phone
   cannot resolve pelvis tilt, hip flexion or lumbar flexion (10–26°) — use it for knee FPPA and frontal signals only.
+  **These figures are agreement with OpenCap on one trial, not accuracy** (corrected 2026-11-16). Against marker
+  motion capture (`docs/validation-results.md` section 4b; `plan/nodes/t-kin-labvalidation.md`), MediaPipe misses
+  by 14–19° at the hip and knee even with five cameras, and on the pilot trial one camera's knee FPPA was 20–24° off as
+  well. The layout advice above is untested against a marker reference.
 - iPhone body scan is a separate, static station step (person rotates slowly
   in A-pose, tight clothing) — it is not recorded during dynamic exercise.
 

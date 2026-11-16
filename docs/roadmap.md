@@ -9,10 +9,14 @@ Catalog the upstream repos (110 today), tier them, provide clone/list/validate t
 Slice chosen: **video → SKEL → OpenSim** (`stacks/video-skel-opensim.md`, code in
 `pipeline/`). It produces a scaled OpenSim model, joint angles, posture vs gravity,
 QC, a validation report and an HTML report a clinician can open and disagree with.
-- ✅ Back-end verified against synthetic truth (~1° joint angles, 0.35° trunk lean vs gravity).
+- ✅ Back-end verified against synthetic truth (~1° joint angles, 0.35° trunk lean vs gravity). Synthetic only:
+  105 dense SKEL markers, no detector noise. Not yet checked on real markers (`plan/nodes/t-kin-backend-markers.md`).
+- ✅ Measured against marker motion capture (OpenCap LabValidation, 2026-11-10 to 11-15,
+  `plan/nodes/t-kin-labvalidation.md`): the MediaPipe routes and HSMR miss the targets; the benchmark's stop rule
+  triggered. OpenCap's own pipeline is about 4.5–4.8° on the same data.
 - ✅ Real-video run (Pose2Sim demo): MediaPipe monocular fails every gate against 4 cameras →
   MediaPipe is a test front-end only (`docs/validation-results.md`).
-- ⬜ HSMR/SKEL on the OpenCap LabValidation dataset vs marker mocap (needs the gated SKEL model + GPU).
+- ✅ HSMR/SKEL on the OpenCap LabValidation dataset vs marker mocap: pelvis tilt 7°, knee 27–29° at lag 0; no target met.
 - ⬜ One healthy volunteer, one exercise, recorded with the selected hardware and device gravity.
 No patient data, no feedback generation yet.
 
