@@ -313,3 +313,31 @@ The first three columns leave out the aliases: best lags beyond ±0.3 s, one rep
   to −1, which points to the motion capture following the videos' timestamps. A direct check would settle it: time
   each stored frame by its own timestamp and compare.
 
+**Post hoc, changing no recorded figure (owner, 2026-11-16): re-timing by the videos' timestamps.** Every route's
+round-2 output is used, except the one-camera MediaPipe routes, which were not rerun and come from round 0. Walking
+and subject 2's `squats1` are left out, and only evaluated trials are used. Each estimate frame was re-timed by its
+own stored video frame's timestamp (OpenCV), instead of index/60, and compared with the motion capture at lag 0:
+- the multi-view routes use Cam0's frame, after the sync's trim;
+- the one-camera routes and HSMR use Cam2's frame.
+
+The baseline is the same comparison on the index timing. Both use `validation.compare` on the IK result. These
+baseline figures leave out walking, so they differ from the recorded ones. Figures:
+`validation/results/kin_benchmark_labvalidation_posthoc_retime.json`; script: `posthoc_retime.py`.
+
+| Route | Trials | Hip, sagittal, right / left | Knee | Ankle | Median best lag, index → timestamps (frames) |
+|---|---|---|---|---|---|
+| Five cameras | 84 | +0.8 / +0.9 | -1.2 / -1.1 | -0.2 / +0.0 | -2 → +5 |
+| Five cameras, augmenter | 83 | +1.1 / +1.4 | +0.4 / +0.8 | +0.8 / +1.0 | -2 → +5 |
+| One camera | 89 | +0.8 / +0.9 | +2.9 / +2.4 | +1.6 / -0.4 | -1 → +5 |
+| One camera, augmenter | 50 | +0.9 / +1.0 | +3.8 / +3.6 | +1.7 / -0.3 | +1 → +7 |
+| HSMR | 89 | +1.4 / +1.3 | +2.2 / +2.1 | +0.7 / +0.8 | -1 → +4 |
+
+The middle columns are the change in RMSE at lag 0, timestamps minus index timing, in degrees. The best-lag medians
+leave out aliases (|lag| > 0.3 s).
+- **The error rises on nearly every route and cell, and the best lags move away from 0** (from about −1 or −2
+  frames to +4 to +7). The one exception is the plain five-camera knee, which falls about 1.2°.
+- **So timestamp alignment is not proposed. Lag 0 on the index timing stays** for the next front end's rule.
+- **Read together with the regression above,** best lag ≈ +3 − 0.8 × gap frames on the strongest routes. Re-timing
+  adds the gap to the estimate's clock, so it turns a small negative lag into a positive one. The motion capture
+  matches the stored frames' order better than their timestamps.
+
