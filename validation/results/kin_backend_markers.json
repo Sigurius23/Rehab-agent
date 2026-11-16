@@ -1,0 +1,2227 @@
+{
+ "what": "t-kin-backend-markers (method committed in ff572ba before the run): OpenCap's video-derived *_study markers (HRNet, two cameras) through this pipeline's back end, against the motion-capture IK at lag 0, beside OpenCap's own IK on the same trials. Aggregate only.",
+ "date": "2026-11-16",
+ "inputs": {
+  "markers_manifest_sha256": "10aaaafc0599e02d59792ba7e9ade8f9fddef1a3001e0caa20910565872c5e77"
+ },
+ "set": [
+  "pelvis_tilt",
+  "pelvis_list",
+  "pelvis_rotation",
+  "hip_flexion_r",
+  "hip_adduction_r",
+  "hip_rotation_r",
+  "knee_angle_r",
+  "ankle_angle_r",
+  "subtalar_angle_r",
+  "hip_flexion_l",
+  "hip_adduction_l",
+  "hip_rotation_l",
+  "knee_angle_l",
+  "ankle_angle_l",
+  "subtalar_angle_l",
+  "lumbar_extension",
+  "lumbar_bending",
+  "lumbar_rotation"
+ ],
+ "ours": {
+  "trials": 159,
+  "subjects": 10,
+  "mae_deg": 5.1078796782077704,
+  "per_subject": {
+   "subject2": 6.010968488052637,
+   "subject3": 5.21378396666241,
+   "subject4": 4.493058893556807,
+   "subject5": 4.724377888885663,
+   "subject6": 5.228313699274997,
+   "subject7": 5.0693968360226265,
+   "subject8": 4.837055083393345,
+   "subject9": 5.253850139205042,
+   "subject10": 4.941553582326613,
+   "subject11": 5.306438204697562
+  },
+  "per_movement": {
+   "walking": {
+    "mae_deg": 5.065970196811295,
+    "trials": 60
+   },
+   "squat": {
+    "mae_deg": 4.149842774632555,
+    "trials": 19
+   },
+   "sit-to-stand": {
+    "mae_deg": 5.212131104051622,
+    "trials": 20
+   },
+   "drop jump": {
+    "mae_deg": 5.430392247975105,
+    "trials": 60
+   }
+  },
+  "per_angle": {
+   "pelvis_tilt": {
+    "mae": 6.018140070936644,
+    "rmse": 6.76452502961763,
+    "bias": 2.8744553257355703,
+    "spread": 3.5852209731954447
+   },
+   "pelvis_list": {
+    "mae": 2.613804811240434,
+    "rmse": 2.981012348619223,
+    "bias": 0.5151804617651923,
+    "spread": 1.7835721704765946
+   },
+   "pelvis_rotation": {
+    "mae": 2.8646510858605474,
+    "rmse": 3.4021821151891,
+    "bias": -0.7863150855607766,
+    "spread": 2.4611513974222046
+   },
+   "hip_flexion_r": {
+    "mae": 7.067060053136191,
+    "rmse": 7.989585109944633,
+    "bias": -4.152534875088562,
+    "spread": 4.416642125483319
+   },
+   "hip_adduction_r": {
+    "mae": 2.839986257013937,
+    "rmse": 3.346981094858325,
+    "bias": -0.09719296909099098,
+    "spread": 2.410387681055658
+   },
+   "hip_rotation_r": {
+    "mae": 4.419029651119418,
+    "rmse": 5.1494478833365775,
+    "bias": 1.9025769510987085,
+    "spread": 3.3263073949581092
+   },
+   "knee_angle_r": {
+    "mae": 5.58663082118751,
+    "rmse": 6.320571264149708,
+    "bias": 0.68198617908446,
+    "spread": 4.315155510351497
+   },
+   "ankle_angle_r": {
+    "mae": 5.492596556271833,
+    "rmse": 6.688883154642456,
+    "bias": 2.991319276865814,
+    "spread": 5.089230070020581
+   },
+   "subtalar_angle_r": {
+    "mae": 6.305817830270949,
+    "rmse": 7.258385701885585,
+    "bias": 1.838379994138182,
+    "spread": 4.649351075637254
+   },
+   "hip_flexion_l": {
+    "mae": 7.326976188803586,
+    "rmse": 8.334242681411867,
+    "bias": -5.050292190729977,
+    "spread": 4.727415884415574
+   },
+   "hip_adduction_l": {
+    "mae": 3.2675253608693646,
+    "rmse": 3.7635877806127978,
+    "bias": -2.2835008762491205,
+    "spread": 2.3354435937819042
+   },
+   "hip_rotation_l": {
+    "mae": 4.063449113497091,
+    "rmse": 4.808568269232536,
+    "bias": -1.020935224274726,
+    "spread": 3.4141574287771173
+   },
+   "knee_angle_l": {
+    "mae": 5.138522438700955,
+    "rmse": 5.919514329760494,
+    "bias": 0.14940557230357207,
+    "spread": 4.407400993735299
+   },
+   "ankle_angle_l": {
+    "mae": 6.835943510956762,
+    "rmse": 7.9958932079051,
+    "bias": 5.899705012176472,
+    "spread": 4.833335309726064
+   },
+   "subtalar_angle_l": {
+    "mae": 5.082836736083164,
+    "rmse": 6.001833456894591,
+    "bias": 0.4161056854255095,
+    "spread": 4.350143493579756
+   },
+   "lumbar_extension": {
+    "mae": 9.272536282875953,
+    "rmse": 10.509175338283834,
+    "bias": -6.48728645816386,
+    "spread": 5.708431346732647
+   },
+   "lumbar_bending": {
+    "mae": 3.3041152719060873,
+    "rmse": 3.941201297530873,
+    "bias": 0.931559050879908,
+    "spread": 3.0477233942057387
+   },
+   "lumbar_rotation": {
+    "mae": 4.442212167009436,
+    "rmse": 5.358208901757482,
+    "bias": 2.5789864082449063,
+    "spread": 3.800682311211663
+   }
+  }
+ },
+ "ours_common": {
+  "trials": 159,
+  "subjects": 10,
+  "mae_deg": 5.1078796782077704,
+  "per_subject": {
+   "subject2": 6.010968488052637,
+   "subject3": 5.21378396666241,
+   "subject4": 4.493058893556807,
+   "subject5": 4.724377888885663,
+   "subject6": 5.228313699274997,
+   "subject7": 5.0693968360226265,
+   "subject8": 4.837055083393345,
+   "subject9": 5.253850139205042,
+   "subject10": 4.941553582326613,
+   "subject11": 5.306438204697562
+  },
+  "per_movement": {
+   "walking": {
+    "mae_deg": 5.065970196811295,
+    "trials": 60
+   },
+   "squat": {
+    "mae_deg": 4.149842774632555,
+    "trials": 19
+   },
+   "sit-to-stand": {
+    "mae_deg": 5.212131104051622,
+    "trials": 20
+   },
+   "drop jump": {
+    "mae_deg": 5.430392247975105,
+    "trials": 60
+   }
+  },
+  "per_angle": {
+   "pelvis_tilt": {
+    "mae": 6.018140070936644,
+    "rmse": 6.76452502961763,
+    "bias": 2.8744553257355703,
+    "spread": 3.5852209731954447
+   },
+   "pelvis_list": {
+    "mae": 2.613804811240434,
+    "rmse": 2.981012348619223,
+    "bias": 0.5151804617651923,
+    "spread": 1.7835721704765946
+   },
+   "pelvis_rotation": {
+    "mae": 2.8646510858605474,
+    "rmse": 3.4021821151891,
+    "bias": -0.7863150855607766,
+    "spread": 2.4611513974222046
+   },
+   "hip_flexion_r": {
+    "mae": 7.067060053136191,
+    "rmse": 7.989585109944633,
+    "bias": -4.152534875088562,
+    "spread": 4.416642125483319
+   },
+   "hip_adduction_r": {
+    "mae": 2.839986257013937,
+    "rmse": 3.346981094858325,
+    "bias": -0.09719296909099098,
+    "spread": 2.410387681055658
+   },
+   "hip_rotation_r": {
+    "mae": 4.419029651119418,
+    "rmse": 5.1494478833365775,
+    "bias": 1.9025769510987085,
+    "spread": 3.3263073949581092
+   },
+   "knee_angle_r": {
+    "mae": 5.58663082118751,
+    "rmse": 6.320571264149708,
+    "bias": 0.68198617908446,
+    "spread": 4.315155510351497
+   },
+   "ankle_angle_r": {
+    "mae": 5.492596556271833,
+    "rmse": 6.688883154642456,
+    "bias": 2.991319276865814,
+    "spread": 5.089230070020581
+   },
+   "subtalar_angle_r": {
+    "mae": 6.305817830270949,
+    "rmse": 7.258385701885585,
+    "bias": 1.838379994138182,
+    "spread": 4.649351075637254
+   },
+   "hip_flexion_l": {
+    "mae": 7.326976188803586,
+    "rmse": 8.334242681411867,
+    "bias": -5.050292190729977,
+    "spread": 4.727415884415574
+   },
+   "hip_adduction_l": {
+    "mae": 3.2675253608693646,
+    "rmse": 3.7635877806127978,
+    "bias": -2.2835008762491205,
+    "spread": 2.3354435937819042
+   },
+   "hip_rotation_l": {
+    "mae": 4.063449113497091,
+    "rmse": 4.808568269232536,
+    "bias": -1.020935224274726,
+    "spread": 3.4141574287771173
+   },
+   "knee_angle_l": {
+    "mae": 5.138522438700955,
+    "rmse": 5.919514329760494,
+    "bias": 0.14940557230357207,
+    "spread": 4.407400993735299
+   },
+   "ankle_angle_l": {
+    "mae": 6.835943510956762,
+    "rmse": 7.9958932079051,
+    "bias": 5.899705012176472,
+    "spread": 4.833335309726064
+   },
+   "subtalar_angle_l": {
+    "mae": 5.082836736083164,
+    "rmse": 6.001833456894591,
+    "bias": 0.4161056854255095,
+    "spread": 4.350143493579756
+   },
+   "lumbar_extension": {
+    "mae": 9.272536282875953,
+    "rmse": 10.509175338283834,
+    "bias": -6.48728645816386,
+    "spread": 5.708431346732647
+   },
+   "lumbar_bending": {
+    "mae": 3.3041152719060873,
+    "rmse": 3.941201297530873,
+    "bias": 0.931559050879908,
+    "spread": 3.0477233942057387
+   },
+   "lumbar_rotation": {
+    "mae": 4.442212167009436,
+    "rmse": 5.358208901757482,
+    "bias": 2.5789864082449063,
+    "spread": 3.800682311211663
+   }
+  }
+ },
+ "opencap_common": {
+  "trials": 159,
+  "subjects": 10,
+  "mae_deg": 4.569265040857673,
+  "per_subject": {
+   "subject2": 4.7251143960015884,
+   "subject3": 3.9352424144244385,
+   "subject4": 4.425985798032961,
+   "subject5": 4.09555086256856,
+   "subject6": 3.448380606828268,
+   "subject7": 4.589178974392862,
+   "subject8": 4.269750367669495,
+   "subject9": 5.0700521416178255,
+   "subject10": 6.086277815135147,
+   "subject11": 5.047117031905587
+  },
+  "per_movement": {
+   "walking": {
+    "mae_deg": 4.129149668414831,
+    "trials": 60
+   },
+   "squat": {
+    "mae_deg": 4.098896210145179,
+    "trials": 19
+   },
+   "sit-to-stand": {
+    "mae_deg": 4.671771747235454,
+    "trials": 20
+   },
+   "drop jump": {
+    "mae_deg": 5.137972177312984,
+    "trials": 60
+   }
+  },
+  "per_angle": {
+   "pelvis_tilt": {
+    "mae": 6.2082534784320655,
+    "rmse": 6.896584546268545,
+    "bias": -4.617999515537393,
+    "spread": 3.327581356118415
+   },
+   "pelvis_list": {
+    "mae": 2.1429107278305297,
+    "rmse": 2.5109671203329573,
+    "bias": -0.4414100688827441,
+    "spread": 1.7387606356181586
+   },
+   "pelvis_rotation": {
+    "mae": 2.9646108887517064,
+    "rmse": 3.4961076638065594,
+    "bias": -1.2002610034069972,
+    "spread": 2.4247323750557253
+   },
+   "hip_flexion_r": {
+    "mae": 5.700352213696999,
+    "rmse": 6.469530789119569,
+    "bias": 3.3347237415731867,
+    "spread": 3.665607532641979
+   },
+   "hip_adduction_r": {
+    "mae": 2.659112563192108,
+    "rmse": 3.1402002587103928,
+    "bias": 0.5647283475779254,
+    "spread": 2.3542488441113005
+   },
+   "hip_rotation_r": {
+    "mae": 4.0098165936770025,
+    "rmse": 4.7119051505921075,
+    "bias": 2.0948334154376616,
+    "spread": 3.1561735896528256
+   },
+   "knee_angle_r": {
+    "mae": 3.8820053294606525,
+    "rmse": 4.651989811102106,
+    "bias": -0.7485129633919314,
+    "spread": 3.707638320849379
+   },
+   "ankle_angle_r": {
+    "mae": 5.459033783361012,
+    "rmse": 6.585347262038146,
+    "bias": 3.2829738064223144,
+    "spread": 5.075689897310699
+   },
+   "subtalar_angle_r": {
+    "mae": 5.425960374408038,
+    "rmse": 6.423929659291277,
+    "bias": 0.15100175143244607,
+    "spread": 4.636529301342978
+   },
+   "hip_flexion_l": {
+    "mae": 5.835032541833682,
+    "rmse": 6.661514808143075,
+    "bias": 3.381390766145165,
+    "spread": 4.051223602238518
+   },
+   "hip_adduction_l": {
+    "mae": 2.657879646274104,
+    "rmse": 3.148103181901264,
+    "bias": -0.9356092092292752,
+    "spread": 2.316576980579396
+   },
+   "hip_rotation_l": {
+    "mae": 4.103377099288858,
+    "rmse": 4.8872453768787505,
+    "bias": 1.253311469767159,
+    "spread": 3.4897335046567393
+   },
+   "knee_angle_l": {
+    "mae": 3.9813763485579634,
+    "rmse": 4.687882563173893,
+    "bias": -0.16286679991360278,
+    "spread": 3.9212494656333403
+   },
+   "ankle_angle_l": {
+    "mae": 6.12341911224477,
+    "rmse": 7.2555501922172585,
+    "bias": 4.941806652141118,
+    "spread": 4.731252934831813
+   },
+   "subtalar_angle_l": {
+    "mae": 5.73492627780754,
+    "rmse": 6.773157376058026,
+    "bias": -2.8749669594173364,
+    "spread": 4.796191472178952
+   },
+   "lumbar_extension": {
+    "mae": 7.88001524082514,
+    "rmse": 8.838528438731336,
+    "bias": 5.3361524157459055,
+    "spread": 4.527202245717623
+   },
+   "lumbar_bending": {
+    "mae": 3.2055362341255558,
+    "rmse": 3.811454115214123,
+    "bias": 0.7193891258721039,
+    "spread": 2.6975669110977436
+   },
+   "lumbar_rotation": {
+    "mae": 4.273152281670393,
+    "rmse": 5.130727750316762,
+    "bias": 2.0985893428729883,
+    "spread": 3.602019163321124
+   }
+  }
+ },
+ "opencap_all": {
+  "trials": 159,
+  "subjects": 10,
+  "mae_deg": 4.569265040857673,
+  "per_subject": {
+   "subject2": 4.7251143960015884,
+   "subject3": 3.9352424144244385,
+   "subject4": 4.425985798032961,
+   "subject5": 4.09555086256856,
+   "subject6": 3.448380606828268,
+   "subject7": 4.589178974392862,
+   "subject8": 4.269750367669495,
+   "subject9": 5.0700521416178255,
+   "subject10": 6.086277815135147,
+   "subject11": 5.047117031905587
+  },
+  "per_movement": {
+   "walking": {
+    "mae_deg": 4.129149668414831,
+    "trials": 60
+   },
+   "squat": {
+    "mae_deg": 4.098896210145179,
+    "trials": 19
+   },
+   "sit-to-stand": {
+    "mae_deg": 4.671771747235454,
+    "trials": 20
+   },
+   "drop jump": {
+    "mae_deg": 5.137972177312984,
+    "trials": 60
+   }
+  },
+  "per_angle": {
+   "pelvis_tilt": {
+    "mae": 6.2082534784320655,
+    "rmse": 6.896584546268545,
+    "bias": -4.617999515537393,
+    "spread": 3.327581356118415
+   },
+   "pelvis_list": {
+    "mae": 2.1429107278305297,
+    "rmse": 2.5109671203329573,
+    "bias": -0.4414100688827441,
+    "spread": 1.7387606356181586
+   },
+   "pelvis_rotation": {
+    "mae": 2.9646108887517064,
+    "rmse": 3.4961076638065594,
+    "bias": -1.2002610034069972,
+    "spread": 2.4247323750557253
+   },
+   "hip_flexion_r": {
+    "mae": 5.700352213696999,
+    "rmse": 6.469530789119569,
+    "bias": 3.3347237415731867,
+    "spread": 3.665607532641979
+   },
+   "hip_adduction_r": {
+    "mae": 2.659112563192108,
+    "rmse": 3.1402002587103928,
+    "bias": 0.5647283475779254,
+    "spread": 2.3542488441113005
+   },
+   "hip_rotation_r": {
+    "mae": 4.0098165936770025,
+    "rmse": 4.7119051505921075,
+    "bias": 2.0948334154376616,
+    "spread": 3.1561735896528256
+   },
+   "knee_angle_r": {
+    "mae": 3.8820053294606525,
+    "rmse": 4.651989811102106,
+    "bias": -0.7485129633919314,
+    "spread": 3.707638320849379
+   },
+   "ankle_angle_r": {
+    "mae": 5.459033783361012,
+    "rmse": 6.585347262038146,
+    "bias": 3.2829738064223144,
+    "spread": 5.075689897310699
+   },
+   "subtalar_angle_r": {
+    "mae": 5.425960374408038,
+    "rmse": 6.423929659291277,
+    "bias": 0.15100175143244607,
+    "spread": 4.636529301342978
+   },
+   "hip_flexion_l": {
+    "mae": 5.835032541833682,
+    "rmse": 6.661514808143075,
+    "bias": 3.381390766145165,
+    "spread": 4.051223602238518
+   },
+   "hip_adduction_l": {
+    "mae": 2.657879646274104,
+    "rmse": 3.148103181901264,
+    "bias": -0.9356092092292752,
+    "spread": 2.316576980579396
+   },
+   "hip_rotation_l": {
+    "mae": 4.103377099288858,
+    "rmse": 4.8872453768787505,
+    "bias": 1.253311469767159,
+    "spread": 3.4897335046567393
+   },
+   "knee_angle_l": {
+    "mae": 3.9813763485579634,
+    "rmse": 4.687882563173893,
+    "bias": -0.16286679991360278,
+    "spread": 3.9212494656333403
+   },
+   "ankle_angle_l": {
+    "mae": 6.12341911224477,
+    "rmse": 7.2555501922172585,
+    "bias": 4.941806652141118,
+    "spread": 4.731252934831813
+   },
+   "subtalar_angle_l": {
+    "mae": 5.73492627780754,
+    "rmse": 6.773157376058026,
+    "bias": -2.8749669594173364,
+    "spread": 4.796191472178952
+   },
+   "lumbar_extension": {
+    "mae": 7.88001524082514,
+    "rmse": 8.838528438731336,
+    "bias": 5.3361524157459055,
+    "spread": 4.527202245717623
+   },
+   "lumbar_bending": {
+    "mae": 3.2055362341255558,
+    "rmse": 3.811454115214123,
+    "bias": 0.7193891258721039,
+    "spread": 2.6975669110977436
+   },
+   "lumbar_rotation": {
+    "mae": 4.273152281670393,
+    "rmse": 5.130727750316762,
+    "bias": 2.0985893428729883,
+    "spread": 3.602019163321124
+   }
+  }
+ },
+ "counts": {
+  "run": 160,
+  "evaluated": 160,
+  "not_evaluated": {},
+  "multi_segment": 0
+ },
+ "subject2_squats1": {
+  "ours": 5.736737778395062,
+  "opencap": 4.652265373186295
+ },
+ "expected": {
+  "rule": "our MAE over the 18 angles within 1.5 deg of OpenCap's own IK on the same markers (4.57 deg), zero-lag control's trials and rule",
+  "ours_deg": 5.1078796782077704,
+  "opencap_deg": 4.569265040857673,
+  "difference_deg": 0.5386146373500971,
+  "difference_common_trials_deg": 0.5386146373500971,
+  "met": true
+ },
+ "rows": [
+  {
+   "subject": "subject10",
+   "trial": "DJ1",
+   "movement": "drop jump",
+   "status": "evaluated",
+   "why": null,
+   "coverage": 1.0,
+   "segments": 1,
+   "mae18": 5.190568279909188
+  },
+  {
+   "subject": "subject10",
+   "trial": "DJ2",
+   "movement": "drop jump",
+   "status": "evaluated",
+   "why": null,
+   "coverage": 1.0,
+   "segments": 1,
+   "mae18": 5.86910235175
+  },
+  {
+   "subject": "subject10",
+   "trial": "DJ3",
+   "movement": "drop jump",
+   "status": "evaluated",
+   "why": null,
+   "coverage": 1.0,
+   "segments": 1,
+   "mae18": 4.59242260807152
+  },
+  {
+   "subject": "subject10",
+   "trial": "DJAsym1",
+   "movement": "drop jump",
+   "status": "evaluated",
+   "why": null,
+   "coverage": 1.0,
+   "segments": 1,
+   "mae18": 5.660465985814394
+  },
+  {
+   "subject": "subject10",
+   "trial": "DJAsym2",
+   "movement": "drop jump",
+   "status": "evaluated",
+   "why": null,
+   "coverage": 1.0,
+   "segments": 1,
+   "mae18": 4.739094429650437
+  },
+  {
+   "subject": "subject10",
+   "trial": "DJAsym3",
+   "movement": "drop jump",
+   "status": "evaluated",
+   "why": null,
+   "coverage": 1.0,
+   "segments": 1,
+   "mae18": 5.766180766440781
+  },
+  {
+   "subject": "subject10",
+   "trial": "STS1",
+   "movement": "sit-to-stand",
+   "status": "evaluated",
+   "why": null,
+   "coverage": 1.0,
+   "segments": 1,
+   "mae18": 4.287272630961099
+  },
+  {
+   "subject": "subject10",
+   "trial": "STSweakLegs1",
+   "movement": "sit-to-stand",
+   "status": "evaluated",
+   "why": null,
+   "coverage": 1.0,
+   "segments": 1,
+   "mae18": 5.334020260528641
+  },
+  {
+   "subject": "subject10",
+   "trial": "squats1",
+   "movement": "squat",
+   "status": "evaluated",
+   "why": null,
+   "coverage": 1.0,
+   "segments": 1,
+   "mae18": 3.923837834230504
+  },
+  {
+   "subject": "subject10",
+   "trial": "squatsAsym1",
+   "movement": "squat",
+   "status": "evaluated",
+   "why": null,
+   "coverage": 1.0,
+   "segments": 1,
+   "mae18": 5.518787991172102
+  },
+  {
+   "subject": "subject10",
+   "trial": "walking1",
+   "movement": "walking",
+   "status": "evaluated",
+   "why": null,
+   "coverage": 1.0,
+   "segments": 1,
+   "mae18": 3.9737138552488895
+  },
+  {
+   "subject": "subject10",
+   "trial": "walking2",
+   "movement": "walking",
+   "status": "evaluated",
+   "why": null,
+   "coverage": 1.0,
+   "segments": 1,
+   "mae18": 4.261888855330579
+  },
+  {
+   "subject": "subject10",
+   "trial": "walking3",
+   "movement": "walking",
+   "status": "evaluated",
+   "why": null,
+   "coverage": 1.0,
+   "segments": 1,
+   "mae18": 4.527881836367522
+  },
+  {
+   "subject": "subject10",
+   "trial": "walkingTS1",
+   "movement": "walking",
+   "status": "evaluated",
+   "why": null,
+   "coverage": 1.0,
+   "segments": 1,
+   "mae18": 4.728740442063492
+  },
+  {
+   "subject": "subject10",
+   "trial": "walkingTS2",
+   "movement": "walking",
+   "status": "evaluated",
+   "why": null,
+   "coverage": 1.0,
+   "segments": 1,
+   "mae18": 5.453446827992592
+  },
+  {
+   "subject": "subject10",
+   "trial": "walkingTS3",
+   "movement": "walking",
+   "status": "evaluated",
+   "why": null,
+   "coverage": 1.0,
+   "segments": 1,
+   "mae18": 5.2374323616940535
+  },
+  {
+   "subject": "subject11",
+   "trial": "DJ1",
+   "movement": "drop jump",
+   "status": "evaluated",
+   "why": null,
+   "coverage": 1.0,
+   "segments": 1,
+   "mae18": 6.7341327796111115
+  },
+  {
+   "subject": "subject11",
+   "trial": "DJ4",
+   "movement": "drop jump",
+   "status": "evaluated",
+   "why": null,
+   "coverage": 1.0,
+   "segments": 1,
+   "mae18": 6.414507763503268
+  },
+  {
+   "subject": "subject11",
+   "trial": "DJ5",
+   "movement": "drop jump",
+   "status": "evaluated",
+   "why": null,
+   "coverage": 1.0,
+   "segments": 1,
+   "mae18": 6.590421121617826
+  },
+  {
+   "subject": "subject11",
+   "trial": "DJAsym3",
+   "movement": "drop jump",
+   "status": "evaluated",
+   "why": null,
+   "coverage": 1.0,
+   "segments": 1,
+   "mae18": 6.173115797532956
+  },
+  {
+   "subject": "subject11",
+   "trial": "DJAsym4",
+   "movement": "drop jump",
+   "status": "evaluated",
+   "why": null,
+   "coverage": 1.0,
+   "segments": 1,
+   "mae18": 5.6830665094609465
+  },
+  {
+   "subject": "subject11",
+   "trial": "DJAsym5",
+   "movement": "drop jump",
+   "status": "evaluated",
+   "why": null,
+   "coverage": 1.0,
+   "segments": 1,
+   "mae18": 5.704066284555556
+  },
+  {
+   "subject": "subject11",
+   "trial": "STS1",
+   "movement": "sit-to-stand",
+   "status": "evaluated",
+   "why": null,
+   "coverage": 1.0,
+   "segments": 1,
+   "mae18": 5.006358057937584
+  },
+  {
+   "subject": "subject11",
+   "trial": "STSweakLegs1",
+   "movement": "sit-to-stand",
+   "status": "evaluated",
+   "why": null,
+   "coverage": 1.0,
+   "segments": 1,
+   "mae18": 5.2027610008563885
+  },
+  {
+   "subject": "subject11",
+   "trial": "squats1",
+   "movement": "squat",
+   "status": "evaluated",
+   "why": null,
+   "coverage": 1.0,
+   "segments": 1,
+   "mae18": 4.985552101953711
+  },
+  {
+   "subject": "subject11",
+   "trial": "squatsAsym1",
+   "movement": "squat",
+   "status": "evaluated",
+   "why": null,
+   "coverage": 1.0,
+   "segments": 1,
+   "mae18": 5.101295466642307
+  },
+  {
+   "subject": "subject11",
+   "trial": "walking2",
+   "movement": "walking",
+   "status": "evaluated",
+   "why": null,
+   "coverage": 1.0,
+   "segments": 1,
+   "mae18": 3.814607314489379
+  },
+  {
+   "subject": "subject11",
+   "trial": "walking3",
+   "movement": "walking",
+   "status": "evaluated",
+   "why": null,
+   "coverage": 1.0,
+   "segments": 1,
+   "mae18": 3.2172218672426474
+  },
+  {
+   "subject": "subject11",
+   "trial": "walking4",
+   "movement": "walking",
+   "status": "evaluated",
+   "why": null,
+   "coverage": 1.0,
+   "segments": 1,
+   "mae18": 3.2229826441062803
+  },
+  {
+   "subject": "subject11",
+   "trial": "walkingTS1",
+   "movement": "walking",
+   "status": "evaluated",
+   "why": null,
+   "coverage": 1.0,
+   "segments": 1,
+   "mae18": 6.108595855255624
+  },
+  {
+   "subject": "subject11",
+   "trial": "walkingTS2",
+   "movement": "walking",
+   "status": "evaluated",
+   "why": null,
+   "coverage": 1.0,
+   "segments": 1,
+   "mae18": 5.203610479964839
+  },
+  {
+   "subject": "subject11",
+   "trial": "walkingTS3",
+   "movement": "walking",
+   "status": "evaluated",
+   "why": null,
+   "coverage": 1.0,
+   "segments": 1,
+   "mae18": 5.740716230430555
+  },
+  {
+   "subject": "subject2",
+   "trial": "DJ1",
+   "movement": "drop jump",
+   "status": "evaluated",
+   "why": null,
+   "coverage": 1.0,
+   "segments": 1,
+   "mae18": 5.854701606694444
+  },
+  {
+   "subject": "subject2",
+   "trial": "DJ2",
+   "movement": "drop jump",
+   "status": "evaluated",
+   "why": null,
+   "coverage": 1.0,
+   "segments": 1,
+   "mae18": 7.01092169115304
+  },
+  {
+   "subject": "subject2",
+   "trial": "DJ3",
+   "movement": "drop jump",
+   "status": "evaluated",
+   "why": null,
+   "coverage": 1.0,
+   "segments": 1,
+   "mae18": 6.883329675098039
+  },
+  {
+   "subject": "subject2",
+   "trial": "DJAsym1",
+   "movement": "drop jump",
+   "status": "evaluated",
+   "why": null,
+   "coverage": 1.0,
+   "segments": 1,
+   "mae18": 8.489339178571429
+  },
+  {
+   "subject": "subject2",
+   "trial": "DJAsym4",
+   "movement": "drop jump",
+   "status": "evaluated",
+   "why": null,
+   "coverage": 1.0,
+   "segments": 1,
+   "mae18": 7.705037238300376
+  },
+  {
+   "subject": "subject2",
+   "trial": "DJAsym5",
+   "movement": "drop jump",
+   "status": "evaluated",
+   "why": null,
+   "coverage": 1.0,
+   "segments": 1,
+   "mae18": 8.147214079080628
+  },
+  {
+   "subject": "subject2",
+   "trial": "STS1",
+   "movement": "sit-to-stand",
+   "status": "evaluated",
+   "why": null,
+   "coverage": 1.0,
+   "segments": 1,
+   "mae18": 5.068836333922538
+  },
+  {
+   "subject": "subject2",
+   "trial": "STSweakLegs1",
+   "movement": "sit-to-stand",
+   "status": "evaluated",
+   "why": null,
+   "coverage": 1.0,
+   "segments": 1,
+   "mae18": 6.231394610827237
+  },
+  {
+   "subject": "subject2",
+   "trial": "squats1",
+   "movement": "squat",
+   "status": "evaluated",
+   "why": null,
+   "coverage": 1.0,
+   "segments": 1,
+   "mae18": 5.736737778395062
+  },
+  {
+   "subject": "subject2",
+   "trial": "squatsAsym1",
+   "movement": "squat",
+   "status": "evaluated",
+   "why": null,
+   "coverage": 1.0,
+   "segments": 1,
+   "mae18": 5.771444235677025
+  },
+  {
+   "subject": "subject2",
+   "trial": "walking1",
+   "movement": "walking",
+   "status": "evaluated",
+   "why": null,
+   "coverage": 1.0,
+   "segments": 1,
+   "mae18": 5.286125959883965
+  },
+  {
+   "subject": "subject2",
+   "trial": "walking2",
+   "movement": "walking",
+   "status": "evaluated",
+   "why": null,
+   "coverage": 1.0,
+   "segments": 1,
+   "mae18": 5.41126644883738
+  },
+  {
+   "subject": "subject2",
+   "trial": "walking3",
+   "movement": "walking",
+   "status": "evaluated",
+   "why": null,
+   "coverage": 1.0,
+   "segments": 1,
+   "mae18": 5.672983532029774
+  },
+  {
+   "subject": "subject2",
+   "trial": "walkingTS1",
+   "movement": "walking",
+   "status": "evaluated",
+   "why": null,
+   "coverage": 1.0,
+   "segments": 1,
+   "mae18": 4.546779557448672
+  },
+  {
+   "subject": "subject2",
+   "trial": "walkingTS2",
+   "movement": "walking",
+   "status": "evaluated",
+   "why": null,
+   "coverage": 1.0,
+   "segments": 1,
+   "mae18": 4.221973138391814
+  },
+  {
+   "subject": "subject2",
+   "trial": "walkingTS4",
+   "movement": "walking",
+   "status": "evaluated",
+   "why": null,
+   "coverage": 1.0,
+   "segments": 1,
+   "mae18": 3.8631800348731886
+  },
+  {
+   "subject": "subject3",
+   "trial": "DJ1",
+   "movement": "drop jump",
+   "status": "evaluated",
+   "why": null,
+   "coverage": 1.0,
+   "segments": 1,
+   "mae18": 5.384109085801033
+  },
+  {
+   "subject": "subject3",
+   "trial": "DJ2",
+   "movement": "drop jump",
+   "status": "evaluated",
+   "why": null,
+   "coverage": 1.0,
+   "segments": 1,
+   "mae18": 5.6075687004150705
+  },
+  {
+   "subject": "subject3",
+   "trial": "DJ4",
+   "movement": "drop jump",
+   "status": "evaluated",
+   "why": null,
+   "coverage": 1.0,
+   "segments": 1,
+   "mae18": 5.534539789046717
+  },
+  {
+   "subject": "subject3",
+   "trial": "DJAsym1",
+   "movement": "drop jump",
+   "status": "evaluated",
+   "why": null,
+   "coverage": 1.0,
+   "segments": 1,
+   "mae18": 5.174582754160207
+  },
+  {
+   "subject": "subject3",
+   "trial": "DJAsym2",
+   "movement": "drop jump",
+   "status": "evaluated",
+   "why": null,
+   "coverage": 1.0,
+   "segments": 1,
+   "mae18": 5.289459675348837
+  },
+  {
+   "subject": "subject3",
+   "trial": "DJAsym4",
+   "movement": "drop jump",
+   "status": "evaluated",
+   "why": null,
+   "coverage": 1.0,
+   "segments": 1,
+   "mae18": 5.079107064382716
+  },
+  {
+   "subject": "subject3",
+   "trial": "STS1",
+   "movement": "sit-to-stand",
+   "status": "evaluated",
+   "why": null,
+   "coverage": 1.0,
+   "segments": 1,
+   "mae18": 4.378709484429297
+  },
+  {
+   "subject": "subject3",
+   "trial": "STSweakLegs1",
+   "movement": "sit-to-stand",
+   "status": "evaluated",
+   "why": null,
+   "coverage": 1.0,
+   "segments": 1,
+   "mae18": 5.104130241194216
+  },
+  {
+   "subject": "subject3",
+   "trial": "squats1",
+   "movement": "squat",
+   "status": "evaluated",
+   "why": null,
+   "coverage": 1.0,
+   "segments": 1,
+   "mae18": 3.6024149541080357
+  },
+  {
+   "subject": "subject3",
+   "trial": "squatsAsym1",
+   "movement": "squat",
+   "status": "evaluated",
+   "why": null,
+   "coverage": 1.0,
+   "segments": 1,
+   "mae18": 4.225582243296007
+  },
+  {
+   "subject": "subject3",
+   "trial": "walking1",
+   "movement": "walking",
+   "status": "evaluated",
+   "why": null,
+   "coverage": 1.0,
+   "segments": 1,
+   "mae18": 3.9773893103282836
+  },
+  {
+   "subject": "subject3",
+   "trial": "walking2",
+   "movement": "walking",
+   "status": "evaluated",
+   "why": null,
+   "coverage": 1.0,
+   "segments": 1,
+   "mae18": 4.057822207005718
+  },
+  {
+   "subject": "subject3",
+   "trial": "walking3",
+   "movement": "walking",
+   "status": "evaluated",
+   "why": null,
+   "coverage": 1.0,
+   "segments": 1,
+   "mae18": 4.155981002648954
+  },
+  {
+   "subject": "subject3",
+   "trial": "walkingTS2",
+   "movement": "walking",
+   "status": "evaluated",
+   "why": null,
+   "coverage": 1.0,
+   "segments": 1,
+   "mae18": 6.817764652636587
+  },
+  {
+   "subject": "subject3",
+   "trial": "walkingTS3",
+   "movement": "walking",
+   "status": "evaluated",
+   "why": null,
+   "coverage": 1.0,
+   "segments": 1,
+   "mae18": 8.035916788271242
+  },
+  {
+   "subject": "subject3",
+   "trial": "walkingTS4",
+   "movement": "walking",
+   "status": "evaluated",
+   "why": null,
+   "coverage": 1.0,
+   "segments": 1,
+   "mae18": 6.995465513525641
+  },
+  {
+   "subject": "subject4",
+   "trial": "DJ1",
+   "movement": "drop jump",
+   "status": "evaluated",
+   "why": null,
+   "coverage": 1.0,
+   "segments": 1,
+   "mae18": 4.47993827990316
+  },
+  {
+   "subject": "subject4",
+   "trial": "DJ2",
+   "movement": "drop jump",
+   "status": "evaluated",
+   "why": null,
+   "coverage": 1.0,
+   "segments": 1,
+   "mae18": 4.283168068327991
+  },
+  {
+   "subject": "subject4",
+   "trial": "DJ3",
+   "movement": "drop jump",
+   "status": "evaluated",
+   "why": null,
+   "coverage": 1.0,
+   "segments": 1,
+   "mae18": 4.684417560203373
+  },
+  {
+   "subject": "subject4",
+   "trial": "DJAsym1",
+   "movement": "drop jump",
+   "status": "evaluated",
+   "why": null,
+   "coverage": 1.0,
+   "segments": 1,
+   "mae18": 5.211730752869354
+  },
+  {
+   "subject": "subject4",
+   "trial": "DJAsym2",
+   "movement": "drop jump",
+   "status": "evaluated",
+   "why": null,
+   "coverage": 1.0,
+   "segments": 1,
+   "mae18": 4.93506425853644
+  },
+  {
+   "subject": "subject4",
+   "trial": "DJAsym3",
+   "movement": "drop jump",
+   "status": "evaluated",
+   "why": null,
+   "coverage": 1.0,
+   "segments": 1,
+   "mae18": 4.694299462044444
+  },
+  {
+   "subject": "subject4",
+   "trial": "STS1",
+   "movement": "sit-to-stand",
+   "status": "evaluated",
+   "why": null,
+   "coverage": 1.0,
+   "segments": 1,
+   "mae18": 4.5525120671110315
+  },
+  {
+   "subject": "subject4",
+   "trial": "STSweakLegs1",
+   "movement": "sit-to-stand",
+   "status": "evaluated",
+   "why": null,
+   "coverage": 1.0,
+   "segments": 1,
+   "mae18": 4.43819543735923
+  },
+  {
+   "subject": "subject4",
+   "trial": "squats1",
+   "movement": "squat",
+   "status": "evaluated",
+   "why": null,
+   "coverage": 1.0,
+   "segments": 1,
+   "mae18": 3.396954227819465
+  },
+  {
+   "subject": "subject4",
+   "trial": "squatsAsym1",
+   "movement": "squat",
+   "status": "evaluated",
+   "why": null,
+   "coverage": 1.0,
+   "segments": 1,
+   "mae18": 3.4724041031523
+  },
+  {
+   "subject": "subject4",
+   "trial": "walking1",
+   "movement": "walking",
+   "status": "evaluated",
+   "why": null,
+   "coverage": 1.0,
+   "segments": 1,
+   "mae18": 4.243253066335878
+  },
+  {
+   "subject": "subject4",
+   "trial": "walking2",
+   "movement": "walking",
+   "status": "evaluated",
+   "why": null,
+   "coverage": 1.0,
+   "segments": 1,
+   "mae18": 4.010812360311448
+  },
+  {
+   "subject": "subject4",
+   "trial": "walking4",
+   "movement": "walking",
+   "status": "evaluated",
+   "why": null,
+   "coverage": 1.0,
+   "segments": 1,
+   "mae18": 4.025581221482813
+  },
+  {
+   "subject": "subject4",
+   "trial": "walkingTS1",
+   "movement": "walking",
+   "status": "evaluated",
+   "why": null,
+   "coverage": 1.0,
+   "segments": 1,
+   "mae18": 5.156806089024864
+  },
+  {
+   "subject": "subject4",
+   "trial": "walkingTS2",
+   "movement": "walking",
+   "status": "evaluated",
+   "why": null,
+   "coverage": 1.0,
+   "segments": 1,
+   "mae18": 5.040719475512215
+  },
+  {
+   "subject": "subject4",
+   "trial": "walkingTS3",
+   "movement": "walking",
+   "status": "evaluated",
+   "why": null,
+   "coverage": 1.0,
+   "segments": 1,
+   "mae18": 5.263085866914894
+  },
+  {
+   "subject": "subject5",
+   "trial": "DJ1",
+   "movement": "drop jump",
+   "status": "evaluated",
+   "why": null,
+   "coverage": 1.0,
+   "segments": 1,
+   "mae18": 4.6492964711511515
+  },
+  {
+   "subject": "subject5",
+   "trial": "DJ2",
+   "movement": "drop jump",
+   "status": "evaluated",
+   "why": null,
+   "coverage": 1.0,
+   "segments": 1,
+   "mae18": 4.567106921520202
+  },
+  {
+   "subject": "subject5",
+   "trial": "DJ3",
+   "movement": "drop jump",
+   "status": "evaluated",
+   "why": null,
+   "coverage": 1.0,
+   "segments": 1,
+   "mae18": 4.581242945
+  },
+  {
+   "subject": "subject5",
+   "trial": "DJAsym1",
+   "movement": "drop jump",
+   "status": "evaluated",
+   "why": null,
+   "coverage": 1.0,
+   "segments": 1,
+   "mae18": 4.588396189467787
+  },
+  {
+   "subject": "subject5",
+   "trial": "DJAsym2",
+   "movement": "drop jump",
+   "status": "evaluated",
+   "why": null,
+   "coverage": 1.0,
+   "segments": 1,
+   "mae18": 4.869352182464647
+  },
+  {
+   "subject": "subject5",
+   "trial": "DJAsym3",
+   "movement": "drop jump",
+   "status": "evaluated",
+   "why": null,
+   "coverage": 1.0,
+   "segments": 1,
+   "mae18": 4.348521274002057
+  },
+  {
+   "subject": "subject5",
+   "trial": "STS1",
+   "movement": "sit-to-stand",
+   "status": "evaluated",
+   "why": null,
+   "coverage": 1.0,
+   "segments": 1,
+   "mae18": 6.464193850817532
+  },
+  {
+   "subject": "subject5",
+   "trial": "STSweakLegs1",
+   "movement": "sit-to-stand",
+   "status": "evaluated",
+   "why": null,
+   "coverage": 1.0,
+   "segments": 1,
+   "mae18": 6.341268868155187
+  },
+  {
+   "subject": "subject5",
+   "trial": "squats1",
+   "movement": "squat",
+   "status": "evaluated",
+   "why": null,
+   "coverage": 1.0,
+   "segments": 1,
+   "mae18": 3.6451802702053815
+  },
+  {
+   "subject": "subject5",
+   "trial": "squatsAsym1",
+   "movement": "squat",
+   "status": "evaluated",
+   "why": null,
+   "coverage": 1.0,
+   "segments": 1,
+   "mae18": 3.2481590193474763
+  },
+  {
+   "subject": "subject5",
+   "trial": "walking1",
+   "movement": "walking",
+   "status": "evaluated",
+   "why": null,
+   "coverage": 1.0,
+   "segments": 1,
+   "mae18": 4.86213612931255
+  },
+  {
+   "subject": "subject5",
+   "trial": "walking2",
+   "movement": "walking",
+   "status": "evaluated",
+   "why": null,
+   "coverage": 1.0,
+   "segments": 1,
+   "mae18": 5.175046414587418
+  },
+  {
+   "subject": "subject5",
+   "trial": "walking3",
+   "movement": "walking",
+   "status": "evaluated",
+   "why": null,
+   "coverage": 1.0,
+   "segments": 1,
+   "mae18": 5.386226329905437
+  },
+  {
+   "subject": "subject5",
+   "trial": "walkingTS1",
+   "movement": "walking",
+   "status": "evaluated",
+   "why": null,
+   "coverage": 1.0,
+   "segments": 1,
+   "mae18": 3.950681564411111
+  },
+  {
+   "subject": "subject5",
+   "trial": "walkingTS2",
+   "movement": "walking",
+   "status": "evaluated",
+   "why": null,
+   "coverage": 1.0,
+   "segments": 1,
+   "mae18": 4.866302414589041
+  },
+  {
+   "subject": "subject5",
+   "trial": "walkingTS3",
+   "movement": "walking",
+   "status": "evaluated",
+   "why": null,
+   "coverage": 1.0,
+   "segments": 1,
+   "mae18": 4.046935377233637
+  },
+  {
+   "subject": "subject6",
+   "trial": "DJ1",
+   "movement": "drop jump",
+   "status": "evaluated",
+   "why": null,
+   "coverage": 1.0,
+   "segments": 1,
+   "mae18": 4.949762506321637
+  },
+  {
+   "subject": "subject6",
+   "trial": "DJ2",
+   "movement": "drop jump",
+   "status": "evaluated",
+   "why": null,
+   "coverage": 1.0,
+   "segments": 1,
+   "mae18": 4.624354113130788
+  },
+  {
+   "subject": "subject6",
+   "trial": "DJ3",
+   "movement": "drop jump",
+   "status": "evaluated",
+   "why": null,
+   "coverage": 1.0,
+   "segments": 1,
+   "mae18": 5.991253567570208
+  },
+  {
+   "subject": "subject6",
+   "trial": "DJAsym1",
+   "movement": "drop jump",
+   "status": "evaluated",
+   "why": null,
+   "coverage": 1.0,
+   "segments": 1,
+   "mae18": 5.054829408388339
+  },
+  {
+   "subject": "subject6",
+   "trial": "DJAsym2",
+   "movement": "drop jump",
+   "status": "evaluated",
+   "why": null,
+   "coverage": 1.0,
+   "segments": 1,
+   "mae18": 5.310636507137681
+  },
+  {
+   "subject": "subject6",
+   "trial": "DJAsym3",
+   "movement": "drop jump",
+   "status": "evaluated",
+   "why": null,
+   "coverage": 1.0,
+   "segments": 1,
+   "mae18": 5.563231298363637
+  },
+  {
+   "subject": "subject6",
+   "trial": "STS1",
+   "movement": "sit-to-stand",
+   "status": "evaluated",
+   "why": null,
+   "coverage": 1.0,
+   "segments": 1,
+   "mae18": 6.565265104664343
+  },
+  {
+   "subject": "subject6",
+   "trial": "STSweakLegs1",
+   "movement": "sit-to-stand",
+   "status": "evaluated",
+   "why": null,
+   "coverage": 1.0,
+   "segments": 1,
+   "mae18": 6.859426009433043
+  },
+  {
+   "subject": "subject6",
+   "trial": "squats1",
+   "movement": "squat",
+   "status": "evaluated",
+   "why": null,
+   "coverage": 1.0,
+   "segments": 1,
+   "mae18": 4.051171429240911
+  },
+  {
+   "subject": "subject6",
+   "trial": "squatsAsym1",
+   "movement": "squat",
+   "status": "evaluated",
+   "why": null,
+   "coverage": 1.0,
+   "segments": 1,
+   "mae18": 4.5364451486043675
+  },
+  {
+   "subject": "subject6",
+   "trial": "walking1",
+   "movement": "walking",
+   "status": "evaluated",
+   "why": null,
+   "coverage": 1.0,
+   "segments": 1,
+   "mae18": 4.753808726476302
+  },
+  {
+   "subject": "subject6",
+   "trial": "walking2",
+   "movement": "walking",
+   "status": "evaluated",
+   "why": null,
+   "coverage": 1.0,
+   "segments": 1,
+   "mae18": 4.262205409476651
+  },
+  {
+   "subject": "subject6",
+   "trial": "walking3",
+   "movement": "walking",
+   "status": "evaluated",
+   "why": null,
+   "coverage": 1.0,
+   "segments": 1,
+   "mae18": 4.373746879793104
+  },
+  {
+   "subject": "subject6",
+   "trial": "walkingTS1",
+   "movement": "walking",
+   "status": "evaluated",
+   "why": null,
+   "coverage": 1.0,
+   "segments": 1,
+   "mae18": 5.55109613365806
+  },
+  {
+   "subject": "subject6",
+   "trial": "walkingTS2",
+   "movement": "walking",
+   "status": "evaluated",
+   "why": null,
+   "coverage": 1.0,
+   "segments": 1,
+   "mae18": 4.803078474383681
+  },
+  {
+   "subject": "subject6",
+   "trial": "walkingTS3",
+   "movement": "walking",
+   "status": "evaluated",
+   "why": null,
+   "coverage": 1.0,
+   "segments": 1,
+   "mae18": 6.402708471757202
+  },
+  {
+   "subject": "subject7",
+   "trial": "DJ2",
+   "movement": "drop jump",
+   "status": "evaluated",
+   "why": null,
+   "coverage": 1.0,
+   "segments": 1,
+   "mae18": 5.03042040072612
+  },
+  {
+   "subject": "subject7",
+   "trial": "DJ3",
+   "movement": "drop jump",
+   "status": "evaluated",
+   "why": null,
+   "coverage": 1.0,
+   "segments": 1,
+   "mae18": 4.659219106979503
+  },
+  {
+   "subject": "subject7",
+   "trial": "DJ4",
+   "movement": "drop jump",
+   "status": "evaluated",
+   "why": null,
+   "coverage": 1.0,
+   "segments": 1,
+   "mae18": 4.732188870757576
+  },
+  {
+   "subject": "subject7",
+   "trial": "DJAsym1",
+   "movement": "drop jump",
+   "status": "evaluated",
+   "why": null,
+   "coverage": 1.0,
+   "segments": 1,
+   "mae18": 4.839298857249456
+  },
+  {
+   "subject": "subject7",
+   "trial": "DJAsym2",
+   "movement": "drop jump",
+   "status": "evaluated",
+   "why": null,
+   "coverage": 1.0,
+   "segments": 1,
+   "mae18": 4.9261605998435805
+  },
+  {
+   "subject": "subject7",
+   "trial": "DJAsym3",
+   "movement": "drop jump",
+   "status": "evaluated",
+   "why": null,
+   "coverage": 1.0,
+   "segments": 1,
+   "mae18": 5.0263549535308645
+  },
+  {
+   "subject": "subject7",
+   "trial": "STS1",
+   "movement": "sit-to-stand",
+   "status": "evaluated",
+   "why": null,
+   "coverage": 1.0,
+   "segments": 1,
+   "mae18": 5.305278580075775
+  },
+  {
+   "subject": "subject7",
+   "trial": "STSweakLegs1",
+   "movement": "sit-to-stand",
+   "status": "evaluated",
+   "why": null,
+   "coverage": 1.0,
+   "segments": 1,
+   "mae18": 4.068698286604462
+  },
+  {
+   "subject": "subject7",
+   "trial": "squats1",
+   "movement": "squat",
+   "status": "evaluated",
+   "why": null,
+   "coverage": 1.0,
+   "segments": 1,
+   "mae18": 3.17440191365036
+  },
+  {
+   "subject": "subject7",
+   "trial": "squatsAsym1",
+   "movement": "squat",
+   "status": "evaluated",
+   "why": null,
+   "coverage": 1.0,
+   "segments": 1,
+   "mae18": 3.7836086666989797
+  },
+  {
+   "subject": "subject7",
+   "trial": "walking1",
+   "movement": "walking",
+   "status": "evaluated",
+   "why": null,
+   "coverage": 1.0,
+   "segments": 1,
+   "mae18": 5.402465090058922
+  },
+  {
+   "subject": "subject7",
+   "trial": "walking2",
+   "movement": "walking",
+   "status": "evaluated",
+   "why": null,
+   "coverage": 1.0,
+   "segments": 1,
+   "mae18": 5.030898303244275
+  },
+  {
+   "subject": "subject7",
+   "trial": "walking3",
+   "movement": "walking",
+   "status": "evaluated",
+   "why": null,
+   "coverage": 1.0,
+   "segments": 1,
+   "mae18": 5.337381394586465
+  },
+  {
+   "subject": "subject7",
+   "trial": "walkingTS1",
+   "movement": "walking",
+   "status": "evaluated",
+   "why": null,
+   "coverage": 1.0,
+   "segments": 1,
+   "mae18": 6.190304560581481
+  },
+  {
+   "subject": "subject7",
+   "trial": "walkingTS2",
+   "movement": "walking",
+   "status": "evaluated",
+   "why": null,
+   "coverage": 1.0,
+   "segments": 1,
+   "mae18": 6.811410610081386
+  },
+  {
+   "subject": "subject7",
+   "trial": "walkingTS3",
+   "movement": "walking",
+   "status": "evaluated",
+   "why": null,
+   "coverage": 1.0,
+   "segments": 1,
+   "mae18": 6.79225918169281
+  },
+  {
+   "subject": "subject8",
+   "trial": "DJ1",
+   "movement": "drop jump",
+   "status": "evaluated",
+   "why": null,
+   "coverage": 1.0,
+   "segments": 1,
+   "mae18": 5.674621546031747
+  },
+  {
+   "subject": "subject8",
+   "trial": "DJ2",
+   "movement": "drop jump",
+   "status": "evaluated",
+   "why": null,
+   "coverage": 1.0,
+   "segments": 1,
+   "mae18": 5.643877091284068
+  },
+  {
+   "subject": "subject8",
+   "trial": "DJ3",
+   "movement": "drop jump",
+   "status": "evaluated",
+   "why": null,
+   "coverage": 1.0,
+   "segments": 1,
+   "mae18": 5.877120269749749
+  },
+  {
+   "subject": "subject8",
+   "trial": "DJAsym1",
+   "movement": "drop jump",
+   "status": "evaluated",
+   "why": null,
+   "coverage": 1.0,
+   "segments": 1,
+   "mae18": 5.5637223233243
+  },
+  {
+   "subject": "subject8",
+   "trial": "DJAsym2",
+   "movement": "drop jump",
+   "status": "evaluated",
+   "why": null,
+   "coverage": 1.0,
+   "segments": 1,
+   "mae18": 4.760814589369047
+  },
+  {
+   "subject": "subject8",
+   "trial": "DJAsym3",
+   "movement": "drop jump",
+   "status": "evaluated",
+   "why": null,
+   "coverage": 1.0,
+   "segments": 1,
+   "mae18": 5.21219519105681
+  },
+  {
+   "subject": "subject8",
+   "trial": "STS1",
+   "movement": "sit-to-stand",
+   "status": "evaluated",
+   "why": null,
+   "coverage": 1.0,
+   "segments": 1,
+   "mae18": 3.76288681478131
+  },
+  {
+   "subject": "subject8",
+   "trial": "STSweakLegs1",
+   "movement": "sit-to-stand",
+   "status": "evaluated",
+   "why": null,
+   "coverage": 1.0,
+   "segments": 1,
+   "mae18": 4.099397048189443
+  },
+  {
+   "subject": "subject8",
+   "trial": "squats1",
+   "movement": "squat",
+   "status": "evaluated",
+   "why": null,
+   "coverage": 1.0,
+   "segments": 1,
+   "mae18": 3.1609498596980408
+  },
+  {
+   "subject": "subject8",
+   "trial": "squatsAsym1",
+   "movement": "squat",
+   "status": "evaluated",
+   "why": null,
+   "coverage": 1.0,
+   "segments": 1,
+   "mae18": 3.449931528923795
+  },
+  {
+   "subject": "subject8",
+   "trial": "walking1",
+   "movement": "walking",
+   "status": "evaluated",
+   "why": null,
+   "coverage": 1.0,
+   "segments": 1,
+   "mae18": 4.4673716930447895
+  },
+  {
+   "subject": "subject8",
+   "trial": "walking2",
+   "movement": "walking",
+   "status": "evaluated",
+   "why": null,
+   "coverage": 1.0,
+   "segments": 1,
+   "mae18": 4.597893073121289
+  },
+  {
+   "subject": "subject8",
+   "trial": "walking3",
+   "movement": "walking",
+   "status": "evaluated",
+   "why": null,
+   "coverage": 1.0,
+   "segments": 1,
+   "mae18": 4.404642950379902
+  },
+  {
+   "subject": "subject8",
+   "trial": "walkingTS1",
+   "movement": "walking",
+   "status": "evaluated",
+   "why": null,
+   "coverage": 1.0,
+   "segments": 1,
+   "mae18": 5.439990418051326
+  },
+  {
+   "subject": "subject8",
+   "trial": "walkingTS2",
+   "movement": "walking",
+   "status": "evaluated",
+   "why": null,
+   "coverage": 1.0,
+   "segments": 1,
+   "mae18": 6.332093800689784
+  },
+  {
+   "subject": "subject8",
+   "trial": "walkingTS3",
+   "movement": "walking",
+   "status": "evaluated",
+   "why": null,
+   "coverage": 1.0,
+   "segments": 1,
+   "mae18": 4.945373136598124
+  },
+  {
+   "subject": "subject9",
+   "trial": "DJ1",
+   "movement": "drop jump",
+   "status": "evaluated",
+   "why": null,
+   "coverage": 1.0,
+   "segments": 1,
+   "mae18": 5.2859047274033815
+  },
+  {
+   "subject": "subject9",
+   "trial": "DJ2",
+   "movement": "drop jump",
+   "status": "evaluated",
+   "why": null,
+   "coverage": 1.0,
+   "segments": 1,
+   "mae18": 5.7550116924054375
+  },
+  {
+   "subject": "subject9",
+   "trial": "DJ3",
+   "movement": "drop jump",
+   "status": "evaluated",
+   "why": null,
+   "coverage": 1.0,
+   "segments": 1,
+   "mae18": 4.766874812753623
+  },
+  {
+   "subject": "subject9",
+   "trial": "DJAsym1",
+   "movement": "drop jump",
+   "status": "evaluated",
+   "why": null,
+   "coverage": 1.0,
+   "segments": 1,
+   "mae18": 5.268917988154121
+  },
+  {
+   "subject": "subject9",
+   "trial": "DJAsym2",
+   "movement": "drop jump",
+   "status": "evaluated",
+   "why": null,
+   "coverage": 1.0,
+   "segments": 1,
+   "mae18": 5.436444010525031
+  },
+  {
+   "subject": "subject9",
+   "trial": "DJAsym3",
+   "movement": "drop jump",
+   "status": "evaluated",
+   "why": null,
+   "coverage": 1.0,
+   "segments": 1,
+   "mae18": 4.700730864988426
+  },
+  {
+   "subject": "subject9",
+   "trial": "STS1",
+   "movement": "sit-to-stand",
+   "status": "evaluated",
+   "why": null,
+   "coverage": 1.0,
+   "segments": 1,
+   "mae18": 5.823070515792274
+  },
+  {
+   "subject": "subject9",
+   "trial": "STSweakLegs1",
+   "movement": "sit-to-stand",
+   "status": "evaluated",
+   "why": null,
+   "coverage": 1.0,
+   "segments": 1,
+   "mae18": 5.348946877391805
+  },
+  {
+   "subject": "subject9",
+   "trial": "squats1",
+   "movement": "squat",
+   "status": "evaluated",
+   "why": null,
+   "coverage": 1.0,
+   "segments": 1,
+   "mae18": 4.3939405100239135
+  },
+  {
+   "subject": "subject9",
+   "trial": "squatsAsym1",
+   "movement": "squat",
+   "status": "evaluated",
+   "why": null,
+   "coverage": 1.0,
+   "segments": 1,
+   "mae18": 3.7833497525294026
+  },
+  {
+   "subject": "subject9",
+   "trial": "walking1",
+   "movement": "walking",
+   "status": "evaluated",
+   "why": null,
+   "coverage": 1.0,
+   "segments": 1,
+   "mae18": 4.869413807777779
+  },
+  {
+   "subject": "subject9",
+   "trial": "walking2",
+   "movement": "walking",
+   "status": "evaluated",
+   "why": null,
+   "coverage": 1.0,
+   "segments": 1,
+   "mae18": 6.175573353888889
+  },
+  {
+   "subject": "subject9",
+   "trial": "walking3",
+   "movement": "walking",
+   "status": "evaluated",
+   "why": null,
+   "coverage": 1.0,
+   "segments": 1,
+   "mae18": 6.22320421041768
+  },
+  {
+   "subject": "subject9",
+   "trial": "walkingTS1",
+   "movement": "walking",
+   "status": "evaluated",
+   "why": null,
+   "coverage": 1.0,
+   "segments": 1,
+   "mae18": 5.0443019403125
+  },
+  {
+   "subject": "subject9",
+   "trial": "walkingTS2",
+   "movement": "walking",
+   "status": "evaluated",
+   "why": null,
+   "coverage": 1.0,
+   "segments": 1,
+   "mae18": 6.159623139595237
+  },
+  {
+   "subject": "subject9",
+   "trial": "walkingTS3",
+   "movement": "walking",
+   "status": "evaluated",
+   "why": null,
+   "coverage": 1.0,
+   "segments": 1,
+   "mae18": 5.026294023321167
+  }
+ ]
+}

@@ -11,9 +11,11 @@ keep = [i for i, n in enumerate(names) if n.endswith("_study")]
 assert len(keep) == 43, len(keep)
 x = np.asarray(markers, float)[:, keep, :] * (0.001 if units == "mm" else 1.0)
 x[np.all(x == 0, axis=2)] = np.nan
-fps = float(round(1.0 / np.median(np.diff(times)), 6)); assert abs(times[0]) < 1e-6, times[0]
+fps = float(round(1.0 / np.median(np.diff(times)), 6))
+# some files start after 0 s: keep the file's own clock by numbering frames from its first time (fixed 2026-11-16 after 12 files failed the t0 = 0 assert)
+fidx = np.rint(np.asarray(times) * fps).astype(int); assert np.allclose(fidx / fps, times, atol=1e-6)
 valid = np.isfinite(x).all(axis=(1, 2))
-seq = MarkerSequence(fps=fps, frame="yup_world", marker_names=[names[i] for i in keep], markers=x, valid=valid,
+seq = MarkerSequence(fps=fps, frame="yup_world", marker_names=[names[i] for i in keep], markers=x, valid=valid, frame_index=fidx,
                      meta=dict(source="OpenCap LabValidation MarkerData/Video/HRNet/2-cameras (*_study markers)", person_ref=sys.argv[3], tier="C",
                                metric_scale=True, default_config="mediapipe_lstm_pose2sim"))
 seq.save(sys.argv[2]); print(f'{{"frames": {seq.n_frames}, "valid": {int(valid.sum())}, "fps": {fps}, "units_in": "{units}"}}')
