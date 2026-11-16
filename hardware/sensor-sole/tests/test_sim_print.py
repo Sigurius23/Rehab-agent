@@ -33,7 +33,7 @@ def board(side="R"):
                 bend=dict(point=[70.0, 0.0], dir=[0.0, 1.0]),
                 routing_plan={"heel": [[40.5, m * -10], [50, m * -10], [50, m * -18]],
                               "toe1": [[59.5, m * -10], [50, m * -10], [50, m * -18]]},
-                tail=dict(end=[50.0, m * -60], dir=[0.0, m * -1.0], width=8.0),
+                tail=dict(end=[50.0, m * -60], dir=[0.0, m * -1.0], width=10.0),
                 copper_routing=dict(pin_order=["COM", "heel", "toe1", "COM"]))
 
 
@@ -91,16 +91,54 @@ class Sim(unittest.TestCase):
 
 
 class Print(unittest.TestCase):
-    def test_carrier_and_cover_are_watertight_with_one_hole_per_wire(self):
+    def build(self, **kw):
         import sole_print as SP
-        with tempfile.TemporaryDirectory() as d:
-            p = Path(d) / "b.board.json"; p.write_text(json.dumps(board()))
-            rep = SP.build(p, Path(d) / "out")
-            c = rep["parts"]["carrier"]
-            self.assertTrue(c["watertight"] and rep["parts"]["cover"]["watertight"])
-            self.assertEqual(c["genus"], rep["wires"]["sense"] + rep["wires"]["common"])   # holes through the floor
-            self.assertGreaterEqual(rep["layers"]["narrowest_wall_between_pockets_mm"], 0.8)
-            self.assertTrue((Path(d) / "out" / "TEST_R_0123456789.carrier.stl").stat().st_size > 1000)
+        d = tempfile.TemporaryDirectory(); self.addCleanup(d.cleanup)
+        p = Path(d.name) / "b.board.json"; p.write_text(json.dumps(board(kw.pop("side", "R"))))
+        return SP.build(p, Path(d.name) / "out", **kw), Path(d.name) / "out"
+
+    def test_carrier_and_cover_are_watertight_with_one_hole_per_wire(self):
+        rep, out = self.build()
+        c = rep["parts"]["carrier"]
+        self.assertTrue(c["watertight"] and rep["parts"]["cover"]["watertight"])
+        self.assertEqual(c["genus"], rep["wires"]["conductors"])                  # one hole through the floor per wire
+        self.assertTrue((out / "TEST_R_0123456789.carrier.stl").stat().st_size > 1000)
+
+    def test_the_stack_matches_the_flex_sole_one_sense_comb_per_region_one_common_net(self):
+        rep, out = self.build()
+        self.assertTrue(rep["checks"]["all_pass"], rep["checks"])
+        self.assertEqual(rep["parts"]["electrodes"]["sense_pieces"], 2 + 1)        # heel, toe1 and the reference cell
+        self.assertEqual(rep["wires"], dict(rep["wires"], sense=2, reference=1, common=1, conductors=4))
+        for n, c in rep["cells"].items():
+            self.assertGreaterEqual(c["clearance_mm"], 0.58, n)                    # combs never closer than the gap
+            self.assertTrue(c["joined_to_common"] and c["hole_on_sense"] and c["vented"], n)
+        for n in ("heel", "toe1"):
+            self.assertGreater(rep["cells"][n]["interleaved_share"], 0.7, n)
+        for f in ("electrodes", "spacer", "film"):
+            self.assertTrue((out / f"TEST_R_0123456789.{f}.dxf").stat().st_size > 500)
+
+    def test_the_cut_file_has_its_layers_and_one_closed_outline_per_sense_comb(self):
+        import ezdxf
+        rep, out = self.build()
+        doc = ezdxf.readfile(out / "TEST_R_0123456789.electrodes.dxf")
+        by = {}
+        for e in doc.modelspace():
+            self.assertTrue(e.closed)
+            by.setdefault(e.dxf.layer, []).append(e)
+        self.assertEqual(sorted(by), ["COMMON", "HOLES", "OUTLINE", "SENSE"])
+        self.assertGreaterEqual(len(by["SENSE"]), 3)                               # one island per cell (a comb may enclose a slot)
+        self.assertEqual(len(by["HOLES"]), rep["wires"]["conductors"])
+
+    def test_without_the_reference_cell_and_on_the_left_foot(self):
+        rep, _ = self.build(ref_cell=False, side="L")
+        self.assertTrue(rep["checks"]["all_pass"], rep["checks"])
+        self.assertFalse(rep["reference_cell"])
+        self.assertEqual(rep["wires"]["conductors"], 3)
+
+    def test_finer_combs_keep_their_gap(self):
+        rep, _ = self.build(finger=0.4, gap=0.4)
+        self.assertTrue(rep["checks"]["all_pass"], rep["checks"])
+        self.assertGreaterEqual(rep["checks"]["smallest_clearance_mm"], 0.38)
 
 
 if __name__ == "__main__":
