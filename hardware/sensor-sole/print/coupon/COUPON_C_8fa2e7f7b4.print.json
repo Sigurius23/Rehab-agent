@@ -1,0 +1,158 @@
+{
+ "board_id": "COUPON C 8fa2e7f7b4",
+ "design_hash": "8fa2e7f7b4ea7dbeb667459179092544046bcb73633eaa78192daa01b8bc894f",
+ "side": "C",
+ "status": "design only: not printed, cut or assembled; sensing, fit and durability untested",
+ "matches": "the flex sole's stack and sensing (shunt-mode combs under a film patch per region, one sense line per region, one common net); comb pitch is coarser (cuttable), and wires replace the copper routing",
+ "parts": {
+  "carrier": {
+   "file": "COUPON_C_8fa2e7f7b4.carrier.stl",
+   "thickness_mm": 1.0,
+   "volume_cm3": 10.18,
+   "watertight": true,
+   "genus": 6
+  },
+  "cover": {
+   "file": "COUPON_C_8fa2e7f7b4.cover.stl",
+   "thickness_mm": 0.4,
+   "volume_cm3": 4.16,
+   "watertight": true
+  },
+  "electrodes": {
+   "file": "COUPON_C_8fa2e7f7b4.electrodes.dxf",
+   "material": "copper foil on an adhesive carrier (proposed)",
+   "finger_mm": 0.6,
+   "gap_mm": 0.6,
+   "spine_mm": 0.8,
+   "sense_pieces": 5,
+   "common_area_mm2": 5740.0,
+   "common_dropped_mm2": 729.38
+  },
+  "spacer": {
+   "file": "COUPON_C_8fa2e7f7b4.spacer.dxf",
+   "material": "double-sided adhesive film (proposed)",
+   "windows": 5,
+   "narrowest_wall_mm": 7.2
+  },
+  "film": {
+   "file": "COUPON_C_8fa2e7f7b4.film.dxf",
+   "patches": 5,
+   "material": "pressure-sensitive film, not chosen"
+  }
+ },
+ "layers": {
+  "underside_channels_mm": 0.5,
+  "floor_with_holes_mm": 0.5,
+  "cover_mm": 0.4,
+  "printed_total_mm": 1.4,
+  "window_inset_mm": 0.6,
+  "hole_mm": 1.2,
+  "note": "the foil, spacer and film add their own thickness (about 0.25 mm together, to be measured)",
+  "material": "TPU (95A class), proposed"
+ },
+ "cells": {
+  "cell_s16": {
+   "window_mm2": 219.0,
+   "region_mm2": 256.0,
+   "sense_mm2": 58.9,
+   "common_comb_mm2": 55.8,
+   "interleaved_share": 0.733,
+   "clearance_mm": 0.597,
+   "joined_to_common": true,
+   "hole_on_sense": true,
+   "vented": true
+  },
+  "cell_m30": {
+   "window_mm2": 829.4,
+   "region_mm2": 900.0,
+   "sense_mm2": 217.3,
+   "common_comb_mm2": 197.7,
+   "interleaved_share": 0.856,
+   "clearance_mm": 0.597,
+   "joined_to_common": true,
+   "hole_on_sense": true,
+   "vented": true
+  },
+  "cell_l45": {
+   "window_mm2": 1918.4,
+   "region_mm2": 2025.0,
+   "sense_mm2": 487.9,
+   "common_comb_mm2": 483.9,
+   "interleaved_share": 0.895,
+   "clearance_mm": 0.6,
+   "joined_to_common": true,
+   "hole_on_sense": true,
+   "vented": true
+  },
+  "bend_60x12": {
+   "window_mm2": 635.0,
+   "region_mm2": 720.0,
+   "sense_mm2": 165.8,
+   "common_comb_mm2": 161.4,
+   "interleaved_share": 0.862,
+   "clearance_mm": 0.597,
+   "joined_to_common": true,
+   "hole_on_sense": true,
+   "vented": true
+  },
+  "ref": {
+   "window_mm2": 192.0,
+   "region_mm2": null,
+   "sense_mm2": 55.7,
+   "common_comb_mm2": 45.5,
+   "interleaved_share": 0.783,
+   "clearance_mm": 0.6,
+   "joined_to_common": true,
+   "hole_on_sense": true,
+   "vented": true
+  }
+ },
+ "reference_cell": true,
+ "wires": {
+  "sense": 4,
+  "reference": 1,
+  "common": 1,
+  "conductors": 6,
+  "most_in_one_channel": 6,
+  "wire_diameter_mm": 0.35,
+  "note": "channels follow the routing plan; widths are wires x diameter + clearance"
+ },
+ "vent": "each window opens through its wire hole into the underside channels, which run to the tail's end; do not pot the holes",
+ "removed_thin_walls_mm2": {
+  "channels": 1.29,
+  "floor": 0.21
+ },
+ "bed": {
+  "rotation_deg": 0,
+  "size_mm": [
+   115.0,
+   140.0
+  ],
+  "fits": true,
+  "bed_mm": [
+   256,
+   256
+  ]
+ },
+ "checks": {
+  "carrier_watertight": true,
+  "cover_watertight": true,
+  "carrier_genus_is_holes": true,
+  "every_sense_comb_is_one_piece": true,
+  "common_is_one_piece_with_its_hole": true,
+  "every_common_comb_joined": true,
+  "smallest_clearance_mm": 0.597,
+  "clearance_ok": true,
+  "every_hole_on_its_sense_comb": true,
+  "every_cell_vented_to_the_tail_end": true,
+  "copper_inside_the_outline": true,
+  "smallest_interleaved_share": 0.733,
+  "all_pass": true
+ },
+ "caveats": [
+  "nothing has been printed, cut, bought or measured",
+  "comb fingers and gaps are 0.6 mm here and 0.2 mm on the flex board: sensitivity will differ",
+  "thicker than the flex sole; toe-pocket fit untested",
+  "the reference cell sits on the tail: it follows the shoe's temperature only roughly"
+ ]
+}

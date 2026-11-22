@@ -24,6 +24,9 @@ all 47 cases ran there with none skipped, on this machine. None of the OpenSim, 
 
 | Configuration | Suite | ok | skipped | expected failure | failed | Skip reasons |
 |---|---|---|---|---|---|---|
+| Generator Python (pinned set, Python 3.13), 2026-11-22 | `test_coupon_readout.py` | 6 | 0 | 0 | 0 | — |
+| System Python 3.13 (no generator packages), 2026-11-22 | `test_coupon_readout.py` | 4 | 2 | 0 | 0 | needs the generator's Python with manifold3d and ezdxf |
+| Generator Python (pinned set, Python 3.13), 2026-11-22 | `test_sim_print.py` | 9 | 0 | 0 | 0 | — |
 | Pipeline Python (OpenSim 4.6), external models present | `test_sim_osim.py` | 16 | 0 | 0 | 0 | — |
 | Pipeline Python (OpenSim 4.6), external models present | `test_dhondt_port.py` | 12 | 1 | 0 | 0 | needs casadi and DHONDT_EXP5 |
 | Pipeline Python (OpenSim 4.6), external models present | `test_foot_comparison.py` | 3 | 0 | 0 | 0 | — |

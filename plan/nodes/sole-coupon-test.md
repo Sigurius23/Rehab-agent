@@ -6,7 +6,7 @@ area: "sole"
 parent: "[[goal-sensor-sole]]"
 priority: "2"
 source: "hardware/sensor-sole/DESIGN.md sections 8 and 9.3; hardware/sensor-sole/FOOT_MODELS.md sections 4 and 9"
-updated: "2026-11-09"
+updated: "2026-11-22"
 ---
 # The sensor film's measured response (coupon test)
 
@@ -27,3 +27,5 @@ the stack's compression on the footbed is worth recording too.
 
 A law built for our sole and shoe describes a person wearing them. It would not make arm A of the LabValidation
 comparison ([[sole-forceplate-dynamic]]) valid, because those participants were recorded in other footwear.
+
+**The coupon (2026-11-22):** `coupon_print.py` makes it with the sole's exact stack (`print/coupon/`: cells of 16, 30 and 45 mm, a 60 × 12 mm bend strip and the reference cell; every check passes). How to build and read it: `hardware/sensor-sole/BUILD.md`.

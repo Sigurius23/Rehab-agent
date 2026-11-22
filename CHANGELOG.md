@@ -452,6 +452,15 @@
       boards. 14 pass and have maps.
     - **Corrected:** CANDIDATES.md's T1 coverlay column now gives the checker's figures, 0.18–0.20 mm².
     - **Still open:** the copper trace counts a single-point touch as a connection.
+- **Build instructions for the printed prototype** (`hardware/sensor-sole/BUILD.md`). Instructions only: nothing
+  bought, printed or run.
+  - A coupon to build first (`coupon_print.py`, `print/coupon/`): four cells of 16, 30 and 45 mm and a 60 × 12 mm
+    bend strip, plus the reference cell, with the sole's exact stack. `sole_print.py`'s builder makes it unchanged,
+    and every check passes.
+  - Parts and tools, with the film left as the one open choice; step-by-step assembly with a check after each step.
+  - A bench readout (`readout/`): firmware for a XIAO nRF52840, a 16:1 multiplexer and two transimpedance
+    amplifiers, ratiometric against the bias, and a CSV logger. The logger is tested; the firmware is checked only
+    for syntax against an Arduino API stub.
 - **Shoe CAD capability map** (`shoe-cad-map/`). This is the owner's research note of 2026-11-02, from a foot scan
   to a last. It rates 20 shoe and last design tools on 26 features, from published vendor material, not
   hands-on testing. The folder has the data, its generator, the self-contained page and a CSV. The committed

@@ -92,7 +92,7 @@ measured sensitivity. All of `sole_print.py`'s checks pass on both feet (`checks
 (parameters, cells, wires, checks, bed fit) and `print.png` (the electrode sheet and the carrier's underside).
 All drawings are in millimetres, in the board's coordinates, so they register on the outline layer.
 
-**Assembly order (a plan):**
+**Assembly order (a plan; the full instructions, with a check after each step, are in [`BUILD.md`](BUILD.md)):**
 1. Print the carrier (underside up or down, to be tried) and the cover.
 2. Cut the electrode sheet, weed it, and lay it on the carrier's flat top, registered on the outline.
 3. Solder each sense wire to its land through the hole, and the common wire at the tail root. Lay the wires
