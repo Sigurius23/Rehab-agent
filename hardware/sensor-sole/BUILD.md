@@ -44,8 +44,8 @@ parts, one hole per wire, every comb in one piece, 0.6 mm between combs, every c
 
 ## 2. Parts and tools
 
-The parts are classes, with examples. Choosing and buying them is the owner's decision. No prices or suppliers
-here: check them when ordering.
+The parts are classes, with examples. Choosing and buying them is the owner's decision. A rough cost estimate,
+from public list prices, is in `plan/nodes/d-prototype-materials.md`; check prices when ordering.
 
 **Sole stack:**
 
